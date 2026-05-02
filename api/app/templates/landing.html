@@ -228,37 +228,39 @@
 
     /* ===== TIMELINE ===== */
     .timeline { position: relative; padding: 60px 0; }
-    .tl-step { display: flex; align-items: flex-start; margin-bottom: 48px; position: relative; opacity: 0; }
-    .tl-step.visible { opacity: 1; }
-    .tl-step:nth-child(1) { flex-direction: row; }
-    .tl-step:nth-child(2) { flex-direction: row-reverse; }
-    .tl-step:nth-child(3) { flex-direction: row; }
-    .tl-step:nth-child(4) { flex-direction: row-reverse; }
-    .tl-step:nth-child(odd) { transform: translateX(-30px); transition: all .6s ease; }
-    .tl-step:nth-child(even) { transform: translateX(30px); transition: all .6s ease; }
-    .tl-step.visible:nth-child(odd), .tl-step.visible:nth-child(even) { transform: translateX(0); }
+    .tl-track { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-50%); }
+    .tl-track-bg { width: 100%; height: 100%; background: var(--border); }
+    .tl-track-fill { position: absolute; top: 0; left: 0; width: 100%; height: 0; background: linear-gradient(180deg, var(--accent), var(--accent2), var(--accent3), var(--green)); transition: height .6s ease; }
 
-    .tl-content { width: 44%; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 28px; transition: border-color .4s; }
-    .tl-step.visible .tl-content { border-color: rgba(99,102,241,0.15); }
+    .tl-row { display: flex; align-items: flex-start; margin-bottom: 48px; position: relative; }
+    .tl-row.left .tl-content { margin-right: auto; margin-left: 0; }
+    .tl-row.left .tl-node { margin: 0 auto; }
+    .tl-row.left .tl-spacer { margin-left: auto; }
+    .tl-row.right { flex-direction: row-reverse; }
+    .tl-row.right .tl-content { margin-left: auto; margin-right: 0; }
+    .tl-row.right .tl-node { margin: 0 auto; }
+    .tl-row.right .tl-spacer { margin-right: auto; }
+
+    .tl-content { width: 44%; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 28px; opacity: 0; transition: all .6s ease; }
+    .tl-row.left .tl-content { transform: translateX(-40px); }
+    .tl-row.right .tl-content { transform: translateX(40px); }
+    .tl-row.visible .tl-content { opacity: 1; transform: translateX(0); }
+    .tl-row.visible .tl-content { border-color: rgba(99,102,241,0.15); }
     .tl-content .tl-num { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
     .tl-content h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     .tl-content p { color: var(--muted); font-size: 13px; line-height: 1.6; }
     .tl-content .tl-time { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 12px; color: var(--green); font-weight: 600; background: rgba(16,185,129,0.06); padding: 4px 12px; border-radius: 999px; }
 
-    .tl-track { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-50%); }
-    .tl-track-bg { width: 100%; height: 100%; background: var(--border); }
-    .tl-track-fill { position: absolute; top: 0; left: 0; width: 100%; height: 0; background: linear-gradient(180deg, var(--accent), var(--accent2), var(--accent3), var(--green)); transition: height .6s ease; }
-
     .tl-node { width: 12%; display: flex; justify-content: center; padding-top: 28px; position: relative; z-index: 2; }
     .tl-dot { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: #fff; box-shadow: 0 0 20px rgba(99,102,241,0.3); }
-    .tl-step:nth-child(1) .tl-dot { background: var(--accent); }
-    .tl-step:nth-child(2) .tl-dot { background: var(--accent2); box-shadow: 0 0 20px rgba(139,92,246,0.3); }
-    .tl-step:nth-child(3) .tl-dot { background: var(--accent3); box-shadow: 0 0 20px rgba(6,182,212,0.3); }
-    .tl-step:nth-child(4) .tl-dot { background: var(--green); box-shadow: 0 0 20px rgba(16,185,129,0.3); }
+    .tl-row:nth-child(1) .tl-dot { background: var(--accent); }
+    .tl-row:nth-child(2) .tl-dot { background: var(--accent2); box-shadow: 0 0 20px rgba(139,92,246,0.3); }
+    .tl-row:nth-child(3) .tl-dot { background: var(--accent3); box-shadow: 0 0 20px rgba(6,182,212,0.3); }
+    .tl-row:nth-child(4) .tl-dot { background: var(--green); box-shadow: 0 0 20px rgba(16,185,129,0.3); }
     .tl-dot::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid rgba(99,102,241,0.15); animation: nodeRing 2.5s ease-in-out infinite; }
-    .tl-step:nth-child(2) .tl-dot::after { border-color: rgba(139,92,246,0.15); }
-    .tl-step:nth-child(3) .tl-dot::after { border-color: rgba(6,182,212,0.15); }
-    .tl-step:nth-child(4) .tl-dot::after { border-color: rgba(16,185,129,0.15); }
+    .tl-row:nth-child(2) .tl-dot::after { border-color: rgba(139,92,246,0.15); }
+    .tl-row:nth-child(3) .tl-dot::after { border-color: rgba(6,182,212,0.15); }
+    .tl-row:nth-child(4) .tl-dot::after { border-color: rgba(16,185,129,0.15); }
     @keyframes nodeRing { 0%,100% { transform: scale(1); opacity: .4; } 50% { transform: scale(1.12); opacity: 1; } }
 
     .tl-spacer { width: 44%; }
@@ -281,9 +283,11 @@
       .vp-metric { text-align: center; }
       /* Timeline mobile: all content on right, track on left */
       .tl-track { left: 22px; }
-      .tl-step, .tl-step:nth-child(odd), .tl-step:nth-child(even) { flex-direction: row !important; }
+      .tl-row, .tl-row.right { flex-direction: row !important; }
+      .tl-row.right .tl-content { margin-left: 0; margin-right: auto; }
+      .tl-row.right .tl-spacer { margin-right: 0; margin-left: auto; }
       .tl-node { width: 44px; flex-shrink: 0; }
-      .tl-content { width: calc(100% - 60px); }
+      .tl-content { width: calc(100% - 60px); transform: translateX(-20px) !important; }
       .tl-spacer { display: none; }
     }
     @media (max-width: 640px) {
@@ -579,7 +583,7 @@
       <div class="tl-track-fill" id="tlProgress"></div>
     </div>
 
-    <div class="tl-step">
+    <div class="tl-row left">
       <div class="tl-content">
         <div class="tl-num">Step 01</div>
         <h3>Create your account</h3>
@@ -590,7 +594,7 @@
       <div class="tl-spacer"></div>
     </div>
 
-    <div class="tl-step">
+    <div class="tl-row right">
       <div class="tl-spacer"></div>
       <div class="tl-node"><div class="tl-dot">2</div></div>
       <div class="tl-content">
@@ -601,7 +605,7 @@
       </div>
     </div>
 
-    <div class="tl-step">
+    <div class="tl-row left">
       <div class="tl-content">
         <div class="tl-num">Step 03</div>
         <h3>Connect your channels</h3>
@@ -612,7 +616,7 @@
       <div class="tl-spacer"></div>
     </div>
 
-    <div class="tl-step">
+    <div class="tl-row right">
       <div class="tl-spacer"></div>
       <div class="tl-node"><div class="tl-dot">4</div></div>
       <div class="tl-content">
@@ -647,11 +651,11 @@
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.1 });
-document.querySelectorAll('.reveal, .tl-step').forEach(el => observer.observe(el));
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
 // Timeline fill
 function updateTl() {
-  const steps = document.querySelectorAll('.tl-step');
+  const steps = document.querySelectorAll('.tl-row');
   const tl = document.querySelector('.timeline');
   const fill = document.getElementById('tlProgress');
   if (!tl || !fill) return;
@@ -666,7 +670,7 @@ function updateTl() {
 const tlObs = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); updateTl(); } });
 }, { threshold: 0.3 });
-document.querySelectorAll('.tl-step').forEach(el => tlObs.observe(el));
+document.querySelectorAll('.tl-row').forEach(el => tlObs.observe(el));
 
 // Spotlight
 document.querySelectorAll('.feat, .channel-card').forEach(card => {
