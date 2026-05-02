@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Jeeves widget preview</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,sans-serif;background:#f6f7fb;color:#172033}
+    header{height:64px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:0 28px}
+    .brand{font-weight:750}
+    nav{display:flex;gap:18px;color:#64748b;font-size:14px}
+    main{max-width:1040px;margin:0 auto;padding:44px 24px}
+    .hero{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:28px;align-items:start}
+    h1{font-size:34px;line-height:1.1;margin:0 0 14px}
+    p{color:#64748b;line-height:1.55}
+    .panel{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;box-shadow:0 10px 30px rgba(15,23,42,.06)}
+    .metric{display:flex;justify-content:space-between;border-bottom:1px solid #eef2f7;padding:10px 0;font-size:14px}
+    .metric:last-child{border-bottom:0}
+    .label{color:#64748b}
+    .value{font-weight:700}
+    .toolbar{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap}
+    button{font:inherit;border:0;border-radius:8px;padding:10px 13px;cursor:pointer;font-weight:700}
+    .primary{background:#2563eb;color:#fff}
+    .secondary{background:#fff;border:1px solid #cbd5e1;color:#172033}
+    .notice{margin-top:28px;padding:14px 16px;border-radius:8px;background:#fff7ed;border:1px solid #fed7aa;color:#7c2d12;font-size:14px}
+    @media (max-width:760px){header{padding:0 18px}nav{display:none}.hero{grid-template-columns:1fr}h1{font-size:28px}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Acme Store</div>
+    <nav><span>Pricing</span><span>Docs</span><span>Orders</span><span>Contact</span></nav>
+  </header>
+  <main>
+    <section class="hero">
+      <div>
+        <h1>Preview your customer support experience</h1>
+        <p>This page behaves like a normal customer website with the Jeeves widget installed. Open the chat, send a test question, then check Conversation logs in the admin dashboard.</p>
+        <div class="toolbar">
+          <button class="primary" onclick="window.JeevesWidget && window.JeevesWidget.open()">Open chat</button>
+          <button class="secondary" onclick="window.JeevesWidget && window.JeevesWidget.reset()">Reset visitor</button>
+        </div>
+        <div id="missing" class="notice" style="display:none">No tenant_id found. Open this page from Website widget after logging in.</div>
+      </div>
+      <aside class="panel">
+        <div class="metric"><span class="label">Sample order</span><span class="value">#1024</span></div>
+        <div class="metric"><span class="label">Plan</span><span class="value">Business</span></div>
+        <div class="metric"><span class="label">Channel</span><span class="value">Website</span></div>
+        <div class="metric"><span class="label">Expected reply</span><span class="value">AI first</span></div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    (function(){
+      var tid = localStorage.getItem('jeeves_tid');
+      if(!tid){
+        document.getElementById('missing').style.display = 'block';
+        return;
+      }
+      var cfg = {};
+      try { cfg = JSON.parse(sessionStorage.getItem('jeeves_widget_preview_cfg') || '{}'); } catch(e) {}
+      var s = document.createElement('script');
+      s.src = '/widget.js';
+      s.async = true;
+      s.setAttribute('data-tenant-id', tid);
+      if(cfg.title) s.setAttribute('data-title', cfg.title);
+      if(cfg.subtitle) s.setAttribute('data-subtitle', cfg.subtitle);
+      if(cfg.greeting) s.setAttribute('data-greeting', cfg.greeting);
+      if(cfg.accent) s.setAttribute('data-accent', cfg.accent);
+      if(cfg.position) s.setAttribute('data-position', cfg.position);
+      if(cfg.privacy) s.setAttribute('data-privacy-url', cfg.privacy);
+      if(cfg.email) s.setAttribute('data-email-required', cfg.email);
+      document.body.appendChild(s);
+    })();
+  </script>
+</body>
+</html>

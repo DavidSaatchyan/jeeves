@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Chat logs</h1>
+<div class="card">
+  <div class="row" style="gap:8px">
+    <input id="uid" type="text" placeholder="Filter by user_id" style="max-width:260px"/>
+    <input id="days" type="number" value="30" style="max-width:100px"/>
+    <button onclick="load()">Search</button>
+  </div>
+</div>
+<div class="card">
+  <table>
+    <thead><tr><th>Time</th><th>User</th><th>Dir</th><th>Message</th><th>Response</th><th>Sources</th><th>Action</th><th>Res.</th><th>ms</th></tr></thead>
+    <tbody id="tbl"></tbody>
+  </table>
+</div>
+{% endblock %}
+{% block tail %}
+<script>
+function esc(v){
+  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function sourceDetails(sources){
+  if(!sources || !sources.length) return '<span class="muted">-</span>';
+  const body = sources.map(s => {
+    const loc = [s.filename, s.section, s.page ? `p. ${s.page}` : ''].filter(Boolean).join(' / ');
+    const score = s.score == null ? '' : ` - score ${s.score}`;
+    return `<div style="margin:8px 0"><strong>[${esc(s.source_id)}]</strong> ${esc(loc)}${esc(score)}<br><span class="muted">${esc(s.snippet || '').slice(0,500)}</span></div>`;
+  }).join('');
+  return `<details><summary>${sources.length} source${sources.length===1?'':'s'}</summary>${body}</details>`;
+}
+async function load(){
+  const u = document.getElementById('uid').value.trim();
+  const d = document.getElementById('days').value||30;
+  const qs = new URLSearchParams(); if(u) qs.set('user_id',u); qs.set('days',d);
+  const rows = await api('/dashboard/logs?'+qs.toString());
+  tbl.innerHTML = rows.map(r=>{
+    const pill = r.resolution==='resolved'?'<span class="pill ok">resolved</span>'
+      :(r.resolution==='escalated'?'<span class="pill err">escalated</span>':'<span class="pill">—</span>');
+    return `<tr>
+      <td>${esc(r.created_at.replace('T',' ').slice(0,19))}</td>
+      <td>${esc(r.user_id)}</td>
+      <td>${esc(r.direction)}</td>
+      <td>${esc((r.message||'').slice(0,200))}</td>
+      <td>${esc((r.response||'').slice(0,200))}</td>
+      <td>${sourceDetails(r.sources)}</td>
+      <td>${esc(r.action_called||'')}</td>
+      <td>${pill}</td>
+      <td>${r.latency_ms||''}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="9" class="muted">No logs yet.</td></tr>';
+}
+load();
+</script>
+{% endblock %}

@@ -1,0 +1,68 @@
+# Jeeves MVP — runtime config (not tenant-editable in MVP, but architecture-ready).
+agent:
+  name: "Jeeves"
+  system_prompt: |
+    You are Jeeves, an AI support agent.
+    Answer politely and to the point. Use the provided knowledge base snippets
+    and the customer's CRM context when they are relevant.
+    If you do not know the answer, admit it and offer to escalate to a human.
+    When the user explicitly asks to change tariff/plan, call the
+    `update_tariff` tool. When the user asks for a human, call `escalate_to_human`.
+  temperature: 0.2
+  max_iterations: 5
+
+llm:
+  provider: "openai"
+  model: "gpt-4o-mini"
+
+rag:
+  chunk_size: 512
+  chunk_overlap: 64
+  embedding_model: "text-embedding-3-small"
+  top_k: 5
+  distance_threshold: 0.75
+
+memory:
+  type: "buffer"
+  max_messages: 20
+  ttl_days: 7
+
+channels:
+  web_widget:
+    enabled: true
+    endpoint: "/widget.js"
+  rest_api:
+    enabled: true
+  telegram:
+    enabled: false
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+
+actions:
+  - name: "update_tariff"
+    description: "Change customer's tariff/plan in CRM"
+    enabled: true
+  - name: "get_subscription_status"
+    description: "Read customer's subscription info from CRM"
+    enabled: true
+  - name: "escalate_to_human"
+    description: "Escalate the conversation to a human operator"
+    enabled: true
+
+crm:
+  default_read_mapping:
+    tariff: "$.data.tariff"
+    accounts_count: "$.data.accounts_count"
+    views_trend: "$.data.views_trend"
+  default_write_mapping:
+    tariff: "$.data.tariff"
+
+proactive:
+  enabled: true
+  default_metric_url: "/user/{id}/activity"
+  default_threshold_percent: 30
+  min_days_between_trigger: 3
+
+billing:
+  trial_days: 14
+  trial_dialogs: 100
+  price_per_resolution_usd: 0.10

@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: jeeves
+      POSTGRES_PASSWORD: jeeves123
+      POSTGRES_DB: jeeves
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql:ro
+    # Host port publish is optional; expose only if you need to connect from host.
+    # ports:
+    #   - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jeeves"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    # Not published to host — another Redis is likely already listening on 6379.
+    # ports:
+    #   - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  chroma:
+    image: chromadb/chroma:0.5.5  # pinned: client chromadb==0.5.0 in requirements
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      IS_PERSISTENT: "TRUE"
+      ANONYMIZED_TELEMETRY: "FALSE"
+    # ports:
+    #   - "8001:8000"
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - "${API_HOST_PORT:-8000}:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg2://jeeves:jeeves123@postgres:5432/jeeves
+      REDIS_URL: redis://redis:6379/0
+      CHROMA_URL: http://chroma:8000
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me-min-32-chars-long!}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8000}
+      KNOWLEDGE_DIR: /app/knowledge
+      HUBSPOT_CLIENT_ID: ${HUBSPOT_CLIENT_ID:-}
+      HUBSPOT_CLIENT_SECRET: ${HUBSPOT_CLIENT_SECRET:-}
+      HUBSPOT_REDIRECT_URI: ${HUBSPOT_REDIRECT_URI:-http://localhost:8000/crm/oauth/hubspot/callback}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./api/app:/app/app
+      - ./knowledge:/app/knowledge
+      - ./frontend:/app/frontend:ro
+      - ./config.yaml:/app/config.yaml:ro
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg2://jeeves:jeeves123@postgres:5432/jeeves
+      REDIS_URL: redis://redis:6379/0
+      CHROMA_URL: http://chroma:8000
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      KNOWLEDGE_DIR: /app/knowledge
+      API_INTERNAL_URL: http://api:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./worker:/app
+      - ./knowledge:/app/knowledge
+      - ./config.yaml:/app/config.yaml:ro
+    command: celery -A tasks worker --loglevel=info
+
+  beat:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg2://jeeves:jeeves123@postgres:5432/jeeves
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    depends_on:
+      - redis
+    volumes:
+      - ./worker:/app
+      - ./config.yaml:/app/config.yaml:ro
+    command: celery -A tasks beat --loglevel=info
+
+volumes:
+  postgres_data:
+  chroma_data:

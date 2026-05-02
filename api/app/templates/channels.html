@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Channels</h1>
+
+<div class="help">
+  <h3>Connect your customers where they are</h3>
+  <p>Each channel is a separate way for users to reach Jeeves. All channels share the same knowledge base and AI brain — you just pick where to be available.</p>
+</div>
+
+<!-- ═══ CHANNEL CARDS ════════════════════════════════════════════════════════ -->
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:24px">
+  <!-- Website Widget -->
+  <div class="channel-card active" onclick="selectChannel('web_widget')" style="padding:24px;background:var(--card);border:2px solid var(--bord);border-radius:14px;cursor:pointer;text-align:center;transition:border-color .2s,background .2s">
+    <span style="font-size:40px;display:block;margin-bottom:12px;font-family:monospace;font-weight:700;color:var(--acc)">&#9670;</span>
+    <div style="font-weight:700;font-size:16px">Website Widget</div>
+    <div class="muted" style="font-size:12px;margin-top:4px">Chat widget on your site</div>
+    <span id="badge-web_widget" class="pill muted" style="margin-top:10px;display:inline-block">—</span>
+  </div>
+  <!-- Telegram -->
+  <div class="channel-card" onclick="selectChannel('telegram')" style="padding:24px;background:var(--card);border:2px solid var(--bord);border-radius:14px;cursor:pointer;text-align:center;transition:border-color .2s,background .2s">
+    <span style="font-size:40px;display:block;margin-bottom:12px;font-family:monospace;font-weight:700;color:#2AABEE">&#9654;</span>
+    <div style="font-weight:700;font-size:16px">Telegram</div>
+    <div class="muted" style="font-size:12px;margin-top:4px">Bot — free, instant setup</div>
+    <span id="badge-telegram" class="pill muted" style="margin-top:10px;display:inline-block">—</span>
+  </div>
+  <!-- WhatsApp -->
+  <div class="channel-card" onclick="selectChannel('whatsapp')" style="padding:24px;background:var(--card);border:2px solid var(--bord);border-radius:14px;cursor:pointer;text-align:center;transition:border-color .2s,background .2s">
+    <span style="font-size:40px;display:block;margin-bottom:12px;font-family:monospace;font-weight:700;color:#25D366">&#9654;</span>
+    <div style="font-weight:700;font-size:16px">WhatsApp</div>
+    <div class="muted" style="font-size:12px;margin-top:4px">Business Cloud API</div>
+    <span id="badge-whatsapp" class="pill muted" style="margin-top:10px;display:inline-block">—</span>
+  </div>
+</div>
+
+<!-- ═══ CHANNEL CONFIG PANELS ═══════════════════════════════════════════════ -->
+
+<!-- Website Widget panel -->
+<div id="panel-web_widget" class="channel-panel" style="display:none">
+  <div class="card">
+    <h2>Website Widget</h2>
+    <p class="muted" style="margin:0 0 16px">Embed a floating chat button on any website. Copy the script below and paste before <code>&lt;/body&gt;</code>.</p>
+
+    <div class="grid" style="margin-bottom:16px">
+      <div>
+        <label>Widget title</label>
+        <input id="wTitle" type="text" value="Jeeves support"/>
+        <label>Subtitle</label>
+        <input id="wSubtitle" type="text" value="AI agent online"/>
+        <label>Greeting</label>
+        <input id="wGreeting" type="text" value="Hi. How can I help?"/>
+      </div>
+      <div>
+        <label>Accent color</label>
+        <input id="wAccent" type="text" value="#2563eb"/>
+        <label>Position</label>
+        <select id="wPosition">
+          <option value="right">Right</option>
+          <option value="left">Left</option>
+        </select>
+        <label>Email capture</label>
+        <select id="wEmail">
+          <option value="true">Require email</option>
+          <option value="false">Allow anonymous</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card" style="background:#0b1228;border:1px solid var(--bord)">
+      <h2 style="font-size:14px">Install snippet</h2>
+      <pre id="snippet" style="font-size:12px;max-height:120px;overflow:auto"></pre>
+      <div class="row">
+        <button onclick="copySnip()" style="font-size:13px;padding:6px 10px">Copy</button>
+        <span id="copied" class="muted"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Telegram panel -->
+<div id="panel-telegram" class="channel-panel" style="display:none">
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:4px">
+      <h2 style="margin:0">Telegram</h2>
+      <span id="tgStatus" class="pill muted">not configured</span>
+    </div>
+
+    <div class="help" style="margin:16px 0">
+      <h3>How to set up (2 minutes)</h3>
+      <div class="step"><div class="num">1</div><div>Open Telegram, find <strong>@BotFather</strong></div></div>
+      <div class="step"><div class="num">2</div><div>Send <code>/newbot</code>, follow instructions, get the <strong>token</strong></div></div>
+      <div class="step"><div class="num">3</div><div>Paste the token below and click Test</div></div>
+    </div>
+
+    <label>Bot Token</label>
+    <input id="tgToken" type="password" placeholder="123456:ABC-DEF..."/>
+    <p class="muted">Format: <code>123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11</code></p>
+
+    <label style="margin-top:8px;display:block">Webhook URL <span class="muted">(auto-filled)</span></label>
+    <input id="tgWebhook" type="url" readonly style="opacity:0.6"/>
+    <p class="muted">Telegram will send messages here. Must be publicly accessible with HTTPS.</p>
+
+    <div class="row" style="margin-top:14px;gap:8px;flex-wrap:wrap">
+      <button onclick="saveTelegram()" style="font-size:13px;padding:7px 12px">Save &amp; Test</button>
+      <button class="ghost" onclick="disconnectTelegram()" id="tgDisconnect" style="display:none;font-size:13px;padding:7px 12px;color:var(--err)">Disconnect</button>
+      <span id="tgMsg" class="muted"></span>
+    </div>
+    <div class="err-msg" id="tgErr"></div>
+  </div>
+</div>
+
+<!-- WhatsApp panel -->
+<div id="panel-whatsapp" class="channel-panel" style="display:none">
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:4px">
+      <h2 style="margin:0">WhatsApp</h2>
+      <span id="waStatus" class="pill muted">not configured</span>
+    </div>
+
+    <div class="help" style="margin:16px 0">
+      <h3>How to set up (10 minutes)</h3>
+      <div class="step"><div class="num">1</div><div>Create an app at <a href="https://developers.facebook.com/" target="_blank" style="color:var(--acc)">developers.facebook.com</a></div></div>
+      <div class="step"><div class="num">2</div><div>Add WhatsApp product, get <strong>Phone Number ID</strong> and <strong>Access Token</strong></div></div>
+      <div class="step"><div class="num">3</div><div>Fill in the fields below, set your verify token, and click Test</div></div>
+    </div>
+
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px">
+      <div>
+        <label>Phone Number ID</label>
+        <input id="waPhoneId" type="text" placeholder="123456789"/>
+      </div>
+      <div>
+        <label>Business Phone</label>
+        <input id="waPhone" type="text" placeholder="+1234567890"/>
+      </div>
+    </div>
+
+    <label style="margin-top:10px;display:block">Access Token</label>
+    <input id="waToken" type="password" placeholder="EAA..."/>
+
+    <label style="margin-top:10px;display:block">Verify Token <span class="muted">(you choose this, used for webhook verification)</span></label>
+    <input id="waVerifyToken" type="text" placeholder="my-secret-123"/>
+
+    <label style="margin-top:10px;display:block">Webhook URL <span class="muted">(auto-filled, set this in Meta App)</span></label>
+    <input id="waWebhook" type="url" readonly style="opacity:0.6"/>
+    <p class="muted">In your Meta App → WhatsApp → Configuration → Callback URL: paste this URL. Verify Token: paste the one you chose above.</p>
+
+    <div class="row" style="margin-top:14px;gap:8px;flex-wrap:wrap">
+      <button onclick="saveWhatsApp()" style="font-size:13px;padding:7px 12px">Save &amp; Test</button>
+      <button class="ghost" onclick="disconnectWhatsApp()" id="waDisconnect" style="display:none;font-size:13px;padding:7px 12px;color:var(--err)">Disconnect</button>
+      <span id="waMsg" class="muted"></span>
+    </div>
+    <div class="err-msg" id="waErr"></div>
+  </div>
+</div>
+
+<style>
+.channel-card.selected{border-color:var(--acc)!important;background:#162040!important}
+.channel-card:hover{border-color:#3a4a6a}
+.pill.muted{color:var(--mut);border-color:var(--bord)}
+</style>
+
+{% endblock %}
+{% block tail %}
+<script>
+var BASE = location.origin;
+var webhookBase = BASE;
+
+// ═══ Channel selector ══════════════════════════════════════════════════════
+function selectChannel(ch){
+  document.querySelectorAll('.channel-panel').forEach(function(el){ el.style.display='none'; });
+  document.querySelectorAll('.channel-card').forEach(function(el){ el.className='channel-card'; });
+  var panel = document.getElementById('panel-'+ch);
+  var card = document.querySelector('.channel-card[onclick="selectChannel(\''+ch+'\')"]');
+  if(panel) panel.style.display='';
+  if(card) card.className='channel-card selected';
+
+  if(ch==='web_widget') buildSnippet();
+  if(ch==='telegram') document.getElementById('tgWebhook').value = webhookBase+'/channels/telegram/webhook';
+  if(ch==='whatsapp'){
+    document.getElementById('waWebhook').value = webhookBase+'/channels/whatsapp/webhook';
+  }
+}
+
+// ═══ Website Widget ════════════════════════════════════════════════════════
+var tid = tenantId() || 'YOUR_TENANT_ID';
+var base = '{{ public_base_url }}';
+var wFields = ['wTitle','wSubtitle','wGreeting','wAccent','wPosition','wEmail'];
+
+function htmlAttr(v){ return String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function attr(name, value, defaultValue){
+  if(!value || value===defaultValue) return '';
+  return '\n  '+name+'="'+htmlAttr(value)+'"';
+}
+function buildSnippet(){
+  var title = document.getElementById('wTitle').value.trim();
+  var subtitle = document.getElementById('wSubtitle').value.trim();
+  var greeting = document.getElementById('wGreeting').value.trim();
+  var accent = document.getElementById('wAccent').value.trim();
+  var position = document.getElementById('wPosition').value;
+  var email = document.getElementById('wEmail').value;
+  var el = document.getElementById('snippet');
+  if(!el) return;
+  el.textContent = '<script async\n  src="'+base+'/widget.js"\n  data-tenant-id="'+tid+'"'+attr('data-title',title,'Jeeves support')+attr('data-subtitle',subtitle,'AI agent online')+attr('data-greeting',greeting,'Hi. How can I help?')+attr('data-accent',accent,'#2563eb')+attr('data-position',position,'right')+attr('data-email-required',email,'true')+'><\/script>';
+}
+wFields.forEach(function(id){
+  var el = document.getElementById(id);
+  if(el) el.addEventListener('input', buildSnippet);
+});
+var wPosEl = document.getElementById('wPosition');
+if(wPosEl) wPosEl.addEventListener('change', buildSnippet);
+var wEmailEl = document.getElementById('wEmail');
+if(wEmailEl) wEmailEl.addEventListener('change', buildSnippet);
+
+async function copySnip(){
+  var el = document.getElementById('snippet');
+  if(!el) return;
+  await navigator.clipboard.writeText(el.textContent);
+  document.getElementById('copied').textContent = 'Copied';
+  setTimeout(function(){ document.getElementById('copied').textContent=''; }, 1800);
+}
+
+// ═══ Load channel statuses ═════════════════════════════════════════════════
+async function loadChannels(){
+  try {
+    var channels = await api('/channels');
+    channels.forEach(function(ch){
+      var badge = document.getElementById('badge-'+ch.channel_type);
+      if(!badge) return;
+      var status = ch.status;
+      if(status==='active'){
+        badge.textContent='connected';
+        badge.className='pill ok';
+      } else if(status==='not_configured'){
+        badge.textContent='—';
+        badge.className='pill muted';
+      } else {
+        badge.textContent=status;
+        badge.className='pill '+(status==='error'?'err':'muted');
+      }
+    });
+
+    // Telegram specific
+    var tg = channels.find(function(c){ return c.channel_type==='telegram'; });
+    if(tg && tg.status==='active'){
+      document.getElementById('tgStatus').textContent='connected';
+      document.getElementById('tgStatus').className='pill ok';
+      document.getElementById('tgDisconnect').style.display='';
+      document.getElementById('tgToken').value='••••••••';
+    }
+
+    // WhatsApp specific
+    var wa = channels.find(function(c){ return c.channel_type==='whatsapp'; });
+    if(wa && wa.status==='active'){
+      document.getElementById('waStatus').textContent='connected';
+      document.getElementById('waStatus').className='pill ok';
+      document.getElementById('waDisconnect').style.display='';
+      document.getElementById('waToken').value='••••••••';
+      document.getElementById('waPhoneId').value = wa.config_mask.phone_number_id || '';
+      document.getElementById('waPhone').value = wa.config_mask.business_phone || '';
+      document.getElementById('waVerifyToken').value='••••••••';
+    }
+  } catch(e) {}
+}
+
+// ═══ Telegram ══════════════════════════════════════════════════════════════
+async function saveTelegram(){
+  document.getElementById('tgErr').textContent='';
+  document.getElementById('tgMsg').textContent='Testing…';
+  try {
+    var token = document.getElementById('tgToken').value.trim();
+    if(!token || token==='••••••••'){
+      // If masked, don't overwrite — fetch current and use it
+      var ch = await api('/channels/telegram');
+      // We need to re-save with existing config, but we can't retrieve the token.
+      // Just test instead.
+      var testResult = await api('/channels/telegram/test', {method:'POST'});
+      document.getElementById('tgMsg').textContent = testResult.ok ? '✅ '+testResult.message : '❌ '+testResult.message;
+      document.getElementById('tgStatus').textContent = testResult.ok ? 'connected' : 'error';
+      document.getElementById('tgStatus').className = 'pill '+(testResult.ok?'ok':'err');
+      return;
+    }
+    var cfg = { bot_token: token, webhook_url: webhookBase+'/channels/telegram/webhook' };
+    await api('/channels/telegram', {method:'POST', body:{config:cfg}});
+    var testResult = await api('/channels/telegram/test', {method:'POST'});
+    document.getElementById('tgMsg').textContent = testResult.ok ? '✅ '+testResult.message : '❌ '+testResult.message;
+    if(testResult.ok){
+      document.getElementById('tgStatus').textContent='connected';
+      document.getElementById('tgStatus').className='pill ok';
+      document.getElementById('tgDisconnect').style.display='';
+      document.getElementById('tgToken').value='••••••••';
+    }
+    loadChannels();
+  } catch(e){ document.getElementById('tgErr').textContent=e.message; document.getElementById('tgMsg').textContent=''; }
+}
+
+async function disconnectTelegram(){
+  if(!confirm('Disconnect Telegram?')) return;
+  try {
+    await api('/channels/telegram', {method:'DELETE'});
+    document.getElementById('tgStatus').textContent='not configured';
+    document.getElementById('tgStatus').className='pill muted';
+    document.getElementById('tgDisconnect').style.display='none';
+    document.getElementById('tgToken').value='';
+    document.getElementById('tgMsg').textContent='Disconnected';
+    loadChannels();
+  } catch(e){ document.getElementById('tgErr').textContent=e.message; }
+}
+
+// ═══ WhatsApp ══════════════════════════════════════════════════════════════
+async function saveWhatsApp(){
+  document.getElementById('waErr').textContent='';
+  document.getElementById('waMsg').textContent='Testing…';
+  try {
+    var phoneId = document.getElementById('waPhoneId').value.trim();
+    var phone = document.getElementById('waPhone').value.trim();
+    var token = document.getElementById('waToken').value.trim();
+    var verifyToken = document.getElementById('waVerifyToken').value.trim();
+
+    if(!phoneId || !phone || !token || !verifyToken){
+      document.getElementById('waErr').textContent='All fields are required';
+      document.getElementById('waMsg').textContent='';
+      return;
+    }
+
+    var cfg = {
+      phone_number_id: phoneId,
+      business_phone: phone,
+      access_token: token,
+      verify_token: verifyToken,
+    };
+    await api('/channels/whatsapp', {method:'POST', body:{config:cfg}});
+    var testResult = await api('/channels/whatsapp/test', {method:'POST'});
+    document.getElementById('waMsg').textContent = testResult.ok ? '✅ '+testResult.message : '❌ '+testResult.message;
+    if(testResult.ok){
+      document.getElementById('waStatus').textContent='connected';
+      document.getElementById('waStatus').className='pill ok';
+      document.getElementById('waDisconnect').style.display='';
+      document.getElementById('waToken').value='••••••••';
+      document.getElementById('waVerifyToken').value='••••••••';
+    }
+    loadChannels();
+  } catch(e){ document.getElementById('waErr').textContent=e.message; document.getElementById('waMsg').textContent=''; }
+}
+
+async function disconnectWhatsApp(){
+  if(!confirm('Disconnect WhatsApp?')) return;
+  try {
+    await api('/channels/whatsapp', {method:'DELETE'});
+    document.getElementById('waStatus').textContent='not configured';
+    document.getElementById('waStatus').className='pill muted';
+    document.getElementById('waDisconnect').style.display='none';
+    document.getElementById('waPhoneId').value='';
+    document.getElementById('waPhone').value='';
+    document.getElementById('waToken').value='';
+    document.getElementById('waVerifyToken').value='';
+    document.getElementById('waMsg').textContent='Disconnected';
+    loadChannels();
+  } catch(e){ document.getElementById('waErr').textContent=e.message; }
+}
+
+// Init
+selectChannel('web_widget');
+loadChannels();
+</script>
+{% endblock %}

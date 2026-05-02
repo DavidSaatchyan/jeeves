@@ -1,0 +1,849 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Integrations</h1>
+
+<div class="help">
+  <h3>Как это работает</h3>
+  <p>Выберите нужную систему, подключите и настройте. Jeeves будет использовать данные из подключённых систем чтобы отвечать персонально.</p>
+</div>
+
+<!-- ═══ GROUP 1: CRM ═══════════════════════════════════════════════════════ -->
+<div class="card">
+  <div class="row" style="justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleSection('crmSection')">
+    <div class="row" style="gap:10px">
+      <span style="font-size:20px">📊</span>
+      <div>
+        <h2 style="margin:0">CRM</h2>
+        <span class="muted" style="font-size:12px">Данные клиентов — план, статус, история</span>
+      </div>
+    </div>
+    <div class="row" style="gap:8px">
+      <span id="crmStatusBadge" class="pill muted">не подключено</span>
+      <span id="crmArrow" style="font-size:18px;transition:transform .2s">▾</span>
+    </div>
+  </div>
+
+  <div id="crmSection" style="display:none;margin-top:16px">
+    <!-- Integration selector -->
+    <div class="row" style="gap:8px;margin-bottom:16px">
+      <button id="crmTabHubspot" class="ghost crm-tab" onclick="selectCrmTab('hubspot')" style="font-size:13px;padding:8px 14px">HubSpot</button>
+      <button id="crmTabCustom" class="ghost crm-tab" onclick="selectCrmTab('custom')" style="font-size:13px;padding:8px 14px">Custom REST API</button>
+    </div>
+
+    <!-- HubSpot panel -->
+    <div id="crmPanelHubspot" style="display:none">
+      <div style="padding:14px;background:#0e1530;border:1px solid var(--bord);border-radius:10px">
+        <div class="row" style="justify-content:space-between;margin-bottom:8px">
+          <div class="row" style="gap:8px">
+            <span style="background:#ff7a59;color:#fff;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">H</span>
+            <div><strong style="font-size:14px">HubSpot</strong><span class="muted" style="display:block;font-size:11px">OAuth · контакты, компании, заметки</span></div>
+          </div>
+          <span id="badge-hubspot" class="pill muted">—</span>
+        </div>
+        <p class="muted" style="margin:8px 0 12px">Jeeves найдёт контакт по email и покажет данные в разговоре. Настроив HubSpot — Custom REST API не нужен.</p>
+        <div class="row" style="gap:8px;flex-wrap:wrap">
+          <button onclick="connectHubSpot()" id="hubspotConnect" style="font-size:13px;padding:7px 12px">Connect HubSpot</button>
+          <button class="ghost" onclick="disconnectHubSpot()" id="hubspotDisconnect" style="display:none;font-size:13px;padding:7px 12px;color:var(--err)">Disconnect</button>
+          <span id="hubspotStatus" class="muted" style="font-size:12px"></span>
+        </div>
+        <div class="err-msg" id="msg-hubspot"></div>
+      </div>
+    </div>
+
+    <!-- Custom REST panel -->
+    <div id="crmPanelCustom" style="display:none">
+      <div style="padding:14px;background:#0e1530;border:1px solid var(--bord);border-radius:10px">
+        <div class="row" style="justify-content:space-between;margin-bottom:8px">
+          <div class="row" style="gap:8px">
+            <span style="background:#4a90d9;color:#fff;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">API</span>
+            <div><strong style="font-size:14px">Custom REST API</strong><span class="muted" style="display:block;font-size:11px">Любая внутренняя CRM или бэкенд</span></div>
+          </div>
+        </div>
+        <p class="muted" style="margin:8px 0 12px">Укажите endpoint, куда Jeeves будет обращаться за данными клиента. Используйте <code>{user_id}</code> как placeholder.</p>
+
+        <label>API endpoint</label>
+        <input id="read_url" type="url" placeholder="https://yourapp.com/api/customers/{user_id}"/>
+
+        <label style="margin-top:8px;display:block">API key</label>
+        <input id="api_key" type="password" placeholder="sk-… (сохраняется securely)"/>
+
+        <label style="margin-top:12px;display:block">Поля для Jeeves</label>
+        <div id="fieldsList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
+        <button class="ghost" onclick="addField()" style="font-size:12px;padding:5px 10px">+ Добавить поле</button>
+        <p class="muted">Поля из ответа API, которые Jeeves должен знать: <code>plan</code>, <code>orders_count</code> и т.д.</p>
+
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--bord)">
+          <strong style="font-size:13px">Возможности</strong>
+          <label class="row" style="margin-top:6px;gap:8px;cursor:pointer"><input id="capRead" type="checkbox" checked style="width:auto"/> Чтение профиля клиента</label>
+          <label class="row" style="margin-top:4px;gap:8px;cursor:pointer"><input id="capUpdate" type="checkbox" style="width:auto"/> Изменение плана / тарифа</label>
+          <label class="row" style="margin-top:4px;gap:8px;cursor:pointer"><input id="capConfirm" type="checkbox" checked style="width:auto"/> Спрашивать подтверждение перед записью</label>
+        </div>
+
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bord)">
+          <label>Update URL <span class="muted">(для записи, необязательно)</span></label>
+          <input id="write_url" type="url" placeholder="https://yourapp.com/api/customers/{user_id}"/>
+        </div>
+
+        <div class="row" style="margin-top:12px;gap:8px;flex-wrap:wrap">
+          <button onclick="saveCrm()" style="font-size:13px;padding:7px 12px">Save</button>
+          <button class="ghost" onclick="testCrm()" style="font-size:13px;padding:7px 12px">Test</button>
+          <input id="test_user" type="text" placeholder="test user ID" style="max-width:150px"/>
+          <span id="crmSaveStatus" class="muted"></span>
+        </div>
+        <div class="err-msg" id="crmErr"></div>
+        <div id="crmTestResult" style="display:none;margin-top:10px;padding:10px;background:#0b1228;border-radius:8px;border:1px solid var(--bord)">
+          <div style="font-size:12px;color:var(--mut);margin-bottom:4px">Что увидит Jeeves:</div>
+          <pre id="crmPreview" style="margin:0;font-size:12px"></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Primary identifier -->
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--bord)">
+      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div>
+          <strong style="font-size:14px">Как искать клиентов</strong>
+          <span class="muted" style="display:block;font-size:11px">Какое поле использовать для поиска в подключённых системах</span>
+        </div>
+        <span id="identBadge" class="pill muted">email</span>
+      </div>
+      <select id="primary-identifier" onchange="toggleIdentField()" style="max-width:400px;font-size:13px">
+        <option value="email">Email (user_id воспринимается как email)</option>
+        <option value="user_id">User ID (user_id воспринимается как ID)</option>
+        <option value="custom">Кастомное поле из widget.identify()</option>
+      </select>
+      <div id="ident-field-row" style="display:none;margin-top:8px">
+        <input id="identifier-field" type="text" placeholder="e.g. phone, customer_id, shopify_id" style="max-width:300px;font-size:13px"/>
+        <p class="muted" style="margin:4px 0 0">Это поле берётся из extra_fields в <code>window.JeevesWidget.identify()</code>.</p>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button onclick="savePrimaryIdentifier()" style="font-size:13px;padding:7px 12px">Save</button>
+      </div>
+      <div class="err-msg" id="msg-ident"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GROUP 2: E-commerce & Billing ═════════════════════════════════════ -->
+<div class="card">
+  <div class="row" style="justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleSection('ecomSection')">
+    <div class="row" style="gap:10px">
+      <span style="font-size:20px">🛒</span>
+      <div>
+        <h2 style="margin:0">E-commerce & Billing</h2>
+        <span class="muted" style="font-size:12px">Заказы, доставка, подписки — опционально</span>
+      </div>
+    </div>
+    <div class="row" style="gap:8px">
+      <span id="ecomStatusBadge" class="pill muted">не подключено</span>
+      <span id="ecomArrow" style="font-size:18px;transition:transform .2s">▾</span>
+    </div>
+  </div>
+
+  <div id="ecomSection" style="display:none;margin-top:16px">
+    <p class="muted" style="margin:0 0 16px">Подключите нужные системы. Можно подключить несколько одновременно.</p>
+
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px">
+      <!-- Shopify selector card -->
+      <div id="ecomCardShopify" class="ecom-card" onclick="selectEcomTab('shopify')" style="padding:14px;background:#0e1530;border:2px solid var(--bord);border-radius:10px;cursor:pointer;text-align:center;transition:border-color .2s,background .2s">
+        <span style="background:#95bf47;color:#0b1020;width:36px;height:36px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;margin-bottom:8px">S</span>
+        <div style="font-weight:600;font-size:14px">Shopify</div>
+        <div class="muted" style="font-size:11px;margin-top:2px">Заказы, доставка</div>
+        <span id="badge-shopify" class="pill muted" style="margin-top:8px;display:inline-block">—</span>
+      </div>
+      <!-- WooCommerce selector card -->
+      <div id="ecomCardWoo" class="ecom-card" onclick="selectEcomTab('woocommerce')" style="padding:14px;background:#0e1530;border:2px solid var(--bord);border-radius:10px;cursor:pointer;text-align:center;transition:border-color .2s,background .2s">
+        <span style="background:#7f54b3;color:#fff;width:36px;height:36px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;margin-bottom:8px">W</span>
+        <div style="font-weight:600;font-size:14px">WooCommerce</div>
+        <div class="muted" style="font-size:11px;margin-top:2px">Заказы, клиенты</div>
+        <span id="badge-woocommerce" class="pill muted" style="margin-top:8px;display:inline-block">—</span>
+      </div>
+      <!-- Stripe selector card -->
+      <div id="ecomCardStripe" class="ecom-card" onclick="selectEcomTab('stripe')" style="padding:14px;background:#0e1530;border:2px solid var(--bord);border-radius:10px;cursor:pointer;text-align:center;transition:border-color .2s,background .2s">
+        <span style="background:#635bff;color:#fff;width:36px;height:36px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;margin-bottom:8px">P</span>
+        <div style="font-weight:600;font-size:14px">Stripe</div>
+        <div class="muted" style="font-size:11px;margin-top:2px">Подписки, биллинг</div>
+        <span id="badge-stripe" class="pill muted" style="margin-top:8px;display:inline-block">—</span>
+      </div>
+    </div>
+
+    <!-- Shopify config panel -->
+    <div id="ecomPanelShopify" style="display:none">
+      <div style="padding:14px;background:#0e1530;border:1px solid var(--bord);border-radius:10px">
+        <div class="row" style="justify-content:space-between;margin-bottom:8px">
+          <div class="row" style="gap:8px">
+            <span style="background:#95bf47;color:#0b1020;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">S</span>
+            <div><strong style="font-size:14px">Shopify</strong></div>
+          </div>
+        </div>
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:8px">
+          <div><label>Shop domain</label><input id="sf-shop" type="text" placeholder="my-store.myshopify.com" style="font-size:13px"/></div>
+          <div><label>Admin API token</label><input id="sf-token" type="password" placeholder="shpat_…" style="font-size:13px"/></div>
+        </div>
+        <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap">
+          <button onclick="connectNative('shopify')" style="font-size:13px;padding:6px 10px">Connect</button>
+          <button class="ghost" onclick="testNative('shopify')" id="test-sf" disabled style="font-size:13px;padding:6px 10px">Test</button>
+          <button class="ghost" onclick="disconnectNative('shopify')" id="disc-sf" style="display:none;font-size:13px;padding:6px 10px;color:var(--err)">Disconnect</button>
+        </div>
+        <div class="err-msg" id="msg-shopify"></div>
+      </div>
+    </div>
+
+    <!-- WooCommerce config panel -->
+    <div id="ecomPanelWoo" style="display:none">
+      <div style="padding:14px;background:#0e1530;border:1px solid var(--bord);border-radius:10px">
+        <div class="row" style="justify-content:space-between;margin-bottom:8px">
+          <div class="row" style="gap:8px">
+            <span style="background:#7f54b3;color:#fff;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">W</span>
+            <div><strong style="font-size:14px">WooCommerce</strong></div>
+          </div>
+        </div>
+        <label>Store URL</label>
+        <input id="woo-url" type="url" placeholder="https://my-store.com" style="font-size:13px"/>
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+          <div><label>Consumer Key</label><input id="woo-key" type="password" placeholder="ck_…" style="font-size:13px"/></div>
+          <div><label>Consumer Secret</label><input id="woo-secret" type="password" placeholder="cs_…" style="font-size:13px"/></div>
+        </div>
+        <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap">
+          <button onclick="connectNative('woocommerce')" style="font-size:13px;padding:6px 10px">Connect</button>
+          <button class="ghost" onclick="testNative('woocommerce')" id="test-woo" disabled style="font-size:13px;padding:6px 10px">Test</button>
+          <button class="ghost" onclick="disconnectNative('woocommerce')" id="disc-woo" style="display:none;font-size:13px;padding:6px 10px;color:var(--err)">Disconnect</button>
+        </div>
+        <div class="err-msg" id="msg-woocommerce"></div>
+      </div>
+    </div>
+
+    <!-- Stripe config panel -->
+    <div id="ecomPanelStripe" style="display:none">
+      <div style="padding:14px;background:#0e1530;border:1px solid var(--bord);border-radius:10px">
+        <div class="row" style="justify-content:space-between;margin-bottom:8px">
+          <div class="row" style="gap:8px">
+            <span style="background:#635bff;color:#fff;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">P</span>
+            <div><strong style="font-size:14px">Stripe</strong></div>
+          </div>
+        </div>
+        <label>Secret API key</label>
+        <input id="str-key" type="password" placeholder="sk_live_… or sk_test_…" style="font-size:13px"/>
+        <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap">
+          <button onclick="connectNative('stripe')" style="font-size:13px;padding:6px 10px">Connect</button>
+          <button class="ghost" onclick="testNative('stripe')" id="test-str" disabled style="font-size:13px;padding:6px 10px">Test</button>
+          <button class="ghost" onclick="disconnectNative('stripe')" id="disc-str" style="display:none;font-size:13px;padding:6px 10px;color:var(--err)">Disconnect</button>
+        </div>
+        <div class="err-msg" id="msg-stripe"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GROUP 3: Actions ══════════════════════════════════════════════════ -->
+<div class="card">
+  <div class="row" style="justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleSection('actionsSection')">
+    <div class="row" style="gap:10px">
+      <span style="font-size:20px">⚡</span>
+      <div>
+        <h2 style="margin:0">Actions</h2>
+        <span class="muted" style="font-size:12px">Кастомные API-вызовы во время разговора</span>
+      </div>
+    </div>
+    <div class="row" style="gap:8px">
+      <span id="actionsCount" class="pill muted">0</span>
+      <span id="actionsArrow" style="font-size:18px;transition:transform .2s">▾</span>
+    </div>
+  </div>
+
+  <div id="actionsSection" style="display:none;margin-top:16px">
+    <p class="muted" style="margin:0 0 16px">Jeeves сам решит когда вызвать действие, извлекая параметры из разговора.</p>
+
+    <div class="row" style="margin-bottom:12px">
+      <button onclick="openActionForm()" style="font-size:13px;padding:7px 12px">+ Add action</button>
+    </div>
+
+    <div id="actionsEmpty" style="padding:24px 0;text-align:center;color:var(--mut)">
+      Нет действий. Добавьте чтобы Jeeves мог не только отвечать, но и делать.
+    </div>
+    <table id="actionsTable" style="display:none">
+      <thead><tr><th>Что делает</th><th>Запрос</th><th>Активно</th><th></th></tr></thead>
+      <tbody id="actionsBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ GROUP 4: Recent calls ═════════════════════════════════════════════ -->
+<div class="card">
+  <div class="row" style="justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleSection('logsSection')">
+    <div class="row" style="gap:10px">
+      <span style="font-size:20px">📜</span>
+      <div>
+        <h2 style="margin:0">Recent calls</h2>
+        <span class="muted" style="font-size:12px">История вызовов и действий</span>
+      </div>
+    </div>
+    <span id="logsArrow" style="font-size:18px;transition:transform .2s">▾</span>
+  </div>
+
+  <div id="logsSection" style="display:none;margin-top:16px">
+    <table>
+      <thead><tr><th>Время</th><th>Действие</th><th>Пользователь</th><th>Результат</th><th>ms</th></tr></thead>
+      <tbody id="logsBody"><tr><td colspan="5" class="muted">Пока пусто.</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ FUTURE: Webhooks & Writeback ══════════════════════════════════════ -->
+<div class="card" style="opacity:0.5;pointer-events:none;position:relative">
+  <div style="position:absolute;top:12px;right:16px"><span class="pill warn">coming soon</span></div>
+  <div class="row" style="gap:10px;align-items:center">
+    <span style="font-size:20px">🔔</span>
+    <div>
+      <h2 style="margin:0">Webhooks & Writeback</h2>
+      <span class="muted" style="font-size:12px">Real-time события и саммари диалогов</span>
+    </div>
+  </div>
+  <p class="muted" style="margin:12px 0 0">Incoming webhook для обогащения контекста, outgoing для отправки событий, writeback — AI-саммари обратно в CRM.</p>
+</div>
+
+<!-- ═══ ACTION FORM MODAL ══════════════════════════════════════════════════ -->
+<div id="actionModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;overflow-y:auto">
+  <div style="background:var(--card);border:1px solid var(--bord);border-radius:14px;max-width:560px;margin:40px auto;padding:24px">
+    <div class="row" style="justify-content:space-between;margin-bottom:16px">
+      <h2 style="margin:0" id="actionFormTitle">Add action</h2>
+      <button class="ghost" onclick="closeActionForm()" style="padding:6px 10px">✕</button>
+    </div>
+
+    <label>Что делает это действие?</label>
+    <textarea id="aDesc" rows="2" placeholder="Сменить тариф клиента. Вызывается когда пользователь просит апгрейд."></textarea>
+    <p class="muted">Jeeves использует это описание чтобы решить когда вызывать действие.</p>
+
+    <label style="margin-top:12px;display:block">Внутреннее имя <span class="muted">(без пробелов)</span></label>
+    <input id="aName" type="text" placeholder="change_plan"/>
+
+    <div class="grid" style="grid-template-columns:110px 1fr;gap:10px;margin-top:12px">
+      <div>
+        <label>Method</label>
+        <select id="aMethod">
+          <option>GET</option><option>POST</option><option>PATCH</option><option>PUT</option><option>DELETE</option>
+        </select>
+      </div>
+      <div>
+        <label>URL</label>
+        <input id="aUrl" type="text" placeholder="https://yourapp.com/api/customers/{user_id}/plan"/>
+      </div>
+    </div>
+    <p class="muted">Используйте <code>{user_id}</code> и <code>{field_name}</code> как placeholders.</p>
+
+    <label style="margin-top:12px;display:block">API key <span class="muted">(пусто = ключ из CRM)</span></label>
+    <input id="aAuth" type="password" placeholder="sk-…"/>
+
+    <label style="margin-top:14px;display:block">Параметры из разговора</label>
+    <div id="paramsList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+    <button class="ghost" onclick="addParam()" style="font-size:12px;padding:5px 10px">+ Добавить поле</button>
+    <p class="muted">Jeeves извлечёт эти значения из того что говорит пользователь. Например: <code>plan</code> → "business".</p>
+
+    <div style="margin-top:12px;padding:12px;background:#0e1530;border-radius:8px;border:1px solid var(--bord)">
+      <label class="row" style="gap:8px;cursor:pointer">
+        <input id="aConfirm" type="checkbox" checked style="width:auto"/>
+        Спрашивать подтверждение перед выполнением
+      </label>
+      <p class="muted" style="margin:4px 0 0 24px;font-size:12px">Jeeves опишет что собирается сделать и подождёт «да».</p>
+    </div>
+
+    <label class="row" style="margin-top:12px;gap:8px;cursor:pointer">
+      <input id="aEnabled" type="checkbox" checked style="width:auto"/> Активно
+    </label>
+
+    <div class="err-msg" id="actionFormErr" style="margin-top:10px"></div>
+    <div class="row" style="margin-top:16px;gap:10px">
+      <button onclick="saveAction()" style="font-size:13px;padding:8px 14px">Save action</button>
+      <button class="ghost" id="actionTestBtn" onclick="testAction()" style="display:none;font-size:13px;padding:8px 14px">Test</button>
+      <span id="actionFormStatus" class="muted"></span>
+    </div>
+    <div id="actionTestResult" style="display:none;margin-top:12px">
+      <label>Response</label>
+      <pre id="actionTestOut" style="max-height:160px;overflow:auto"></pre>
+    </div>
+  </div>
+</div>
+
+<style>
+.ecom-card.active{border-color:var(--acc)!important;background:#162040!important}
+.ecom-card:hover{border-color:#3a4a6a}
+.crm-tab.active{background:var(--acc)!important;color:#0b1020!important;border-color:var(--acc)!important}
+</style>
+
+{% endblock %}
+{% block tail %}
+<script>
+function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function showMsg(id, text, type){
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.textContent = text;
+  if(type==='ok') { el.style.color='var(--ok)'; setTimeout(function(){ el.textContent=''; el.style.color=''; }, 3000); }
+}
+
+// ═══ Section toggle ═══════════════════════════════════════════════════════
+function toggleSection(id){
+  var el = document.getElementById(id);
+  var arrow = document.getElementById(id.replace('Section','Arrow'));
+  if(el.style.display==='none'){
+    el.style.display='';
+    if(arrow) arrow.style.transform='rotate(180deg)';
+  } else {
+    el.style.display='none';
+    if(arrow) arrow.style.transform='rotate(0deg)';
+  }
+}
+
+// ═══ CRM tabs ═════════════════════════════════════════════════════════════
+function selectCrmTab(tab){
+  document.getElementById('crmPanelHubspot').style.display = tab==='hubspot' ? '' : 'none';
+  document.getElementById('crmPanelCustom').style.display = tab==='custom' ? '' : 'none';
+  document.getElementById('crmTabHubspot').className = 'ghost crm-tab'+(tab==='hubspot'?' active':'');
+  document.getElementById('crmTabCustom').className = 'ghost crm-tab'+(tab==='custom'?' active':'');
+}
+
+// ═══ E-commerce tabs ══════════════════════════════════════════════════════
+function selectEcomTab(tab){
+  document.getElementById('ecomPanelShopify').style.display = tab==='shopify' ? '' : 'none';
+  document.getElementById('ecomPanelWoo').style.display = tab==='woocommerce' ? '' : 'none';
+  document.getElementById('ecomPanelStripe').style.display = tab==='stripe' ? '' : 'none';
+  ['Shopify','Woo','Stripe'].forEach(function(name){
+    var card = document.getElementById('ecomCard'+name);
+    if(card) card.className = 'ecom-card';
+  });
+  var activeName = tab==='shopify'?'Shopify':tab==='woocommerce'?'Woo':'Stripe';
+  var activeCard = document.getElementById('ecomCard'+activeName);
+  if(activeCard) activeCard.className = 'ecom-card active';
+}
+
+// ═══ CRM: HubSpot ═════════════════════════════════════════════════════════
+function connectHubSpot(){
+  api('/crm/connect/hubspot').then(function(r){
+    location.href = r.auth_url;
+  }).catch(function(e){ showMsg('msg-hubspot', e.message, ''); });
+}
+
+function disconnectHubSpot(){
+  if(!confirm('Disconnect HubSpot?')) return;
+  api('/crm/disconnect/hubspot', {method:'POST'}).then(function(){
+    showMsg('msg-hubspot','Disconnected','ok');
+    loadAll();
+  }).catch(function(e){ showMsg('msg-hubspot', e.message, ''); });
+}
+
+// ═══ CRM: Custom REST ═════════════════════════════════════════════════════
+var crmFields = [];
+
+function renderFields(){
+  document.getElementById('fieldsList').innerHTML = crmFields.map(function(f,i){
+    return '<div class="row" style="gap:8px">' +
+      '<input type="text" value="'+esc(f.name)+'" placeholder="field name" ' +
+        'oninput="crmFields['+i+'].name=this.value" style="max-width:150px;font-size:13px"/>' +
+      '<input type="text" value="'+esc(f.label)+'" placeholder="description" ' +
+        'oninput="crmFields['+i+'].label=this.value" style="flex:1;font-size:13px"/>' +
+      '<button class="ghost" onclick="removeField('+i+')" style="padding:5px 8px;color:var(--err)">✕</button>' +
+    '</div>';
+  }).join('');
+}
+
+function addField(){ crmFields.push({name:'',label:''}); renderFields(); }
+function removeField(i){ crmFields.splice(i,1); renderFields(); }
+
+function _buildReadMapping(){
+  var m = {};
+  crmFields.forEach(function(f){ if(f.name) m[f.name] = '$.'+f.name; });
+  return m;
+}
+
+function capabilities(){
+  return {
+    read_customer: document.getElementById('capRead').checked,
+    update_plan: document.getElementById('capUpdate').checked,
+    require_confirmation: document.getElementById('capConfirm').checked,
+  };
+}
+
+function setCapabilities(c){
+  c = c || {};
+  document.getElementById('capRead').checked = c.read_customer !== false;
+  document.getElementById('capUpdate').checked = !!c.update_plan;
+  document.getElementById('capConfirm').checked = c.require_confirmation !== false;
+}
+
+async function loadCrm(){
+  try {
+    var c = await api('/crm/config');
+    document.getElementById('read_url').value = c.read_url || '';
+    document.getElementById('write_url').value = c.write_url || '';
+    setCapabilities(c.capabilities);
+    var mapping = c.read_mapping || {};
+    crmFields = Object.entries(mapping).map(function(e){ return {name:e[0], label:e[0].replace(/_/g,' ')}; });
+    if(!crmFields.length) crmFields = [{name:'plan',label:'subscription plan'}];
+    renderFields();
+
+    // Determine which tab to show
+    var provider = c.provider || 'custom_rest';
+    if(provider === 'hubspot'){
+      selectCrmTab('hubspot');
+    } else {
+      selectCrmTab(c.read_url ? 'custom' : 'hubspot');
+    }
+
+    // Update badge
+    var hasHubspot = provider === 'hubspot';
+    var hasCustom = !!c.read_url;
+    var badge = document.getElementById('crmStatusBadge');
+    if(hasHubspot || hasCustom){
+      var label = hasHubspot ? 'HubSpot' : 'Custom REST';
+      badge.textContent = label;
+      badge.className = 'pill ok';
+    }
+  } catch(e) {
+    crmFields = [{name:'plan',label:'subscription plan'}];
+    renderFields();
+    selectCrmTab('hubspot');
+  }
+}
+
+async function saveCrm(){
+  document.getElementById('crmErr').textContent='';
+  document.getElementById('crmSaveStatus').textContent='Saving…';
+  try {
+    var keyVal = document.getElementById('api_key').value.trim();
+    var headers = keyVal && keyVal!=='••••••••' ? {'Authorization':'Bearer '+keyVal} : {};
+    var body = {
+      provider: 'custom_rest',
+      read_url: document.getElementById('read_url').value.trim()||null,
+      write_url: document.getElementById('write_url').value.trim()||null,
+      headers: headers,
+      read_mapping: _buildReadMapping(),
+      write_mapping: {},
+      capabilities: capabilities(),
+    };
+    await api('/crm/config',{method:'POST',body});
+    document.getElementById('crmSaveStatus').textContent='Saved ✓';
+    if(document.getElementById('read_url').value.trim()){
+      document.getElementById('crmStatusBadge').textContent='Custom REST';
+      document.getElementById('crmStatusBadge').className='pill ok';
+    }
+    setTimeout(function(){ document.getElementById('crmSaveStatus').textContent=''; },1800);
+  } catch(e){
+    document.getElementById('crmErr').textContent=e.message;
+    document.getElementById('crmSaveStatus').textContent='';
+  }
+}
+
+async function testCrm(){
+  document.getElementById('crmErr').textContent='';
+  document.getElementById('crmSaveStatus').textContent='Testing…';
+  document.getElementById('crmTestResult').style.display='none';
+  try{
+    await saveCrm();
+    var uid = document.getElementById('test_user').value.trim()||'test';
+    var qs = new URLSearchParams({sample_user_id:uid});
+    var r = await api('/crm/test?'+qs.toString(),{method:'POST'});
+    if(r.ok){
+      document.getElementById('crmSaveStatus').textContent='✅ Connected';
+      document.getElementById('crmStatusBadge').textContent='connected';
+      document.getElementById('crmStatusBadge').className='pill ok';
+    } else {
+      document.getElementById('crmSaveStatus').textContent='❌ Failed ('+r.status_code+')';
+      document.getElementById('crmStatusBadge').textContent='error';
+      document.getElementById('crmStatusBadge').className='pill err';
+    }
+    var preview = r.mapped && Object.keys(r.mapped).length ? r.mapped : (r.error ? {error:r.error} : r.sample || {});
+    document.getElementById('crmPreview').textContent = JSON.stringify(preview, null, 2);
+    document.getElementById('crmTestResult').style.display='';
+  }catch(e){
+    document.getElementById('crmSaveStatus').textContent='❌ Error';
+    document.getElementById('crmStatusBadge').textContent='error';
+    document.getElementById('crmStatusBadge').className='pill err';
+    document.getElementById('crmErr').textContent=e.message;
+  }
+}
+
+// ═══ Primary Identifier ══════════════════════════════════════════════════
+function toggleIdentField(){
+  document.getElementById('ident-field-row').style.display =
+    document.getElementById('primary-identifier').value==='custom' ? '' : 'none';
+}
+
+function savePrimaryIdentifier(){
+  var ident = document.getElementById('primary-identifier').value;
+  var body = { provider:'custom_rest', primary_identifier: ident };
+  if(ident==='custom'){
+    body.capabilities = { identifier_field: document.getElementById('identifier-field').value.trim() };
+  }
+  api('/crm/config',{method:'POST',body:body})
+    .then(function(){ showMsg('msg-ident','Saved ✓','ok'); document.getElementById('identBadge').textContent=ident; })
+    .catch(function(e){ showMsg('msg-ident',e.message,''); });
+}
+
+function loadPrimaryIdentifier(){
+  api('/crm/config').then(function(d){
+    var ident = d.primary_identifier||'email';
+    document.getElementById('primary-identifier').value = ident;
+    document.getElementById('identBadge').textContent = ident;
+    if(d.capabilities && d.capabilities.identifier_field){
+      document.getElementById('identifier-field').value = d.capabilities.identifier_field;
+    }
+    toggleIdentField();
+  }).catch(function(){});
+}
+
+// ═══ Native Connectors (Shopify, Woo, Stripe) ════════════════════════════
+function connectNative(provider){
+  var creds = {}, meta = {};
+  if(provider==='shopify'){
+    creds = { shop_domain: document.getElementById('sf-shop').value.trim(), access_token: document.getElementById('sf-token').value.trim() };
+    meta = { domain: creds.shop_domain };
+  } else if(provider==='woocommerce'){
+    creds = { store_url: document.getElementById('woo-url').value.trim(), consumer_key: document.getElementById('woo-key').value.trim(), consumer_secret: document.getElementById('woo-secret').value.trim() };
+  } else if(provider==='stripe'){
+    creds = { secret_key: document.getElementById('str-key').value.trim() };
+  }
+  showMsg('msg-'+provider, 'Connecting…', '');
+  api('/integrations/native/'+provider, {method:'POST', body:{provider:provider, credentials:creds, meta:meta}})
+    .then(function(){ showMsg('msg-'+provider, 'Connected ✓', 'ok'); loadAll(); })
+    .catch(function(e){ showMsg('msg-'+provider, e.message, ''); });
+}
+
+function testNative(provider){
+  showMsg('msg-'+provider, 'Testing…', '');
+  api('/integrations/native/'+provider+'/test', {method:'POST'})
+    .then(function(d){ showMsg('msg-'+provider, d.ok ? 'Test passed ✓' : 'Failed: '+(d.error||'unknown'), d.ok?'ok':''); })
+    .catch(function(e){ showMsg('msg-'+provider, e.message, ''); });
+}
+
+function disconnectNative(provider){
+  if(!confirm('Disconnect '+provider+'?')) return;
+  showMsg('msg-'+provider, 'Disconnecting…', '');
+  api('/integrations/native/'+provider, {method:'DELETE'})
+    .then(function(){ showMsg('msg-'+provider, 'Disconnected', 'ok'); loadAll(); })
+    .catch(function(e){ showMsg('msg-'+provider, e.message, ''); });
+}
+
+// ═══ Actions ══════════════════════════════════════════════════════════════
+var editingActionId = null;
+var actionParams = [];
+
+function renderParams(){
+  document.getElementById('paramsList').innerHTML = actionParams.map(function(p,i){
+    return '<div class="row" style="gap:8px">' +
+      '<input type="text" value="'+esc(p.name)+'" placeholder="field name" ' +
+        'oninput="actionParams['+i+'].name=this.value" style="max-width:140px;font-size:13px"/>' +
+      '<input type="text" value="'+esc(p.desc)+'" placeholder="what it means" ' +
+        'oninput="actionParams['+i+'].desc=this.value" style="flex:1;font-size:13px"/>' +
+      '<button class="ghost" onclick="removeParam('+i+')" style="padding:5px 8px;color:var(--err)">✕</button>' +
+    '</div>';
+  }).join('');
+}
+
+function addParam(){ actionParams.push({name:'',desc:''}); renderParams(); }
+function removeParam(i){ actionParams.splice(i,1); renderParams(); }
+
+function _buildParameters(){
+  var props = {}, required = [];
+  actionParams.forEach(function(p){
+    if(!p.name) return;
+    props[p.name] = {type:'string', description:p.desc||p.name};
+    required.push(p.name);
+  });
+  return {type:'object', properties:props, required:required};
+}
+
+function _paramsFromSchema(schema){
+  var props = (schema||{}).properties || {};
+  return Object.entries(props).map(function(e){ return {name:e[0], desc:(e[1].description||'')}; });
+}
+
+function openActionForm(tool){
+  editingActionId = tool ? tool.id : null;
+  document.getElementById('actionFormTitle').textContent = tool ? 'Edit action' : 'Add action';
+  document.getElementById('aDesc').value = tool ? tool.description : '';
+  document.getElementById('aName').value = tool ? tool.name : '';
+  document.getElementById('aMethod').value = tool ? tool.method : 'POST';
+  document.getElementById('aUrl').value = tool ? tool.url_template : '';
+  var h = tool ? (tool.headers || {}) : {};
+  document.getElementById('aAuth').value = (h['Authorization']||h['X-Api-Key']) ? '••••••••' : '';
+  actionParams = _paramsFromSchema(tool ? tool.parameters : null);
+  if(!actionParams.length) actionParams = [{name:'',desc:''}];
+  renderParams();
+  document.getElementById('aConfirm').checked = tool ? tool.require_confirmation : true;
+  document.getElementById('aEnabled').checked = tool ? tool.enabled : true;
+  document.getElementById('actionFormErr').textContent='';
+  document.getElementById('actionFormStatus').textContent='';
+  document.getElementById('actionTestResult').style.display='none';
+  document.getElementById('actionTestBtn').style.display = tool ? '' : 'none';
+  document.getElementById('actionModal').style.display='';
+}
+
+function closeActionForm(){ document.getElementById('actionModal').style.display='none'; }
+
+async function saveAction(){
+  document.getElementById('actionFormErr').textContent='';
+  document.getElementById('actionFormStatus').textContent='Saving…';
+  try{
+    var authVal = document.getElementById('aAuth').value.trim();
+    var headers = authVal && authVal!=='••••••••' ? {'Authorization':'Bearer '+authVal} : {};
+    var body = {
+      name: document.getElementById('aName').value.trim(),
+      description: document.getElementById('aDesc').value.trim(),
+      tool_type: 'action',
+      method: document.getElementById('aMethod').value,
+      url_template: document.getElementById('aUrl').value.trim(),
+      headers: headers,
+      parameters: _buildParameters(),
+      body_template: {},
+      require_confirmation: document.getElementById('aConfirm').checked,
+      enabled: document.getElementById('aEnabled').checked,
+    };
+    if(editingActionId) await api('/tools/'+editingActionId,{method:'PUT',body});
+    else await api('/tools',{method:'POST',body});
+    closeActionForm();
+    loadActions();
+  }catch(e){
+    document.getElementById('actionFormErr').textContent=e.message;
+    document.getElementById('actionFormStatus').textContent='';
+  }
+}
+
+async function testAction(){
+  if(!editingActionId) return;
+  document.getElementById('actionFormStatus').textContent='Testing…';
+  document.getElementById('actionTestResult').style.display='none';
+  try{
+    var r = await api('/tools/'+editingActionId+'/test',{method:'POST',body:{}});
+    document.getElementById('actionTestOut').textContent = JSON.stringify(r,null,2);
+    document.getElementById('actionTestResult').style.display='';
+    document.getElementById('actionFormStatus').textContent = r.ok ? '✅ Connected' : '❌ Failed';
+  }catch(e){
+    document.getElementById('actionFormErr').textContent=e.message;
+    document.getElementById('actionFormStatus').textContent='';
+  }
+}
+
+async function deleteAction(id){
+  if(!confirm('Delete this action?')) return;
+  await api('/tools/'+id,{method:'DELETE'});
+  loadActions();
+}
+
+async function toggleAction(id, enabled){
+  var all = await api('/tools');
+  var t = all.find(function(x){ return x.id===id; });
+  if(!t) return;
+  await api('/tools/'+id,{method:'PUT',body:Object.assign({},t,{enabled:enabled})});
+  loadActions();
+}
+
+async function loadActions(){
+  var rows = await api('/tools');
+  document.getElementById('actionsEmpty').style.display = rows.length ? 'none' : '';
+  document.getElementById('actionsTable').style.display = rows.length ? '' : 'none';
+  document.getElementById('actionsCount').textContent = rows.length;
+  document.getElementById('actionsBody').innerHTML = rows.map(function(t){
+    return '<tr>' +
+      '<td><div style="font-weight:600">'+esc(t.description.split('.')[0].slice(0,60))+'</div>' +
+      '<div class="muted" style="font-size:11px;margin-top:2px">'+esc(t.name)+'</div></td>' +
+      '<td class="muted" style="font-size:12px"><span style="font-weight:600">'+esc(t.method)+'</span>' +
+      '<span style="word-break:break-all"> '+esc(t.url_template)+'</span></td>' +
+      '<td><label style="display:flex;align-items:center;gap:6px;cursor:pointer">' +
+      '<input type="checkbox" '+(t.enabled?'checked':'')+' onchange="toggleAction(\''+t.id+'\','+!t.enabled+')" style="width:auto"/></label></td>' +
+      '<td class="row" style="gap:6px">' +
+      '<button class="ghost" onclick=\'openActionForm('+JSON.stringify(t).replace(/'/g,"&#39;")+')\'>Edit</button>' +
+      '<button class="ghost" style="color:var(--err)" onclick="deleteAction(\''+t.id+'\')">Delete</button>' +
+      '</td></tr>';
+  }).join('');
+  loadLogs();
+}
+
+async function loadLogs(){
+  var rows = await api('/tools/logs/recent?limit=30');
+  document.getElementById('logsBody').innerHTML = rows.length ? rows.map(function(r){
+    return '<tr>' +
+      '<td class="muted" style="font-size:12px;white-space:nowrap">'+esc((r.created_at||'').replace('T',' ').slice(0,16))+'</td>' +
+      '<td>'+esc(r.tool_name)+'</td>' +
+      '<td class="muted">'+esc(r.user_id)+'</td>' +
+      '<td><span class="pill '+(r.status==='ok'?'ok':'err')+'">'+(r.status==='ok'?'✅ ok':'❌ '+esc(r.error||'failed'))+'</span></td>' +
+      '<td class="muted">'+esc(r.latency_ms??'')+'</td>' +
+    '</tr>';
+  }).join('') : '<tr><td colspan="5" class="muted">Пока пусто.</td></tr>';
+}
+
+document.getElementById('actionModal').addEventListener('click',function(e){
+  if(e.target===document.getElementById('actionModal')) closeActionForm();
+});
+
+// ═══ Load everything ══════════════════════════════════════════════════════
+function loadAll(){
+  loadConnectors();
+  loadCrm();
+  loadPrimaryIdentifier();
+  loadActions();
+}
+
+function loadConnectors(){
+  api('/integrations').then(function(data){
+    var connected = {};
+    (data.native_connectors||[]).forEach(function(nc){ connected[nc.provider] = nc.status==='connected'; });
+    ['shopify','woocommerce','stripe'].forEach(function(p){
+      var badge = document.getElementById('badge-'+p);
+      var short = p==='woocommerce'?'woo':p==='stripe'?'str':'sf';
+      var testBtn = document.getElementById('test-'+short);
+      var discBtn = document.getElementById('disc-'+short);
+      if(badge){ badge.textContent = connected[p]?'connected':'—'; badge.className = 'pill '+(connected[p]?'ok':'muted'); }
+      if(testBtn) testBtn.disabled = !connected[p];
+      if(discBtn) discBtn.style.display = connected[p] ? '' : 'none';
+    });
+
+    // Update e-commerce status badge
+    var anyConnected = ['shopify','woocommerce','stripe'].some(function(p){ return connected[p]; });
+    var ecomBadge = document.getElementById('ecomStatusBadge');
+    if(anyConnected){
+      var names = ['shopify','woocommerce','stripe'].filter(function(p){ return connected[p]; });
+      ecomBadge.textContent = names.join(', ');
+      ecomBadge.className = 'pill ok';
+    }
+  }).catch(function(){});
+
+  api('/crm/providers/status').then(function(s){
+    var hs = s.hubspot || {};
+    var badge = document.getElementById('badge-hubspot');
+    var connBtn = document.getElementById('hubspotConnect');
+    var discBtn = document.getElementById('hubspotDisconnect');
+    var statusEl = document.getElementById('hubspotStatus');
+    if(!hs.configured){
+      if(statusEl) statusEl.textContent = 'HubSpot не настроен на сервере.';
+      if(connBtn) connBtn.disabled = true;
+      if(discBtn) discBtn.style.display = 'none';
+      if(badge){ badge.textContent='—'; badge.className='pill muted'; }
+      return;
+    }
+    if(hs.connected){
+      if(badge){ badge.textContent='connected'; badge.className='pill ok'; }
+      if(connBtn) connBtn.style.display='none';
+      if(discBtn) discBtn.style.display='';
+      if(statusEl) statusEl.textContent='Scopes: '+((hs.scopes||[]).join(', ')||'—');
+    } else {
+      if(badge){ badge.textContent='—'; badge.className='pill muted'; }
+      if(connBtn) connBtn.style.display='';
+      if(discBtn) discBtn.style.display='none';
+      if(statusEl) statusEl.textContent='';
+    }
+  }).catch(function(){});
+}
+
+loadAll();
+
+// Handle HubSpot OAuth callback
+var hsParams = new URLSearchParams(location.search);
+if(hsParams.get('hubspot')){
+  setTimeout(function(){
+    loadAll();
+    if(hsParams.get('hubspot')==='connected') showMsg('msg-hubspot','HubSpot connected ✓','ok');
+    else if(hsParams.get('hubspot')==='error') showMsg('msg-hubspot','Ошибка: '+hsParams.get('reason'),'');
+  }, 500);
+}
+</script>
+{% endblock %}

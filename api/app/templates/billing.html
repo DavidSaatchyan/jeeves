@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Billing</h1>
+<div class="card">
+  <div class="grid">
+    <div class="stat"><div class="n" id="u">–</div><div class="l">Dialogs used</div></div>
+    <div class="stat"><div class="n" id="l">–</div><div class="l">Trial limit</div></div>
+    <div class="stat"><div class="n" id="rr">–</div><div class="l">Resolution rate</div></div>
+    <div class="stat"><div class="n" id="e">–</div><div class="l">Trial ends</div></div>
+    <div class="stat"><div class="n" id="c">–</div><div class="l">Estimated charge</div></div>
+  </div>
+  <p class="muted" style="margin-top:18px">Pricing: $0.10 per resolved dialog. Trial: 14 days or 100 dialogs.</p>
+  <button>Add payment method</button>
+  <span class="muted" style="margin-left:8px">(Stripe integration is out of scope for MVP.)</span>
+</div>
+{% endblock %}
+{% block tail %}
+<script>
+(async ()=>{
+  const b = await api('/dashboard/billing');
+  u.textContent = b.dialogs_used;
+  l.textContent = b.dialogs_limit;
+  rr.textContent = (b.resolution_rate*100).toFixed(0)+'%';
+  e.textContent = b.trial_ends? b.trial_ends.slice(0,10):'—';
+  c.textContent = '$'+b.estimated_charge_usd.toFixed(2);
+})();
+</script>
+{% endblock %}

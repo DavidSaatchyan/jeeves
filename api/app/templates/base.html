@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Jeeves Admin</title>
+  <style>
+    :root { --bg:#0b1020; --fg:#e8edf7; --mut:#8a94b0; --acc:#7c9cff; --card:#141a2d; --bord:#23304f; --err:#ff6b6b; --ok:#6bd68f;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,Segoe UI,sans-serif;background:var(--bg);color:var(--fg);display:flex;min-height:100vh}
+    aside{width:240px;flex-shrink:0;background:#0e1530;border-right:1px solid var(--bord);padding:18px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
+    aside .brand{font-weight:700;letter-spacing:.3px;font-size:18px;padding:0 20px 16px;border-bottom:1px solid var(--bord);margin-bottom:14px}
+    aside .group{padding:14px 20px 4px;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+    aside a{display:block;padding:9px 20px;color:#cdd5ec;text-decoration:none;font-size:14px;border-left:3px solid transparent}
+    aside a:hover{background:#141a2d}
+    aside a.active{background:#141a2d;color:var(--fg);border-left-color:var(--acc)}
+    aside a .desc{display:block;font-size:11px;color:var(--mut);margin-top:1px}
+    aside a:hover .desc, aside a.active .desc{color:#a3aed0}
+    aside .logout{margin-top:14px;border-top:1px solid var(--bord);padding-top:10px}
+    main{flex:1;max-width:1100px;margin:0 auto;padding:28px 28px 60px}
+    @media (max-width:760px){body{flex-direction:column}aside{width:100%;height:auto;position:static}}
+    .card{background:var(--card);border:1px solid var(--bord);border-radius:12px;padding:18px;margin-bottom:18px}
+    h1{margin:0 0 18px;font-size:22px}
+    h2{margin:0 0 12px;font-size:16px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+    label{display:block;font-size:12px;color:var(--mut);margin-top:10px;margin-bottom:4px}
+    input,textarea,select,button{font:inherit}
+    input[type=text],input[type=email],input[type=password],input[type=number],input[type=url],textarea,select{
+      width:100%;padding:10px 12px;background:#0b1228;color:var(--fg);border:1px solid var(--bord);border-radius:8px;outline:none
+    }
+    textarea{min-height:80px;font-family:ui-monospace,Consolas,monospace;font-size:13px}
+    button,.btn{background:var(--acc);color:#0b1020;border:0;border-radius:8px;padding:10px 14px;cursor:pointer;font-weight:600}
+    button.ghost{background:transparent;color:var(--fg);border:1px solid var(--bord)}
+    button:disabled{opacity:.5;cursor:default}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:8px 10px;border-bottom:1px solid var(--bord);text-align:left;vertical-align:top}
+    th{color:var(--mut);font-weight:600}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;border:1px solid var(--bord)}
+    .pill.ok{color:var(--ok);border-color:#1f6b3c}
+    .pill.err{color:var(--err);border-color:#7a2b2b}
+    .pill.warn{color:#f0c36d;border-color:#6a5228}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+    .stat{background:#0e1530;padding:16px;border-radius:10px;border:1px solid var(--bord)}
+    .stat .n{font-size:28px;font-weight:700}
+    .stat .l{color:var(--mut);font-size:12px;margin-top:4px}
+    .row{display:flex;gap:10px;align-items:center}
+    .muted{color:var(--mut);font-size:12px}
+    code,pre{font-family:ui-monospace,Consolas,monospace;font-size:12px;background:#0b1228;padding:2px 6px;border-radius:4px}
+    pre{padding:12px;overflow:auto}
+    .drop{border:2px dashed var(--bord);border-radius:10px;padding:30px;text-align:center;color:var(--mut)}
+    .drop.hot{border-color:var(--acc);color:var(--fg)}
+    .err-msg{color:var(--err);font-size:13px;margin-top:8px}
+    .help{background:#0e1a3a;border:1px solid #2a3a6a;border-left:3px solid var(--acc);padding:14px 16px;border-radius:8px;margin-bottom:16px;font-size:13px;line-height:1.55}
+    .help h3{margin:0 0 6px;font-size:14px;color:var(--fg)}
+    .help p{margin:6px 0;color:#cdd5ec}
+    .help code{background:#0b1228}
+    .step{display:flex;gap:10px;margin:8px 0}
+    .step .num{width:22px;height:22px;border-radius:50%;background:var(--acc);color:#0b1020;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px}
+    .skip{display:inline-block;margin-top:8px;color:var(--mut);font-size:12px}
+  </style>
+</head>
+<body>
+<aside>
+  <div class="brand">🤵 Jeeves</div>
+
+  <div class="group">Overview</div>
+  <a href="/admin" data-path="/admin">Dashboard<span class="desc">Stats & getting started</span></a>
+
+  <div class="group">Train your agent</div>
+  <a href="/admin/knowledge" data-path="/admin/knowledge">Knowledge base<span class="desc">Upload your docs / FAQs</span></a>
+
+  <div class="group">Connect</div>
+  <a href="/admin/channels" data-path="/admin/channels">Channels<span class="desc">Widget, Telegram, WhatsApp</span></a>
+  <a href="/admin/integrations" data-path="/admin/integrations">Integrations<span class="desc">Connect your systems & tools</span></a>
+  <a href="/admin/proactive" data-path="/admin/proactive">Proactive engine<span class="desc">Auto-message users on issues</span></a>
+
+  <div class="group">Operate</div>
+  <a href="/admin/logs" data-path="/admin/logs">Conversation logs<span class="desc">See every dialog</span></a>
+  <a href="/admin/billing" data-path="/admin/billing">Billing & usage<span class="desc">Trial, charges</span></a>
+
+  <div class="logout">
+    <a href="#" onclick="logout();return false">Sign out</a>
+  </div>
+</aside>
+<main>
+{% block body %}{% endblock %}
+</main>
+<script>
+// Highlight current section in sidebar.
+(function(){
+  var p = location.pathname.replace(/\/$/, '') || '/admin';
+  document.querySelectorAll('aside a[data-path]').forEach(function(a){
+    if(a.getAttribute('data-path')===p) a.classList.add('active');
+  });
+})();
+</script>
+<script>
+// Tiny auth helper — token stored in localStorage.
+function token(){ return localStorage.getItem('jeeves_token'); }
+function setToken(t,tid){ localStorage.setItem('jeeves_token',t); if(tid) localStorage.setItem('jeeves_tid',tid); }
+function tenantId(){ return localStorage.getItem('jeeves_tid'); }
+function logout(){ localStorage.removeItem('jeeves_token'); localStorage.removeItem('jeeves_tid'); location.href='/admin/login'; }
+async function api(path, opts={}){
+  const headers = opts.headers||{};
+  if(!(opts.body instanceof FormData)) headers['Content-Type']='application/json';
+  const t = token(); if(t) headers['Authorization']='Bearer '+t;
+  const r = await fetch(path,{...opts,headers,body: opts.body && !(opts.body instanceof FormData) ? JSON.stringify(opts.body):opts.body});
+  if(r.status===401){ location.href='/admin/login'; throw new Error('unauth'); }
+  if(r.status===402){ location.href='/admin/billing'; }
+  const ct=r.headers.get('content-type')||''; const data = ct.includes('json')?await r.json():await r.text();
+  if(!r.ok) throw new Error(typeof data==='string'?data:JSON.stringify(data));
+  return data;
+}
+// Redirect to login if token missing (except on /admin/login itself).
+if(!token() && !location.pathname.endsWith('/login')){ location.href='/admin/login'; }
+</script>
+{% block tail %}{% endblock %}
+</body>
+</html>

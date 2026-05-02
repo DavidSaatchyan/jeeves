@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Dashboard</h1>
+<div class="grid" id="stats">
+  <div class="stat"><div class="n" id="s1">–</div><div class="l">Dialogs today</div></div>
+  <div class="stat"><div class="n" id="s2">–</div><div class="l">Resolved today</div></div>
+  <div class="stat"><div class="n" id="s3">–</div><div class="l">Resolution rate (today)</div></div>
+  <div class="stat"><div class="n" id="s4">–</div><div class="l">Total dialogs</div></div>
+  <div class="stat"><div class="n" id="s5">–</div><div class="l">Overall resolution rate</div></div>
+</div>
+<div class="card">
+  <h2>Getting started</h2>
+  <p class="muted" style="margin:0 0 12px">Three short steps. Only the first one is required to start chatting.</p>
+  <div class="step"><div class="num">1</div><div>
+    <strong><a href="/admin/knowledge">Upload your knowledge base</a></strong>
+    <div class="muted">Drag-and-drop your FAQ, product docs, policies (.pdf/.txt/.md). The agent will answer questions using these.</div>
+  </div></div>
+  <div class="step"><div class="num">2</div><div>
+    <strong><a href="/admin/channels">Put the chat widget on your website</a></strong>
+    <div class="muted">Copy a one-line script tag. A floating chat button will appear on your site.</div>
+  </div></div>
+  <div class="step"><div class="num">3</div><div>
+    <strong><a href="/admin/integrations">Connect integrations & CRM</a> <span class="muted">(optional)</span></strong>
+    <div class="muted">Lets the agent <em>do things</em> — read a customer's plan, change tariff, etc. — instead of just answering. Skip if you only need Q&A.</div>
+  </div></div>
+  <div class="step"><div class="num">4</div><div>
+    <strong><a href="/admin/proactive">Enable proactive messages</a> <span class="muted">(optional)</span></strong>
+    <div class="muted">Agent reaches out first when a user's activity drops. Requires CRM step.</div>
+  </div></div>
+</div>
+{% endblock %}
+{% block tail %}
+<script>
+(async ()=>{
+  try{
+    const s = await api('/dashboard/stats');
+    s1.textContent = s.dialogs_today;
+    s2.textContent = s.resolved_today;
+    s3.textContent = (s.resolution_rate_today*100).toFixed(0)+'%';
+    s4.textContent = s.total_dialogs;
+    s5.textContent = (s.overall_resolution_rate*100).toFixed(0)+'%';
+  }catch(e){ console.error(e); }
+})();
+</script>
+{% endblock %}

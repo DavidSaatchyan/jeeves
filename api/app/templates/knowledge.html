@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Knowledge base</h1>
+<div class="help">
+  <h3>What is this?</h3>
+  <p>The knowledge base is what your agent <strong>knows about your product</strong>. Upload FAQ, product docs, policies, pricing pages — anything in <code>.pdf</code>, <code>.txt</code>, or <code>.md</code>. The agent will quote from these files when answering.</p>
+  <p><strong>Tip:</strong> Many small focused files work better than one giant document. We have ready-made samples in <code>knowledge/sample/</code>.</p>
+</div>
+<div class="card">
+  <h2>Upload</h2>
+  <div id="drop" class="drop">Drop one or more files here, or <label style="color:var(--acc);cursor:pointer">browse<input id="file" type="file" accept=".pdf,.txt,.md" multiple style="display:none"/></label></div>
+  <div class="muted" style="margin-top:8px">Allowed: .pdf, .txt, .md · Max 50 MB total per tenant · Indexing starts automatically and takes ~10–60s.</div>
+  <div id="uprog" class="muted" style="margin-top:6px"></div>
+  <div class="err-msg" id="uerr"></div>
+</div>
+<div class="card">
+  <h2>Files</h2>
+  <table><thead><tr><th>Filename</th><th>Status</th><th></th></tr></thead><tbody id="tbl"></tbody></table>
+</div>
+{% endblock %}
+{% block tail %}
+<script>
+var widgetLoaded = false;
+
+function showWidgetPlaceholder(){
+  if(document.getElementById('widget-placeholder')) return;
+  var ph = document.createElement('div');
+  ph.id = 'widget-placeholder';
+  ph.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:8px;';
+  ph.innerHTML =
+    '<div style="background:#1e2a45;border:1px solid var(--bord);border-radius:10px;padding:10px 14px;max-width:220px;font-size:12px;color:var(--mut);line-height:1.5">'
+    + '⬆️ Upload at least one knowledge file to activate the test widget.</div>'
+    + '<div style="width:56px;height:56px;border-radius:50%;background:var(--bord);display:flex;align-items:center;justify-content:center;">'
+    + '<span style="font-size:22px;filter:grayscale(1);opacity:0.4">💬</span></div>';
+  document.body.appendChild(ph);
+}
+
+function hideWidgetPlaceholder(){
+  var ph = document.getElementById('widget-placeholder');
+  if(ph) ph.remove();
+}
+
+function setWidgetVisible(visible){
+  var root = document.getElementById('jeeves-widget-root');
+  if(root) root.style.display = visible ? '' : 'none';
+}
+
+function loadWidget(){
+  if(widgetLoaded) return;
+  widgetLoaded = true;
+  var tid = localStorage.getItem('jeeves_tid');
+  if(!tid) return;
+  var s = document.createElement('script');
+  s.src = '/widget.js';
+  s.async = true;
+  s.setAttribute('data-tenant-id', tid);
+  s.setAttribute('data-greeting', 'Test your knowledge base — ask me anything!');
+  document.body.appendChild(s);
+}
+
+async function refresh(){
+  const rows = await api('/knowledge/files');
+  tbl.innerHTML = rows.map(r=>{
+    const cls = r.status==='ready'?'ok':(r.status==='failed'?'err':'warn');
+    return `<tr><td>${r.filename}</td><td><span class="pill ${cls}">${r.status}</span></td>
+      <td><button class="ghost" onclick="del('${r.id}')">Delete</button></td></tr>`;
+  }).join('') || '<tr><td colspan="3" class="muted">No files yet.</td></tr>';
+
+  const hasReady = rows.some(r => r.status === 'ready');
+  if(hasReady){
+    hideWidgetPlaceholder();
+    loadWidget();
+    setWidgetVisible(true);
+  } else {
+    setWidgetVisible(false);
+    showWidgetPlaceholder();
+  }
+}
+</script>
+<script>
+async function uploadOne(f){
+  const fd = new FormData(); fd.append('file', f);
+  return api('/knowledge/files',{method:'POST',body:fd});
+}
+async function uploadMany(files){
+  uerr.textContent='';
+  const arr = Array.from(files);
+  let done=0, failed=0;
+  for(const f of arr){
+    document.getElementById('uprog').textContent = `Uploading ${done+failed+1}/${arr.length}: ${f.name}…`;
+    try{ await uploadOne(f); done++; }
+    catch(e){ failed++; uerr.textContent = (uerr.textContent?uerr.textContent+'; ':'') + f.name+': '+e.message; }
+    await refresh();
+  }
+  document.getElementById('uprog').textContent = `Uploaded ${done}/${arr.length}` + (failed?` (${failed} failed)`:'');
+}
+async function del(id){
+  if(!confirm('Delete this file?')) return;
+  await fetch('/knowledge/files/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+token()}});
+  refresh();
+}
+const drop=document.getElementById('drop');
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('hot')});
+drop.addEventListener('dragleave',()=>drop.classList.remove('hot'));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('hot');if(e.dataTransfer.files.length)uploadMany(e.dataTransfer.files)});
+document.getElementById('file').addEventListener('change',e=>{if(e.target.files.length)uploadMany(e.target.files)});
+refresh();
+setInterval(refresh, 5000);
+</script>
+{% endblock %}

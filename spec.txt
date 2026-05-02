@@ -1,0 +1,293 @@
+ТЗ  на  продукт:  Universal  AI  Agent  (UAA)  
+Версия  1.0  —  концепция  
+ 
+1.  Ценности  продукта  
+№  Проблема  рынка  Наше  решение  
+1  Интеграция  с  легаси  CRM  занимает  месяцы  
+Self-serve:  клиент  даёт  API- ссылку  →  агент  сам  тестирует  и  подключается  за  5  минут  
+2  Данные  не  AI-ready  (разрознены,  грязные)  
+Инструмент  «чистки  и  индексации»:  загрузил  PDF/ ссылки  →  готово  
+3  Нет  проактивности  —  всё  реактивно  
+Детектор  аномалий  +  планировщик  →  агент  пишет  первым  
+4  Непонятная  цена  (request  a  quote)  
+Pay-per-resolution  +  лимиты  в  личном  кабинете  
+5  Enterprise  не  могут  отправлять  данные  в  OpenAI  
+Model-agnostic  +  возможность  локального  деплоя  
+6  Чёрный  ящик  —  непонятно,  почему  ответил  так  
+Логи  решений  +  аудит  
+ 
+2.  Принципы  продукта  (не  нарушать)  
+Принцип  Что  значит  
+Self-serve  first  Клиент  подключает  продукт  без  звонка  с  нами.  Максимум  15  минут  от  регистрации  до  первого  диалога  
+
+=== PAGE ===
+
+Агентность  Не  просто  отвечает,  а  выполняет  действия  (через  API  клиента)  
+Проактивность  Инициирует  диалог,  а  не  только  реагирует  
+Прозрачность  Цена,  логи,  причина  ответа  —  всё  видно  
+Адаптивность  Работает  с  любыми  данными  и  любой  CRM  
+ 
+3.  Пользовательские  сценарии  (product  use  cases)  
+3.1.  Реактивные  (отвечает)  
+ID  Сценарий  Пример  
+R1  Фактологический  вопрос  «Сколько  стоит  подписка?»  →  ответ  из  базы  знаний  
+R2  Решение  проблемы  «Не  могу  войти»  →  сброс  пароля  через  API  
+R3  Выполнение  действия  «Смени  тариф  на  бизнес»  →  вызов  API  клиента  
+R4  Эскалация  человеку  «Позови  оператора»  →  создание  тикета  +  уведомление  
+R5  Многошаговый  запрос  «Верните  деньги  за  прошлый  месяц»  →  сбор  данных  +  проверка  +  возврат  
+3.2.  Проактивные  (инициирует  сам)  
+ID  Триггер  Действие  
+P1  Падение  метрики  >30%  (из  CRM/ вебхука)  
+«Вижу  проблемы.  Нужна  помощь?»  
+
+=== PAGE ===
+
+P2  Неактивность  >7  дней  «Скучаем.  Есть  вопросы?»  
+P3  Завершил  регистрацию,  но  не  закончил  онбординг  
+«Проведу  по  шагам  за  2  минуты?»  
+P4  Новый  функционал,  релевантный  клиенту  
+«Появилась  новая  функция.  Рассказать?»  
+P5  Риск  оттока  (например,  перестал  пользоваться  ключевой  функцией)  
+«Всё  работает?  Давайте  помогу»  
+ 
+4.  Модули  продукта  (верхнеуровнево)  
+Модуль  Что  делает  Для  кого  
+Knowledge  Manager  Индексация  документов,  ссылок,  FAQ  
+Админ  клиента  
+CRM  Connector  Подключение  к  API  клиента  (чтение/запись)  
+Админ  клиента  
+Channel  Manager  Настройка  каналов  (чат,  TG,  WhatsApp)  
+Админ  клиента  
+Agent  Core  Оркестратор  +  RAG  +  Actions  +  память  
+Ядро  
+Proactive  Engine  Детектор  +  планировщик  +  исходящие  сообщения  
+Ядро  
+Admin  Dashboard  Настройки,  логи,  метрики,  биллинг  
+Админ  клиента  
+Analytics  Resolution  rate,  экономия,  топ  вопросов  
+Админ  клиента  
+ 
+
+=== PAGE ===
+
+5.  Детальное  ТЗ  на  MVP  
+5.1.  Что  входит  в  MVP  
+Цель  MVP:  клиент  может  за  15  минут  настроить  агента,  который  отвечает  на  вопросы  
+из
+ 
+его
+ 
+документов
+ 
+и
+ 
+выполняет
+ 
+1
+ 
+действие
+ 
+(чтение/запись
+ 
+в
+ 
+CRM).
+ 
+Включено  в  MVP  
+Модуль  Что  именно  
+Knowledge  Manager  Загрузка  .txt,  .pdf,  .md  →  автоматическая  индексация  (chunk  512,  overlap  64)  →  поиск  через  RAG  
+CRM  Connector  Подключение  через  REST  API  (клиент  даёт  URL  +  метод  +  маппинг  полей)  →  агент  умеет  читать  и  записывать  2  поля  (например,  tariff,  status)  
+Channel  Manager  Веб-виджет  (iframe/JS)  +  REST  API  для  внешних  вызовов  
+Agent  Core  Оркестратор  (LangChain),  RAG,  память  диалога  (на  сессию),  1  action  (update  tariff)  
+Admin  Dashboard  Регистрация/логин,  загрузка  файлов,  настройка  CRM- подключения,  просмотр  логов  диалогов  
+Проактивность  1  сценарий:  падение  метрики  из  CRM  →  агент  пишет  «Нужна  помощь?»  
+Не  входит  в  MVP  (будущие  этапы)  ●  WhatsApp  /  Telegram  /  Slack  каналы  ●  Более  1  действия  ●  Проактивные  сценарии  кроме  P1  ●  On-premise  деплой  ●  Сложные  разрешения  RBAC  ●  Интеграция  с  Zapier  /  Make   
+
+=== PAGE ===
+
+5.2.  Архитектура  MVP  
+ 
+Структура  проекта  
+jeeves-mvp/  ├──  docker-compose.yml  ├──  .env.example  ├──  config.yaml  ├──  api/  │    ├──  Dockerfile  │    ├──  requirements.txt  │    ├──  app/  │    │    ├──  main.py  │    │    ├──  auth.py  │    │    ├──  agent.py  │    │    ├──  rag.py  │    │    ├──  memory.py  │    │    ├──  actions.py  │    │    ├──  channels/  │    │    │    ├──  base.py  │    │    │    ├──  rest.py  │    │    │    └──  widget.py  │    │    ├──  models.py  │    │    └──  config.py  │    └──  knowledge/           #  монтируется  для  тестов  ├──  worker/  │    ├──  Dockerfile  │    ├──  requirements.txt  │    └──  tasks.py             #  проактивность  +  индексация  ├──  frontend/  │    └──  widget.js            #  веб-виджет  └──  scripts/      ├──  init_db.sql      └──  test_api.sh   
+5.3.  Функциональные  требования  MVP  
+5.3.1.  Регистрация  и  тенанты  (FR-1)  
+ID  Требование  Приёмка  
+
+=== PAGE ===
+
+FR-1.1  Регистрация  по  email  +  подтверждение  
+Пользователь  получает  письмо,  переходит  по  ссылке  
+FR-1.2  Автоматическое  создание  tenant_id  при  регистрации  
+У  каждого  клиента  свой  tenant  
+FR-1.3  Вход  по  email  +  пароль  (JWT,  refresh  token)  
+Токен  живёт  7  дней  
+FR-1.4  При  первом  входе  —  туториал  по  загрузке  документов  
+3  шага  с  подсветкой  
+5.3.2.  Knowledge  Manager  (FR-2)  
+ID  Требование  Приёмка  
+FR-2.1  Drag-and-drop  загрузка  файлов  (до  50  МБ  суммарно  в  MVP)  
+Файлы  видны  в  списке  
+FR-2.2  Поддержка:  .txt,  .pdf,  .md  После  загрузки  автоматическая  индексация  
+FR-2.3  При  загрузке  —  разбивка  на  чанки  (512/64),  эмбеддинги  через  OpenAI,  сохранение  в  Chroma  
+Поиск  по  новым  файлам  работает  через  2  минуты  
+FR-2.4  Возможность  удалить  файл  →  переиндексация  
+После  удаления  ответы  не  ссылаются  на  него  
+FR-2.5  Отображение  статуса  индексации  (processing/ready/failed)  
+UI  показывает  состояние  
+5.3.3.  CRM  Connector  (FR-3)  
+ID  Требование  Приёмка  
+
+=== PAGE ===
+
+FR-3.1  Клиент  вводит:  URL  эндпоинта,  метод  (GET/POST),  заголовки  (API- ключ)  
+Сохраняется  в  tenant  config  
+FR-3.2  Маппинг:  какие  поля  читать  (например,  $.data.tariff),  какие  писать  
+UI- форма  для  маппинга  
+FR-3.3  Тестирование  подключения  (кнопка  «Test»  с  запросом  к  API  клиента)  
+«Success»  или  ошибка  с  пояснением  
+FR-3.4  Агент  автоматически  читает  контекст  клиента  перед  каждым  диалогом  
+В  логах  видно  GET  {url}/{user_id}  
+5.3.4.  Agent  Core  (FR-4)  
+ID  Требование  Приёмка  
+FR-4.1  Оркестратор  на  LangChain  с  поддержкой  памяти  (последние  20  сообщений)  
+Бот  помнит  историю  
+FR-4.2  RAG  поиск  (embedding  +  similarity,  top-k=5)  по  всем  документам  tenant  
+Ответы  из  базы  знаний  
+FR-4.3  System  prompt  из  конфига  (клиент  не  меняет  в  MVP)  
+Фиксирован:  «Ты  AI- агент...»  
+FR-4.4  1  action:  update_tariff(tariff)  →  вызывает  CRM  API  клиента  
+После  команды  «смени  тариф»  —  обновляется  в  CRM  
+FR-4.5  Лимит  5  итераций  LLM  (предотвращает  циклы)  
+При  зацикливании  —  эскалация  
+FR-4.6  Эскалация  человеку:  создание  записи  в  очереди  
+В  логах  диалога  статус  escalated  
+
+=== PAGE ===
+
+config.yaml  #  config.yaml  #  Клиент  не  меняет  в  MVP,  но  архитектура  заложена   agent:    name:  "Jeeves"    system_prompt:  |      Ты  —  Jeeves,  AI- агент  поддержки.      Отвечай  вежливо,  по  делу,  используй  базу  знаний.      Если  не  знаешь  —  признайся  и  предложи  передать  оператору.    temperature:  0.2    max_iterations:  5   llm:    provider:  "openai"    model:  "gpt-4o-mini"   rag:    chunk_size:  512    chunk_overlap:  64    embedding_model:  "text-embedding-3-small"    top_k:  5   memory:    type:  "buffer"    max_messages:  20    ttl_days:  7   channels:    web_widget:      enabled:  true      endpoint:  "/widget.js"    rest_api:      enabled:  true    telegram:      enabled:  false      bot_token:  "${TELEGRAM_BOT_TOKEN}"   actions:    -  name:  "update_tariff"      description:  "Сменить  тариф  клиента"      enabled:  true    -  name:  "get_subscription_status"      description:  "Получить  статус  подписки"      enabled:  true    -  name:  "escalate_to_human"      description:  "Передать  диалог  оператору"  
+
+=== PAGE ===
+
+    enabled:  true   crm:    default_read_mapping:      tariff:  "$.data.tariff"      accounts_count:  "$.data.accounts_count"      views_trend:  "$.data.views_trend"    default_write_mapping:      tariff:  "$.data.tariff"   proactive:    enabled:  true    default_metric_url:  "/user/{id}/activity"    default_threshold_percent:  30    min_days_between_trigger:  3  
+5.3.5.  Channel  Manager  (FR-5)  
+ID  Требование  Приёмка  
+FR-5.1  клиент  вставляет  <script  src="https://jeeves.ai/widget.js"  data-tenant-id="...">.  Виджет  сам  инициализируется,  создаёт  плавающую  иконку  чата  и  окно  диалога.   
+Виджет  открывается,  отправляет  сообщения  
+FR-5.2  Виджет  передаёт  user_id  (тот,  кто  на  сайте)  
+Агент  знает,  с  кем  говорит  
+FR-5.3  REST  API  эндпоинт  POST  /chat  для  любых  внешних  систем  
+curl- запрос  возвращает  ответ  
+FR-5.4  Каждый  запрос  логируется  с  tenant_id  и  user_id  
+Админ  видит  диалоги  в  логах  
+FR-5.5  | Адаптер  для  нового  канала  наследуется  от  BaseChannel  |  Новый  канал  =  100  строк  кода,  ядро  не  меняется   
+ 
+  
+
+=== PAGE ===
+
+ 
+Интерфейс  адаптера  канала  #  app/channels/base.py  #  Код  для  разработчиков,  не  для  клиента   from  abc  import  ABC,  abstractmethod  from  typing  import  Callable,  Awaitable   class  BaseChannel(ABC):      """Базовый  класс  для  всех  каналов  связи."""           @abstractmethod      async  def  start(self)  ->  None:          """Запустить  прослушивание  канала."""          pass           @abstractmethod      async  def  send_message(self,  user_id:  str,  message:  str)  ->  None:          """Отправить  сообщение  пользователю."""          pass           @abstractmethod      def  set_handler(self,  handler:  Callable[[str,  str,  str],  Awaitable[str]])  ->  None:          """Установить  обработчик  входящих  сообщений.                   Args:              handler:  async  (tenant_id,  user_id,  message)  ->  response_text          """          pass   #  Пример  реализации  для  REST  API  (уже  встроен  в  FastAPI)  #  Пример  для  Telegram:  class  TelegramChannel(BaseChannel):      async  def  start(self):          #  polling  или  webhook          pass   
+Веб-виджет  спецификация  <!--  Виджет:  клиент  вставляет  на  сайт  -->  <script  src="https://jeeves.ai/widget.js"  data-tenant-id="YOUR_TENANT_ID"></script>   <!--  Спецификация  виджета:  1.  Загружается  асинхронно,  не  блокирует  страницу  2.  Создаёт  плавающую  иконку  чата  в  правом  нижнем  углу  
+
+=== PAGE ===
+
+3.  При  клике  открывается  окно  чата  4.  Пользователь  вводит  email  (или  логин)  →  это  user_id  5.  Сообщения  отправляются  на  POST  /chat  (с  tenant_id  из  data- атрибута)  6.  Ответы  отображаются  в  окне  чата  7.  Поддерживает  проактивные  сообщения  (через  WebSocket  или  long-polling)   Формат  запроса  виджета:  {    "tenant_id":  "YOUR_TENANT_ID",    "user_id":  "user@example.com",    "message":  "текст  сообщения",    "channel":  "web_widget"  }   Ответ:  {    "response":  "текст  ответа",    "action_called":  null  }  -->   
+5.3.6.  Admin  Dashboard  (FR-6)  
+ID  Требование  Приёмка  
+FR-6.1  Дашборд:  количество  диалогов  сегодня,  resolution  rate  (грубо:  без  эскалации)  
+Цифры  на  главной  
+FR-6.2  Страница  «База  знаний»:  список  файлов,  загрузка,  удаление  
+UI  соответствует  требованиям  FR-2  
+FR-6.3  Страница  «CRM  подключение»:  форма  настройки  +  тест  
+UI  соответствует  FR-3  
+FR-6.4  Страница  «Логи  диалогов»:  таблица  (время,  user_id,  вопрос,  ответ,  эскалация)  
+Поиск  по  user_id  и  дате  
+
+=== PAGE ===
+
+FR-6.5  Страница  «Каналы»:  включить/выключить  виджет,  показать  код  для  вставки  
+Код  меняется  при  смене  настроек  
+5.3.7.  Проактивный  движок  (FR-7)  —  упрощённый  для  MVP  
+ID  Требование  Приёмка  
+FR-7.1  Клиент  может  задать  URL  для  получения  метрики  пользователя  (например,  GET  /user/{id}/activity).  Падение  >30%  за  3  дня  →  trigger  
+В  админке  форма  для  настройки  метрики  
+FR-7.2  При  срабатывании  триггера  агент  отправляет  сообщение:  «Вижу  снижение  активности.  Нужна  помощь?»  
+Сообщение  появляется  в  чате  с  пользователем  
+FR-7.3  Частота:  не  чаще  1  раза  в  3  дня  на  пользователя  
+В  логах  проверка  
+5.3.8.  Биллинг  (FR-8)  —  упрощённый  
+ID  Требование  Приёмка  
+FR-8.1  Tri ал  14  дней,  100  диалогов  бесплатно  
+После  регистрации  tri ал  автоматический  
+FR-8.2  После  триала  —  блокировка  API,  пока  не  введут  карту  
+Страница  с  просьбой  оплатить  
+FR-8.3  Pay-per-resolution:  $0.10  за  диалог,  решённый  без  эскалации  (resolution  rate  автоматическая)  
+Счётчик  в  админке  
+FR-8.4  Страница  биллинга:  сколько  использовано,  сколько  осталось  
+UI  
+
+=== PAGE ===
+
+ 
+5.4.  Нефункциональные  требования  MVP  (NFR)  
+ID  Требование  Параметр  
+NFR-1  Время  ответа  (P95)  <  5  секунд  
+NFR-2  Доступность  для  демо  99%  (будни  9–21)  
+NFR-3  Безопасность  JWT  +  изоляция  tenant  во  всех  запросах  
+NFR-4  Логирование  Каждый  диалог  сохраняется  с  tenant_id  
+NFR-5  Деплой  Docker-compose  на  одном  сервере  (MVP  не  масштабируется)  
+NFR-6  Язык  интерфейса  Английский  (MVP  глобальный)  
+NFR-7  Добавление  нового  канала  требует  только  реализации  BaseChannel  (без  изменения  core)  
+ 
+ 
+API  спецификация   paths:    /auth/register:      post:        summary:  Регистрация  нового  клиента        requestBody:          required:  true          content:            application/json:              schema:                type:  object                required:  [email,  password,  tenant_name]                properties:                  email:  {  type:  string,  format:  email  }                  password:  {  type:  string,  minLength:  8  }  
+
+=== PAGE ===
+
+                tenant_name:  {  type:  string  }        responses:          201:            description:  Успешная  регистрация            content:              application/json:                schema:                  type:  object                  properties:                    tenant_id:  {  type:  string  }                    access_token:  {  type:  string  }                    refresh_token:  {  type:  string  }          400:  {  description:  Email  уже  существует  }     /auth/login:      post:        summary:  Вход        requestBody:          content:            application/json:              schema:                type:  object                required:  [email,  password]                properties:                  email:  {  type:  string  }                  password:  {  type:  string  }        responses:          200:            content:              application/json:                schema:                  type:  object                  properties:                    access_token:  {  type:  string  }                    refresh_token:  {  type:  string  }     /chat:      post:        summary:  Отправить  сообщение  агенту        security:  [{  bearerAuth:  []  }]        requestBody:          content:            application/json:              schema:                type:  object                required:  [user_id,  message]                properties:                  user_id:  {  type:  string  }  
+
+=== PAGE ===
+
+                message:  {  type:  string  }                  channel:  {  type:  string,  default:  "rest_api"  }        responses:          200:            content:              application/json:                schema:                  type:  object                  properties:                    response:  {  type:  string  }                    action_called:  {  type:  string,  nullable:  true  }                    latency_ms:  {  type:  integer  }     /customer/{user_id}:      get:        summary:  Получить  данные  клиента  из  CRM        security:  [{  bearerAuth:  []  }]        parameters:          -  {  name:  user_id,  in:  path,  required:  true,  schema:  {  type:  string  }  }        responses:          200:            content:              application/json:                schema:                  type:  object                  properties:                    tariff:  {  type:  string  }                    accounts_count:  {  type:  integer  }                    views_trend:  {  type:  string  }       patch:        summary:  Обновить  данные  клиента  в  CRM        security:  [{  bearerAuth:  []  }]        parameters:          -  {  name:  user_id,  in:  path,  required:  true,  schema:  {  type:  string  }  }        requestBody:          content:            application/json:              schema:                type:  object                properties:                  tariff:  {  type:  string  }        responses:  {  200:  {  description:  Обновлено  }  }     /knowledge/files:      post:        summary:  Загрузить  файл  в  базу  знаний        security:  [{  bearerAuth:  []  }]  
+
+=== PAGE ===
+
+      requestBody:          content:            multipart/form-data:              schema:                type:  object                properties:                  file:  {  type:  string,  format:  binary  }        responses:          202:  {  description:  Файл  принят,  индексация  начата  }       get:        summary:  Список  файлов        security:  [{  bearerAuth:  []  }]        responses:          200:            content:              application/json:                schema:                  type:  array                  items:                    type:  object                    properties:                      id:  {  type:  string  }                      filename:  {  type:  string  }                      status:  {  type:  string  }     /crm/config:      get:  {  summary:  Получить  настройки  CRM  }      post:  {  summary:  Сохранить  настройки  CRM  }      post  /test:  {  summary:  Протестировать  подключение  к  CRM  }     /proactive/config:      get:  {  summary:  Получить  настройки  проактивности  }      post:  {  summary:  Сохранить  настройки  проактивности  }   components:    securitySchemes:      bearerAuth:        type:  http        scheme:  bearer   
+ 
+Переменные  окружения  (.env)  #  Добавить  как  отдельный  список  в  ТЗ,  раздел  5.4  (после  NFR)  
+
+=== PAGE ===
+
+ #  Обязательные  DATABASE_URL=postgresql://user:pass@postgres:5432/jeeves  REDIS_URL=redis://redis:6379/0  OPENAI_API_KEY=sk-xxx  JWT_SECRET=your-secret-key-min-32-chars   #  Опциональные  S3_BUCKET=jeeves-knowledge  S3_ENDPOINT=http://minio:9000  S3_ACCESS_KEY=minioadmin  S3_SECRET_KEY=minioadmin   WEBHOOK_BASE_URL=https://your-domain.com   #  для  проактивности   #  Каналы  (опционально)  TELEGRAM_BOT_TOKEN=xxx   #  если  включили  telegram   
+5.5.  Пользовательские  данные  (схемы)  
+Tenant  config  (Postgres)  sql  ●  tenants  (  ●      id  UUID  PRIMARY  KEY,  ●      name  TEXT,  ●      email  TEXT  UNIQUE,  ●      hashed_password  TEXT,  ●      trial_ends  TIMESTAMP,  ●      is_active  BOOLEAN,  ●      created_at  TIMESTAMP  ●  )  ●   ●  crm_config  (  ●      tenant_id  UUID  PRIMARY  KEY  REFERENCES  tenants(id),  ●      read_url  TEXT,  ●      write_url  TEXT,  ●      headers  JSON,  ●      read_mapping  JSON,  --  например  {"tariff":  "$.data.tariff"}  ●      write_mapping  JSON  ●  )  ●   ●  proactive_metric  (  ●      tenant_id  UUID  PRIMARY  KEY  REFERENCES  tenants(id),  ●      metric_url  TEXT,  ●      threshold  INTEGER,  --  30%  падения  
+
+=== PAGE ===
+
+●      last_triggered_per_user  JSONB  ●  )  ●   ●  files  (  ●      id  UUID  PRIMARY  KEY,  ●      tenant_id  UUID  REFERENCES  tenants(id),  ●      filename  TEXT,  ●      s3_key  TEXT,  ●      status  TEXT  --  processing/ready/failed  )  
+Логи  диалогов  (Postgres)  sql  ●  chat_logs  (  ●      id  UUID  PRIMARY  KEY,  ●      tenant_id  UUID,  ●      user_id  TEXT,  ●      direction  TEXT,  --  incoming/outgoing  (проактив)  ●      message  TEXT,  ●      response  TEXT,  ●      resolution  TEXT,  --  resolved/escalated  ●      action_called  TEXT,  ●      latency_ms  INTEGER,  ●      created_at  TIMESTAMP  )  
+Память  диалогов  (Redis)  redis  ●  #  Ключ:  memory:{tenant_id}:{user_id}  ●  #  Значение:  массив  последних  20  сообщений  #  TTL:  7  дней  
+Документы  +  векторы  ●  S3:  {tenant_id}/{file_id}/{filename}  ●  Chroma:  collection  =  tenant_{tenant_id}  ●  Эмбеддинги:  OpenAI  text-embedding-3-small   
+5.6.  Критерии  приёмки  MVP  (OKR)  
+№  Что  проверяем  Критерий  
+
+=== PAGE ===
+
+1  Регистрация  нового  клиента  За  2  минуты  создал  аккаунт,  вошёл,  увидел  дашборд  
+2  Загрузка  базы  знаний  Загрузил  PDF/TXT  →  через  2  минуты  чат  отвечает  на  вопрос  оттуда  
+3  Настройка  CRM  Ввёл  API  →  тест  успешен  →  команда  «смени  тариф»  реально  меняет  в  CRM  
+4  Чат-виджет  Вставил  скрипт  →  на  сайте  появился  чат  →  ответы  приходят  
+5  Проактивность  Настроил  метрику  →  сымитировал  падение  →  агент  написал  сам  
+6  Биллинг  После  100  диалогов  (или  14  дней)  —  запрос  карты  
+7  Resolution  rate  >70%  на  тестовом  наборе  из  100  вопросов  
+●    
+5.7  Docker  Compose   
+#  docker-compose.yml  #  Добавить  в  конец  ТЗ,  перед  критериями  приёмки   version:  '3.8'   services:    postgres:      image:  postgres:15-alpine      environment:        POSTGRES_USER:  jeeves        POSTGRES_PASSWORD:  jeeves123        POSTGRES_DB:  jeeves      volumes:        -  postgres_data:/var/lib/postgresql/data      ports:        -  "5432:5432"  
+
+=== PAGE ===
+
+    healthcheck:        test:  ["CMD-SHELL",  "pg_isready  -U  jeeves"]        interval:  5s     redis:      image:  redis:7-alpine      ports:        -  "6379:6379"      healthcheck:        test:  ["CMD",  "redis-cli",  "ping"]        interval:  5s     chroma:      image:  chromadb/chroma:latest      volumes:        -  chroma_data:/chroma/chroma      environment:        IS_PERSISTENT:  TRUE      ports:        -  "8001:8000"     api:      build:        context:  ./api        dockerfile:  Dockerfile      ports:        -  "8000:8000"      environment:        DATABASE_URL:  postgresql://jeeves:jeeves123@postgres:5432/jeeves        REDIS_URL:  redis://redis:6379/0        CHROMA_URL:  http://chroma:8000        OPENAI_API_KEY:  ${OPENAI_API_KEY}        JWT_SECRET:  ${JWT_SECRET:-dev-secret-change-me}      depends_on:        postgres:          condition:  service_healthy        redis:          condition:  service_healthy      volumes:        -  ./knowledge:/app/knowledge      command:  uvicorn  app.main:app  --host  0.0.0.0  --port  8000  --reload     worker:      build:        context:  ./worker        dockerfile:  Dockerfile      environment:        DATABASE_URL:  postgresql://jeeves:jeeves123@postgres:5432/jeeves  
+
+=== PAGE ===
+
+      REDIS_URL:  redis://redis:6379/0        OPENAI_API_KEY:  ${OPENAI_API_KEY}      depends_on:        -  postgres        -  redis      command:  celery  -A  tasks  worker  --loglevel=info     beat:      build:        context:  ./worker        dockerfile:  Dockerfile      environment:        DATABASE_URL:  postgresql://jeeves:jeeves123@postgres:5432/jeeves        REDIS_URL:  redis://redis:6379/0      depends_on:        -  redis      command:  celery  -A  tasks  beat  --loglevel=info   volumes:    postgres_data:    chroma_data:   
