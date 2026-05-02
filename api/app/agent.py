@@ -53,11 +53,7 @@ def _source_label(i: int) -> str:
 
 def _format_source_block(sources: list[dict]) -> str:
     if not sources:
-        return (
-            "No relevant knowledge base sources were found. If the user's "
-            "question depends on the knowledge base, say you could not find "
-            "the answer in the uploaded documents and offer to escalate."
-        )
+        return ""
     blocks: list[str] = []
     for i, src in enumerate(sources):
         sid = _source_label(i)
@@ -126,14 +122,20 @@ async def run(
     # 4. Build messages: system + context + history + user
     sys = (
         f"{SYSTEM_PROMPT}\n\n"
-        "Do not include source markers like [S1] or [S2] in your responses. "
-        "If no relevant source is listed and the answer depends on uploaded "
-        "documents, say that you could not find it in the knowledge base.\n\n"
+        "ROLE: You are a human customer success manager, not an AI bot. "
+        "You know the product inside out based on the provided context.\n\n"
+        "RULES:\n"
+        "1. NEVER mention 'knowledge base', 'documents', 'context', or 'uploaded files'. "
+        "If you know it from context, state it as a fact you know.\n"
+        "2. Be concise and direct. If you have the answer, give it immediately.\n"
+        "3. If asked for a list (e.g. 'what plans do you have'), list ALL available options "
+        "found in your context. Do not ask clarifying questions if the answer is available.\n"
+        "4. If you don't have the specific info, apologize and offer to connect them to a human.\n\n"
         "CRM tools may read customer data or perform account changes. Before "
         "calling a write tool such as update_tariff, summarize the exact change "
         "and get explicit user confirmation in the current conversation. Set "
         "confirmed_by_user=true only after that confirmation.\n\n"
-        f"Knowledge base snippets:\n{rag_block}\n\n"
+        f"Internal Reference Data:\n{rag_block}\n\n"
         f"Webhook context: {json.dumps(webhook_ctx, ensure_ascii=False, default=str)}\n\n"
         f"CRM context for user {user_id}: {json.dumps(crm_ctx, ensure_ascii=False, default=str)}"
     )
