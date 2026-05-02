@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Jeeves — AI Support Agent for Every Channel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080c18;
+      --bg-card: #0e1530;
+      --border: #1a2444;
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --text: #e8ecf4;
+      --muted: #8892b0;
+      --green: #34d399;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+    /* NAV */
+    nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; position: fixed; top: 0; width: 100%; z-index: 100; backdrop-filter: blur(16px); background: rgba(8,12,24,0.7); border-bottom: 1px solid var(--border); }
+    .logo { font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
+    .logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+    .btn-nav { background: var(--accent); color: #fff; padding: 10px 22px; border-radius: 10px; font-weight: 600; font-size: 14px; text-decoration: none; transition: transform .2s, box-shadow .2s; }
+    .btn-nav:hover { transform: translateY(-1px); box-shadow: 0 4px 20px var(--accent-glow); }
+
+    /* HERO */
+    .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 120px 24px 80px; position: relative; }
+    .hero::before { content: ''; position: absolute; top: -20%; left: 50%; transform: translateX(-50%); width: 800px; height: 800px; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%); pointer-events: none; }
+    .badge { display: inline-flex; align-items: center; gap: 8px; background: var(--bg-card); border: 1px solid var(--border); padding: 6px 16px; border-radius: 999px; font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+    .badge .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+    .hero h1 { font-size: clamp(36px, 6vw, 72px); font-weight: 800; line-height: 1.1; letter-spacing: -2px; max-width: 900px; margin-bottom: 24px; }
+    .hero h1 .hl { background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 18px; color: var(--muted); max-width: 600px; line-height: 1.7; margin-bottom: 40px; }
+    .hero-buttons { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .btn-primary { background: var(--accent); color: #fff; padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 600; text-decoration: none; transition: transform .2s, box-shadow .2s; border: none; cursor: pointer; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px var(--accent-glow); }
+    .btn-secondary { background: var(--bg-card); color: var(--text); padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 600; text-decoration: none; border: 1px solid var(--border); transition: border-color .2s; }
+    .btn-secondary:hover { border-color: var(--accent); }
+
+    /* FEATURES */
+    .section { padding: 100px 24px; max-width: 1100px; margin: 0 auto; }
+    .section-title { text-align: center; margin-bottom: 60px; }
+    .section-title h2 { font-size: 36px; font-weight: 700; letter-spacing: -1px; margin-bottom: 12px; }
+    .section-title p { color: var(--muted); font-size: 16px; }
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+    .feature { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; transition: border-color .3s, transform .3s; }
+    .feature:hover { border-color: var(--accent); transform: translateY(-4px); }
+    .feature-icon { width: 48px; height: 48px; border-radius: 12px; background: var(--accent-glow); display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 20px; }
+    .feature h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .feature p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+    /* CHANNELS */
+    .channels-grid { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 40px; }
+    .channel-badge { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 28px; display: flex; align-items: center; gap: 14px; min-width: 200px; }
+    .channel-badge .icon { font-size: 28px; }
+    .channel-badge .info div { font-weight: 600; font-size: 15px; }
+    .channel-badge .info span { color: var(--muted); font-size: 12px; }
+
+    /* HOW IT WORKS */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 32px; text-align: center; }
+    .step-num { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .step h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .step p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+    /* CTA */
+    .cta { text-align: center; padding: 100px 24px; background: linear-gradient(180deg, var(--bg) 0%, var(--bg-card) 100%); }
+    .cta h2 { font-size: 40px; font-weight: 700; letter-spacing: -1px; margin-bottom: 16px; }
+    .cta p { color: var(--muted); margin-bottom: 32px; font-size: 16px; }
+
+    /* FOOTER */
+    footer { text-align: center; padding: 40px 24px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); }
+
+    @media (max-width: 640px) {
+      nav { padding: 16px 20px; }
+      .nav-links a:not(.btn-nav) { display: none; }
+      .hero h1 { font-size: 32px; letter-spacing: -1px; }
+      .hero p { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Jeeves<span>.</span></div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#channels">Channels</a>
+    <a href="#how">How it works</a>
+    <a href="/admin/login" class="btn-nav">Get Started</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="badge"><span class="dot"></span> Now with Telegram & WhatsApp</div>
+  <h1>Your AI support agent,<br><span class="hl">everywhere at once</span></h1>
+  <p>Train Jeeves on your docs. Connect it to your website, Telegram, or WhatsApp. It resolves queries, pulls CRM context, and escalates when needed — 24/7.</p>
+  <div class="hero-buttons">
+    <a href="/admin/login" class="btn-primary">Start Free Trial</a>
+    <a href="#features" class="btn-secondary">Learn More</a>
+  </div>
+</section>
+
+<section class="section" id="features">
+  <div class="section-title">
+    <h2>Why Jeeves?</h2>
+    <p>Built for teams that want answers, not ticket queues.</p>
+  </div>
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon">📚</div>
+      <h3>Knowledge-driven</h3>
+      <p>Upload your PDFs, FAQs, and manuals. Jeeves uses RAG to find exact answers — no hallucinations.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔗</div>
+      <h3>CRM context</h3>
+      <p>Connects to your CRM to greet customers by name and see their history instantly.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">⚡</div>
+      <h3>Actions & tools</h3>
+      <p>Let the agent look up orders, change tariffs, or create tickets via custom tool definitions.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📊</div>
+      <h3>Full observability</h3>
+      <p>Every conversation is logged with sources, latency, and resolution status. Audit-ready.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔔</div>
+      <h3>Proactive outreach</h3>
+      <p>Monitors your metrics and auto-messages users when something drops — before they complain.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🌐</div>
+      <h3>Omnichannel</h3>
+      <p>One brain, many surfaces. Website widget, Telegram bot, WhatsApp Business — all from one dashboard.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="channels">
+  <div class="section-title">
+    <h2>Available Channels</h2>
+    <p>Connect once. Reach customers wherever they are.</p>
+  </div>
+  <div class="channels-grid">
+    <div class="channel-badge">
+      <span class="icon">💬</span>
+      <div class="info"><div>Website Widget</div><span>Embed on any site</span></div>
+    </div>
+    <div class="channel-badge">
+      <span class="icon">✈️</span>
+      <div class="info"><div>Telegram</div><span>Instant setup</span></div>
+    </div>
+    <div class="channel-badge">
+      <span class="icon">📱</span>
+      <div class="info"><div>WhatsApp</div><span>Business Cloud API</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="how">
+  <div class="section-title">
+    <h2>How it works</h2>
+    <p>Up and running in under 10 minutes.</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Create account</h3>
+      <p>Sign up in seconds. No credit card needed for the trial.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Upload docs</h3>
+      <p>Drop your PDFs, FAQs, or manuals. Jeeves indexes them automatically.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Connect channels</h3>
+      <p>Enable the website widget or connect your Telegram bot in one click.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <h3>Go live</h3>
+      <p>Jeeves starts answering questions 24/7. You monitor from the dashboard.</p>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <h2>Ready to automate support?</h2>
+  <p>Start your free trial today. No credit card required.</p>
+  <a href="/admin/login" class="btn-primary">Get Started →</a>
+</section>
+
+<footer>
+  &copy; 2026 Jeeves. Built for teams that scale.
+</footer>
+
+</body>
+</html>

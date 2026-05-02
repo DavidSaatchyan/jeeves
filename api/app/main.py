@@ -5,6 +5,8 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from pathlib import Path
 
 from . import admin, auth, dashboard_api, knowledge, routes_chat, routes_crm, routes_proactive, routes_tools, routes_mock, routes_integrations, routes_channels
 from .channels import widget as widget_channel
@@ -126,6 +128,14 @@ def on_startup() -> None:
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
+
+
+_LANDING = Path(__file__).parent / "templates" / "landing.html"
+
+
+@app.get("/", response_class=HTMLResponse)
+def landing():
+    return _LANDING.read_text(encoding="utf-8")
 
 
 app.include_router(auth.router)
