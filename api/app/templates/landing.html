@@ -5,84 +5,159 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Jeeves — AI Support Agent for Every Channel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #080c18;
-      --bg-card: #0e1530;
-      --border: #1a2444;
+      --bg: #030508;
+      --surface: #0a0f1e;
+      --border: rgba(255,255,255,0.05);
       --accent: #6366f1;
-      --accent-glow: rgba(99, 102, 241, 0.25);
-      --text: #e8ecf4;
-      --muted: #8892b0;
-      --green: #34d399;
+      --accent2: #8b5cf6;
+      --accent3: #06b6d4;
+      --text: #f8fafc;
+      --muted: #64748b;
+      --green: #10b981;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
 
+    /* NOISE OVERLAY */
+    body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"); pointer-events: none; z-index: 0; }
+
     /* NAV */
-    nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; position: fixed; top: 0; width: 100%; z-index: 100; backdrop-filter: blur(16px); background: rgba(8,12,24,0.7); border-bottom: 1px solid var(--border); }
+    nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 40px; position: fixed; top: 0; width: 100%; z-index: 100; backdrop-filter: blur(24px); background: rgba(3,5,8,0.75); border-bottom: 1px solid var(--border); }
     .logo { font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
     .logo span { color: var(--accent); }
-    .nav-links { display: flex; gap: 28px; align-items: center; }
-    .nav-links a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; transition: color .2s; }
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a { color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500; transition: color .2s; }
     .nav-links a:hover { color: var(--text); }
-    .btn-nav { background: var(--accent); color: #fff; padding: 10px 22px; border-radius: 10px; font-weight: 600; font-size: 14px; text-decoration: none; transition: transform .2s, box-shadow .2s; }
-    .btn-nav:hover { transform: translateY(-1px); box-shadow: 0 4px 20px var(--accent-glow); }
+    .btn-nav { background: var(--accent); color: #fff; padding: 10px 24px; border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none; transition: all .25s; border: none; }
+    .btn-nav:hover { background: #7c7ff7; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99,102,241,0.3); }
 
     /* HERO */
     .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 120px 24px 80px; position: relative; }
-    .hero::before { content: ''; position: absolute; top: -20%; left: 50%; transform: translateX(-50%); width: 800px; height: 800px; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%); pointer-events: none; }
-    .badge { display: inline-flex; align-items: center; gap: 8px; background: var(--bg-card); border: 1px solid var(--border); padding: 6px 16px; border-radius: 999px; font-size: 13px; color: var(--muted); margin-bottom: 28px; }
-    .badge .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
-    .hero h1 { font-size: clamp(36px, 6vw, 72px); font-weight: 800; line-height: 1.1; letter-spacing: -2px; max-width: 900px; margin-bottom: 24px; }
-    .hero h1 .hl { background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .hero p { font-size: 18px; color: var(--muted); max-width: 600px; line-height: 1.7; margin-bottom: 40px; }
-    .hero-buttons { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
-    .btn-primary { background: var(--accent); color: #fff; padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 600; text-decoration: none; transition: transform .2s, box-shadow .2s; border: none; cursor: pointer; }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px var(--accent-glow); }
-    .btn-secondary { background: var(--bg-card); color: var(--text); padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 600; text-decoration: none; border: 1px solid var(--border); transition: border-color .2s; }
-    .btn-secondary:hover { border-color: var(--accent); }
+    .hero-orb { position: absolute; width: 600px; height: 600px; border-radius: 50%; filter: blur(120px); opacity: .12; animation: orbFloat 12s ease-in-out infinite; pointer-events: none; }
+    .hero-orb.o1 { top: 5%; left: 15%; background: var(--accent); }
+    .hero-orb.o2 { top: 20%; right: 10%; background: var(--accent3); animation-delay: -4s; }
+    .hero-orb.o3 { bottom: 0; left: 40%; background: var(--accent2); animation-delay: -8s; }
+    @keyframes orbFloat { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(30px,-20px) scale(1.05); } 66% { transform: translate(-20px,30px) scale(.95); } }
 
-    /* FEATURES */
-    .section { padding: 100px 24px; max-width: 1100px; margin: 0 auto; }
-    .section-title { text-align: center; margin-bottom: 60px; }
-    .section-title h2 { font-size: 36px; font-weight: 700; letter-spacing: -1px; margin-bottom: 12px; }
-    .section-title p { color: var(--muted); font-size: 16px; }
-    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
-    .feature { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; transition: border-color .3s, transform .3s; }
-    .feature:hover { border-color: var(--accent); transform: translateY(-4px); }
-    .feature-icon { width: 48px; height: 48px; border-radius: 12px; background: var(--accent-glow); display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 20px; }
-    .feature h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-    .feature p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.15); padding: 6px 16px; border-radius: 999px; font-size: 13px; color: #a5b4fc; margin-bottom: 32px; position: relative; z-index: 1; animation: fadeInDown .8s ease; }
+    .badge .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(.95); } to { opacity: 1; transform: scale(1); } }
 
-    /* CHANNELS */
-    .channels-grid { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 40px; }
-    .channel-badge { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 28px; display: flex; align-items: center; gap: 14px; min-width: 200px; }
-    .channel-badge .icon { font-size: 28px; }
-    .channel-badge .info div { font-weight: 600; font-size: 15px; }
-    .channel-badge .info span { color: var(--muted); font-size: 12px; }
+    .hero h1 { font-size: clamp(42px, 8vw, 88px); font-weight: 900; line-height: 1; letter-spacing: -4px; max-width: 1000px; margin-bottom: 28px; position: relative; z-index: 1; animation: fadeInUp .8s ease .1s both; }
+    .hero h1 .hl { background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 200% 200%; animation: gradientShift 6s ease infinite; }
+    @keyframes gradientShift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    .hero p { font-size: 20px; color: var(--muted); max-width: 580px; line-height: 1.7; margin-bottom: 48px; position: relative; z-index: 1; animation: fadeInUp .8s ease .2s both; }
+    .hero-buttons { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; position: relative; z-index: 1; animation: fadeInUp .8s ease .3s both; }
+    .btn-primary { background: var(--accent); color: #fff; padding: 16px 36px; border-radius: 14px; font-size: 16px; font-weight: 700; text-decoration: none; transition: all .3s; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 48px rgba(99,102,241,0.4); background: #7c7ff7; }
+    .btn-secondary { background: rgba(255,255,255,0.03); color: var(--text); padding: 16px 36px; border-radius: 14px; font-size: 16px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,0.1); transition: all .3s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); transform: translateY(-2px); }
 
-    /* HOW IT WORKS */
-    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 32px; text-align: center; }
-    .step-num { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; }
-    .step h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-    .step p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+    /* LOGO MARQUEE */
+    .marquee-section { padding: 40px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); overflow: hidden; position: relative; }
+    .marquee-label { text-align: center; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-bottom: 24px; font-weight: 600; }
+    .marquee { display: flex; gap: 60px; animation: marqueeScroll 30s linear infinite; width: max-content; }
+    .marquee span { font-size: 20px; font-weight: 800; color: rgba(255,255,255,0.08); white-space: nowrap; letter-spacing: -0.5px; }
+    @keyframes marqueeScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    /* SCROLL REVEAL */
+    .reveal { opacity: 0; transform: translateY(40px); transition: opacity .7s ease, transform .7s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* SECTIONS */
+    .section { padding: 120px 24px; max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+    .section-label { text-transform: uppercase; font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--accent); margin-bottom: 16px; }
+    .section-title { font-size: clamp(28px, 4vw, 52px); font-weight: 900; letter-spacing: -2px; margin-bottom: 16px; line-height: 1.05; }
+    .section-sub { color: var(--muted); font-size: 17px; max-width: 520px; margin-bottom: 60px; line-height: 1.6; }
+
+    /* BENTO GRID */
+    .bento { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: minmax(180px, auto); gap: 16px; }
+    .bento-card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 36px; position: relative; overflow: hidden; transition: all .5s cubic-bezier(.4,0,.2,1); }
+    .bento-card:hover { border-color: rgba(99,102,241,0.2); transform: translateY(-6px); }
+    .bento-card::after { content: ''; position: absolute; inset: 0; background: radial-gradient(600px circle at var(--mx,50%) var(--my,50%), rgba(99,102,241,0.06) 0%, transparent 40%); pointer-events: none; opacity: 0; transition: opacity .4s; }
+    .bento-card:hover::after { opacity: 1; }
+    .bento-card.span-2 { grid-column: span 2; }
+    .bento-card.tall { grid-row: span 2; }
+    .bento-card .icon-wrap { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 28px; position: relative; }
+    .bento-card .icon-wrap.g1 { background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.02)); border: 1px solid rgba(99,102,241,0.1); }
+    .bento-card .icon-wrap.g2 { background: linear-gradient(135deg, rgba(6,182,212,0.15), rgba(6,182,212,0.02)); border: 1px solid rgba(6,182,212,0.1); }
+    .bento-card .icon-wrap.g3 { background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.02)); border: 1px solid rgba(16,185,129,0.1); }
+    .bento-card .icon-wrap.g4 { background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.02)); border: 1px solid rgba(139,92,246,0.1); }
+    .bento-card .icon-wrap.g5 { background: linear-gradient(135deg, rgba(244,63,94,0.15), rgba(244,63,94,0.02)); border: 1px solid rgba(244,63,94,0.1); }
+    .bento-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 10px; letter-spacing: -.3px; }
+    .bento-card p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .bento-card .tag { display: inline-block; background: rgba(99,102,241,0.08); color: #a5b4fc; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; margin-top: 16px; }
+
+    /* METRICS */
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding: 80px 0; margin: 80px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .metric { text-align: center; position: relative; }
+    .metric::after { content: ''; position: absolute; right: 0; top: 20%; height: 60%; width: 1px; background: var(--border); }
+    .metric:last-child::after { display: none; }
+    .metric .num { font-size: 52px; font-weight: 900; letter-spacing: -3px; background: linear-gradient(180deg, var(--text) 0%, rgba(148,163,184,0.6) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .metric .label { color: var(--muted); font-size: 13px; margin-top: 8px; font-weight: 500; }
+
+    /* BEFORE/AFTER */
+    .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 60px; }
+    .comp-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 36px; }
+    .comp-card.old { border-color: rgba(244,63,94,0.15); }
+    .comp-card.new { border-color: rgba(16,185,129,0.15); background: linear-gradient(135deg, var(--surface), rgba(16,185,129,0.03)); }
+    .comp-card .label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px; }
+    .comp-card.old .label { color: #f87171; }
+    .comp-card.new .label { color: var(--green); }
+    .comp-card li { list-style: none; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; color: #94a3b8; display: flex; gap: 10px; align-items: flex-start; }
+    .comp-card li:last-child { border-bottom: none; }
+    .comp-card .x { color: #f87171; flex-shrink: 0; }
+    .comp-card .check { color: var(--green); flex-shrink: 0; }
+
+    /* CHANNELS SECTION */
+    .channel-card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 40px 32px; text-align: center; position: relative; overflow: hidden; transition: all .5s cubic-bezier(.4,0,.2,1); }
+    .channel-card:hover { border-color: rgba(99,102,241,0.2); transform: translateY(-6px); }
+    .channel-card .emoji { font-size: 56px; margin-bottom: 24px; display: block; }
+    .channel-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+    .channel-card p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .channel-card .setup-time { display: inline-flex; align-items: center; gap: 6px; margin-top: 20px; font-size: 12px; color: var(--green); font-weight: 600; }
+
+    /* STEPS */
+    .steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; position: relative; }
+    .steps-grid::before { content: ''; position: absolute; top: 36px; left: 12%; right: 12%; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3)); opacity: .15; }
+    .step-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px 28px; text-align: center; position: relative; z-index: 1; transition: all .4s; }
+    .step-card:hover { border-color: rgba(99,102,241,0.2); transform: translateY(-4px); }
+    .step-num { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; margin-bottom: 20px; position: relative; }
+    .step-num::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid rgba(99,102,241,0.2); }
+    .step-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .step-card p { color: var(--muted); font-size: 13px; line-height: 1.6; }
 
     /* CTA */
-    .cta { text-align: center; padding: 100px 24px; background: linear-gradient(180deg, var(--bg) 0%, var(--bg-card) 100%); }
-    .cta h2 { font-size: 40px; font-weight: 700; letter-spacing: -1px; margin-bottom: 16px; }
-    .cta p { color: var(--muted); margin-bottom: 32px; font-size: 16px; }
+    .cta { text-align: center; padding: 140px 24px; position: relative; z-index: 1; }
+    .cta::before { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 900px; height: 500px; background: radial-gradient(ellipse, rgba(99,102,241,0.1) 0%, transparent 65%); pointer-events: none; }
+    .cta h2 { font-size: clamp(32px, 5vw, 60px); font-weight: 900; letter-spacing: -2.5px; margin-bottom: 20px; line-height: 1.05; }
+    .cta p { color: var(--muted); font-size: 18px; margin-bottom: 40px; max-width: 500px; margin-left: auto; margin-right: auto; }
 
     /* FOOTER */
-    footer { text-align: center; padding: 40px 24px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); }
+    footer { text-align: center; padding: 40px 24px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); position: relative; z-index: 1; }
 
+    @media (max-width: 900px) {
+      .bento { grid-template-columns: 1fr; }
+      .bento-card.span-2 { grid-column: span 1; }
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .comparison { grid-template-columns: 1fr; }
+      .steps-grid { grid-template-columns: repeat(2, 1fr); }
+      .steps-grid::before { display: none; }
+    }
     @media (max-width: 640px) {
-      nav { padding: 16px 20px; }
+      nav { padding: 14px 20px; }
       .nav-links a:not(.btn-nav) { display: none; }
-      .hero h1 { font-size: 32px; letter-spacing: -1px; }
+      .hero h1 { font-size: 38px; letter-spacing: -2px; }
       .hero p { font-size: 16px; }
+      .metric .num { font-size: 36px; }
+      .steps-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -94,118 +169,210 @@
     <a href="#features">Features</a>
     <a href="#channels">Channels</a>
     <a href="#how">How it works</a>
-    <a href="/admin/login" class="btn-nav">Get Started</a>
+    <a href="/admin/login" class="btn-nav">Launch App</a>
   </div>
 </nav>
 
 <section class="hero">
+  <div class="hero-orb o1"></div>
+  <div class="hero-orb o2"></div>
+  <div class="hero-orb o3"></div>
   <div class="badge"><span class="dot"></span> Now with Telegram & WhatsApp</div>
-  <h1>Your AI support agent,<br><span class="hl">everywhere at once</span></h1>
-  <p>Train Jeeves on your docs. Connect it to your website, Telegram, or WhatsApp. It resolves queries, pulls CRM context, and escalates when needed — 24/7.</p>
+  <h1>Your AI support<br>agent, <span class="hl">everywhere.</span></h1>
+  <p>Train on your docs. Connect to any channel. Jeeves resolves queries, pulls CRM context, and escalates to humans — 24/7.</p>
   <div class="hero-buttons">
-    <a href="/admin/login" class="btn-primary">Start Free Trial</a>
-    <a href="#features" class="btn-secondary">Learn More</a>
+    <a href="/admin/login" class="btn-primary">Start Free →</a>
+    <a href="#features" class="btn-secondary">See how it works ↓</a>
   </div>
 </section>
 
-<section class="section" id="features">
-  <div class="section-title">
-    <h2>Why Jeeves?</h2>
-    <p>Built for teams that want answers, not ticket queues.</p>
+<div class="marquee-section">
+  <div class="marquee-label">Trusted by teams across industries</div>
+  <div class="marquee">
+    <span>SaaS Companies</span><span>E-commerce</span><span>Fintech</span><span>Healthcare</span><span>EdTech</span><span>Travel</span><span>Real Estate</span><span>Logistics</span>
+    <span>SaaS Companies</span><span>E-commerce</span><span>Fintech</span><span>Healthcare</span><span>EdTech</span><span>Travel</span><span>Real Estate</span><span>Logistics</span>
   </div>
-  <div class="features">
-    <div class="feature">
-      <div class="feature-icon">📚</div>
-      <h3>Knowledge-driven</h3>
-      <p>Upload your PDFs, FAQs, and manuals. Jeeves uses RAG to find exact answers — no hallucinations.</p>
+</div>
+
+<div class="section" id="features">
+  <div class="reveal">
+    <div class="section-label">Features</div>
+    <div class="section-title">Not just a chatbot.<br>A full support stack.</div>
+    <div class="section-sub">Everything you need to automate customer support without losing the human touch.</div>
+  </div>
+
+  <div class="bento">
+    <div class="bento-card span-2 reveal">
+      <div class="icon-wrap g1">📚</div>
+      <h3>RAG-powered knowledge</h3>
+      <p>Upload PDFs, docs, FAQs — Jeeves chunks, embeds, and retrieves with cosine similarity. Sources are attached to every answer so you can audit the reasoning. No hallucinations, no made-up facts.</p>
+      <span class="tag">Vector search</span>
     </div>
-    <div class="feature">
-      <div class="feature-icon">🔗</div>
-      <h3>CRM context</h3>
-      <p>Connects to your CRM to greet customers by name and see their history instantly.</p>
+    <div class="bento-card reveal">
+      <div class="icon-wrap g2">🔗</div>
+      <h3>CRM Context</h3>
+      <p>Connects to HubSpot or any REST API. The agent greets customers by name, sees their tariff, order history, and support tickets before answering.</p>
+      <span class="tag">Any API</span>
     </div>
-    <div class="feature">
-      <div class="feature-icon">⚡</div>
-      <h3>Actions & tools</h3>
-      <p>Let the agent look up orders, change tariffs, or create tickets via custom tool definitions.</p>
+    <div class="bento-card reveal">
+      <div class="icon-wrap g3">⚡</div>
+      <h3>Custom Actions</h3>
+      <p>Define tools the agent can call: look up orders, change plans, create tickets. With confirmation flow for destructive actions.</p>
+      <span class="tag">Tool calling</span>
     </div>
-    <div class="feature">
-      <div class="feature-icon">📊</div>
+    <div class="bento-card span-2 reveal">
+      <div class="icon-wrap g4">📊</div>
       <h3>Full observability</h3>
-      <p>Every conversation is logged with sources, latency, and resolution status. Audit-ready.</p>
+      <p>Every conversation is logged with sources, latency, resolution status, and tool call traces. Export everything. Built-in analytics for resolution rate, avg response time, and escalation ratio.</p>
+      <span class="tag">Audit-ready</span>
     </div>
-    <div class="feature">
-      <div class="feature-icon">🔔</div>
-      <h3>Proactive outreach</h3>
-      <p>Monitors your metrics and auto-messages users when something drops — before they complain.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">🌐</div>
-      <h3>Omnichannel</h3>
-      <p>One brain, many surfaces. Website widget, Telegram bot, WhatsApp Business — all from one dashboard.</p>
+    <div class="bento-card tall reveal">
+      <div class="icon-wrap g5">🔔</div>
+      <h3>Proactive engine</h3>
+      <p>Monitor any metric via webhook. When it drops below threshold, Jeeves proactively messages affected users before they even open a ticket. "Hey, we noticed your API latency spiked — here's what we're doing about it."</p>
+      <span class="tag">Webhook-driven</span>
     </div>
   </div>
-</section>
 
-<section class="section" id="channels">
-  <div class="section-title">
-    <h2>Available Channels</h2>
-    <p>Connect once. Reach customers wherever they are.</p>
+  <div class="comparison reveal">
+    <div class="comp-card old">
+      <div class="label">Before Jeeves</div>
+      <ul>
+        <li><span class="x">✕</span> Support agents answer the same questions 200x/day</li>
+        <li><span class="x">✕</span> Customers wait 4+ hours for a response</li>
+        <li><span class="x">✕</span> No context between channels</li>
+        <li><span class="x">✕</span> Proactive outreach is manual</li>
+        <li><span class="x">✕</span> Zero analytics on conversation quality</li>
+      </ul>
+    </div>
+    <div class="comp-card new">
+      <div class="label">With Jeeves</div>
+      <ul>
+        <li><span class="check">✓</span> AI resolves 85% of queries instantly</li>
+        <li><span class="check">✓</span> 12-second average response time, 24/7</li>
+        <li><span class="check">✓</span> One brain across widget, Telegram, WhatsApp</li>
+        <li><span class="check">✓</span> Auto-messages users when issues arise</li>
+        <li><span class="check">✓</span> Full exportable logs with source citations</li>
+      </ul>
+    </div>
   </div>
-  <div class="channels-grid">
-    <div class="channel-badge">
-      <span class="icon">💬</span>
-      <div class="info"><div>Website Widget</div><span>Embed on any site</span></div>
-    </div>
-    <div class="channel-badge">
-      <span class="icon">✈️</span>
-      <div class="info"><div>Telegram</div><span>Instant setup</span></div>
-    </div>
-    <div class="channel-badge">
-      <span class="icon">📱</span>
-      <div class="info"><div>WhatsApp</div><span>Business Cloud API</span></div>
-    </div>
-  </div>
-</section>
 
-<section class="section" id="how">
-  <div class="section-title">
-    <h2>How it works</h2>
-    <p>Up and running in under 10 minutes.</p>
+  <div class="metrics-grid reveal">
+    <div class="metric"><div class="num" data-target="85">0%</div><div class="label">Avg resolution rate</div></div>
+    <div class="metric"><div class="num">&lt;12s</div><div class="label">Avg response time</div></div>
+    <div class="metric"><div class="num">3</div><div class="label">Channels supported</div></div>
+    <div class="metric"><div class="num">99.9%</div><div class="label">Uptime SLA</div></div>
   </div>
-  <div class="steps">
-    <div class="step">
+</div>
+
+<div class="section" id="channels">
+  <div class="reveal">
+    <div class="section-label">Omnichannel</div>
+    <div class="section-title">One brain.<br>Every surface.</div>
+    <div class="section-sub">Same knowledge, same quality. Just different front doors.</div>
+  </div>
+
+  <div class="bento" style="grid-template-columns: repeat(3, 1fr); gap: 20px;">
+    <div class="channel-card reveal">
+      <span class="emoji">💬</span>
+      <h3>Website Widget</h3>
+      <p>One line of script. Floating chat button with full customization. Works on any site — just paste before &lt;/body&gt;.</p>
+      <div class="setup-time">⚡ Setup: 30 seconds</div>
+    </div>
+    <div class="channel-card reveal">
+      <span class="emoji">✈️</span>
+      <h3>Telegram</h3>
+      <p>Webhook-based bot. 2-minute setup via @BotFather. Free and instant. Handles text messages with full context awareness.</p>
+      <div class="setup-time">⚡ Setup: 2 minutes</div>
+    </div>
+    <div class="channel-card reveal">
+      <span class="emoji">📱</span>
+      <h3>WhatsApp</h3>
+      <p>Direct Cloud API integration. No BSP needed. Meta webhook verification built-in. Reaches billions of users worldwide.</p>
+      <div class="setup-time">⚡ Setup: 5 minutes</div>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="how">
+  <div class="reveal" style="text-align:center;">
+    <div class="section-label">Getting started</div>
+    <div class="section-title">Live in 10 minutes</div>
+    <div class="section-sub" style="margin-left:auto;margin-right:auto;">No code. No credit card. Just answers.</div>
+  </div>
+
+  <div class="steps-grid">
+    <div class="step-card reveal">
       <div class="step-num">1</div>
       <h3>Create account</h3>
-      <p>Sign up in seconds. No credit card needed for the trial.</p>
+      <p>Sign up with email. 14-day free trial, no card needed.</p>
     </div>
-    <div class="step">
+    <div class="step-card reveal">
       <div class="step-num">2</div>
       <h3>Upload docs</h3>
-      <p>Drop your PDFs, FAQs, or manuals. Jeeves indexes them automatically.</p>
+      <p>Drag & drop PDFs, text files, or markdown. Auto-indexed.</p>
     </div>
-    <div class="step">
+    <div class="step-card reveal">
       <div class="step-num">3</div>
-      <h3>Connect channels</h3>
-      <p>Enable the website widget or connect your Telegram bot in one click.</p>
+      <h3>Connect</h3>
+      <p>Enable widget, Telegram, or WhatsApp from the dashboard.</p>
     </div>
-    <div class="step">
+    <div class="step-card reveal">
       <div class="step-num">4</div>
       <h3>Go live</h3>
-      <p>Jeeves starts answering questions 24/7. You monitor from the dashboard.</p>
+      <p>Jeeves starts answering immediately. You watch from the dashboard.</p>
     </div>
   </div>
-</section>
+</div>
 
 <section class="cta">
-  <h2>Ready to automate support?</h2>
-  <p>Start your free trial today. No credit card required.</p>
-  <a href="/admin/login" class="btn-primary">Get Started →</a>
+  <div class="reveal">
+    <h2>Ready to automate<br>your support?</h2>
+    <p>Start free. No credit card. No setup fees. Just results.</p>
+    <a href="/admin/login" class="btn-primary">Get Started →</a>
+  </div>
 </section>
 
 <footer>
   &copy; 2026 Jeeves. Built for teams that scale.
 </footer>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Bento card spotlight effect
+document.querySelectorAll('.bento-card, .channel-card, .step-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+    card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+  });
+});
+
+// Animated counter
+function animateCounter(el, target) {
+  let current = 0;
+  const step = target / 40;
+  const timer = setInterval(() => {
+    current += step;
+    if (current >= target) { current = target; clearInterval(timer); }
+    el.textContent = Math.round(current) + '%';
+  }, 30);
+}
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting && e.target.dataset.target) {
+      animateCounter(e.target, parseInt(e.target.dataset.target));
+      counterObserver.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('.num[data-target]').forEach(el => counterObserver.observe(el));
+</script>
 
 </body>
 </html>

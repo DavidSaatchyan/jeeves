@@ -98,7 +98,7 @@
 function token(){ return localStorage.getItem('jeeves_token'); }
 function setToken(t,tid){ localStorage.setItem('jeeves_token',t); if(tid) localStorage.setItem('jeeves_tid',tid); }
 function tenantId(){ return localStorage.getItem('jeeves_tid'); }
-function logout(){ localStorage.removeItem('jeeves_token'); localStorage.removeItem('jeeves_tid'); location.href='/admin/login'; }
+function logout(){ localStorage.removeItem('jeeves_token'); localStorage.removeItem('jeeves_tid'); location.href='/'; }
 async function api(path, opts={}){
   const headers = opts.headers||{};
   if(!(opts.body instanceof FormData)) headers['Content-Type']='application/json';
