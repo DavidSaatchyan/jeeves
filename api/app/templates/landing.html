@@ -177,11 +177,19 @@
     .vp-metric .val.green { color: var(--green); }
     .vp-metric .lbl { font-size: 11px; color: var(--muted); }
 
-    /* ===== METRICS ===== */
-    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding: 60px 0; }
-    .metric { text-align: center; }
-    .metric .num { font-size: 48px; font-weight: 900; letter-spacing: -3px; background: linear-gradient(180deg, var(--text) 0%, rgba(148,163,184,0.5) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .metric .label { color: var(--muted); font-size: 13px; margin-top: 6px; font-weight: 500; }
+    /* ===== HERO METRIC ===== */
+    .hero-metric { text-align: center; padding: 80px 24px 100px; }
+    .hero-metric .big-num { font-size: clamp(100px, 18vw, 200px); font-weight: 900; letter-spacing: -8px; line-height: 0.85; background: linear-gradient(180deg, #fff 0%, var(--accent) 50%, var(--accent2) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; position: relative; display: inline-block; }
+    .hero-metric .big-num::after { content: '%'; }
+    .hero-metric .big-sub { font-size: clamp(16px, 2.5vw, 22px); font-weight: 600; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; margin-top: 8px; }
+    .hero-metric .big-desc { max-width: 560px; margin: 32px auto 0; }
+    .hero-metric .big-desc p { font-size: 16px; line-height: 1.7; color: #cbd5e1; }
+    .hero-metric .big-desc p + p { margin-top: 8px; color: #94a3b8; font-size: 14px; }
+    .hero-metric .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border-radius: 20px; margin-top: 64px; overflow: hidden; }
+    .hero-metric .stat-block { background: var(--surface); padding: 40px 32px; transition: background .3s; }
+    .hero-metric .stat-block:hover { background: rgba(99,102,241,0.04); }
+    .hero-metric .stat-block .s-num { font-size: 28px; font-weight: 800; color: #f1f5f9; letter-spacing: -1px; margin-bottom: 8px; }
+    .hero-metric .stat-block .s-label { font-size: 13px; color: #94a3b8; line-height: 1.6; }
 
     /* ===== CHANNELS ===== */
     .channels-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
@@ -249,7 +257,7 @@
       .hero-text p { margin-left: auto; margin-right: auto; }
       .hero-buttons { justify-content: center; }
       .caps-grid { grid-template-columns: repeat(2, 1fr); }
-      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat-row { grid-template-columns: 1fr; }
       .channels-grid { grid-template-columns: 1fr; }
       .vp-row { flex-direction: column; text-align: center; }
       .vp-arrow { transform: rotate(90deg); }
@@ -510,11 +518,27 @@
     </div>
   </div>
 
-  <div class="metrics-grid reveal">
-    <div class="metric"><div class="num" data-target="85">0%</div><div class="label">Avg resolution rate</div></div>
-    <div class="metric"><div class="num">&lt;12s</div><div class="label">Avg response time</div></div>
-    <div class="metric"><div class="num">3</div><div class="label">Channels supported</div></div>
-    <div class="metric"><div class="num">99.9%</div><div class="label">Uptime SLA</div></div>
+  <div class="hero-metric reveal">
+    <div class="big-num">90</div>
+    <div class="big-sub">auto-resolved instantly</div>
+    <div class="big-desc">
+      <p>Jeeves answers 90% of questions without a human.</p>
+      <p>The remaining 10%? Escalated with full context.</p>
+    </div>
+    <div class="stat-row">
+      <div class="stat-block">
+        <div class="s-num">&lt;5s</div>
+        <div class="s-label">Response time, 24/7.<br>No queues.</div>
+      </div>
+      <div class="stat-block">
+        <div class="s-num">1 brain</div>
+        <div class="s-label">Unified memory across<br>all channels.</div>
+      </div>
+      <div class="stat-block">
+        <div class="s-num">Proactive</div>
+        <div class="s-label">Auto-messages users<br>before problems.</div>
+      </div>
+    </div>
   </div>
 </div>
 
