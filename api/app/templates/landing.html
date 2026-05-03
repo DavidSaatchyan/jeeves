@@ -30,8 +30,8 @@
     .nav-links { display: flex; gap: 32px; align-items: center; }
     .nav-links a { color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500; transition: color .2s; }
     .nav-links a:hover { color: var(--text); }
-    .btn-nav { background: #fff; color: #030508; padding: 10px 24px; border-radius: 10px; font-weight: 800; font-size: 14px; text-decoration: none; transition: all .25s; border: none; }
-    .btn-nav:hover { background: #f1f5f9; box-shadow: 0 8px 24px rgba(255,255,255,0.2); transform: translateY(-1px); }
+    .btn-nav { background: #030508; color: #fff; padding: 10px 24px; border-radius: 10px; font-weight: 800; font-size: 14px; text-decoration: none; transition: all .25s; border: 1px solid rgba(255,255,255,0.2); }
+    .btn-nav:hover { background: #1a1f35; border-color: rgba(255,255,255,0.35); box-shadow: 0 8px 24px rgba(0,0,0,0.4); transform: translateY(-1px); }
 
     /* ===== HERO ===== */
     .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 120px 24px 80px; position: relative; overflow: hidden; }
@@ -229,30 +229,37 @@
 
     .tl-node { padding-top: 28px; position: relative; z-index: 2; }
     .tl-dot { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: #fff; }
-    .tl-row:nth-child(1) .tl-dot { background: var(--accent); box-shadow: 0 0 20px rgba(99,102,241,0.4); }
-    .tl-row:nth-child(2) .tl-dot { background: var(--accent2); box-shadow: 0 0 20px rgba(139,92,246,0.4); }
-    .tl-row:nth-child(3) .tl-dot { background: var(--accent3); box-shadow: 0 0 20px rgba(6,182,212,0.4); }
-    .tl-row:nth-child(4) .tl-dot { background: var(--accent2); box-shadow: 0 0 20px rgba(139,92,246,0.4); }
-    .tl-row:nth-child(5) .tl-dot { background: var(--green); box-shadow: 0 0 20px rgba(16,185,129,0.4); }
+    .tl-row.d1 .tl-dot { background: var(--accent); box-shadow: 0 0 20px rgba(99,102,241,0.4); }
+    .tl-row.d2 .tl-dot { background: var(--accent2); box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+    .tl-row.d3 .tl-dot { background: var(--accent3); box-shadow: 0 0 20px rgba(6,182,212,0.4); }
+    .tl-row.d4 .tl-dot { background: var(--accent2); box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+    .tl-row.d5 .tl-dot { background: var(--green); box-shadow: 0 0 20px rgba(16,185,129,0.4); }
 
     /* ===== PRICING ===== */
-    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 900px; margin: 0 auto; }
-    .price-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px 32px; text-align: center; position: relative; transition: all .4s; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 1100px; margin: 0 auto; }
+    .price-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 36px 24px; text-align: center; position: relative; transition: all .4s; }
     .price-card:hover { transform: translateY(-4px); }
-    .price-card.featured { border-color: rgba(99,102,241,0.3); background: linear-gradient(180deg, rgba(99,102,241,0.06) 0%, var(--surface) 40%); }
+    .price-card.featured { border-color: rgba(99,102,241,0.3); background: linear-gradient(180deg, rgba(99,102,241,0.08) 0%, var(--surface) 50%); box-shadow: 0 0 40px rgba(99,102,241,0.08); }
     .price-card.featured::before { content: 'Most popular'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 999px; }
-    .price-card .p-name { font-size: 14px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
-    .price-card .p-price { font-size: 48px; font-weight: 900; letter-spacing: -3px; color: #f1f5f9; }
-    .price-card .p-price .p-cur { font-size: 24px; vertical-align: super; margin-right: 2px; }
-    .price-card .p-period { font-size: 14px; color: #94a3b8; margin-top: 4px; margin-bottom: 28px; }
-    .price-card .p-features { list-style: none; text-align: left; margin-bottom: 32px; }
-    .price-card .p-features li { font-size: 14px; color: #cbd5e1; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; align-items: center; gap: 10px; }
-    .price-card .p-features li::before { content: '✓'; color: var(--green); font-weight: 700; font-size: 13px; flex-shrink: 0; }
-    .price-card .p-btn { display: block; width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 700; text-decoration: none; transition: all .3s; border: none; cursor: pointer; }
-    .price-card .p-btn.primary { background: var(--accent); color: #fff; }
+    .price-card .p-name { font-size: 13px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+    .price-card .p-price { font-size: 44px; font-weight: 900; letter-spacing: -3px; color: #f1f5f9; }
+    .price-card .p-price .p-cur { font-size: 22px; vertical-align: super; margin-right: 2px; }
+    .price-card .p-period { font-size: 13px; color: #94a3b8; margin-top: 4px; margin-bottom: 24px; }
+    .price-card .p-features { list-style: none; text-align: left; margin-bottom: 28px; }
+    .price-card .p-features li { font-size: 13px; color: #cbd5e1; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; align-items: center; gap: 8px; }
+    .price-card .p-features li::before { content: '✓'; color: var(--green); font-weight: 700; font-size: 12px; flex-shrink: 0; }
+    .price-card .p-btn { display: block; width: 100%; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700; text-decoration: none; transition: all .3s; cursor: pointer; }
+    .price-card .p-btn.primary { background: var(--accent); color: #fff; border: none; }
     .price-card .p-btn.primary:hover { background: #4f46e5; box-shadow: 0 8px 24px rgba(99,102,241,0.3); }
     .price-card .p-btn.secondary { background: rgba(255,255,255,0.06); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1); }
     .price-card .p-btn.secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+    .price-card .p-btn.outline { background: transparent; color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15); }
+    .price-card .p-btn.outline:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); }
+    .pricing-note { max-width: 700px; margin: 40px auto 0; text-align: center; }
+    .pricing-note .pn-row { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 12px; }
+    .pricing-note .pn-icon { font-size: 18px; flex-shrink: 0; }
+    .pricing-note .pn-text { font-size: 13px; color: #cbd5e1; line-height: 1.5; }
+    .pricing-note .pn-text strong { color: #f1f5f9; }
 
     /* CTA */
     .cta-section { background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.04) 100%); }
@@ -279,7 +286,7 @@
       .tl-row.left .tl-card, .tl-row.right .tl-card { grid-column: 2; justify-self: start; transform: translateX(-20px) !important; width: 100%; max-width: none; }
       .tl-row.left .tl-node, .tl-row.right .tl-node { grid-column: 1; justify-self: center; }
       .tl-row.left .tl-void, .tl-row.right .tl-void { display: none; }
-      .pricing-grid { grid-template-columns: 1fr; max-width: 360px; margin: 0 auto; }
+      .pricing-grid { grid-template-columns: 1fr 1fr; max-width: 500px; }
     }
     @media (max-width: 640px) {
       nav { padding: 14px 20px; }
@@ -298,10 +305,8 @@
 <nav>
   <div class="logo">Jeeves<span>.</span></div>
   <div class="nav-links">
-    <a href="#capabilities">Product</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#channels">Channels</a>
     <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
     <a href="/admin/login" class="btn-nav">Launch App</a>
   </div>
 </nav>
@@ -354,12 +359,12 @@
         <div class="phone-body" id="chatBody">
           <div class="msg user" id="m1">
             <div class="msg-avatar">D</div>
-            <div class="msg-bubble">Hi, I want to upgrade to Business plan</div>
+            <div class="msg-bubble">Hi, I want to upgrade to Pro plan</div>
           </div>
           <div class="msg bot" id="m2" style="display:none;">
             <div class="msg-avatar">J</div>
             <div>
-              <div class="msg-bubble">Sure! I see you're on <strong>Growth</strong> ($29/mo). Scale is <strong>$79/mo</strong> with unlimited conversations, proactive alerts, and custom actions. Want me to switch?</div>
+              <div class="msg-bubble">Sure! I see you're on <strong>Starter</strong> ($49/mo). Pro is <strong>$149/mo</strong> with all channels, proactive alerts, and custom actions. Want me to switch?</div>
             </div>
           </div>
           <div class="msg user" id="m3" style="display:none;">
@@ -371,7 +376,7 @@
             <div>
               <div class="msg-bubble">
                 <div class="msg-confirmation">
-                  <div class="msg-confirm-text">⚠ Confirm upgrade: Growth → Scale<br>$29/mo → $79/mo</div>
+                  <div class="msg-confirm-text">⚠ Confirm upgrade: Starter → Pro<br>$49/mo → $149/mo</div>
                   <div class="msg-confirm-btn" id="confirmBtn">Confirm</div>
                 </div>
               </div>
@@ -380,7 +385,7 @@
           <div class="msg bot" id="m5" style="display:none;">
             <div class="msg-avatar">J</div>
             <div>
-              <div class="msg-bubble">Done! Your plan is now <strong>Scale</strong>. All features active immediately. Billed $79/mo starting next cycle.</div>
+              <div class="msg-bubble">Done! Your plan is now <strong>Pro</strong>. All features active immediately. Billed $149/mo starting next cycle.</div>
               <div class="msg-success">✓ Action: plan.upgrade completed</div>
             </div>
           </div>
@@ -550,7 +555,7 @@
       <div class="tl-track-fill" id="tlProgress"></div>
     </div>
 
-    <div class="tl-row left">
+    <div class="tl-row left d1">
       <div class="tl-card">
         <div class="tl-num">Step 01</div>
         <h3>Create your account</h3>
@@ -561,7 +566,7 @@
       <div class="tl-void"></div>
     </div>
 
-    <div class="tl-row right">
+    <div class="tl-row right d2">
       <div class="tl-void"></div>
       <div class="tl-node"><div class="tl-dot">2</div></div>
       <div class="tl-card">
@@ -572,7 +577,7 @@
       </div>
     </div>
 
-    <div class="tl-row left">
+    <div class="tl-row left d3">
       <div class="tl-card">
         <div class="tl-num">Step 03</div>
         <h3>Connect your channels</h3>
@@ -583,7 +588,7 @@
       <div class="tl-void"></div>
     </div>
 
-    <div class="tl-row right">
+    <div class="tl-row right d4">
       <div class="tl-void"></div>
       <div class="tl-node"><div class="tl-dot">4</div></div>
       <div class="tl-card">
@@ -594,7 +599,7 @@
       </div>
     </div>
 
-    <div class="tl-row left">
+    <div class="tl-row left d5">
       <div class="tl-card">
         <div class="tl-num">Step 05</div>
         <h3>You're live</h3>
@@ -613,47 +618,71 @@
 <div class="section" id="pricing" style="text-align:center;">
   <div class="reveal">
     <div class="section-title">Pay for results,<br>not promises.</div>
-    <div class="section-sub" style="margin-left:auto;margin-right:auto;">Cheaper than a single support agent. Scales with your volume.</div>
+    <div class="section-sub" style="margin-left:auto;margin-right:auto;">Cheaper than a single support agent. Scales with you.</div>
   </div>
 
   <div class="pricing-grid">
     <div class="price-card reveal">
-      <div class="p-name">Starter</div>
+      <div class="p-name">Free</div>
       <div class="p-price"><span class="p-cur">$</span>0</div>
-      <div class="p-period">Free forever</div>
+      <div class="p-period">/month</div>
       <ul class="p-features">
-        <li>50 resolutions / month</li>
+        <li>25 resolved / month</li>
         <li>1 channel</li>
-        <li>Basic knowledge base</li>
+        <li>Basic RAG</li>
         <li>Community support</li>
       </ul>
       <a href="/admin/login" class="p-btn secondary">Get Started</a>
     </div>
-    <div class="price-card featured reveal">
-      <div class="p-name">Growth</div>
-      <div class="p-price"><span class="p-cur">$</span>29</div>
-      <div class="p-period">per month</div>
+    <div class="price-card reveal">
+      <div class="p-name">Starter</div>
+      <div class="p-price"><span class="p-cur">$</span>49</div>
+      <div class="p-period">/month</div>
       <ul class="p-features">
-        <li>500 resolutions / month</li>
+        <li>500 resolved / month</li>
         <li>3 channels</li>
-        <li>CRM integration</li>
-        <li>Custom actions</li>
+        <li>CRM Context</li>
+        <li>Basic Actions</li>
+        <li>Email support</li>
+      </ul>
+      <a href="/admin/login" class="p-btn secondary">Get Started</a>
+    </div>
+    <div class="price-card featured reveal">
+      <div class="p-name">Pro</div>
+      <div class="p-price"><span class="p-cur">$</span>149</div>
+      <div class="p-period">/month</div>
+      <ul class="p-features">
+        <li>2,000 resolved / month</li>
+        <li>All channels</li>
+        <li>Custom Actions</li>
+        <li>Proactive Engine</li>
         <li>Priority support</li>
       </ul>
       <a href="/admin/login" class="p-btn primary">Get Started</a>
     </div>
     <div class="price-card reveal">
-      <div class="p-name">Scale</div>
-      <div class="p-price"><span class="p-cur">$</span>79</div>
-      <div class="p-period">per month</div>
+      <div class="p-name">Enterprise</div>
+      <div class="p-price" style="font-size:36px;letter-spacing:-2px;">Custom</div>
+      <div class="p-period">tailored</div>
       <ul class="p-features">
-        <li>Unlimited resolutions</li>
-        <li>All channels + email</li>
-        <li>Proactive engine</li>
-        <li>Full analytics</li>
-        <li>Dedicated support</li>
+        <li>Unlimited resolved</li>
+        <li>All channels + API</li>
+        <li>On-premise</li>
+        <li>SLA 99.9%</li>
+        <li>Dedicated team</li>
       </ul>
-      <a href="/admin/login" class="p-btn secondary">Get Started</a>
+      <a href="/admin/login" class="p-btn outline">Contact Us</a>
+    </div>
+  </div>
+
+  <div class="pricing-note reveal">
+    <div class="pn-row">
+      <div class="pn-icon">💡</div>
+      <div class="pn-text">Overage: <strong>$0.20 per resolution</strong> beyond your plan. Still 80% cheaper than Fin's $0.99/resolution.</div>
+    </div>
+    <div class="pn-row">
+      <div class="pn-icon">✨</div>
+      <div class="pn-text">Proactive engine auto-messages users before problems. <strong>Included in Pro.</strong> Not available anywhere else.</div>
     </div>
   </div>
 </div>
