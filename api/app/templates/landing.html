@@ -84,48 +84,48 @@
     .phone-btn-side { position: absolute; right: -5px; top: 120px; width: 4px; height: 40px; background: linear-gradient(180deg, #8892a0, #a0aab8); border-radius: 0 2px 2px 0; box-shadow: 2px 0 4px rgba(0,0,0,0.3); transform: translateZ(-4px); }
     .phone-btn-vol1 { position: absolute; left: -5px; top: 100px; width: 4px; height: 28px; background: linear-gradient(180deg, #8892a0, #a0aab8); border-radius: 2px 0 0 2px; box-shadow: -2px 0 4px rgba(0,0,0,0.3); transform: translateZ(-4px); }
     .phone-btn-vol2 { position: absolute; left: -5px; top: 138px; width: 4px; height: 28px; background: linear-gradient(180deg, #8892a0, #a0aab8); border-radius: 2px 0 0 2px; box-shadow: -2px 0 4px rgba(0,0,0,0.3); transform: translateZ(-4px); }
-    .phone-screen { background: #f1f5f9; margin: 6px; border-radius: 34px; overflow: hidden; box-shadow: inset 0 0 8px rgba(0,0,0,0.08); }
+    .phone-screen { background: #0f172a; margin: 6px; border-radius: 34px; overflow: hidden; box-shadow: inset 0 0 8px rgba(0,0,0,0.3); }
     .phone-dynamic-island { width: 100px; height: 28px; background: #000; border-radius: 20px; margin: 8px auto 0; position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
     .phone-island-cam { width: 8px; height: 8px; border-radius: 50%; background: #1a1f35; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 0 4px rgba(255,255,255,0.08); }
-    .phone-status { display: flex; justify-content: space-between; align-items: center; padding: 6px 22px 4px; font-size: 12px; font-weight: 600; color: #1e293b; }
+    .phone-status { display: flex; justify-content: space-between; align-items: center; padding: 6px 22px 4px; font-size: 12px; font-weight: 600; color: #e2e8f0; }
     .phone-status-time { font-size: 14px; font-weight: 700; }
     .phone-status-icons { display: flex; gap: 4px; align-items: center; }
-    .phone-status-icons svg { width: 14px; height: 14px; fill: #1e293b; }
-    .phone-nav-bar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #fff; border-bottom: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-    .phone-back-btn { color: #6366f1; font-size: 22px; font-weight: 300; line-height: 1; }
+    .phone-status-icons svg { width: 14px; height: 14px; fill: #e2e8f0; }
+    .phone-nav-bar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #1e293b; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .phone-back-btn { color: #818cf8; font-size: 22px; font-weight: 300; line-height: 1; }
     .phone-bot-icon { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; box-shadow: 0 0 12px rgba(99,102,241,0.3); }
     .phone-bot-info { flex: 1; }
-    .phone-bot-name { font-size: 13px; font-weight: 600; color: #1e293b; }
+    .phone-bot-name { font-size: 13px; font-weight: 600; color: #e2e8f0; }
     .phone-bot-status { font-size: 10px; color: #2d9a6e; }
-    .phone-body { height: 370px; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; position: relative; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); scrollbar-width: none; }
+    .phone-body { height: 370px; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; position: relative; background: linear-gradient(180deg, #0f172a 0%, #111827 100%); scrollbar-width: none; }
     .phone-body::-webkit-scrollbar { display: none; }
     .msg { display: flex; gap: 6px; max-width: 90%; opacity: 0; transform: translateY(6px); transition: opacity .35s, transform .35s; flex-shrink: 0; }
     .msg.show { opacity: 1; transform: translateY(0); }
     .msg.user { align-self: flex-end; flex-direction: row-reverse; }
     .msg-avatar { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; margin-top: 2px; }
     .msg.bot .msg-avatar { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
-    .msg.user .msg-avatar { background: #e2e8f0; color: #64748b; border: 1px solid #cbd5e1; }
+    .msg.user .msg-avatar { background: #334155; color: #94a3b8; border: 1px solid #475569; }
     .msg-bubble { padding: 8px 12px; border-radius: 14px; font-size: 11.5px; line-height: 1.45; }
-    .msg.bot .msg-bubble { background: #fff; border: 1px solid #e2e8f0; border-top-left-radius: 4px; color: #334155; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .msg.bot .msg-bubble { background: #1e293b; border: 1px solid rgba(255,255,255,0.06); border-top-left-radius: 4px; color: #e2e8f0; }
     .msg.user .msg-bubble { background: linear-gradient(135deg, var(--accent), #4f46e5); color: #fff; border-top-right-radius: 4px; box-shadow: 0 4px 12px rgba(99,102,241,0.25); }
-    .msg-bubble strong { color: #1e293b; }
+    .msg-bubble strong { color: #f1f5f9; }
     .msg.user .msg-bubble strong { color: #fff; }
     .msg-confirmation { margin-top: 6px; padding: 8px 10px; background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.15); border-radius: 10px; }
-    .msg-confirm-text { font-size: 10px; color: #dc2626; margin-bottom: 6px; font-weight: 500; }
+    .msg-confirm-text { font-size: 10px; color: #f87171; margin-bottom: 6px; font-weight: 500; }
     .msg-confirm-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: var(--accent); color: #fff; border-radius: 8px; font-weight: 700; font-size: 10px; transition: all .3s; }
     .msg-confirm-btn.tapped { background: var(--green); transform: scale(1.05); box-shadow: 0 0 12px rgba(16,185,129,0.4); }
     .msg-confirm-btn.tapped::before { content: '✓ '; }
-    .msg-success { margin-top: 6px; padding: 6px 8px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.12); border-radius: 8px; font-size: 10px; color: #16a34a; font-weight: 600; }
+    .msg-success { margin-top: 6px; padding: 6px 8px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.12); border-radius: 8px; font-size: 10px; color: #34d399; font-weight: 600; }
     .typing-dots { display: none; align-items: center; gap: 5px; padding-left: 28px; flex-shrink: 0; }
     .typing-dots.active { display: flex; }
-    .typing-dots span { width: 5px; height: 5px; border-radius: 50%; background: #94a3b8; animation: typing 1.4s ease-in-out infinite; }
+    .typing-dots span { width: 5px; height: 5px; border-radius: 50%; background: #64748b; animation: typing 1.4s ease-in-out infinite; }
     .typing-dots span:nth-child(2) { animation-delay: .2s; }
     .typing-dots span:nth-child(3) { animation-delay: .4s; }
-    .phone-input { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border-top: 1px solid #e2e8f0; flex-shrink: 0; background: #fff; box-shadow: 0 -2px 8px rgba(0,0,0,0.04); }
-    .phone-input-field { flex: 1; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 18px; padding: 7px 12px; font-size: 11px; color: #64748b; }
+    .phone-input { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border-top: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; background: #1e293b; }
+    .phone-input-field { flex: 1; background: #334155; border: 1px solid rgba(255,255,255,0.06); border-radius: 18px; padding: 7px 12px; font-size: 11px; color: #94a3b8; }
     .phone-send { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(99,102,241,0.3); }
     .phone-send svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2; }
-    .phone-home-bar { width: 120px; height: 4px; background: rgba(0,0,0,0.2); border-radius: 2px; margin: 8px auto; }
+    .phone-home-bar { width: 120px; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px; margin: 8px auto; }
 
     /* SECTION DIVIDER */
     .section-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(99,102,241,0.2), rgba(139,92,246,0.15), rgba(6,182,212,0.2), transparent); }
@@ -143,130 +143,134 @@
     .reveal.visible { opacity: 1; transform: translateY(0); }
 
     /* ===== CAPABILITIES ===== */
-    /* RAG HERO — deep architecture visualization */
-    .rag-hero { margin: 40px 0 48px; padding: 0; background: linear-gradient(165deg, #111827 0%, #1a2340 40%, #0f1729 70%, #111827 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; position: relative; overflow: hidden; perspective: 1000px; }
-    .rag-hero::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 24px 24px; pointer-events: none; z-index: 1; }
-    .rag-hero::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(99,102,241,0.25), transparent); z-index: 2; }
+    /* RAG HERO — production architecture visualization */
+    .rag-hero { margin: 40px 0 48px; padding: 36px 32px 0; background: linear-gradient(170deg, #111827 0%, #151d35 30%, #0f1729 60%, #111827 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; position: relative; overflow: hidden; }
+    .rag-hero::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle, rgba(99,102,241,0.04) 1px, transparent 1px); background-size: 28px 28px; pointer-events: none; z-index: 0; mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%); }
+    .rag-hero::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.3) 50%, transparent 100%); z-index: 5; }
 
-    .rag-glow-orb { position: absolute; border-radius: 50%; filter: blur(60px); pointer-events: none; z-index: 0; }
-    .rag-glow-orb.go1 { width: 300px; height: 200px; top: -60px; left: 10%; background: rgba(99,102,241,0.06); }
-    .rag-glow-orb.go2 { width: 250px; height: 160px; bottom: -40px; right: 15%; background: rgba(45,154,110,0.04); }
+    .rag-glow-orb { position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; }
+    .rag-glow-orb.go1 { width: 350px; height: 200px; top: -80px; left: 5%; background: rgba(99,102,241,0.07); }
+    .rag-glow-orb.go2 { width: 280px; height: 180px; bottom: -60px; right: 10%; background: rgba(45,154,110,0.05); }
 
-    .rag-content { text-align: center; position: relative; z-index: 3; padding: 32px 36px 0; }
-    .rag-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); border-radius: 999px; font-size: 11px; font-weight: 600; color: #818cf8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
-    .rag-hero h3 { font-size: clamp(20px, 3vw, 28px); font-weight: 800; color: #e5e7eb; letter-spacing: -.5px; line-height: 1.2; margin-bottom: 10px; }
-    .rag-hero p { color: #9ca3af; font-size: 15px; max-width: 560px; margin: 0 auto 28px; line-height: 1.6; }
+    .rag-header { text-align: center; position: relative; z-index: 2; margin-bottom: 32px; }
+    .rag-badge { display: inline-flex; align-items: center; gap: 8px; padding: 5px 16px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); border-radius: 999px; font-size: 11px; font-weight: 600; color: #a5b4fc; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 18px; }
+    .rag-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #6366f1; box-shadow: 0 0 8px rgba(99,102,241,0.5); }
+    .rag-hero h3 { font-size: clamp(20px, 3vw, 28px); font-weight: 800; color: #f1f5f9; letter-spacing: -.5px; line-height: 1.25; margin-bottom: 10px; }
+    .rag-hero > .rag-header > p, .rag-hero .rag-desc { color: #94a3b8; font-size: 15px; max-width: 540px; margin: 0 auto; line-height: 1.65; }
 
-    .rag-architecture { position: relative; z-index: 3; padding: 0 28px 32px; }
-    .rag-pipeline-wrap { position: relative; }
-    .rag-pipeline { display: flex; align-items: flex-start; justify-content: center; gap: 0; position: relative; }
+    /* Pipeline container */
+    .rag-pipeline-wrap { position: relative; z-index: 2; padding-bottom: 32px; }
+    .rag-pipeline { display: flex; align-items: center; justify-content: center; gap: 0; overflow-x: auto; padding: 8px 0; }
 
-    .rag-stage { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; z-index: 2; }
-    .rag-stage-label { font-size: 9px; color: #6b7280; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+    /* Common stage */
+    .rag-stage { display: flex; flex-direction: column; align-items: center; gap: 10px; flex-shrink: 0; position: relative; z-index: 2; }
+    .rag-stage-label { font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; white-space: nowrap; }
 
     /* Stage 1: Document Ingestion */
-    .rag-ingest { width: 90px; }
-    .rag-ingest-stack { position: relative; width: 100%; height: 72px; }
-    .rag-ingest-doc { position: absolute; width: 50px; height: 60px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.25); transition: all 0.3s ease; }
-    .rag-ingest-doc:nth-child(1) { left: 0; top: 6px; z-index: 3; }
-    .rag-ingest-doc:nth-child(2) { left: 16px; top: 3px; z-index: 2; transform: rotate(-6deg); }
-    .rag-ingest-doc:nth-child(3) { left: 32px; top: 0; z-index: 1; transform: rotate(-12deg); }
-    .rag-ingest-doc svg { width: 18px; height: 18px; }
-    .rag-ingest-doc .doc-lines { width: 24px; display: flex; flex-direction: column; gap: 2px; }
+    .rag-ingest { width: 88px; }
+    .rag-ingest-stack { position: relative; width: 88px; height: 74px; }
+    .rag-ingest-doc { position: absolute; width: 52px; height: 62px; background: linear-gradient(160deg, #1e293b, #1a2332); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 6px 16px rgba(0,0,0,0.3); transition: all 0.3s ease; }
+    .rag-ingest-doc:nth-child(1) { left: 2px; top: 8px; z-index: 3; }
+    .rag-ingest-doc:nth-child(2) { left: 16px; top: 4px; z-index: 2; transform: rotate(-5deg); border-color: rgba(255,255,255,0.04); }
+    .rag-ingest-doc:nth-child(3) { left: 30px; top: 0; z-index: 1; transform: rotate(-10deg); border-color: rgba(255,255,255,0.03); }
+    .rag-ingest-doc svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .rag-ingest-doc .doc-lines { display: flex; flex-direction: column; gap: 3px; width: 26px; }
     .rag-ingest-doc .doc-lines span { height: 2px; border-radius: 1px; }
-    .rag-ingest-doc .doc-lines span:nth-child(1) { background: #475569; width: 100%; }
-    .rag-ingest-doc .doc-lines span:nth-child(2) { background: #334155; width: 75%; }
-    .rag-ingest-doc .doc-lines span:nth-child(3) { background: #334155; width: 55%; }
+    .rag-ingest-doc:nth-child(1) .doc-lines span { background: #475569; }
+    .rag-ingest-doc:nth-child(2) .doc-lines span { background: #3d4a5c; }
+    .rag-ingest-doc:nth-child(3) .doc-lines span { background: #334155; }
+    .rag-ingest-doc .doc-lines span:nth-child(1) { width: 100%; }
+    .rag-ingest-doc .doc-lines span:nth-child(2) { width: 70%; }
+    .rag-ingest-doc .doc-lines span:nth-child(3) { width: 50%; }
 
     /* Stage 2: Chunking */
-    .rag-chunk { width: 90px; }
-    .rag-chunk-visual { position: relative; width: 100%; height: 72px; }
-    .rag-chunk-text { position: absolute; left: 50%; transform: translateX(-50%); top: 0; width: 72px; height: 20px; background: #1e293b; border: 1px solid #334155; border-radius: 4px; display: flex; align-items: center; padding: 0 6px; gap: 2px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-    .rag-chunk-text .ct-line { height: 2px; border-radius: 1px; }
-    .rag-chunk-text .ct-line:nth-child(1) { width: 40%; background: #64748b; }
-    .rag-chunk-text .ct-line:nth-child(2) { width: 60%; background: #475569; }
-    .rag-chunk-text .ct-line:nth-child(3) { width: 35%; background: #334155; }
-    .rag-chunk-arrow { position: absolute; top: 24px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; }
-    .rag-chunk-arrow svg { width: 100%; height: 100%; stroke: #4b5563; }
-    .rag-chunk-pieces { position: absolute; bottom: 0; left: 0; right: 0; display: flex; gap: 3px; justify-content: center; }
-    .rag-chunk-piece { width: 18px; height: 28px; background: #1e293b; border: 1px solid rgba(99,102,241,0.15); border-radius: 3px; display: flex; flex-direction: column; align-items: center; padding: 3px 2px; gap: 2px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
-    .rag-chunk-piece .cp-line { height: 1.5px; border-radius: 1px; }
-    .rag-chunk-piece:nth-child(1) .cp-line { background: rgba(99,102,241,0.4); width: 70%; }
+    .rag-chunk { width: 88px; }
+    .rag-chunk-visual { position: relative; width: 88px; height: 74px; }
+    .rag-chunk-source { position: absolute; left: 50%; transform: translateX(-50%); top: 2px; width: 68px; height: 22px; background: linear-gradient(160deg, #1e293b, #1a2332); border: 1px solid rgba(255,255,255,0.06); border-radius: 5px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 8px; gap: 3px; box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+    .rag-chunk-source .cs-line { height: 2px; border-radius: 1px; }
+    .rag-chunk-source .cs-line:nth-child(1) { width: 85%; background: #64748b; }
+    .rag-chunk-source .cs-line:nth-child(2) { width: 60%; background: #475569; }
+    .rag-chunk-split { position: absolute; top: 28px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 3px; }
+    .rag-chunk-split .split-line { width: 1px; height: 14px; background: linear-gradient(180deg, transparent, rgba(99,102,241,0.3), transparent); }
+    .rag-chunk-split svg { width: 10px; height: 10px; stroke: rgba(99,102,241,0.4); }
+    .rag-chunk-pieces { position: absolute; bottom: 2px; left: 0; right: 0; display: flex; gap: 4px; justify-content: center; }
+    .rag-chunk-piece { width: 16px; height: 26px; background: linear-gradient(160deg, #1e293b, #1a2332); border: 1px solid rgba(99,102,241,0.12); border-radius: 4px; display: flex; flex-direction: column; align-items: center; padding: 4px 2px 3px; gap: 2px; box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
+    .rag-chunk-piece .cp-line { height: 1.5px; border-radius: 1px; width: 70%; }
+    .rag-chunk-piece:nth-child(1) .cp-line { background: rgba(99,102,241,0.45); }
     .rag-chunk-piece:nth-child(1) .cp-line:last-child { width: 50%; }
-    .rag-chunk-piece:nth-child(2) .cp-line { background: rgba(99,102,241,0.3); width: 80%; }
-    .rag-chunk-piece:nth-child(2) .cp-line:last-child { width: 60%; }
-    .rag-chunk-piece:nth-child(3) .cp-line { background: rgba(99,102,241,0.4); width: 65%; }
+    .rag-chunk-piece:nth-child(2) .cp-line { background: rgba(99,102,241,0.35); }
+    .rag-chunk-piece:nth-child(2) .cp-line:last-child { width: 55%; }
+    .rag-chunk-piece:nth-child(3) .cp-line { background: rgba(99,102,241,0.4); }
     .rag-chunk-piece:nth-child(3) .cp-line:last-child { width: 45%; }
-    .rag-chunk-piece:nth-child(4) .cp-line { background: rgba(99,102,241,0.3); width: 75%; }
-    .rag-chunk-piece:nth-child(4) .cp-line:last-child { width: 55%; }
+    .rag-chunk-piece:nth-child(4) .cp-line { background: rgba(99,102,241,0.3); }
+    .rag-chunk-piece:nth-child(4) .cp-line:last-child { width: 60%; }
 
     /* Stage 3: Vector Embedding */
-    .rag-embed { width: 110px; }
-    .rag-vector-space { width: 110px; height: 80px; background: #1e293b; border: 1px solid rgba(99,102,241,0.15); border-radius: 10px; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 0 16px rgba(99,102,241,0.06); }
-    .rag-vector-space::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(99,102,241,0.03), transparent 50%); }
-    .rag-vdot { position: absolute; width: 5px; height: 5px; border-radius: 50%; }
-    .rag-vdot.vd1 { top: 20px; left: 18px; background: rgba(99,102,241,0.5); box-shadow: 0 0 6px rgba(99,102,241,0.3); }
-    .rag-vdot.vd2 { top: 35px; left: 28px; background: rgba(99,102,241,0.35); }
-    .rag-vdot.vd3 { top: 15px; left: 38px; background: rgba(99,102,241,0.4); }
-    .rag-vdot.vd4 { top: 45px; left: 22px; background: rgba(99,102,241,0.3); }
-    .rag-vdot.vd5 { top: 28px; left: 48px; background: rgba(99,102,241,0.25); }
-    .rag-vdot.vd6 { top: 55px; left: 42px; background: rgba(99,102,241,0.35); }
-    .rag-vdot.vd7 { top: 12px; left: 58px; background: rgba(99,102,241,0.3); }
-    .rag-vdot.vd8 { top: 38px; left: 62px; background: rgba(99,102,241,0.25); }
-    .rag-vdot.vd9 { top: 50px; left: 72px; background: rgba(99,102,241,0.3); }
-    .rag-vdot.vd10 { top: 22px; left: 82px; background: rgba(99,102,241,0.35); }
-    .rag-vdot.vd11 { top: 60px; left: 88px; background: rgba(99,102,241,0.25); }
-    .rag-vdot.vd12 { top: 30px; left: 92px; background: rgba(99,102,241,0.3); }
-    .rag-vdot.query { top: 32px; left: 44px; width: 8px; height: 8px; background: #2d9a6e; box-shadow: 0 0 10px rgba(45,154,110,0.5); z-index: 2; }
-    .rag-vdot.query::after { content: ''; position: absolute; inset: -6px; border: 1px solid rgba(45,154,110,0.3); border-radius: 50%; animation: ragQueryPulse 2s ease-in-out infinite; }
-    @keyframes ragQueryPulse { 0%,100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.5); opacity: 0; } }
-    .rag-vector-axes { position: absolute; inset: 0; pointer-events: none; }
-    .rag-vector-axes .vaxis { position: absolute; background: rgba(255,255,255,0.04); }
-    .rag-vector-axes .vaxis.h { width: 100%; height: 1px; top: 50%; }
-    .rag-vector-axes .vaxis.v { height: 100%; width: 1px; left: 50%; }
+    .rag-embed { width: 104px; }
+    .rag-vector-space { width: 104px; height: 82px; background: linear-gradient(160deg, #1e293b, #182030); border: 1px solid rgba(99,102,241,0.12); border-radius: 10px; position: relative; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.3), 0 0 12px rgba(99,102,241,0.04); }
+    .rag-vector-space::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(99,102,241,0.03), transparent 60%); }
+    .rag-vdot { position: absolute; width: 4px; height: 4px; border-radius: 50%; }
+    .rag-vdot.vd1 { top: 16px; left: 14px; background: rgba(99,102,241,0.45); }
+    .rag-vdot.vd2 { top: 30px; left: 24px; background: rgba(99,102,241,0.3); }
+    .rag-vdot.vd3 { top: 12px; left: 36px; background: rgba(99,102,241,0.35); }
+    .rag-vdot.vd4 { top: 42px; left: 18px; background: rgba(99,102,241,0.25); }
+    .rag-vdot.vd5 { top: 24px; left: 46px; background: rgba(99,102,241,0.2); }
+    .rag-vdot.vd6 { top: 52px; left: 38px; background: rgba(99,102,241,0.3); }
+    .rag-vdot.vd7 { top: 10px; left: 56px; background: rgba(99,102,241,0.25); }
+    .rag-vdot.vd8 { top: 36px; left: 60px; background: rgba(99,102,241,0.2); }
+    .rag-vdot.vd9 { top: 48px; left: 70px; background: rgba(99,102,241,0.25); }
+    .rag-vdot.vd10 { top: 18px; left: 78px; background: rgba(99,102,241,0.3); }
+    .rag-vdot.vd11 { top: 56px; left: 84px; background: rgba(99,102,241,0.2); }
+    .rag-vdot.vd12 { top: 26px; left: 90px; background: rgba(99,102,241,0.25); }
+    .rag-vdot.query { top: 28px; left: 40px; width: 7px; height: 7px; background: #2d9a6e; box-shadow: 0 0 8px rgba(45,154,110,0.4); z-index: 2; }
+    .rag-vdot.query::after { content: ''; position: absolute; inset: -5px; border: 1px solid rgba(45,154,110,0.25); border-radius: 50%; animation: ragQueryPulse 2s ease-in-out infinite; }
+    @keyframes ragQueryPulse { 0%,100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(1.6); opacity: 0; } }
+    .rag-vaxis { position: absolute; background: rgba(255,255,255,0.03); pointer-events: none; }
+    .rag-vaxis.h { width: 100%; height: 1px; top: 50%; }
+    .rag-vaxis.v { height: 100%; width: 1px; left: 50%; }
 
     /* Stage 4: Retrieval / Similarity */
-    .rag-retrieve { width: 100px; }
-    .rag-retrieve-visual { width: 100px; height: 80px; display: flex; flex-direction: column; gap: 4px; }
-    .rag-sim-row { display: flex; align-items: center; gap: 6px; padding: 4px 6px; background: #1e293b; border: 1px solid #334155; border-radius: 5px; }
-    .rag-sim-row.match { border-color: rgba(45,154,110,0.3); background: rgba(45,154,110,0.04); }
+    .rag-retrieve { width: 96px; }
+    .rag-retrieve-visual { width: 96px; display: flex; flex-direction: column; gap: 5px; }
+    .rag-sim-row { display: flex; align-items: center; gap: 5px; padding: 5px 6px; background: linear-gradient(160deg, #1e293b, #1a2332); border: 1px solid rgba(255,255,255,0.05); border-radius: 5px; }
+    .rag-sim-row.match { border-color: rgba(45,154,110,0.25); background: rgba(45,154,110,0.05); }
     .rag-sim-rank { width: 14px; height: 14px; border-radius: 3px; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #94a3b8; font-weight: 700; flex-shrink: 0; }
-    .rag-sim-row.match .rag-sim-rank { background: rgba(45,154,110,0.2); color: #2d9a6e; }
-    .rag-sim-bar { flex: 1; height: 6px; background: #0f172a; border-radius: 3px; overflow: hidden; }
+    .rag-sim-row.match .rag-sim-rank { background: rgba(45,154,110,0.15); color: #34d399; }
+    .rag-sim-bar { flex: 1; height: 5px; background: #0f172a; border-radius: 3px; overflow: hidden; }
     .rag-sim-fill { height: 100%; border-radius: 3px; }
-    .rag-sim-row.match .rag-sim-fill { background: #2d9a6e; }
-    .rag-sim-row:nth-child(2) .rag-sim-fill { background: #64748b; }
-    .rag-sim-row:nth-child(3) .rag-sim-fill { background: #475569; }
-    .rag-sim-score { font-size: 8px; color: #64748b; font-family: 'SF Mono', 'Fira Code', monospace; flex-shrink: 0; }
-    .rag-sim-row.match .rag-sim-score { color: #2d9a6e; }
+    .rag-sim-row.match .rag-sim-fill { background: linear-gradient(90deg, #2d9a6e, #34d399); }
+    .rag-sim-row:nth-child(2) .rag-sim-fill { background: #475569; }
+    .rag-sim-row:nth-child(3) .rag-sim-fill { background: #334155; }
+    .rag-sim-score { font-size: 8px; color: #64748b; font-family: 'SF Mono', 'Fira Code', monospace; flex-shrink: 0; min-width: 24px; text-align: right; }
+    .rag-sim-row.match .rag-sim-score { color: #34d399; }
 
     /* Stage 5: Generation */
-    .rag-generate { width: 110px; }
-    .rag-answer-box { width: 110px; padding: 12px 10px; background: #1e293b; border: 1px solid rgba(45,154,110,0.25); border-radius: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 0 16px rgba(45,154,110,0.06); }
-    .rag-answer-line { display: flex; align-items: center; gap: 4px; }
-    .rag-answer-line .al-text { font-size: 10px; color: #d1d5db; line-height: 1.3; }
-    .rag-answer-line .al-cite { display: inline-block; padding: 1px 4px; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); border-radius: 3px; font-size: 7px; color: #818cf8; font-family: 'SF Mono', 'Fira Code', monospace; white-space: nowrap; }
-    .rag-answer-cursor, .ab-cursor { display: inline-block; width: 1px; height: 10px; background: #2d9a6e; animation: abCursorBlink 1s step-end infinite; }
+    .rag-generate { width: 108px; }
+    .rag-answer-box { width: 108px; padding: 12px 10px; background: linear-gradient(160deg, #1e293b, #1a2332); border: 1px solid rgba(45,154,110,0.2); border-radius: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 7px; box-shadow: 0 6px 20px rgba(0,0,0,0.3), 0 0 12px rgba(45,154,110,0.04); }
+    .rag-answer-line { display: flex; align-items: center; gap: 5px; width: 100%; }
+    .rag-answer-line .al-text { font-size: 10px; color: #e2e8f0; line-height: 1.35; flex: 1; }
+    .rag-answer-line .al-cite { display: inline-block; padding: 2px 5px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.15); border-radius: 3px; font-size: 7px; color: #a5b4fc; font-family: 'SF Mono', 'Fira Code', monospace; white-space: nowrap; }
+    .rag-answer-cursor { display: inline-block; width: 1px; height: 10px; background: #34d399; animation: abCursorBlink 1s step-end infinite; }
     @keyframes abCursorBlink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
-    .rag-grounded-tag { font-size: 7px; color: #2d9a6e; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; display: flex; align-items: center; gap: 3px; }
-    .rag-grounded-tag::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #2d9a6e; }
+    .rag-grounded-tag { font-size: 7px; color: #34d399; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; display: flex; align-items: center; gap: 4px; padding: 2px 0; }
+    .rag-grounded-tag::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #34d399; box-shadow: 0 0 6px rgba(45,154,110,0.4); }
 
-    /* Flow connectors between stages */
-    .rag-flow-line { display: flex; align-items: center; height: 80px; width: 32px; position: relative; }
-    .rag-flow-line .fl-track { width: 100%; height: 1px; background: rgba(99,102,241,0.15); position: relative; }
-    .rag-flow-line .fl-track::before { content: ''; position: absolute; right: -3px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 5px solid rgba(99,102,241,0.25); border-top: 3px solid transparent; border-bottom: 3px solid transparent; }
-    .rag-flow-line .fl-packet { position: absolute; top: -2px; width: 5px; height: 5px; border-radius: 50%; background: rgba(99,102,241,0.6); animation: ragPacket 2.5s ease-in-out infinite; }
-    .rag-flow-line .fl-packet.fp2 { animation-delay: 0.8s; }
-    .rag-flow-line .fl-packet.fp3 { animation-delay: 1.6s; }
-    @keyframes ragPacket { 0% { left: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { left: calc(100% - 5px); opacity: 0; } }
+    /* Flow connectors */
+    .rag-flow-line { display: flex; align-items: center; height: 82px; width: 28px; flex-shrink: 0; position: relative; }
+    .rag-flow-line .fl-track { width: 100%; height: 1px; background: linear-gradient(90deg, rgba(99,102,241,0.08), rgba(99,102,241,0.2)); position: relative; }
+    .rag-flow-line .fl-track::after { content: ''; position: absolute; right: -3px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 4px solid rgba(99,102,241,0.3); border-top: 2.5px solid transparent; border-bottom: 2.5px solid transparent; }
+    .rag-flow-line .fl-packet { position: absolute; top: -2px; width: 4px; height: 4px; border-radius: 50%; background: rgba(99,102,241,0.7); box-shadow: 0 0 6px rgba(99,102,241,0.4); animation: ragPacket 2.8s ease-in-out infinite; }
+    .rag-flow-line .fl-packet.fp2 { animation-delay: 0.9s; }
+    .rag-flow-line .fl-packet.fp3 { animation-delay: 1.8s; }
+    @keyframes ragPacket { 0% { left: 0; opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { left: calc(100% - 4px); opacity: 0; } }
 
     /* Stats */
-    .stats-row { display: flex; gap: 2px; margin: 0; border-radius: 0; overflow: hidden; border-top: 1px solid rgba(255,255,255,0.06); }
-    .stat-card { flex: 1; background: rgba(0,0,0,0.15); padding: 28px 20px; text-align: center; border-right: 1px solid rgba(255,255,255,0.04); }
+    .stats-row { display: flex; gap: 0; border-top: 1px solid rgba(255,255,255,0.06); }
+    .stat-card { flex: 1; background: rgba(0,0,0,0.12); padding: 28px 20px; text-align: center; border-right: 1px solid rgba(255,255,255,0.04); }
     .stat-card:last-child { border-right: none; }
-    .stat-num { font-size: clamp(28px, 4vw, 40px); font-weight: 800; letter-spacing: -2px; line-height: 1; color: #e5e7eb; }
-    .stat-label { font-size: 10px; color: #9ca3af; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
-    .stat-val { font-size: 11px; color: #6b7280; margin-top: 4px; }
+    .stat-num { font-size: clamp(28px, 4vw, 40px); font-weight: 800; letter-spacing: -2px; line-height: 1; color: #f1f5f9; }
+    .stat-label { font-size: 10px; color: #94a3b8; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+    .stat-val { font-size: 11px; color: #64748b; margin-top: 4px; }
 
     /* ===== CAPABILITIES — BENTO ===== */
     .caps-bento { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -403,25 +407,29 @@
     .cb-tile.cb-jeeves .cb-tile-sub { font-size: 10px; color: #3d4a5c; margin-top: 2px; transition: color 0.4s ease; }
 
     .cb-tile.cb-jeeves.lit {
-      border-color: rgba(99,102,241,0.35);
-      box-shadow: 0 0 20px rgba(99,102,241,0.08), 0 0 0 1px rgba(99,102,241,0.06);
+      border-color: rgba(99,102,241,0.55);
+      background: rgba(99,102,241,0.08);
+      box-shadow: 0 0 32px rgba(99,102,241,0.15), 0 0 0 2px rgba(99,102,241,0.1), inset 0 0 24px rgba(99,102,241,0.04);
     }
     .cb-tile.cb-jeeves.lit::before { opacity: 1; }
     .cb-tile.cb-jeeves.lit .cb-tile-core {
-      color: var(--accent);
-      background: rgba(99,102,241,0.06);
-      border-color: rgba(99,102,241,0.15);
+      color: #a5b4fc;
+      background: rgba(99,102,241,0.12);
+      border-color: rgba(99,102,241,0.3);
+      box-shadow: 0 0 16px rgba(99,102,241,0.15);
     }
-    .cb-tile.cb-jeeves.lit .cb-tile-label { color: #d4d4d4; }
-    .cb-tile.cb-jeeves.lit .cb-tile-sub { color: #6b7a8d; }
+    .cb-tile.cb-jeeves.lit .cb-tile-label { color: #e2e8f0; }
+    .cb-tile.cb-jeeves.lit .cb-tile-sub { color: #94a3b8; }
 
     .cb-tile.active {
-      border-color: rgba(99,102,241,0.25);
-      box-shadow: 0 0 12px rgba(99,102,241,0.06);
+      border-color: rgba(99,102,241,0.45);
+      background: rgba(99,102,241,0.06);
+      box-shadow: 0 0 20px rgba(99,102,241,0.1), inset 0 0 12px rgba(99,102,241,0.03);
     }
     .cb-tile.active::before { opacity: 1; }
-    .cb-tile.active .cb-tile-name { color: #d4d4d4; }
-    .cb-tile.active .cb-tile-type { color: #6b7a8d; }
+    .cb-tile.active .cb-tile-name { color: #e2e8f0; }
+    .cb-tile.active .cb-tile-type { color: #94a3b8; }
+    .cb-tile.active svg { filter: drop-shadow(0 0 4px rgba(99,102,241,0.3)); }
 
     /* ===== TIMELINE ===== */
     /* ===== HOW IT WORKS — Terminal ===== */
@@ -529,9 +537,10 @@
 
       /* RAG: hide pipeline, text only */
       .rag-pipeline-wrap { display: none !important; }
-      .rag-hero { padding: 20px 16px !important; margin: 16px 0 20px !important; border-radius: 12px !important; }
+      .rag-hero { padding: 24px 16px !important; margin: 16px 0 20px !important; border-radius: 12px !important; }
+      .rag-header { padding: 0 !important; margin-bottom: 0 !important; }
       .rag-hero h3 { font-size: 17px !important; }
-      .rag-hero p { font-size: 13px !important; }
+      .rag-hero .rag-desc { font-size: 13px !important; }
 
       /* Stats: horizontal row */
       .stats-row { flex-direction: row !important; max-width: 100% !important; border-radius: 10px !important; }
@@ -715,146 +724,146 @@
     <div class="rag-glow-orb go1"></div>
     <div class="rag-glow-orb go2"></div>
 
-    <div class="rag-content">
-      <div class="rag-badge">RAG Architecture</div>
-      <h3>Your knowledge.<br>Accurate retrieval. Zero hallucinations.</h3>
-      <p>Upload PDFs, docs, FAQs — Jeeves auto-chunks, embeds, and retrieves with cosine similarity. Every answer cites a source. No black box, no made-up facts.</p>
-    </div>
+  <div class="rag-header">
+    <div class="rag-badge">RAG Architecture</div>
+    <h3>Your knowledge.<br>Accurate retrieval. Zero hallucinations.</h3>
+    <p class="rag-desc">Upload PDFs, docs, FAQs — Jeeves auto-chunks, embeds, and retrieves with cosine similarity. Every answer cites a source. No black box, no made-up facts.</p>
+  </div>
 
-    <div class="rag-architecture">
-      <div class="rag-pipeline-wrap">
-        <div class="rag-pipeline">
+    <div class="rag-pipeline-wrap">
+      <div class="rag-pipeline">
 
-          <!-- Stage 1: Document Ingestion -->
-          <div class="rag-stage rag-ingest">
-            <div class="rag-ingest-stack">
-              <div class="rag-ingest-doc">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                <div class="doc-lines"><span></span><span></span><span></span></div>
-              </div>
-              <div class="rag-ingest-doc">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                <div class="doc-lines"><span></span><span></span><span></span></div>
-              </div>
-              <div class="rag-ingest-doc">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                <div class="doc-lines"><span></span><span></span><span></span></div>
-              </div>
+        <!-- Stage 1: Document Ingestion -->
+        <div class="rag-stage rag-ingest">
+          <div class="rag-ingest-stack">
+            <div class="rag-ingest-doc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <div class="doc-lines"><span></span><span></span><span></span></div>
             </div>
-            <span class="rag-stage-label">Ingest</span>
-          </div>
-
-          <!-- Flow 1 -->
-          <div class="rag-flow-line">
-            <div class="fl-track"></div>
-            <div class="fl-packet"></div>
-            <div class="fl-packet fp2"></div>
-            <div class="fl-packet fp3"></div>
-          </div>
-
-          <!-- Stage 2: Chunking -->
-          <div class="rag-stage rag-chunk">
-            <div class="rag-chunk-visual">
-              <div class="rag-chunk-text">
-                <div class="ct-line"></div>
-                <div class="ct-line"></div>
-                <div class="ct-line"></div>
-              </div>
-              <div class="rag-chunk-arrow">
-                <svg viewBox="0 0 12 12" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 1v8M3 6l3 3 3-3"/></svg>
-              </div>
-              <div class="rag-chunk-pieces">
-                <div class="rag-chunk-piece"><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div></div>
-                <div class="rag-chunk-piece"><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div></div>
-                <div class="rag-chunk-piece"><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div></div>
-                <div class="rag-chunk-piece"><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div></div>
-              </div>
+            <div class="rag-ingest-doc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              <div class="doc-lines"><span></span><span></span><span></span></div>
             </div>
-            <span class="rag-stage-label">Chunk</span>
-          </div>
-
-          <!-- Flow 2 -->
-          <div class="rag-flow-line">
-            <div class="fl-track"></div>
-            <div class="fl-packet"></div>
-            <div class="fl-packet fp2"></div>
-            <div class="fl-packet fp3"></div>
-          </div>
-
-          <!-- Stage 3: Vector Embedding -->
-          <div class="rag-stage rag-embed">
-            <div class="rag-vector-space">
-              <div class="rag-vector-axes"><div class="vaxis h"></div><div class="vaxis v"></div></div>
-              <div class="rag-vdot vd1"></div>
-              <div class="rag-vdot vd2"></div>
-              <div class="rag-vdot vd3"></div>
-              <div class="rag-vdot vd4"></div>
-              <div class="rag-vdot vd5"></div>
-              <div class="rag-vdot vd6"></div>
-              <div class="rag-vdot vd7"></div>
-              <div class="rag-vdot vd8"></div>
-              <div class="rag-vdot vd9"></div>
-              <div class="rag-vdot vd10"></div>
-              <div class="rag-vdot vd11"></div>
-              <div class="rag-vdot vd12"></div>
-              <div class="rag-vdot query"></div>
+            <div class="rag-ingest-doc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              <div class="doc-lines"><span></span><span></span><span></span></div>
             </div>
-            <span class="rag-stage-label">Embed</span>
           </div>
-
-          <!-- Flow 3 -->
-          <div class="rag-flow-line">
-            <div class="fl-track"></div>
-            <div class="fl-packet"></div>
-            <div class="fl-packet fp2"></div>
-            <div class="fl-packet fp3"></div>
-          </div>
-
-          <!-- Stage 4: Retrieval -->
-          <div class="rag-stage rag-retrieve">
-            <div class="rag-retrieve-visual">
-              <div class="rag-sim-row match">
-                <div class="rag-sim-rank">1</div>
-                <div class="rag-sim-bar"><div class="rag-sim-fill" style="width:94%"></div></div>
-                <div class="rag-sim-score">0.94</div>
-              </div>
-              <div class="rag-sim-row">
-                <div class="rag-sim-rank">2</div>
-                <div class="rag-sim-bar"><div class="rag-sim-fill" style="width:71%"></div></div>
-                <div class="rag-sim-score">0.71</div>
-              </div>
-              <div class="rag-sim-row">
-                <div class="rag-sim-rank">3</div>
-                <div class="rag-sim-bar"><div class="rag-sim-fill" style="width:58%"></div></div>
-                <div class="rag-sim-score">0.58</div>
-              </div>
-            </div>
-            <span class="rag-stage-label">Retrieve</span>
-          </div>
-
-          <!-- Flow 4 -->
-          <div class="rag-flow-line">
-            <div class="fl-track"></div>
-            <div class="fl-packet"></div>
-            <div class="fl-packet fp2"></div>
-            <div class="fl-packet fp3"></div>
-          </div>
-
-          <!-- Stage 5: Generation -->
-          <div class="rag-stage rag-generate">
-            <div class="rag-answer-box">
-              <div class="rag-answer-line">
-                <span class="al-text">Refunds within 30 days<span class="ab-cursor"></span></span>
-              </div>
-              <div class="rag-answer-line">
-                <span class="al-cite">doc_v3.pdf §2.1</span>
-              </div>
-              <div class="rag-grounded-tag">Grounded</div>
-            </div>
-            <span class="rag-stage-label">Generate</span>
-          </div>
-
+          <span class="rag-stage-label">Ingest</span>
         </div>
+
+        <!-- Flow 1 -->
+        <div class="rag-flow-line">
+          <div class="fl-track"></div>
+          <div class="fl-packet"></div>
+          <div class="fl-packet fp2"></div>
+          <div class="fl-packet fp3"></div>
+        </div>
+
+        <!-- Stage 2: Chunking -->
+        <div class="rag-stage rag-chunk">
+          <div class="rag-chunk-visual">
+            <div class="rag-chunk-source">
+              <div class="cs-line"></div>
+              <div class="cs-line"></div>
+            </div>
+            <div class="rag-chunk-split">
+              <div class="split-line"></div>
+              <svg viewBox="0 0 10 10" fill="none" stroke-width="1.5" stroke-linecap="round"><path d="M5 1v8M2 5h6"/></svg>
+              <div class="split-line"></div>
+            </div>
+            <div class="rag-chunk-pieces">
+              <div class="rag-chunk-piece"><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div></div>
+              <div class="rag-chunk-piece"><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div></div>
+              <div class="rag-chunk-piece"><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div></div>
+              <div class="rag-chunk-piece"><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div></div>
+            </div>
+          </div>
+          <span class="rag-stage-label">Chunk</span>
+        </div>
+
+        <!-- Flow 2 -->
+        <div class="rag-flow-line">
+          <div class="fl-track"></div>
+          <div class="fl-packet"></div>
+          <div class="fl-packet fp2"></div>
+          <div class="fl-packet fp3"></div>
+        </div>
+
+        <!-- Stage 3: Vector Embedding -->
+        <div class="rag-stage rag-embed">
+          <div class="rag-vector-space">
+            <div class="rag-vaxis h"></div>
+            <div class="rag-vaxis v"></div>
+            <div class="rag-vdot vd1"></div>
+            <div class="rag-vdot vd2"></div>
+            <div class="rag-vdot vd3"></div>
+            <div class="rag-vdot vd4"></div>
+            <div class="rag-vdot vd5"></div>
+            <div class="rag-vdot vd6"></div>
+            <div class="rag-vdot vd7"></div>
+            <div class="rag-vdot vd8"></div>
+            <div class="rag-vdot vd9"></div>
+            <div class="rag-vdot vd10"></div>
+            <div class="rag-vdot vd11"></div>
+            <div class="rag-vdot vd12"></div>
+            <div class="rag-vdot query"></div>
+          </div>
+          <span class="rag-stage-label">Embed</span>
+        </div>
+
+        <!-- Flow 3 -->
+        <div class="rag-flow-line">
+          <div class="fl-track"></div>
+          <div class="fl-packet"></div>
+          <div class="fl-packet fp2"></div>
+          <div class="fl-packet fp3"></div>
+        </div>
+
+        <!-- Stage 4: Retrieval -->
+        <div class="rag-stage rag-retrieve">
+          <div class="rag-retrieve-visual">
+            <div class="rag-sim-row match">
+              <div class="rag-sim-rank">1</div>
+              <div class="rag-sim-bar"><div class="rag-sim-fill" style="width:94%"></div></div>
+              <div class="rag-sim-score">0.94</div>
+            </div>
+            <div class="rag-sim-row">
+              <div class="rag-sim-rank">2</div>
+              <div class="rag-sim-bar"><div class="rag-sim-fill" style="width:71%"></div></div>
+              <div class="rag-sim-score">0.71</div>
+            </div>
+            <div class="rag-sim-row">
+              <div class="rag-sim-rank">3</div>
+              <div class="rag-sim-bar"><div class="rag-sim-fill" style="width:58%"></div></div>
+              <div class="rag-sim-score">0.58</div>
+            </div>
+          </div>
+          <span class="rag-stage-label">Retrieve</span>
+        </div>
+
+        <!-- Flow 4 -->
+        <div class="rag-flow-line">
+          <div class="fl-track"></div>
+          <div class="fl-packet"></div>
+          <div class="fl-packet fp2"></div>
+          <div class="fl-packet fp3"></div>
+        </div>
+
+        <!-- Stage 5: Generation -->
+        <div class="rag-stage rag-generate">
+          <div class="rag-answer-box">
+            <div class="rag-answer-line">
+              <span class="al-text">Refunds within 30 days<span class="rag-answer-cursor"></span></span>
+            </div>
+            <div class="rag-answer-line">
+              <span class="al-cite">doc_v3.pdf §2.1</span>
+            </div>
+            <div class="rag-grounded-tag">Grounded</div>
+          </div>
+          <span class="rag-stage-label">Generate</span>
+        </div>
+
       </div>
     </div>
 
