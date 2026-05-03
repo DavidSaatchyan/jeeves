@@ -50,9 +50,8 @@
 
     .hero-inner { display: flex; align-items: center; gap: 80px; max-width: 1200px; width: 100%; position: relative; z-index: 1; }
     .hero-text { flex: 1; text-align: left; }
-    .hero-text h1 { font-size: clamp(42px, 6.5vw, 80px); font-weight: 900; line-height: .92; letter-spacing: -3px; margin-bottom: 24px; color: #fff; animation: fadeInUp .8s ease .1s both; }
-    .hero-text h1 .hl { background: linear-gradient(135deg, #fff 0%, #c7d2fe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .hero-text h1 .accent-word { background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 40%, var(--accent3) 70%, var(--green) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 300% 300%; animation: gradientShift 5s ease infinite; }
+    .hero-text h1 { font-size: clamp(42px, 6.5vw, 80px); font-weight: 900; line-height: .92; letter-spacing: -3px; margin-bottom: 24px; animation: fadeInUp .8s ease .1s both; }
+    .hero-text h1 .hl { background: linear-gradient(135deg, #fff 0%, #c7d2fe 15%, var(--accent) 30%, var(--accent2) 50%, var(--accent3) 70%, #34d399 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 200% 200%; animation: gradientShift 6s ease infinite; filter: drop-shadow(0 0 30px rgba(99,102,241,0.3)); }
     @keyframes gradientShift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
     .hero-features { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; animation: fadeInUp .8s ease .15s both; }
     .hero-feat { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #94a3b8; }
@@ -131,85 +130,32 @@
     .reveal { opacity: 0; transform: translateY(40px); transition: opacity .7s ease, transform .7s ease; }
     .reveal.visible { opacity: 1; transform: translateY(0); }
 
-    /* ===== FEATURES BENTO ===== */
-    .bento { display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-rows: auto; gap: 16px; }
-    .feat { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 32px; position: relative; overflow: hidden; transition: all .5s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; }
-    .feat:hover { border-color: rgba(99,102,241,0.2); transform: translateY(-4px); }
-    .feat::after { content: ''; position: absolute; inset: 0; background: radial-gradient(500px circle at var(--mx,50%) var(--my,50%), rgba(99,102,241,0.04) 0%, transparent 40%); pointer-events: none; opacity: 0; transition: opacity .4s; }
-    .feat:hover::after { opacity: 1; }
-
-    .feat .visual { margin-bottom: 20px; height: 72px; position: relative; display: flex; align-items: center; }
-    .feat h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-    .feat p { color: var(--muted); font-size: 13px; line-height: 1.65; flex: 1; }
-    .feat .tag { display: inline-block; background: rgba(99,102,241,0.08); color: #a5b4fc; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; margin-top: 14px; width: fit-content; }
-
-    .feat.rag { grid-column: span 7; }
-    .feat.crm { grid-column: span 5; }
-    .feat.actions { grid-column: span 4; }
-    .feat.obs { grid-column: span 5; }
-    .feat.proactive { grid-column: span 3; }
-
-    /* RAG visual: documents → vector dots → answer */
-    .v-rag { display: flex; align-items: center; gap: 6px; width: 100%; }
-    .v-rag-docs { display: flex; gap: 3px; flex-shrink: 0; }
-    .v-rag-doc { width: 28px; height: 36px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.12); border-radius: 4px; position: relative; }
-    .v-rag-doc::before { content: ''; position: absolute; top: 6px; left: 4px; right: 4px; height: 2px; background: rgba(99,102,241,0.2); border-radius: 1px; box-shadow: 0 4px 0 rgba(99,102,241,0.12), 0 8px 0 rgba(99,102,241,0.06); }
-    .v-rag-doc:nth-child(2) { transform: translateY(4px); }
-    .v-rag-arrow { color: var(--accent); font-size: 16px; flex-shrink: 0; animation: arrowPulse 1.5s ease-in-out infinite; }
-    .v-rag-vectors { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; flex: 1; }
-    .v-rag-vec { width: 10px; height: 10px; border-radius: 50%; background: rgba(99,102,241,0.15); animation: vecPulse 2s ease-in-out infinite; }
-    .v-rag-vec:nth-child(2) { animation-delay: .2s; }
-    .v-rag-vec:nth-child(3) { animation-delay: .4s; }
-    .v-rag-vec:nth-child(4) { animation-delay: .6s; }
-    .v-rag-vec:nth-child(5) { animation-delay: .8s; background: var(--accent); opacity: .6; }
-    .v-rag-vec:nth-child(6) { animation-delay: 1s; }
-    @keyframes vecPulse { 0%,100% { opacity: .3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.3); } }
-    @keyframes arrowPulse { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
-
-    /* CRM visual: user card with data */
-    .v-crm { display: flex; align-items: center; gap: 10px; width: 100%; }
-    .v-crm-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent3), var(--accent)); flex-shrink: 0; position: relative; }
-    .v-crm-avatar::after { content: ''; position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--green); border: 2px solid var(--surface); }
-    .v-crm-lines { flex: 1; display: flex; flex-direction: column; gap: 5px; }
-    .v-crm-line { height: 6px; border-radius: 3px; }
-    .v-crm-line.l1 { width: 80%; background: rgba(6,182,212,0.2); }
-    .v-crm-line.l2 { width: 55%; background: rgba(6,182,212,0.12); }
-    .v-crm-line.l3 { width: 70%; background: rgba(6,182,212,0.08); }
-    .v-crm-pill { padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 600; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.15); color: var(--green); white-space: nowrap; flex-shrink: 0; }
-
-    /* Actions visual: tool cards */
-    .v-actions { display: flex; gap: 6px; width: 100%; }
-    .v-tool { flex: 1; background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.1); border-radius: 8px; padding: 8px; text-align: center; }
-    .v-tool-icon { font-size: 18px; margin-bottom: 2px; }
-    .v-tool-name { font-size: 8px; color: var(--muted); }
-    .v-tool:nth-child(1) { animation: toolPop 3s ease-in-out infinite; }
-    .v-tool:nth-child(2) { animation: toolPop 3s ease-in-out .3s infinite; background: rgba(99,102,241,0.06); border-color: rgba(99,102,241,0.1); }
-    .v-tool:nth-child(3) { animation: toolPop 3s ease-in-out .6s infinite; background: rgba(139,92,246,0.06); border-color: rgba(139,92,246,0.1); }
-    @keyframes toolPop { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-
-    /* Observability visual: chart */
-    .v-obs { display: flex; align-items: flex-end; gap: 3px; width: 100%; height: 100%; }
-    .v-obs-bar { flex: 1; border-radius: 3px 3px 0 0; background: rgba(139,92,246,0.2); }
-    .v-obs-bar:nth-child(1) { height: 40%; animation: barAnim 2s ease-in-out infinite; }
-    .v-obs-bar:nth-child(2) { height: 65%; animation: barAnim 2s ease-in-out .15s infinite; }
-    .v-obs-bar:nth-child(3) { height: 35%; animation: barAnim 2s ease-in-out .3s infinite; }
-    .v-obs-bar:nth-child(4) { height: 80%; animation: barAnim 2s ease-in-out .45s infinite; background: rgba(139,92,246,0.35); }
-    .v-obs-bar:nth-child(5) { height: 55%; animation: barAnim 2s ease-in-out .6s infinite; }
-    .v-obs-bar:nth-child(6) { height: 90%; animation: barAnim 2s ease-in-out .75s infinite; background: rgba(139,92,246,0.45); }
-    .v-obs-bar:nth-child(7) { height: 70%; animation: barAnim 2s ease-in-out .9s infinite; }
-    .v-obs-bar:nth-child(8) { height: 95%; animation: barAnim 2s ease-in-out 1.05s infinite; background: rgba(139,92,246,0.55); }
-    @keyframes barAnim { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(.6); } }
-
-    /* Proactive visual: radar */
-    .v-proactive { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; }
-    .v-pro-core { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px rgba(99,102,241,0.4); position: absolute; animation: corePulse 2.5s ease-in-out infinite; }
-    .v-pro-ring { position: absolute; border-radius: 50%; border: 1px solid rgba(244,63,94,0.1); }
-    .v-pro-ring.r1 { width: 40px; height: 40px; animation: ringPulse 2.5s ease-in-out infinite; }
-    .v-pro-ring.r2 { width: 60px; height: 60px; animation: ringPulse 2.5s ease-in-out .4s infinite; }
-    .v-pro-alert { position: absolute; top: 4px; right: 16px; font-size: 9px; font-weight: 600; background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.15); color: var(--red); padding: 3px 8px; border-radius: 999px; white-space: nowrap; animation: alertSlide 3s ease-in-out infinite; }
-    @keyframes corePulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.3); } }
-    @keyframes ringPulse { 0%,100% { opacity: .2; transform: scale(1); } 50% { opacity: .6; transform: scale(1.1); } }
-    @keyframes alertSlide { 0%,15%,85%,100% { opacity: 0; } 25%,75% { opacity: 1; } }
+    /* ===== FEATURES ===== */
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .feat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 36px 32px; position: relative; overflow: hidden; transition: all .5s cubic-bezier(.4,0,.2,1); }
+    .feat-card:hover { border-color: rgba(99,102,241,0.25); transform: translateY(-6px); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .feat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; opacity: 0; transition: opacity .4s; }
+    .feat-card:hover::before { opacity: 1; }
+    .feat-card.c1::before { background: linear-gradient(90deg, var(--accent), transparent); }
+    .feat-card.c2::before { background: linear-gradient(90deg, var(--accent3), transparent); }
+    .feat-card.c3::before { background: linear-gradient(90deg, var(--green), transparent); }
+    .feat-card.c4::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+    .feat-card.c5::before { background: linear-gradient(90deg, var(--red), transparent); }
+    .feat-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
+    .feat-icon svg { width: 28px; height: 28px; }
+    .feat-icon.i1 { background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05)); border: 1px solid rgba(99,102,241,0.15); }
+    .feat-icon.i1 svg { stroke: var(--accent); }
+    .feat-icon.i2 { background: linear-gradient(135deg, rgba(6,182,212,0.15), rgba(6,182,212,0.05)); border: 1px solid rgba(6,182,212,0.15); }
+    .feat-icon.i2 svg { stroke: var(--accent3); }
+    .feat-icon.i3 { background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05)); border: 1px solid rgba(16,185,129,0.15); }
+    .feat-icon.i3 svg { stroke: var(--green); }
+    .feat-icon.i4 { background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.05)); border: 1px solid rgba(139,92,246,0.15); }
+    .feat-icon.i4 svg { stroke: var(--accent2); }
+    .feat-icon.i5 { background: linear-gradient(135deg, rgba(244,63,94,0.15), rgba(244,63,94,0.05)); border: 1px solid rgba(244,63,94,0.15); }
+    .feat-icon.i5 svg { stroke: var(--red); }
+    .feat-card h3 { font-size: 19px; font-weight: 700; margin-bottom: 10px; color: #f1f5f9; letter-spacing: -.2px; }
+    .feat-card p { color: #94a3b8; font-size: 14px; line-height: 1.65; }
+    .feat-card .feat-tag { display: inline-block; background: rgba(99,102,241,0.08); color: #a5b4fc; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; margin-top: 16px; }
 
     /* ===== VALUE PROPOSITION (replaces Before/After) ===== */
     .value-prop { display: flex; flex-direction: column; gap: 16px; margin-top: 60px; }
@@ -299,8 +245,7 @@
       .hero-text { text-align: center; }
       .hero-text p { margin-left: auto; margin-right: auto; }
       .hero-buttons { justify-content: center; }
-      .bento { grid-template-columns: 1fr; }
-      .feat.rag, .feat.crm, .feat.actions, .feat.obs, .feat.proactive { grid-column: span 1; }
+      .features-grid { grid-template-columns: 1fr; }
       .metrics-grid { grid-template-columns: repeat(2, 1fr); }
       .channels-grid { grid-template-columns: 1fr; }
       .vp-row { flex-direction: column; text-align: center; }
@@ -439,80 +384,65 @@
     <div class="section-sub">Everything you need to automate customer support without losing the human touch.</div>
   </div>
 
-  <div class="bento">
-    <div class="feat rag reveal">
-      <div class="visual v-rag">
-        <div class="v-rag-docs">
-          <div class="v-rag-doc"></div>
-          <div class="v-rag-doc"></div>
-        </div>
-        <div class="v-rag-arrow">→</div>
-        <div class="v-rag-vectors">
-          <div class="v-rag-vec"></div>
-          <div class="v-rag-vec"></div>
-          <div class="v-rag-vec"></div>
-          <div class="v-rag-vec"></div>
-          <div class="v-rag-vec"></div>
-          <div class="v-rag-vec"></div>
-        </div>
+  <div class="features-grid">
+    <div class="feat-card c1 reveal">
+      <div class="feat-icon i1">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
       </div>
-      <h3>RAG-powered knowledge</h3>
-      <p>Upload PDFs, docs, FAQs — Jeeves chunks, embeds, and retrieves with cosine similarity. Sources are attached to every answer so you can audit the reasoning. No hallucinations, no made-up facts.</p>
-      <span class="tag">Vector search</span>
+      <h3>Your documents. Instant answers.</h3>
+      <p>Upload PDFs, guides, policies. Jeeves reads them all and answers from your actual data — with sources cited.</p>
+      <span class="feat-tag">Vector search</span>
     </div>
-    <div class="feat crm reveal">
-      <div class="visual v-crm">
-        <div class="v-crm-avatar"></div>
-        <div class="v-crm-lines">
-          <div class="v-crm-line l1"></div>
-          <div class="v-crm-line l2"></div>
-          <div class="v-crm-line l3"></div>
-        </div>
-        <div class="v-crm-pill">Premium</div>
+    <div class="feat-card c2 reveal">
+      <div class="feat-icon i2">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+          <path d="M16 3l2 2 4-4"/>
+        </svg>
       </div>
-      <h3>CRM Context</h3>
-      <p>Connects to HubSpot or any REST API. The agent greets customers by name, sees their tariff, order history, and tickets before answering.</p>
-      <span class="tag">Any API</span>
+      <h3>Knows your customers</h3>
+      <p>Pulls from your CRM — name, plan, order history. The agent greets like it already knows them. Because it does.</p>
+      <span class="feat-tag">Any API</span>
     </div>
-    <div class="feat actions reveal">
-      <div class="visual v-actions">
-        <div class="v-tool">
-          <div class="v-tool-icon">🔍</div>
-          <div class="v-tool-name">lookup</div>
-        </div>
-        <div class="v-tool">
-          <div class="v-tool-icon">✏️</div>
-          <div class="v-tool-name">update</div>
-        </div>
-        <div class="v-tool">
-          <div class="v-tool-icon">🎫</div>
-          <div class="v-tool-name">ticket</div>
-        </div>
+    <div class="feat-card c3 reveal">
+      <div class="feat-icon i3">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
       </div>
-      <h3>Custom Actions</h3>
-      <p>Define tools: look up orders, change plans, create tickets. With confirmation flow for destructive actions.</p>
-      <span class="tag">Tool calling</span>
+      <h3>Takes real actions</h3>
+      <p>Lookup orders, change plans, create tickets. Not just talking — doing. With confirmation before anything irreversible.</p>
+      <span class="feat-tag">Tool calling</span>
     </div>
-    <div class="feat obs reveal">
-      <div class="visual v-obs">
-        <div class="v-obs-bar"></div><div class="v-obs-bar"></div><div class="v-obs-bar"></div>
-        <div class="v-obs-bar"></div><div class="v-obs-bar"></div><div class="v-obs-bar"></div>
-        <div class="v-obs-bar"></div><div class="v-obs-bar"></div>
+    <div class="feat-card c4 reveal">
+      <div class="feat-icon i4">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"/>
+          <path d="M18 17V9"/>
+          <path d="M13 17V5"/>
+          <path d="M8 17v-3"/>
+        </svg>
       </div>
-      <h3>Full observability</h3>
-      <p>Every conversation logged with sources, latency, resolution status, and tool call traces. Built-in analytics.</p>
-      <span class="tag">Audit-ready</span>
+      <h3>See everything</h3>
+      <p>Every conversation logged: sources used, response time, resolution status. Full audit trail out of the box.</p>
+      <span class="feat-tag">Audit-ready</span>
     </div>
-    <div class="feat proactive reveal">
-      <div class="visual v-proactive">
-        <div class="v-pro-ring r1"></div>
-        <div class="v-pro-ring r2"></div>
-        <div class="v-pro-core"></div>
-        <div class="v-pro-alert">⚠ Alert</div>
+    <div class="feat-card c5 reveal">
+      <div class="feat-icon i5">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
       </div>
-      <h3>Proactive engine</h3>
-      <p>Monitors metrics via webhook. Auto-messages users when something drops — before they complain.</p>
-      <span class="tag">Webhook-driven</span>
+      <h3>Alerts before complaints</h3>
+      <p>Monitors your systems. When something breaks, Jeeves reaches out first — explains the issue and gives an ETA.</p>
+      <span class="feat-tag">Webhook-driven</span>
     </div>
   </div>
 
