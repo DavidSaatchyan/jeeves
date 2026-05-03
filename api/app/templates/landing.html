@@ -191,43 +191,43 @@
     .channel-logo svg { width: 32px; height: 32px; }
 
     /* ===== TIMELINE ===== */
-    .timeline { position: relative; padding: 60px 0; }
+    .timeline { position: relative; padding: 60px 0; max-width: 900px; margin: 0 auto; }
     .tl-track { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-50%); }
     .tl-track-bg { width: 100%; height: 100%; background: var(--border); }
-    .tl-track-fill { position: absolute; top: 0; left: 0; width: 100%; height: 0; background: linear-gradient(180deg, var(--accent), var(--accent2), var(--accent3), var(--green)); transition: height .6s ease; }
+    .tl-track-fill { position: absolute; top: 0; left: 0; width: 100%; height: 0; background: linear-gradient(180deg, var(--accent), var(--accent2), var(--accent3), var(--accent2), var(--green)); transition: height .6s ease; }
 
-    .tl-row { display: flex; align-items: flex-start; margin-bottom: 48px; position: relative; }
-    .tl-row.left .tl-content { margin-right: auto; margin-left: 0; }
-    .tl-row.left .tl-node { margin: 0 auto; }
-    .tl-row.left .tl-spacer { margin-left: auto; }
-    .tl-row.right { flex-direction: row-reverse; }
-    .tl-row.right .tl-content { margin-left: auto; margin-right: 0; }
-    .tl-row.right .tl-node { margin: 0 auto; }
-    .tl-row.right .tl-spacer { margin-right: auto; }
+    .tl-row { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 0; align-items: start; margin-bottom: 56px; position: relative; }
+    .tl-row:last-child { margin-bottom: 0; }
+    .tl-row.left .tl-card { grid-column: 1; justify-self: end; }
+    .tl-row.left .tl-node { grid-column: 2; justify-self: center; }
+    .tl-row.left .tl-void { grid-column: 3; }
+    .tl-row.right .tl-void { grid-column: 1; }
+    .tl-row.right .tl-node { grid-column: 2; justify-self: center; }
+    .tl-row.right .tl-card { grid-column: 3; justify-self: start; }
 
-    .tl-content { width: 44%; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 28px; opacity: 0; transition: all .6s ease; }
-    .tl-row.left .tl-content { transform: translateX(-40px); }
-    .tl-row.right .tl-content { transform: translateX(40px); }
-    .tl-row.visible .tl-content { opacity: 1; transform: translateX(0); }
-    .tl-row.visible .tl-content { border-color: rgba(99,102,241,0.15); }
-    .tl-content .tl-num { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-    .tl-content h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-    .tl-content p { color: var(--muted); font-size: 13px; line-height: 1.6; }
-    .tl-content .tl-time { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 12px; color: var(--green); font-weight: 600; background: rgba(16,185,129,0.06); padding: 4px 12px; border-radius: 999px; }
+    .tl-card { width: 100%; max-width: 380px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px; opacity: 0; transition: all .6s ease; }
+    .tl-row.left .tl-card { transform: translateX(-30px); }
+    .tl-row.right .tl-card { transform: translateX(30px); }
+    .tl-row.visible .tl-card { opacity: 1; transform: translateX(0); }
+    .tl-row.visible .tl-card { border-color: rgba(99,102,241,0.15); }
+    .tl-card .tl-num { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .tl-card h3 { font-size: 19px; font-weight: 700; margin-bottom: 10px; color: #f1f5f9; }
+    .tl-card p { color: #cbd5e1; font-size: 14px; line-height: 1.7; }
+    .tl-card .tl-time { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; font-size: 12px; color: var(--green); font-weight: 600; background: rgba(16,185,129,0.06); padding: 5px 14px; border-radius: 999px; }
 
-    .tl-node { width: 12%; display: flex; justify-content: center; padding-top: 28px; position: relative; z-index: 2; }
+    .tl-node { padding-top: 28px; position: relative; z-index: 2; }
     .tl-dot { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: #fff; box-shadow: 0 0 20px rgba(99,102,241,0.3); }
     .tl-row:nth-child(1) .tl-dot { background: var(--accent); }
     .tl-row:nth-child(2) .tl-dot { background: var(--accent2); box-shadow: 0 0 20px rgba(139,92,246,0.3); }
     .tl-row:nth-child(3) .tl-dot { background: var(--accent3); box-shadow: 0 0 20px rgba(6,182,212,0.3); }
-    .tl-row:nth-child(4) .tl-dot { background: var(--green); box-shadow: 0 0 20px rgba(16,185,129,0.3); }
+    .tl-row:nth-child(4) .tl-dot { background: var(--accent2); box-shadow: 0 0 20px rgba(139,92,246,0.3); }
+    .tl-row:nth-child(5) .tl-dot { background: var(--green); box-shadow: 0 0 20px rgba(16,185,129,0.3); }
     .tl-dot::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid rgba(99,102,241,0.15); animation: nodeRing 2.5s ease-in-out infinite; }
     .tl-row:nth-child(2) .tl-dot::after { border-color: rgba(139,92,246,0.15); }
     .tl-row:nth-child(3) .tl-dot::after { border-color: rgba(6,182,212,0.15); }
-    .tl-row:nth-child(4) .tl-dot::after { border-color: rgba(16,185,129,0.15); }
+    .tl-row:nth-child(4) .tl-dot::after { border-color: rgba(139,92,246,0.15); }
+    .tl-row:nth-child(5) .tl-dot::after { border-color: rgba(16,185,129,0.15); }
     @keyframes nodeRing { 0%,100% { transform: scale(1); opacity: .4; } 50% { transform: scale(1.12); opacity: 1; } }
-
-    .tl-spacer { width: 44%; }
 
     /* CTA */
     .cta-section { background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.04) 100%); }
@@ -248,12 +248,10 @@
       .channels-grid { grid-template-columns: 1fr; }
       /* Timeline mobile: all content on right, track on left */
       .tl-track { left: 22px; }
-      .tl-row, .tl-row.right { flex-direction: row !important; }
-      .tl-row.right .tl-content { margin-left: 0; margin-right: auto; }
-      .tl-row.right .tl-spacer { margin-right: 0; margin-left: auto; }
-      .tl-node { width: 44px; flex-shrink: 0; }
-      .tl-content { width: calc(100% - 60px); transform: translateX(-20px) !important; }
-      .tl-spacer { display: none; }
+      .tl-row, .tl-row.right { display: grid; grid-template-columns: 44px 1fr; }
+      .tl-row.left .tl-card, .tl-row.right .tl-card { grid-column: 2; justify-self: start; transform: translateX(-20px) !important; width: 100%; max-width: none; }
+      .tl-row.left .tl-node, .tl-row.right .tl-node { grid-column: 1; justify-self: center; }
+      .tl-row.left .tl-void, .tl-row.right .tl-void { display: none; }
     }
     @media (max-width: 640px) {
       nav { padding: 14px 20px; }
@@ -538,20 +536,20 @@
     </div>
 
     <div class="tl-row left">
-      <div class="tl-content">
+      <div class="tl-card">
         <div class="tl-num">Step 01</div>
         <h3>Create your account</h3>
         <p>Sign up with email. Get instant access to the full platform. 14-day free trial, no card needed.</p>
         <div class="tl-time">⏱ 30 seconds</div>
       </div>
       <div class="tl-node"><div class="tl-dot">1</div></div>
-      <div class="tl-spacer"></div>
+      <div class="tl-void"></div>
     </div>
 
     <div class="tl-row right">
-      <div class="tl-spacer"></div>
+      <div class="tl-void"></div>
       <div class="tl-node"><div class="tl-dot">2</div></div>
-      <div class="tl-content">
+      <div class="tl-card">
         <div class="tl-num">Step 02</div>
         <h3>Upload your knowledge</h3>
         <p>Drag & drop PDFs, text files, or markdown. Jeeves auto-chunks, embeds, and indexes everything in seconds.</p>
@@ -560,25 +558,36 @@
     </div>
 
     <div class="tl-row left">
-      <div class="tl-content">
+      <div class="tl-card">
         <div class="tl-num">Step 03</div>
         <h3>Connect your channels</h3>
         <p>Enable the website widget, connect your Telegram bot, or set up WhatsApp — all from one dashboard.</p>
         <div class="tl-time">⏱ 5 minutes</div>
       </div>
       <div class="tl-node"><div class="tl-dot">3</div></div>
-      <div class="tl-spacer"></div>
+      <div class="tl-void"></div>
     </div>
 
     <div class="tl-row right">
-      <div class="tl-spacer"></div>
+      <div class="tl-void"></div>
       <div class="tl-node"><div class="tl-dot">4</div></div>
-      <div class="tl-content">
+      <div class="tl-card">
         <div class="tl-num">Step 04</div>
-        <h3>Go live</h3>
-        <p>Jeeves starts answering customer queries immediately. Monitor everything from the real-time dashboard.</p>
-        <div class="tl-time" style="color:var(--green);">🚀 You're live</div>
+        <h3>Wire your integrations</h3>
+        <p>Connect your CRM, set up custom actions, configure webhooks. Jeeves pulls customer data and takes real actions — not just chat.</p>
+        <div class="tl-time">⏱ 5 minutes</div>
       </div>
+    </div>
+
+    <div class="tl-row left">
+      <div class="tl-card">
+        <div class="tl-num">Step 05</div>
+        <h3>You're live</h3>
+        <p>Jeeves is already answering queries across every channel. Monitor, refine, and scale from the dashboard. Done.</p>
+        <div class="tl-time" style="color:var(--green);">🚀 Ready</div>
+      </div>
+      <div class="tl-node"><div class="tl-dot">5</div></div>
+      <div class="tl-void"></div>
     </div>
   </div>
 </div>
