@@ -5,255 +5,350 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Jeeves — AI Support Agent for Every Channel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #08090d;
-      --surface: #111218;
-      --surface2: #18191f;
-      --border: rgba(255,255,255,0.07);
+      --bg: #030508;
+      --surface: #0a0f1e;
+      --surface2: #0d1325;
+      --border: rgba(255,255,255,0.12);
       --accent: #6366f1;
       --accent2: #8b5cf6;
       --accent3: #06b6d4;
-      --text: #e8eaf0;
-      --muted: #6b7280;
+      --text: #f8fafc;
+      --muted: #64748b;
       --green: #10b981;
       --red: #f87171;
-      --font: 'Inter', system-ui, sans-serif;
-      --mono: 'JetBrains Mono', monospace;
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
-    body { font-family: var(--font); background: var(--bg); color: var(--text); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
 
     /* NAV */
-    nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 40px; position: fixed; top: 0; width: 100%; z-index: 100; backdrop-filter: blur(20px); background: rgba(8,9,13,0.85); border-bottom: 1px solid var(--border); }
-    .logo { font-size: 20px; font-weight: 800; letter-spacing: -.5px; }
+    nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 40px; position: fixed; top: 0; width: 100%; z-index: 100; backdrop-filter: blur(24px); background: rgba(3,5,8,0.85); border-bottom: 1px solid var(--border); }
+    .logo { font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
     .logo span { color: var(--accent); }
-    .nav-links { display: flex; gap: 24px; align-items: center; }
-    .nav-links a { color: #9ca3af; text-decoration: none; font-size: 13px; font-weight: 500; transition: color .2s; }
-    .nav-links a:hover { color: #fff; }
-    .btn-nav { background: var(--accent); color: #fff !important; padding: 8px 20px; border-radius: 8px; font-weight: 600; font-size: 13px; text-decoration: none; transition: all .2s; }
-    .btn-nav:hover { background: #4f46e5; }
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a { color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+    .btn-nav { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff !important; padding: 10px 24px; border-radius: 10px; font-weight: 800; font-size: 14px; text-decoration: none; transition: all .25s; border: none; }
+    .btn-nav:hover { box-shadow: 0 8px 32px rgba(99,102,241,0.5); transform: translateY(-1px); }
 
     /* ===== HERO ===== */
-    .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 100px 24px 60px; position: relative; }
-    .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 64px 64px; mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%); }
+    .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 120px 24px 80px; position: relative; overflow: hidden; }
+    .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%); }
+    .hero-orb { position: absolute; border-radius: 50%; filter: blur(100px); pointer-events: none; }
+    .hero-orb.o1 { width: 500px; height: 500px; top: -10%; left: 10%; background: var(--accent); opacity: .18; animation: orbFloat 10s ease-in-out infinite; }
+    .hero-orb.o2 { width: 400px; height: 400px; top: 30%; right: 5%; background: var(--accent3); opacity: .14; animation: orbFloat 10s ease-in-out -3s infinite; }
+    .hero-orb.o3 { width: 350px; height: 350px; bottom: -5%; left: 35%; background: var(--accent2); opacity: .14; animation: orbFloat 10s ease-in-out -6s infinite; }
+    @keyframes orbFloat { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(30px,-20px) scale(1.08); } 66% { transform: translate(-20px,25px) scale(.95); } }
 
-    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 999px; font-size: 12px; font-weight: 500; color: #9ca3af; margin-bottom: 28px; position: relative; z-index: 1; border: 1px solid var(--border); }
-    .badge .dot { width: 5px; height: 5px; background: var(--green); border-radius: 50%; }
+    .badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.3); padding: 6px 16px; border-radius: 999px; font-size: 13px; color: #a5b4fc; margin-bottom: 32px; position: relative; z-index: 1; animation: fadeInDown .8s ease; box-shadow: 0 0 20px rgba(99,102,241,0.1); }
+    .badge .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; box-shadow: 0 0 12px var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-    .hero-inner { display: flex; align-items: center; gap: 80px; max-width: 1100px; width: 100%; position: relative; z-index: 1; }
-    .hero-text { flex: 1; }
-    .hero-text h1 { font-size: clamp(36px, 5.5vw, 64px); font-weight: 800; line-height: 1.05; letter-spacing: -2px; margin-bottom: 20px; color: #fff; }
-    .hero-text h1 .hl { background: linear-gradient(135deg, #fff 30%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .hero-text p { font-size: 16px; color: #9ca3af; max-width: 440px; line-height: 1.65; margin-bottom: 28px; }
-    .hero-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
-    .btn-primary { background: #fff; color: var(--bg); padding: 14px 28px; border-radius: 10px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all .2s; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-primary:hover { background: #e5e7eb; }
-    .btn-secondary { background: transparent; color: #9ca3af; padding: 14px 28px; border-radius: 10px; font-size: 14px; font-weight: 500; text-decoration: none; border: 1px solid var(--border); transition: all .2s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-secondary:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
+    .hero-inner { display: flex; align-items: center; gap: 80px; max-width: 1200px; width: 100%; position: relative; z-index: 1; }
+    .hero-text { flex: 1; text-align: left; }
+    .hero-text h1 { font-size: clamp(42px, 6.5vw, 80px); font-weight: 900; line-height: .92; letter-spacing: -3px; margin-bottom: 24px; animation: fadeInUp .8s ease .1s both; }
+    .hero-text h1 .hl { background: linear-gradient(135deg, #fff 0%, #c7d2fe 15%, var(--accent) 30%, var(--accent2) 50%, var(--accent3) 70%, #34d399 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 200% 200%; animation: gradientShift 6s ease infinite; filter: drop-shadow(0 0 30px rgba(99,102,241,0.3)); }
+    @keyframes gradientShift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    .hero-features { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; animation: fadeInUp .8s ease .15s both; }
+    .hero-feat { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #94a3b8; }
+    .hero-feat .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .hero-feat:nth-child(1) .dot { background: var(--accent); }
+    .hero-feat:nth-child(2) .dot { background: var(--accent3); }
+    .hero-feat:nth-child(3) .dot { background: var(--green); }
+    .hero-text p { font-size: 17px; color: #94a3b8; max-width: 460px; line-height: 1.7; margin-bottom: 36px; animation: fadeInUp .8s ease .2s both; }
+    .hero-buttons { display: flex; gap: 14px; flex-wrap: wrap; animation: fadeInUp .8s ease .3s both; }
+    .btn-primary { background: #fff; color: #030508; padding: 16px 32px; border-radius: 14px; font-size: 15px; font-weight: 700; text-decoration: none; transition: all .3s; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 48px rgba(255,255,255,0.2); }
+    .btn-secondary { background: rgba(255,255,255,0.08); color: #e2e8f0; padding: 16px 32px; border-radius: 14px; font-size: 15px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,0.15); transition: all .3s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.12); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
 
-    .hero-mockup { flex-shrink: 0; }
-    .phone-frame { width: 280px; background: var(--surface); border-radius: 36px; border: 1px solid var(--border); box-shadow: 0 40px 80px rgba(0,0,0,0.5); overflow: hidden; }
-    .phone-screen { background: #0c0d12; margin: 3px; border-radius: 32px; overflow: hidden; }
-    .phone-dynamic-island { width: 90px; height: 24px; background: #000; border-radius: 18px; margin: 6px auto 0; }
-    .phone-nav-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid var(--border); }
-    .phone-bot-icon { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
-    .phone-bot-name { font-size: 13px; font-weight: 600; color: #fff; }
+    .hero-mockup { flex-shrink: 0; animation: fadeInUp .8s ease .4s both; position: relative; }
+    .hero-mockup::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 380px; height: 560px; background: radial-gradient(ellipse, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.08) 40%, transparent 70%); pointer-events: none; animation: phoneGlow 4s ease-in-out infinite; }
+    @keyframes phoneGlow { 0%,100% { opacity: 1; transform: translate(-50%,-50%) scale(1); } 50% { opacity: .7; transform: translate(-50%,-50%) scale(1.05); } }
+    .phone-frame { width: 300px; background: linear-gradient(180deg, #1a1f35 0%, #111827 100%); border-radius: 40px; border: 2px solid rgba(99,102,241,0.3); box-shadow: 0 60px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08) inset, 0 0 60px rgba(99,102,241,0.15); overflow: hidden; position: relative; }
+    /* Phone hardware buttons */
+    .phone-btn-side { position: absolute; right: -5px; top: 120px; width: 4px; height: 40px; background: #1f2937; border-radius: 0 2px 2px 0; }
+    .phone-btn-vol1 { position: absolute; left: -5px; top: 100px; width: 4px; height: 28px; background: #1f2937; border-radius: 2px 0 0 2px; }
+    .phone-btn-vol2 { position: absolute; left: -5px; top: 138px; width: 4px; height: 28px; background: #1f2937; border-radius: 2px 0 0 2px; }
+    .phone-screen { background: #0f172a; margin: 4px; border-radius: 34px; overflow: hidden; }
+    .phone-dynamic-island { width: 100px; height: 28px; background: #000; border-radius: 20px; margin: 8px auto 0; position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; }
+    .phone-island-cam { width: 8px; height: 8px; border-radius: 50%; background: #1a1f35; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 0 4px rgba(255,255,255,0.05); }
+    .phone-status { display: flex; justify-content: space-between; align-items: center; padding: 6px 22px 4px; font-size: 12px; font-weight: 600; color: #e2e8f0; }
+    .phone-status-time { font-size: 14px; font-weight: 700; }
+    .phone-status-icons { display: flex; gap: 4px; align-items: center; }
+    .phone-status-icons svg { width: 14px; height: 14px; fill: #e2e8f0; }
+    .phone-nav-bar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.08)); border-bottom: 1px solid rgba(99,102,241,0.15); }
+    .phone-back-btn { color: var(--accent); font-size: 22px; font-weight: 300; line-height: 1; }
+    .phone-bot-icon { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; box-shadow: 0 0 12px rgba(99,102,241,0.4); }
+    .phone-bot-info { flex: 1; }
+    .phone-bot-name { font-size: 13px; font-weight: 600; color: #f1f5f9; }
     .phone-bot-status { font-size: 10px; color: var(--green); }
-    .phone-body { height: 350px; padding: 10px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; scrollbar-width: none; }
+    .phone-body { height: 370px; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; position: relative; background: linear-gradient(180deg, #0f172a 0%, #0a0f1e 100%); scrollbar-width: none; }
     .phone-body::-webkit-scrollbar { display: none; }
-    .msg { display: flex; gap: 6px; max-width: 88%; opacity: 0; transform: translateY(4px); transition: opacity .3s, transform .3s; flex-shrink: 0; }
+    .msg { display: flex; gap: 6px; max-width: 90%; opacity: 0; transform: translateY(6px); transition: opacity .35s, transform .35s; flex-shrink: 0; }
     .msg.show { opacity: 1; transform: translateY(0); }
     .msg.user { align-self: flex-end; flex-direction: row-reverse; }
-    .msg-avatar { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; margin-top: 2px; }
-    .msg.bot .msg-avatar { background: var(--accent); color: #fff; }
-    .msg.user .msg-avatar { background: #1f2937; color: #9ca3af; }
-    .msg-bubble { padding: 7px 11px; border-radius: 12px; font-size: 11px; line-height: 1.45; }
-    .msg.bot .msg-bubble { background: #1a1b22; border: 1px solid var(--border); border-top-left-radius: 3px; color: #d1d5db; }
-    .msg.user .msg-bubble { background: var(--accent); color: #fff; border-top-right-radius: 3px; }
+    .msg-avatar { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; margin-top: 2px; }
+    .msg.bot .msg-avatar { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+    .msg.user .msg-avatar { background: #1e293b; color: #94a3b8; border: 1px solid rgba(255,255,255,0.08); }
+    .msg-bubble { padding: 8px 12px; border-radius: 14px; font-size: 11.5px; line-height: 1.45; }
+    .msg.bot .msg-bubble { background: linear-gradient(135deg, #1e293b, #1a2332); border: 1px solid rgba(255,255,255,0.08); border-top-left-radius: 4px; color: #e2e8f0; }
+    .msg.user .msg-bubble { background: linear-gradient(135deg, var(--accent), #4f46e5); color: #fff; border-top-right-radius: 4px; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
     .msg-bubble strong { color: #fff; }
-    .msg-confirmation { margin-top: 5px; padding: 6px 8px; background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.12); border-radius: 8px; }
-    .msg-confirm-text { font-size: 9px; color: #f87171; margin-bottom: 4px; font-weight: 500; }
-    .msg-confirm-btn { display: inline-flex; align-items: center; gap: 3px; padding: 3px 10px; background: var(--accent); color: #fff; border-radius: 6px; font-weight: 600; font-size: 9px; transition: all .3s; }
-    .msg-confirm-btn.tapped { background: var(--green); }
-    .msg-confirm-btn.tapped::before { content: '\2713 '; }
-    .msg-success { margin-top: 5px; padding: 4px 7px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.12); border-radius: 6px; font-size: 9px; color: var(--green); font-weight: 600; }
-    .typing-dots { display: none; align-items: center; gap: 4px; padding-left: 26px; flex-shrink: 0; }
+    .msg-confirmation { margin-top: 6px; padding: 8px 10px; background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.15); border-radius: 10px; }
+    .msg-confirm-text { font-size: 10px; color: #f87171; margin-bottom: 6px; font-weight: 500; }
+    .msg-confirm-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: var(--accent); color: #fff; border-radius: 8px; font-weight: 700; font-size: 10px; transition: all .3s; }
+    .msg-confirm-btn.tapped { background: var(--green); transform: scale(1.05); box-shadow: 0 0 12px rgba(16,185,129,0.4); }
+    .msg-confirm-btn.tapped::before { content: '✓ '; }
+    .msg-success { margin-top: 6px; padding: 6px 8px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.15); border-radius: 8px; font-size: 10px; color: var(--green); font-weight: 600; }
+    .typing-dots { display: none; align-items: center; gap: 5px; padding-left: 28px; flex-shrink: 0; }
     .typing-dots.active { display: flex; }
-    .typing-dots span { width: 4px; height: 4px; border-radius: 50%; background: #4b5563; animation: typing 1.4s ease-in-out infinite; }
+    .typing-dots span { width: 5px; height: 5px; border-radius: 50%; background: #475569; animation: typing 1.4s ease-in-out infinite; }
     .typing-dots span:nth-child(2) { animation-delay: .2s; }
     .typing-dots span:nth-child(3) { animation-delay: .4s; }
-    .phone-input { display: flex; align-items: center; gap: 5px; padding: 8px 10px; border-top: 1px solid var(--border); background: #0c0d12; }
-    .phone-input-field { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 16px; padding: 6px 10px; font-size: 10px; color: #4b5563; }
-    .phone-home-bar { width: 100px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 6px auto; }
+    .phone-input { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border-top: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; background: #0f172a; }
+    .phone-input-field { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 7px 12px; font-size: 11px; color: #475569; }
+    .phone-send { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; }
+    .phone-send svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2; }
+    .phone-home-bar { width: 120px; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px; margin: 8px auto; }
 
-    /* ===== STATS BAR ===== */
-    .stats-section { padding: 0 24px; background: var(--bg); }
-    .stats-inner { max-width: 1100px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px 32px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; position: relative; overflow: hidden; }
-    .stats-inner::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0.4; }
-    .stat-item { text-align: center; position: relative; }
-    .stat-item:not(:last-child)::after { content: ''; position: absolute; right: -12px; top: 20%; height: 60%; width: 1px; background: var(--border); }
-    .stat-num { font-size: 48px; font-weight: 800; letter-spacing: -3px; color: #fff; line-height: 1; margin-bottom: 8px; font-family: var(--mono); }
-    .stat-num .stat-suffix { font-size: 32px; font-weight: 600; color: var(--accent); }
-    .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; line-height: 1.4; }
+    /* SECTION DIVIDER */
+    .section-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(99,102,241,0.2), rgba(139,92,246,0.15), rgba(6,182,212,0.2), transparent); }
 
-    /* ===== CAPABILITIES ===== */
-    .caps-section { padding: 80px 24px; background: var(--bg); }
-    .caps-inner { max-width: 1100px; margin: 0 auto; }
-    .caps-header { text-align: center; margin-bottom: 48px; }
-    .caps-header h2 { font-size: clamp(26px, 3.5vw, 40px); font-weight: 800; letter-spacing: -1.5px; margin-bottom: 12px; color: #fff; }
-    .caps-header p { font-size: 15px; color: var(--muted); max-width: 480px; margin: 0 auto; line-height: 1.6; }
+    /* SECTIONS */
+    .section { padding: 60px 24px; max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+    .section.alt-bg { background: linear-gradient(180deg, rgba(10,15,30,0.7) 0%, rgba(13,19,37,0.4) 50%, transparent 100%); max-width: 100%; padding-left: 0; padding-right: 0; }
+    .section.alt-bg .section-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .section-label { text-transform: uppercase; font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--accent); margin-bottom: 16px; }
+    .section-title { font-size: clamp(28px, 4vw, 48px); font-weight: 900; letter-spacing: -2px; margin-bottom: 16px; line-height: 1.05; }
+    .section-sub { color: #94a3b8; font-size: 17px; max-width: 520px; margin-bottom: 40px; line-height: 1.6; }
 
-    .caps-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .caps-main { grid-column: 1 / -1; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 36px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
-    .cap-item { position: relative; }
-    .cap-item .cap-num { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-bottom: 12px; font-weight: 600; }
-    .cap-item h3 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-    .cap-item p { font-size: 13px; color: var(--muted); line-height: 1.6; }
-    .cap-item .cap-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(99,102,241,0.1); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
-    .cap-item .cap-icon svg { width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-
-    .cap-feature { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; position: relative; overflow: hidden; }
-    .cap-feature .cap-f-bg { position: absolute; top: 0; right: 0; width: 200px; height: 200px; background: radial-gradient(circle at top right, rgba(99,102,241,0.08), transparent); pointer-events: none; }
-    .cap-feature h3 { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-    .cap-feature p { font-size: 13px; color: var(--muted); line-height: 1.6; }
-    .cap-feature .cap-metric { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 24px; }
-    .cap-feature .cap-metric .cm-val { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--accent); }
-    .cap-feature .cap-metric .cm-label { font-size: 11px; color: var(--muted); }
-
-    /* ===== CIRCUIT BOARD ===== */
-    .circuit-section { padding: 80px 24px; background: var(--bg); }
-    .circuit-inner { max-width: 1100px; margin: 0 auto; text-align: center; }
-    .circuit-header { margin-bottom: 40px; }
-    .circuit-header h2 { font-size: clamp(26px, 3.5vw, 40px); font-weight: 800; letter-spacing: -1.5px; margin-bottom: 12px; color: #fff; }
-    .circuit-header p { font-size: 15px; color: var(--muted); max-width: 480px; margin: 0 auto; line-height: 1.6; }
-
-    .circuit-board { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 40px; position: relative; overflow: hidden; min-height: 500px; }
-    .circuit-board::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 32px 32px; pointer-events: none; }
-
-    .circuit-svg { position: absolute; inset: 0; pointer-events: none; }
-    .circuit-svg path { fill: none; stroke: rgba(99,102,241,0.08); stroke-width: 1.5; }
-    .circuit-svg path.active { stroke: rgba(99,102,241,0.5); }
-    .circuit-svg .particle { fill: var(--accent); opacity: 0; }
-    .circuit-svg .particle.active { opacity: 1; }
-
-    .circuit-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 3; }
-    .circuit-core { width: 80px; height: 80px; border-radius: 20px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; color: #fff; box-shadow: 0 0 60px rgba(99,102,241,0.3); position: relative; }
-    .circuit-core::before { content: ''; position: absolute; inset: -4px; border-radius: 24px; border: 1px solid rgba(99,102,241,0.3); animation: corePulse 2s ease-in-out infinite; }
-    @keyframes corePulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.05); } }
-    .circuit-core-label { text-align: center; margin-top: 10px; font-size: 13px; font-weight: 700; color: #fff; }
-    .circuit-core-sub { font-size: 11px; color: var(--muted); }
-
-    .circuit-node { position: absolute; z-index: 2; text-align: center; transition: all .4s ease; }
-    .circuit-node.active { transform: scale(1.08); }
-    .circuit-node .node-icon { width: 48px; height: 48px; border-radius: 12px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; transition: all .4s; }
-    .circuit-node.active .node-icon { border-color: rgba(99,102,241,0.4); box-shadow: 0 0 20px rgba(99,102,241,0.15); }
-    .circuit-node .node-icon svg { width: 24px; height: 24px; }
-    .circuit-node .node-name { font-size: 11px; font-weight: 600; color: #d1d5db; white-space: nowrap; }
-    .circuit-node .node-type { font-size: 9px; color: var(--muted); }
-
-    .circuit-label { position: absolute; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #4b5563; z-index: 2; }
-    .circuit-label.top { top: 16px; left: 50%; transform: translateX(-50%); }
-    .circuit-label.bottom { bottom: 16px; left: 50%; transform: translateX(-50%); }
-
-    /* ===== TIMELINE ===== */
-    .how-section { padding: 80px 24px; background: var(--bg); }
-    .how-inner { max-width: 800px; margin: 0 auto; text-align: center; }
-    .how-inner > h2 { font-size: clamp(26px, 3.5vw, 40px); font-weight: 800; letter-spacing: -1.5px; margin-bottom: 12px; color: #fff; }
-    .how-inner > p { font-size: 15px; color: var(--muted); margin-bottom: 48px; line-height: 1.6; }
-
-    .timeline { position: relative; text-align: left; }
-    .tl-track { position: absolute; left: 28px; top: 0; bottom: 0; width: 1px; background: var(--border); }
-    .tl-row { display: flex; gap: 24px; margin-bottom: 36px; position: relative; opacity: 0; transform: translateX(-12px); transition: all .5s ease; }
-    .tl-row.visible { opacity: 1; transform: translateX(0); }
-    .tl-row:last-child { margin-bottom: 0; }
-    .tl-dot { width: 56px; height: 56px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--accent); flex-shrink: 0; position: relative; z-index: 1; }
-    .tl-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; flex: 1; }
-    .tl-card .tl-num { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-bottom: 6px; font-weight: 600; }
-    .tl-card h3 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-    .tl-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
-    .tl-card .tl-time { display: inline-block; margin-top: 10px; font-family: var(--mono); font-size: 11px; color: var(--green); font-weight: 600; }
-
-    /* ===== PRICING ===== */
-    .pricing-section { padding: 80px 24px; background: var(--bg); }
-    .pricing-inner { max-width: 1100px; margin: 0 auto; text-align: center; }
-    .pricing-inner > h2 { font-size: clamp(26px, 3.5vw, 40px); font-weight: 800; letter-spacing: -1.5px; margin-bottom: 12px; color: #fff; }
-    .pricing-inner > p { font-size: 15px; color: var(--muted); margin-bottom: 40px; line-height: 1.6; }
-
-    .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-    .price-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px 20px; position: relative; transition: all .3s; text-align: left; }
-    .price-card:hover { border-color: rgba(255,255,255,0.12); }
-    .price-card.featured { border-color: var(--accent); box-shadow: 0 0 40px rgba(99,102,241,0.1); }
-    .price-card.featured .p-badge { display: inline-block; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 999px; margin-bottom: 16px; }
-    .price-card .p-name { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
-    .price-card .p-price { font-size: 36px; font-weight: 800; letter-spacing: -2px; color: #fff; }
-    .price-card .p-price .p-cur { font-size: 18px; vertical-align: super; margin-right: 1px; }
-    .price-card .p-period { font-size: 12px; color: var(--muted); margin-top: 2px; margin-bottom: 20px; }
-    .price-card .p-features { list-style: none; margin-bottom: 24px; }
-    .price-card .p-features li { font-size: 12px; color: #9ca3af; padding: 6px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
-    .price-card .p-features li::before { content: '\2713'; color: var(--green); font-weight: 700; font-size: 11px; }
-    .price-card .p-btn { display: block; width: 100%; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all .2s; cursor: pointer; text-align: center; }
-    .price-card .p-btn.primary { background: var(--accent); color: #fff; border: none; }
-    .price-card .p-btn.primary:hover { background: #4f46e5; }
-    .price-card .p-btn.secondary { background: var(--surface2); color: #d1d5db; border: 1px solid var(--border); }
-    .price-card .p-btn.secondary:hover { border-color: rgba(255,255,255,0.15); }
-    .price-card .p-btn.outline { background: transparent; color: #d1d5db; border: 1px solid var(--border); }
-    .price-card .p-btn.outline:hover { border-color: rgba(255,255,255,0.2); }
-
-    .pricing-note { max-width: 600px; margin: 32px auto 0; text-align: left; }
-    .pricing-note .pn-row { display: flex; align-items: flex-start; gap: 8px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
-    .pricing-note .pn-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
-    .pricing-note .pn-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
-    .pricing-note .pn-text strong { color: #d1d5db; }
-
-    /* CTA */
-    .cta-section { border-top: 1px solid var(--border); }
-    .cta { text-align: center; padding: 80px 24px; max-width: 700px; margin: 0 auto; }
-    .cta h2 { font-size: clamp(26px, 4vw, 42px); font-weight: 800; letter-spacing: -1.5px; margin-bottom: 14px; color: #fff; line-height: 1.1; }
-    .cta p { color: var(--muted); font-size: 15px; margin-bottom: 32px; line-height: 1.6; }
-
-    footer { text-align: center; padding: 32px 24px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); }
-
-    /* REVEAL */
-    .reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
+    /* SCROLL REVEAL */
+    .reveal { opacity: 0; transform: translateY(40px); transition: opacity .7s ease, transform .7s ease; }
     .reveal.visible { opacity: 1; transform: translateY(0); }
 
+    /* ===== CAPABILITIES — BENTO ===== */
+    .caps-bento { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+    .cap-b { background: var(--surface); border-radius: 20px; padding: 32px 28px; position: relative; overflow: hidden; transition: all .4s cubic-bezier(.4,0,.2,1); border: 1px solid rgba(255,255,255,0.12); }
+    .cap-b::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+    .cap-b:hover { transform: translateY(-4px); }
+    .cap-b.b1 { grid-column: span 3; background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, var(--surface) 60%); border-color: rgba(99,102,241,0.3); }
+    .cap-b.b1::before { background: linear-gradient(90deg, var(--accent), transparent); }
+    .cap-b.b1:hover { border-color: rgba(99,102,241,0.5); box-shadow: 0 20px 60px rgba(99,102,241,0.15); }
+    .cap-b.b2 { grid-column: span 3; background: linear-gradient(135deg, rgba(6,182,212,0.12) 0%, var(--surface) 60%); border-color: rgba(6,182,212,0.3); }
+    .cap-b.b2::before { background: linear-gradient(90deg, var(--accent3), transparent); }
+    .cap-b.b2:hover { border-color: rgba(6,182,212,0.5); box-shadow: 0 20px 60px rgba(6,182,212,0.15); }
+    .cap-b.b3 { grid-column: span 2; background: linear-gradient(135deg, rgba(16,185,129,0.12) 0%, var(--surface) 60%); border-color: rgba(16,185,129,0.3); }
+    .cap-b.b3::before { background: linear-gradient(90deg, var(--green), transparent); }
+    .cap-b.b3:hover { border-color: rgba(16,185,129,0.5); box-shadow: 0 20px 60px rgba(16,185,129,0.15); }
+    .cap-b.b4 { grid-column: span 2; background: linear-gradient(135deg, rgba(139,92,246,0.12) 0%, var(--surface) 60%); border-color: rgba(139,92,246,0.3); }
+    .cap-b.b4::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+    .cap-b.b4:hover { border-color: rgba(139,92,246,0.5); box-shadow: 0 20px 60px rgba(139,92,246,0.15); }
+    .cap-b.b5 { grid-column: span 2; background: linear-gradient(135deg, rgba(248,113,113,0.12) 0%, var(--surface) 60%); border-color: rgba(248,113,113,0.3); }
+    .cap-b.b5::before { background: linear-gradient(90deg, var(--red), transparent); }
+    .cap-b.b5:hover { border-color: rgba(248,113,113,0.5); box-shadow: 0 20px 60px rgba(248,113,113,0.15); }
+    .cap-b .cap-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    .cap-b .cap-icon svg { width: 20px; height: 20px; }
+    .cap-b .cap-icon.c1 { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.2); box-shadow: 0 0 16px rgba(99,102,241,0.15); }
+    .cap-b .cap-icon.c1 svg { stroke: #818cf8; }
+    .cap-b .cap-icon.c2 { background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.2); box-shadow: 0 0 16px rgba(6,182,212,0.15); }
+    .cap-b .cap-icon.c2 svg { stroke: #22d3ee; }
+    .cap-b .cap-icon.c3 { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.2); box-shadow: 0 0 16px rgba(16,185,129,0.15); }
+    .cap-b .cap-icon.c3 svg { stroke: #34d399; }
+    .cap-b .cap-icon.c4 { background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.2); box-shadow: 0 0 16px rgba(139,92,246,0.15); }
+    .cap-b .cap-icon.c4 svg { stroke: #a78bfa; }
+    .cap-b .cap-icon.c5 { background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.2); box-shadow: 0 0 16px rgba(248,113,113,0.15); }
+    .cap-b .cap-icon.c5 svg { stroke: #fb7185; }
+    .cap-b .cap-icon.c6 { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.2); box-shadow: 0 0 16px rgba(99,102,241,0.15); }
+    .cap-b .cap-icon.c6 svg { stroke: #818cf8; }
+    .cap-b h3 { font-size: 17px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; letter-spacing: -.2px; }
+    .cap-b p { color: #cbd5e1; font-size: 14px; line-height: 1.65; }
+    .cap-b .cap-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; margin-top: 14px; }
+    .cap-b .cap-tag.t1 { background: rgba(99,102,241,0.1); color: #a5b4fc; }
+    .cap-b .cap-tag.t2 { background: rgba(6,182,212,0.1); color: #67e8f9; }
+    .cap-b .cap-tag.t3 { background: rgba(16,185,129,0.1); color: #6ee7b7; }
+    .cap-b .cap-tag.t4 { background: rgba(139,92,246,0.1); color: #c4b5fd; }
+    .cap-b .cap-tag.t5 { background: rgba(248,113,113,0.1); color: #fda4af; }
+    .cap-b .cap-tag.t6 { background: rgba(99,102,241,0.1); color: #a5b4fc; }
+
+    /* ===== HERO METRIC ===== */
+    .hero-metric { text-align: center; padding: 80px 0; }
+    .hero-metric .hm-wrap { position: relative; display: inline-block; }
+    .hero-metric .hm-wrap::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 350px; height: 350px; background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.1) 40%, transparent 70%); border-radius: 50%; pointer-events: none; }
+    .hm-num { font-size: clamp(90px, 16vw, 180px); font-weight: 900; letter-spacing: -8px; line-height: 0.85; position: relative; }
+    .hm-num .n-main { background: linear-gradient(135deg, #fff 0%, var(--accent) 40%, var(--accent2) 70%, var(--accent3) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 200% 200%; animation: gradientShift 5s ease infinite; }
+    .hm-num .n-pct { background: linear-gradient(135deg, var(--accent2), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hm-tagline { font-size: clamp(14px, 2vw, 18px); font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 5px; margin-top: 16px; }
+    .hm-desc { max-width: 500px; margin: 28px auto 0; }
+    .hm-desc p { font-size: 16px; line-height: 1.7; color: #cbd5e1; }
+    .hm-desc p + p { margin-top: 8px; color: #94a3b8; font-size: 15px; }
+    .hm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 64px; max-width: 700px; margin-left: auto; margin-right: auto; border-radius: 16px; overflow: hidden; border: 1px solid rgba(99,102,241,0.2); box-shadow: 0 0 50px rgba(99,102,241,0.08); }
+    .hm-stat { padding: 32px 24px; background: var(--surface); transition: background .3s; }
+    .hm-stat:hover { background: rgba(99,102,241,0.06); }
+    .hm-stat .hs-val { font-size: 26px; font-weight: 800; color: #f1f5f9; letter-spacing: -.5px; margin-bottom: 6px; }
+    .hm-stat .hs-val.c1 { background: linear-gradient(135deg, var(--accent), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hm-stat .hs-val.c2 { background: linear-gradient(135deg, var(--accent2), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hm-stat .hs-val.c3 { background: linear-gradient(135deg, var(--green), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hm-stat .hs-label { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+
+    /* ===== CHANNELS ===== */
+    .channels-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .channel-card { background: var(--surface); border: 1px solid rgba(255,255,255,0.15); border-radius: 24px; padding: 40px 32px; text-align: center; transition: all .5s; position: relative; overflow: hidden; }
+    .channel-card:hover { border-color: rgba(99,102,241,0.5); transform: translateY(-6px); box-shadow: 0 24px 64px rgba(0,0,0,0.4), 0 0 50px rgba(99,102,241,0.12); }
+    .channel-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+    .channel-card p { color: #94a3b8; font-size: 14px; line-height: 1.7; }
+    .channel-logo { width: 64px; height: 64px; margin: 0 auto 24px; border-radius: 16px; display: flex; align-items: center; justify-content: center; transition: all .4s; }
+    .channel-card:hover .channel-logo { transform: scale(1.05); }
+    .channel-logo.widget { background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(99,102,241,0.05)); border: 1px solid rgba(99,102,241,0.25); box-shadow: 0 0 24px rgba(99,102,241,0.15); }
+    .channel-logo.tg { background: linear-gradient(135deg, rgba(38,165,227,0.2), rgba(38,165,227,0.05)); border: 1px solid rgba(38,165,227,0.25); box-shadow: 0 0 24px rgba(38,165,227,0.15); }
+    .channel-logo.wa { background: linear-gradient(135deg, rgba(37,211,102,0.2), rgba(37,211,102,0.05)); border: 1px solid rgba(37,211,102,0.25); box-shadow: 0 0 24px rgba(37,211,102,0.15); }
+    .channel-logo svg { width: 32px; height: 32px; }
+
+    /* ===== TIMELINE ===== */
+    .timeline { position: relative; padding: 60px 0; max-width: 900px; margin: 0 auto; }
+    .tl-track { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-50%); }
+    .tl-track-bg { width: 100%; height: 100%; background: var(--border); }
+    .tl-track-fill { position: absolute; top: 0; left: 0; width: 100%; height: 0; background: linear-gradient(180deg, var(--accent), var(--accent2), var(--accent3), var(--accent2), var(--green)); transition: height .6s ease; }
+
+    .tl-row { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 0; align-items: start; margin-bottom: 56px; position: relative; }
+    .tl-row:last-child { margin-bottom: 0; }
+    .tl-row.left .tl-card { grid-column: 1; justify-self: end; }
+    .tl-row.left .tl-node { grid-column: 2; justify-self: center; }
+    .tl-row.left .tl-void { grid-column: 3; }
+    .tl-row.right .tl-void { grid-column: 1; }
+    .tl-row.right .tl-node { grid-column: 2; justify-self: center; }
+    .tl-row.right .tl-card { grid-column: 3; justify-self: start; }
+
+    .tl-card { width: 100%; max-width: 380px; background: var(--surface); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 32px; opacity: 0; transition: all .6s ease; position: relative; overflow: hidden; }
+    .tl-row.left .tl-card { transform: translateX(-30px); }
+    .tl-row.right .tl-card { transform: translateX(30px); }
+    .tl-row.visible .tl-card { opacity: 1; transform: translateX(0); }
+    .tl-row.visible .tl-card { border-color: rgba(99,102,241,0.35); box-shadow: 0 16px 48px rgba(0,0,0,0.3), 0 0 40px rgba(99,102,241,0.08); }
+    .tl-card .tl-num { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .tl-card h3 { font-size: 19px; font-weight: 700; margin-bottom: 10px; color: #f1f5f9; }
+    .tl-card p { color: #cbd5e1; font-size: 14px; line-height: 1.7; }
+    .tl-card .tl-time { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; font-size: 12px; color: var(--green); font-weight: 600; background: rgba(16,185,129,0.06); padding: 5px 14px; border-radius: 999px; }
+
+    .tl-node { padding-top: 28px; position: relative; z-index: 2; }
+    .tl-dot { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: #fff; }
+    .tl-row.d1 .tl-dot { background: var(--accent); box-shadow: 0 0 20px rgba(99,102,241,0.4); }
+    .tl-row.d2 .tl-dot { background: var(--accent2); box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+    .tl-row.d3 .tl-dot { background: var(--accent3); box-shadow: 0 0 20px rgba(6,182,212,0.4); }
+    .tl-row.d4 .tl-dot { background: var(--accent2); box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+    .tl-row.d5 .tl-dot { background: var(--green); box-shadow: 0 0 20px rgba(16,185,129,0.4); }
+
+    /* ===== PRICING ===== */
+    .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 1100px; margin: 0 auto; }
+    .price-card { background: var(--surface); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 36px 24px; text-align: center; position: relative; transition: all .4s; overflow: hidden; }
+    .price-card:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.2); }
+    .price-card.featured { border-color: rgba(99,102,241,0.5); background: linear-gradient(180deg, rgba(99,102,241,0.12) 0%, var(--surface) 60%); box-shadow: 0 0 60px rgba(99,102,241,0.15), 0 0 0 1px rgba(99,102,241,0.25); }
+    .price-card.featured::before { content: 'Most popular'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 999px; box-shadow: 0 4px 16px rgba(99,102,241,0.4); }
+    .price-card.featured:hover { box-shadow: 0 0 80px rgba(99,102,241,0.2), 0 0 0 1px rgba(99,102,241,0.35); }
+    .price-card .p-name { font-size: 13px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+    .price-card .p-price { font-size: 44px; font-weight: 900; letter-spacing: -3px; color: #f1f5f9; }
+    .price-card .p-price .p-cur { font-size: 22px; vertical-align: super; margin-right: 2px; }
+    .price-card .p-period { font-size: 13px; color: #94a3b8; margin-top: 4px; margin-bottom: 24px; }
+    .price-card .p-features { list-style: none; text-align: left; margin-bottom: 28px; }
+    .price-card .p-features li { font-size: 13px; color: #cbd5e1; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; align-items: center; gap: 8px; }
+    .price-card .p-features li::before { content: '✓'; color: var(--green); font-weight: 700; font-size: 12px; flex-shrink: 0; }
+    .price-card .p-btn { display: block; width: 100%; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700; text-decoration: none; transition: all .3s; cursor: pointer; }
+    .price-card .p-btn.primary { background: var(--accent); color: #fff; border: none; }
+    .price-card .p-btn.primary:hover { background: #4f46e5; box-shadow: 0 8px 24px rgba(99,102,241,0.3); }
+    .price-card .p-btn.secondary { background: rgba(255,255,255,0.06); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1); }
+    .price-card .p-btn.secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+    .price-card .p-btn.outline { background: transparent; color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15); }
+    .price-card .p-btn.outline:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); }
+    .pricing-note { max-width: 700px; margin: 40px auto 0; text-align: center; }
+    .pricing-note .pn-row { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: var(--surface); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; margin-bottom: 12px; }
+    .pricing-note .pn-icon { font-size: 18px; flex-shrink: 0; }
+    .pricing-note .pn-text { font-size: 13px; color: #cbd5e1; line-height: 1.5; }
+    .pricing-note .pn-text strong { color: #f1f5f9; }
+
+    /* CTA */
+    .cta-section { background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.08) 100%); }
+    .cta { text-align: center; padding: 120px 24px; max-width: 1200px; margin: 0 auto; }
+    .cta h2 { font-size: clamp(32px, 5vw, 60px); font-weight: 900; letter-spacing: -2.5px; margin-bottom: 20px; line-height: 1.05; }
+    .cta p { color: #94a3b8; font-size: 18px; margin-bottom: 40px; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+    footer { text-align: center; padding: 40px 24px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); }
+
     @media (max-width: 1024px) {
-      .pricing-grid { grid-template-columns: 1fr 1fr; max-width: 500px; margin-left: auto; margin-right: auto; }
-      .caps-main { grid-template-columns: repeat(2, 1fr); }
+      .pricing-grid { grid-template-columns: 1fr 1fr; max-width: 600px; margin-left: auto; margin-right: auto; }
     }
     @media (max-width: 900px) {
-      .hero-inner { flex-direction: column; text-align: center; gap: 40px; }
+      .hero-inner { flex-direction: column; text-align: center; gap: 48px; }
+      .hero-text { text-align: center; }
       .hero-text p { margin-left: auto; margin-right: auto; }
       .hero-buttons { justify-content: center; }
-      .stats-inner { grid-template-columns: repeat(2, 1fr); gap: 24px; }
-      .stat-item:nth-child(2)::after { display: none; }
+      .caps-bento { grid-template-columns: 1fr 1fr; }
+      .cap-b.b1, .cap-b.b2 { grid-column: span 2; }
+      .cap-b.b3, .cap-b.b4, .cap-b.b5 { grid-column: span 1; }
+    }
+    @media (max-width: 768px) {
+      .section { padding: 48px 20px; }
+      .section.alt-bg .section-inner { padding: 0 20px; }
+      .section-sub { font-size: 15px; margin-bottom: 32px; }
+      .channels-grid { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; }
+      .hm-stats { max-width: 450px; margin-left: auto; margin-right: auto; }
     }
     @media (max-width: 640px) {
       nav { padding: 12px 16px; }
+      .logo { font-size: 20px; }
       .nav-links a:not(.btn-nav) { display: none; }
-      .hero { min-height: auto; padding: 80px 16px 40px; }
-      .hero-inner { gap: 32px; }
-      .hero-text h1 { font-size: 28px; letter-spacing: -1px; }
-      .hero-text p { font-size: 14px; }
-      .btn-primary, .btn-secondary { padding: 11px 20px; font-size: 13px; }
-      .hero-mockup { transform: scale(.8); transform-origin: top center; }
-      .caps-section, .circuit-section, .how-section, .pricing-section { padding: 48px 16px; }
-      .caps-main { grid-template-columns: 1fr; gap: 24px; padding: 24px; }
-      .stats-inner { grid-template-columns: 1fr 1fr; padding: 24px 16px; }
-      .stat-item::after { display: none !important; }
-      .stat-num { font-size: 36px; letter-spacing: -2px; }
-      .circuit-board { padding: 24px 16px; min-height: 400px; }
-      .tl-row { flex-direction: column; gap: 12px; padding-left: 0; }
+      .btn-nav { padding: 8px 16px; font-size: 13px; }
+      .hero { min-height: auto; padding: 90px 16px 50px; }
+      .hero-inner { gap: 36px; }
+      .hero-text h1 { font-size: 32px; letter-spacing: -1.5px; }
+      .hero-text p { font-size: 14px; margin-bottom: 24px; }
+      .hero-features { justify-content: center; margin-bottom: 20px; gap: 8px; }
+      .hero-feat { font-size: 12px; }
+      .hero-buttons { gap: 10px; }
+      .btn-primary, .btn-secondary { padding: 12px 22px; font-size: 14px; border-radius: 12px; }
+      .hero-mockup { transform: scale(.78); transform-origin: top center; }
+      .hero-mockup::before { width: 200px; height: 300px; }
+      .badge { font-size: 12px; padding: 5px 12px; }
+      .caps-bento { grid-template-columns: 1fr; gap: 12px; }
+      .cap-b.b1, .cap-b.b2 { grid-column: span 1; }
+      .cap-b { padding: 24px 20px; }
+      .cap-b h3 { font-size: 16px; }
+      .cap-b p { font-size: 13px; }
+      .hero-metric { padding: 36px 0 48px; }
+      .hm-num { font-size: 80px; letter-spacing: -4px; }
+      .hm-tagline { font-size: 11px; letter-spacing: 3px; }
+      .hm-desc { padding: 0 16px; }
+      .hm-desc p { font-size: 14px; }
+      .hm-desc p + p { font-size: 13px; }
+      .hm-stats { grid-template-columns: 1fr; max-width: 280px; border-radius: 12px; }
+      .hm-stat { padding: 20px 16px; }
+      .hm-stat .hs-val { font-size: 20px; }
+      .hm-stat .hs-label { font-size: 12px; }
+      .channel-card { padding: 28px 24px; }
+      .channel-card h3 { font-size: 18px; }
+      .channel-card p { font-size: 13px; }
+      /* Timeline mobile */
+      .timeline { max-width: none; padding: 40px 16px; }
       .tl-track { display: none; }
-      .tl-dot { width: 40px; height: 40px; font-size: 12px; }
-      .pricing-grid { display: flex; overflow-x: auto; max-width: 100%; padding-bottom: 8px; gap: 12px; }
-      .price-card { flex: 0 0 240px; }
+      .tl-row.d1, .tl-row.d2, .tl-row.d3, .tl-row.d4, .tl-row.d5 { display: block; margin-bottom: 32px; }
+      .tl-row.d1:last-child, .tl-row.d2:last-child, .tl-row.d3:last-child, .tl-row.d4:last-child, .tl-row.d5:last-child { margin-bottom: 0; }
+      .tl-row.d1 .tl-void, .tl-row.d2 .tl-void, .tl-row.d3 .tl-void, .tl-row.d4 .tl-void, .tl-row.d5 .tl-void { display: none; }
+      .tl-row.d1 .tl-node, .tl-row.d2 .tl-node, .tl-row.d3 .tl-node, .tl-row.d4 .tl-node, .tl-row.d5 .tl-node { display: none; }
+      .tl-row.d1 .tl-card, .tl-row.d2 .tl-card, .tl-row.d3 .tl-card, .tl-row.d4 .tl-card, .tl-row.d5 .tl-card { display: block; max-width: none; width: 100%; transform: none !important; opacity: 1 !important; }
+      /* Pricing mobile: horizontal scroll */
+      .pricing-grid { display: flex; overflow-x: auto; gap: 12px; max-width: 100%; margin-left: -20px; margin-right: -20px; padding: 0 20px 12px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      .pricing-grid::-webkit-scrollbar { display: none; }
+      .price-card { flex: 0 0 280px; scroll-snap-align: center; }
+      .pricing-note { margin-top: 24px; }
+      .pricing-note .pn-row { padding: 12px 14px; flex-direction: column; align-items: flex-start; gap: 6px; }
+      .pricing-note .pn-text { font-size: 12px; }
       .cta { padding: 48px 16px; }
-      .cta h2 { font-size: 24px; }
+      .cta h2 { font-size: 28px; letter-spacing: -1px; }
+      .cta p { font-size: 14px; margin-bottom: 24px; }
+      footer { padding: 24px 16px; }
     }
   </style>
 </head>
@@ -271,395 +366,392 @@
 <!-- ===== HERO ===== -->
 <section class="hero">
   <div class="hero-grid"></div>
+  <div class="hero-orb o1"></div>
+  <div class="hero-orb o2"></div>
+  <div class="hero-orb o3"></div>
+
   <div class="hero-inner">
     <div class="hero-text">
-      <div class="badge"><span class="dot"></span> AI-powered customer support</div>
-      <h1><span class="hl">One agent.</span><br>Every channel.<br>Any question.</h1>
+      <div class="badge"><span class="dot"></span> Now with Telegram & WhatsApp</div>
+      <h1><span class="hl">One AI agent.</span><br>Every channel.<br>Any question.</h1>
+      <div class="hero-features">
+        <span class="hero-feat"><span class="dot"></span> RAG-based</span>
+        <span class="hero-feat"><span class="dot"></span> Actionable</span>
+        <span class="hero-feat"><span class="dot"></span> Omnichannel</span>
+      </div>
       <p>Jeeves answers from your knowledge base, acts on your CRM, and escalates when needed. Connect once — use everywhere.</p>
       <div class="hero-buttons">
-        <a href="/admin/login" class="btn-primary">Start free</a>
-        <a href="#how" class="btn-secondary">How it works</a>
+        <a href="/admin/login" class="btn-primary">Start Free →</a>
+        <a href="#capabilities" class="btn-secondary">See how it works ↓</a>
       </div>
     </div>
+
     <div class="hero-mockup">
-      <div class="phone-frame">
-        <div class="phone-screen">
-          <div class="phone-dynamic-island"></div>
-          <div class="phone-nav-bar">
-            <div class="phone-bot-icon">J</div>
+    <div class="phone-frame">
+      <div class="phone-btn-side"></div>
+      <div class="phone-btn-vol1"></div>
+      <div class="phone-btn-vol2"></div>
+      <div class="phone-screen">
+        <div class="phone-dynamic-island"><div class="phone-island-cam"></div></div>
+        <div class="phone-status">
+          <span class="phone-status-time">9:41</span>
+          <span class="phone-status-icons">
+            <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+          </span>
+        </div>
+        <div class="phone-nav-bar">
+          <div class="phone-back-btn">‹</div>
+          <div class="phone-bot-icon">J</div>
+          <div class="phone-bot-info">
+            <div class="phone-bot-name">Jeeves</div>
+            <div class="phone-bot-status">● Online</div>
+          </div>
+        </div>
+        <div class="phone-body" id="chatBody">
+          <div class="msg user" id="m1">
+            <div class="msg-avatar">D</div>
+            <div class="msg-bubble">Hi, I want to upgrade to Pro plan</div>
+          </div>
+          <div class="msg bot" id="m2" style="display:none;">
+            <div class="msg-avatar">J</div>
             <div>
-              <div class="phone-bot-name">Jeeves</div>
-              <div class="phone-bot-status">Online</div>
+              <div class="msg-bubble">Sure! I see you're on <strong>Starter</strong> ($49/mo). Pro is <strong>$149/mo</strong> with all channels, proactive alerts, and custom actions. Want me to switch?</div>
             </div>
           </div>
-          <div class="phone-body" id="chatBody">
-            <div class="msg user" id="m1">
-              <div class="msg-avatar">D</div>
-              <div class="msg-bubble">Upgrade to Pro plan</div>
-            </div>
-            <div class="msg bot" id="m2" style="display:none;">
-              <div class="msg-avatar">J</div>
-              <div><div class="msg-bubble">You're on <strong>Starter</strong> ($49/mo). Pro is <strong>$149/mo</strong>. Switch?</div></div>
-            </div>
-            <div class="msg user" id="m3" style="display:none;">
-              <div class="msg-avatar">D</div>
-              <div class="msg-bubble">Yes</div>
-            </div>
-            <div class="msg bot" id="m4" style="display:none;">
-              <div class="msg-avatar">J</div>
-              <div>
-                <div class="msg-bubble">
-                  <div class="msg-confirmation">
-                    <div class="msg-confirm-text">Starter → Pro · $49 → $149/mo</div>
-                    <div class="msg-confirm-btn" id="confirmBtn">Confirm</div>
-                  </div>
+          <div class="msg user" id="m3" style="display:none;">
+            <div class="msg-avatar">D</div>
+            <div class="msg-bubble">Yes, do it</div>
+          </div>
+          <div class="msg bot" id="m4" style="display:none;">
+            <div class="msg-avatar">J</div>
+            <div>
+              <div class="msg-bubble">
+                <div class="msg-confirmation">
+                  <div class="msg-confirm-text">⚠ Confirm upgrade: Starter → Pro<br>$49/mo → $149/mo</div>
+                  <div class="msg-confirm-btn" id="confirmBtn">Confirm</div>
                 </div>
               </div>
             </div>
-            <div class="msg bot" id="m5" style="display:none;">
-              <div class="msg-avatar">J</div>
-              <div>
-                <div class="msg-bubble">Done. Plan upgraded to <strong>Pro</strong>.</div>
-                <div class="msg-success">Plan upgraded</div>
-              </div>
+          </div>
+          <div class="msg bot" id="m5" style="display:none;">
+            <div class="msg-avatar">J</div>
+            <div>
+              <div class="msg-bubble">Done! Your plan is now <strong>Pro</strong>. All features active immediately. Billed $149/mo starting next cycle.</div>
+              <div class="msg-success">✓ Action: plan.upgrade completed</div>
             </div>
-            <div class="typing-dots" id="typing"><span></span><span></span><span></span></div>
           </div>
-          <div class="phone-input">
-            <div class="phone-input-field">Message...</div>
-          </div>
-          <div class="phone-home-bar"></div>
+          <div class="typing-dots" id="typing"><span></span><span></span><span></span></div>
         </div>
+        <div class="phone-input">
+          <div class="phone-input-field">Message...</div>
+          <div class="phone-send"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+        </div>
+        <div class="phone-home-bar"></div>
       </div>
+    </div>
     </div>
   </div>
 </section>
 
-<!-- ===== STATS ===== -->
-<div class="stats-section">
-  <div class="stats-inner reveal">
-    <div class="stat-item">
-      <div class="stat-num"><span class="stat-value" data-target="90">0</span><span class="stat-suffix">%</span></div>
-      <div class="stat-label">Queries resolved<br>without human help</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">&lt;<span class="stat-value" data-target="5">0</span><span class="stat-suffix">s</span></div>
-      <div class="stat-label">Average response<br>time, 24/7</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num"><span class="stat-value" data-target="6">0</span><span class="stat-suffix">+</span></div>
-      <div class="stat-label">Channels &<br>integrations</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num"><span class="stat-value" data-target="10">0</span><span class="stat-suffix">min</span></div>
-      <div class="stat-label">From signup<br>to live agent</div>
-    </div>
-  </div>
-</div>
+<div class="section-divider"></div>
 
 <!-- ===== CAPABILITIES ===== -->
-<div class="caps-section">
-  <div class="caps-inner">
-    <div class="caps-header reveal">
-      <h2>A full support stack,<br>not just a chatbot</h2>
-      <p>Everything you need to automate customer support without losing the human touch.</p>
-    </div>
+<div class="section" id="capabilities">
+  <div class="reveal">
+    <div class="section-title">Not just a chatbot.<br>A full support stack.</div>
+    <div class="section-sub">Everything you need to automate customer support without losing the human touch.</div>
+  </div>
 
-    <div class="caps-main reveal">
-      <div class="cap-item">
-        <div class="cap-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
-        <div class="cap-num">01</div>
-        <h3>RAG knowledge</h3>
-        <p>Upload PDFs, docs, FAQs. Every answer has a source attached. No hallucinations.</p>
+  <div class="hero-metric reveal">
+    <div class="hm-wrap">
+      <div class="hm-num"><span class="n-main">90</span><span class="n-pct">%</span></div>
+    </div>
+    <div class="hm-tagline">Auto-resolved instantly</div>
+    <div class="hm-desc">
+      <p>Jeeves answers 90% of questions without a human.</p>
+      <p>The remaining 10%? Escalated with full context.</p>
+    </div>
+    <div class="hm-stats">
+      <div class="hm-stat">
+        <div class="hs-val c1">&lt;5s</div>
+        <div class="hs-label">Response time, 24/7. No queues.</div>
       </div>
-      <div class="cap-item">
-        <div class="cap-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 3l2 2 4-4"/></svg></div>
-        <div class="cap-num">02</div>
-        <h3>CRM context</h3>
-        <p>Connect HubSpot or any REST API. Jeeves sees customer name, plan, history instantly.</p>
+      <div class="hm-stat">
+        <div class="hs-val c2">1 brain</div>
+        <div class="hs-label">Unified memory across all channels.</div>
       </div>
-      <div class="cap-item">
-        <div class="cap-icon"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
-        <div class="cap-num">03</div>
-        <h3>Custom actions</h3>
-        <p>Look up orders, change plans, create tickets. Confirmation for destructive actions.</p>
-      </div>
-      <div class="cap-item">
-        <div class="cap-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-        <div class="cap-num">04</div>
-        <h3>Proactive alerts</h3>
-        <p>Monitors metrics via webhook. Auto-messages users when something drops.</p>
-      </div>
-      <div class="cap-item">
-        <div class="cap-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></div>
-        <div class="cap-num">05</div>
-        <h3>Full analytics</h3>
-        <p>Every conversation logged with sources, latency, resolution status.</p>
-      </div>
-      <div class="cap-item">
-        <div class="cap-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-        <div class="cap-num">06</div>
-        <h3>Human escalation</h3>
-        <p>Hands off to a human with full context and suggested reply when needed.</p>
+      <div class="hm-stat">
+        <div class="hs-val c3">Proactive</div>
+        <div class="hs-label">Auto-messages users before problems.</div>
       </div>
     </div>
+  </div>
 
-    <div class="cap-feature reveal" style="margin-top:16px;">
-      <div class="cap-f-bg"></div>
-      <h3>How it works in practice</h3>
-      <p>A customer writes "Where is my order?" — Jeeves reads the CRM for their name and plan, checks Shopify for order status, and replies with the tracking number. All in under 5 seconds. No human involved.</p>
-      <div class="cap-metric">
-        <div><div class="cm-val">&lt;5s</div><div class="cm-label">response time</div></div>
-        <div><div class="cm-val">3</div><div class="cm-label">systems queried</div></div>
-        <div><div class="cm-val">0</div><div class="cm-label">human agents needed</div></div>
+  <div class="caps-bento">
+    <div class="cap-b b1 reveal">
+      <div class="cap-icon c1">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
       </div>
+      <h3>RAG-powered knowledge</h3>
+      <p>Upload PDFs, docs, FAQs — Jeeves chunks, embeds, and retrieves with cosine similarity. Every answer has a source attached. No hallucinations. No black box.</p>
+      <span class="cap-tag t1">Vector search</span>
+    </div>
+    <div class="cap-b b2 reveal">
+      <div class="cap-icon c2">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+          <path d="M16 3l2 2 4-4"/>
+        </svg>
+      </div>
+      <h3>CRM Context</h3>
+      <p>Connects to HubSpot or any REST API. Jeeves greets customers by name, sees their tariff, order history, and past tickets.</p>
+      <span class="cap-tag t2">Any API</span>
+    </div>
+    <div class="cap-b b3 reveal">
+      <div class="cap-icon c3">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+      </div>
+      <h3>Custom Actions</h3>
+      <p>Look up orders, change plans, create tickets. With confirmation for destructive actions.</p>
+      <span class="cap-tag t3">Tool calling</span>
+    </div>
+    <div class="cap-b b4 reveal">
+      <div class="cap-icon c4">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </div>
+      <h3>Proactive Engine</h3>
+      <p>Monitors metrics via webhook. Auto-messages users when something drops — before they notice.</p>
+      <span class="cap-tag t4">Webhook-driven</span>
+    </div>
+    <div class="cap-b b5 reveal">
+      <div class="cap-icon c5">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"/>
+          <path d="M18 17V9"/>
+          <path d="M13 17V5"/>
+          <path d="M8 17v-3"/>
+        </svg>
+      </div>
+      <h3>Full Analytics</h3>
+      <p>Every conversation logged with sources, latency, resolution status. Built-in dashboards.</p>
+      <span class="cap-tag t5">Audit-ready</span>
     </div>
   </div>
 </div>
 
-<!-- ===== CIRCUIT BOARD ===== -->
-<div class="circuit-section">
-  <div class="circuit-inner">
-    <div class="circuit-header reveal">
-      <h2>Connects to what you use</h2>
-      <p>Channels for communication. Systems for data. Jeeves in the middle.</p>
+<div class="section-divider"></div>
+
+<!-- ===== CHANNELS ===== -->
+<div class="section alt-bg" id="channels">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="section-title">One brain.<br>Every surface.</div>
+      <div class="section-sub">Same knowledge, same quality. Just different front doors.</div>
     </div>
 
-    <div class="circuit-board reveal" id="circuitBoard">
-      <svg class="circuit-svg" id="circuitSvg"></svg>
-
-      <div class="circuit-label top">Channels</div>
-      <div class="circuit-label bottom">Systems</div>
-
-      <div class="circuit-center">
-        <div class="circuit-core">J</div>
-        <div class="circuit-core-label">Jeeves</div>
-        <div class="circuit-core-sub">AI Agent</div>
-      </div>
-
-      <!-- Channel nodes (top half) -->
-      <div class="circuit-node" data-node="0" style="top:14%;left:8%;">
-        <div class="node-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
+    <div class="channels-grid">
+      <div class="channel-card reveal">
+        <div class="channel-logo widget">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            <path d="M8 10h.01M12 10h.01M16 10h.01"/>
+          </svg>
         </div>
-        <div class="node-name">Widget</div>
-        <div class="node-type">Web</div>
+        <h3>Website Widget</h3>
+        <p>One line of script. Floating chat button with full customization. Works on any site.</p>
       </div>
-
-      <div class="circuit-node" data-node="1" style="top:14%;left:27%;">
-        <div class="node-icon">
-          <svg viewBox="0 0 24 24" fill="#26A5E4"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+      <div class="channel-card reveal">
+        <div class="channel-logo tg">
+          <svg viewBox="0 0 24 24" fill="#26A5E4">
+            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+          </svg>
         </div>
-        <div class="node-name">Telegram</div>
-        <div class="node-type">Messenger</div>
+        <h3>Telegram</h3>
+        <p>Webhook-based bot. 2-minute setup via @BotFather. Free and instant.</p>
       </div>
-
-      <div class="circuit-node" data-node="2" style="top:14%;right:27%;">
-        <div class="node-icon">
-          <svg viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+      <div class="channel-card reveal">
+        <div class="channel-logo wa">
+          <svg viewBox="0 0 24 24" fill="#25D366">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+          </svg>
         </div>
-        <div class="node-name">WhatsApp</div>
-        <div class="node-type">Messenger</div>
-      </div>
-
-      <div class="circuit-node" data-node="3" style="top:14%;right:8%;">
-        <div class="node-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-        </div>
-        <div class="node-name">Email</div>
-        <div class="node-type">Incoming</div>
-      </div>
-
-      <div class="circuit-node" data-node="4" style="top:14%;left:50%;transform:translateX(-50%);">
-        <div class="node-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
-        </div>
-        <div class="node-name">API</div>
-        <div class="node-type">Custom</div>
-      </div>
-
-      <!-- System nodes (bottom half) -->
-      <div class="circuit-node" data-node="5" style="bottom:14%;left:12%;">
-        <div class="node-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        <div class="node-name">CRM</div>
-        <div class="node-type">Custom REST</div>
-      </div>
-
-      <div class="circuit-node" data-node="6" style="bottom:14%;left:34%;">
-        <div class="node-icon">
-          <svg viewBox="0 0 24 24" fill="#95bf47"><path d="M19.27 5.33C18.61 5.02 17.91 4.8 17.19 4.69c-.08-.01-.15-.03-.23-.04-.15-.02-.3-.04-.45-.05-.16-.01-.32-.02-.48-.02H5.97c-.16 0-.32.01-.48.02-.15.01-.3.03-.45.05-.08.01-.15.03-.23.04-.72.11-1.42.33-2.07.64L12 16.07l7.27-10.74zm-2.63.35c.56.06 1.1.17 1.62.34L12 13.4 5.74 5.68c.52-.17 1.06-.28 1.62-.34.14-.02.28-.03.43-.04h8.42c.15.01.29.02.43.04zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
-        </div>
-        <div class="node-name">Shopify</div>
-        <div class="node-type">E-commerce</div>
-      </div>
-
-      <div class="circuit-node" data-node="7" style="bottom:14%;right:34%;">
-        <div class="node-icon">
-          <svg viewBox="0 0 24 24" fill="#635bff"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.57 0 7.524.654 6.09 1.965 4.688 3.27 4.034 5.1 4.034 7.39c0 4.198 2.56 5.892 6.694 7.442 2.634.964 3.544 1.631 3.544 2.67 0 1.07-.936 1.696-2.61 1.696-2.097 0-4.937-.858-7.035-2.075l-.915 5.557C5.283 23.467 8.64 24 12.33 24c2.953 0 5.243-.593 6.71-1.89 1.556-1.365 2.418-3.406 2.418-5.955 0-4.28-2.61-5.984-7.482-7.005z"/></svg>
-        </div>
-        <div class="node-name">Stripe</div>
-        <div class="node-type">Billing</div>
-      </div>
-
-      <div class="circuit-node" data-node="8" style="bottom:14%;right:12%;">
-        <div class="node-icon">
-          <svg viewBox="0 0 24 24" fill="#9c27b0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-        </div>
-        <div class="node-name">WooCommerce</div>
-        <div class="node-type">E-commerce</div>
+        <h3>WhatsApp</h3>
+        <p>Direct Cloud API integration. No BSP needed. Reaches billions worldwide.</p>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ===== HOW IT WORKS ===== -->
-<div class="how-section">
-  <div class="how-inner">
-    <div class="reveal">
-      <h2>Live in 10 minutes</h2>
-      <p>No code. No credit card. Just answers.</p>
+<div class="section" id="how">
+  <div class="reveal" style="text-align:center;">
+    <div class="section-title">Live in 10 minutes</div>
+    <div class="section-sub" style="margin-left:auto;margin-right:auto;">No code. No credit card. Just answers.</div>
+  </div>
+
+  <div class="timeline">
+    <div class="tl-track">
+      <div class="tl-track-bg"></div>
+      <div class="tl-track-fill" id="tlProgress"></div>
     </div>
 
-    <div class="timeline">
-      <div class="tl-track"></div>
-      <div class="tl-row">
-        <div class="tl-dot">1</div>
-        <div class="tl-card">
-          <div class="tl-num">Step 1</div>
-          <h3>Create your account</h3>
-          <p>Sign up with email. Instant access to the full platform. 14-day free trial.</p>
-          <div class="tl-time">30 seconds</div>
-        </div>
+    <div class="tl-row left d1">
+      <div class="tl-card">
+        <div class="tl-num">Step 01</div>
+        <h3>Create your account</h3>
+        <p>Sign up with email. Get instant access to the full platform. 14-day free trial, no card needed.</p>
+        <div class="tl-time">⏱ 30 seconds</div>
       </div>
-      <div class="tl-row">
-        <div class="tl-dot">2</div>
-        <div class="tl-card">
-          <div class="tl-num">Step 2</div>
-          <h3>Upload your knowledge</h3>
-          <p>Drag & drop PDFs, text, or markdown. Jeeves auto-chunks, embeds, and indexes.</p>
-          <div class="tl-time">2 minutes</div>
-        </div>
+      <div class="tl-node"><div class="tl-dot">1</div></div>
+      <div class="tl-void"></div>
+    </div>
+
+    <div class="tl-row right d2">
+      <div class="tl-void"></div>
+      <div class="tl-node"><div class="tl-dot">2</div></div>
+      <div class="tl-card">
+        <div class="tl-num">Step 02</div>
+        <h3>Upload your knowledge</h3>
+        <p>Drag & drop PDFs, text files, or markdown. Jeeves auto-chunks, embeds, and indexes everything in seconds.</p>
+        <div class="tl-time">⏱ 2 minutes</div>
       </div>
-      <div class="tl-row">
-        <div class="tl-dot">3</div>
-        <div class="tl-card">
-          <div class="tl-num">Step 3</div>
-          <h3>Connect your channels</h3>
-          <p>Enable the website widget, connect Telegram bot, or set up WhatsApp — from one dashboard.</p>
-          <div class="tl-time">5 minutes</div>
-        </div>
+    </div>
+
+    <div class="tl-row left d3">
+      <div class="tl-card">
+        <div class="tl-num">Step 03</div>
+        <h3>Connect your channels</h3>
+        <p>Enable the website widget, connect your Telegram bot, or set up WhatsApp — all from one dashboard.</p>
+        <div class="tl-time">⏱ 5 minutes</div>
       </div>
-      <div class="tl-row">
-        <div class="tl-dot">4</div>
-        <div class="tl-card">
-          <div class="tl-num">Step 4</div>
-          <h3>Wire your integrations</h3>
-          <p>Connect CRM, set up actions, configure webhooks. Jeeves pulls data and takes real actions.</p>
-          <div class="tl-time">5 minutes</div>
-        </div>
+      <div class="tl-node"><div class="tl-dot">3</div></div>
+      <div class="tl-void"></div>
+    </div>
+
+    <div class="tl-row right d4">
+      <div class="tl-void"></div>
+      <div class="tl-node"><div class="tl-dot">4</div></div>
+      <div class="tl-card">
+        <div class="tl-num">Step 04</div>
+        <h3>Wire your integrations</h3>
+        <p>Connect your CRM, set up custom actions, configure webhooks. Jeeves pulls customer data and takes real actions — not just chat.</p>
+        <div class="tl-time">⏱ 5 minutes</div>
       </div>
-      <div class="tl-row">
-        <div class="tl-dot" style="color:var(--green);">✓</div>
-        <div class="tl-card">
-          <div class="tl-num">Step 5</div>
-          <h3>You're live</h3>
-          <p>Jeeves is answering across every channel. Monitor, refine, and scale.</p>
-          <div class="tl-time" style="color:var(--green);">Ready</div>
-        </div>
+    </div>
+
+    <div class="tl-row left d5">
+      <div class="tl-card">
+        <div class="tl-num">Step 05</div>
+        <h3>You're live</h3>
+        <p>Jeeves is already answering queries across every channel. Monitor, refine, and scale from the dashboard. Done.</p>
+        <div class="tl-time" style="color:var(--green);">🚀 Ready</div>
       </div>
+      <div class="tl-node"><div class="tl-dot">5</div></div>
+      <div class="tl-void"></div>
     </div>
   </div>
 </div>
+
+<div class="section-divider"></div>
 
 <!-- ===== PRICING ===== -->
-<div class="pricing-section">
-  <div class="pricing-inner">
-    <div class="reveal">
-      <h2>Pay for results, not promises.</h2>
-      <p>Cheaper than a single support agent. Scales with you.</p>
-    </div>
+<div class="section" id="pricing" style="text-align:center;">
+  <div class="reveal">
+    <div class="section-title">Pay for results,<br>not promises.</div>
+    <div class="section-sub" style="margin-left:auto;margin-right:auto;">Cheaper than a single support agent. Scales with you.</div>
+  </div>
 
-    <div class="pricing-grid">
-      <div class="price-card reveal">
-        <div class="p-name">Free</div>
-        <div class="p-price"><span class="p-cur">$</span>0</div>
-        <div class="p-period">/month</div>
-        <ul class="p-features">
-          <li>25 resolved / month</li>
-          <li>1 channel</li>
-          <li>Basic RAG</li>
-          <li>Community support</li>
-        </ul>
-        <a href="/admin/login" class="p-btn secondary">Get Started</a>
-      </div>
-      <div class="price-card reveal">
-        <div class="p-name">Starter</div>
-        <div class="p-price"><span class="p-cur">$</span>49</div>
-        <div class="p-period">/month</div>
-        <ul class="p-features">
-          <li>500 resolved / month</li>
-          <li>3 channels</li>
-          <li>CRM Context</li>
-          <li>Email support</li>
-        </ul>
-        <a href="/admin/login" class="p-btn secondary">Get Started</a>
-      </div>
-      <div class="price-card featured reveal">
-        <div class="p-badge">Most popular</div>
-        <div class="p-name">Pro</div>
-        <div class="p-price"><span class="p-cur">$</span>149</div>
-        <div class="p-period">/month</div>
-        <ul class="p-features">
-          <li>2,000 resolved / month</li>
-          <li>All channels</li>
-          <li>Custom Actions</li>
-          <li>Proactive Engine</li>
-          <li>Priority support</li>
-        </ul>
-        <a href="/admin/login" class="p-btn primary">Get Started</a>
-      </div>
-      <div class="price-card reveal">
-        <div class="p-name">Enterprise</div>
-        <div class="p-price" style="font-size:28px;letter-spacing:-1px;">Custom</div>
-        <div class="p-period">tailored</div>
-        <ul class="p-features">
-          <li>Unlimited resolved</li>
-          <li>All channels + API</li>
-          <li>On-premise</li>
-          <li>SLA 99.9%</li>
-          <li>Dedicated team</li>
-        </ul>
-        <a href="/admin/login" class="p-btn outline">Contact Us</a>
-      </div>
+  <div class="pricing-grid">
+    <div class="price-card reveal">
+      <div class="p-name">Free</div>
+      <div class="p-price"><span class="p-cur">$</span>0</div>
+      <div class="p-period">/month</div>
+      <ul class="p-features">
+        <li>25 resolved / month</li>
+        <li>1 channel</li>
+        <li>Basic RAG</li>
+        <li>Community support</li>
+      </ul>
+      <a href="/admin/login" class="p-btn secondary">Get Started</a>
     </div>
+    <div class="price-card reveal">
+      <div class="p-name">Starter</div>
+      <div class="p-price"><span class="p-cur">$</span>49</div>
+      <div class="p-period">/month</div>
+      <ul class="p-features">
+        <li>500 resolved / month</li>
+        <li>3 channels</li>
+        <li>CRM Context</li>
+        <li>Basic Actions</li>
+        <li>Email support</li>
+      </ul>
+      <a href="/admin/login" class="p-btn secondary">Get Started</a>
+    </div>
+    <div class="price-card featured reveal">
+      <div class="p-name">Pro</div>
+      <div class="p-price"><span class="p-cur">$</span>149</div>
+      <div class="p-period">/month</div>
+      <ul class="p-features">
+        <li>2,000 resolved / month</li>
+        <li>All channels</li>
+        <li>Custom Actions</li>
+        <li>Proactive Engine</li>
+        <li>Priority support</li>
+      </ul>
+      <a href="/admin/login" class="p-btn primary">Get Started</a>
+    </div>
+    <div class="price-card reveal">
+      <div class="p-name">Enterprise</div>
+      <div class="p-price" style="font-size:36px;letter-spacing:-2px;">Custom</div>
+      <div class="p-period">tailored</div>
+      <ul class="p-features">
+        <li>Unlimited resolved</li>
+        <li>All channels + API</li>
+        <li>On-premise</li>
+        <li>SLA 99.9%</li>
+        <li>Dedicated team</li>
+      </ul>
+      <a href="/admin/login" class="p-btn outline">Contact Us</a>
+    </div>
+  </div>
 
-    <div class="pricing-note reveal">
-      <div class="pn-row">
-        <div class="pn-icon">◆</div>
-        <div class="pn-text">Overage: <strong>$0.20 per resolution</strong> beyond your plan. 80% cheaper than alternatives.</div>
-      </div>
-      <div class="pn-row">
-        <div class="pn-icon">⚡</div>
-        <div class="pn-text">Proactive engine auto-messages users before problems. <strong>Included in Pro.</strong></div>
-      </div>
+  <div class="pricing-note reveal">
+    <div class="pn-row">
+      <div class="pn-icon">💡</div>
+      <div class="pn-text">Overage: <strong>$0.20 per resolution</strong> beyond your plan. Still 80% cheaper than Fin's $0.99/resolution.</div>
+    </div>
+    <div class="pn-row">
+      <div class="pn-icon">✨</div>
+      <div class="pn-text">Proactive engine auto-messages users before problems. <strong>Included in Pro.</strong> Not available anywhere else.</div>
     </div>
   </div>
 </div>
+
+<div class="section-divider"></div>
 
 <!-- ===== CTA ===== -->
 <div class="cta-section">
   <div class="cta">
     <div class="reveal">
       <h2>Ready to automate<br>your support?</h2>
-      <p>Start free. No credit card. No setup fees.</p>
-      <a href="/admin/login" class="btn-primary">Get Started</a>
+      <p>Start free. No credit card. No setup fees. Just results.</p>
+      <a href="/admin/login" class="btn-primary">Get Started →</a>
     </div>
   </div>
 </div>
 
-<footer>&copy; 2026 Jeeves. Built for teams that scale.</footer>
+<footer>
+  &copy; 2026 Jeeves. Built for teams that scale.
+</footer>
 
 <script>
 // Scroll reveal
@@ -668,140 +760,58 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-// Timeline reveal
+// Timeline fill
+function updateTl() {
+  const steps = document.querySelectorAll('.tl-row');
+  const tl = document.querySelector('.timeline');
+  const fill = document.getElementById('tlProgress');
+  if (!tl || !fill) return;
+  const vis = Array.from(steps).filter(s => s.classList.contains('visible'));
+  if (!vis.length) return;
+  const last = vis[vis.length - 1];
+  const tlR = tl.getBoundingClientRect();
+  const sR = last.getBoundingClientRect();
+  const pct = ((sR.top - tlR.top + sR.height / 2) / tlR.height) * 100;
+  fill.style.height = Math.min(pct, 100) + '%';
+}
 const tlObs = new IntersectionObserver((entries) => {
-  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); updateTl(); } });
 }, { threshold: 0.3 });
 document.querySelectorAll('.tl-row').forEach(el => tlObs.observe(el));
 
-// Stats counter with smooth animation
-function easeOutExpo(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
-
-function animateValue(el, start, end, duration, suffix) {
-  const startTime = performance.now();
-  function update(currentTime) {
-    const elapsed = currentTime - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    const eased = easeOutExpo(progress);
-    const current = Math.round(start + (end - start) * eased);
-    el.textContent = current + suffix;
-    if (progress < 1) requestAnimationFrame(update);
-  }
-  requestAnimationFrame(update);
-}
-
-const statObs = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (e.isIntersecting && !e.target.dataset.animated) {
-      e.target.dataset.animated = 'true';
-      const target = parseInt(e.target.dataset.target);
-      animateValue(e.target, 0, target, 1500, '');
-    }
+// Spotlight
+document.querySelectorAll('.feat, .channel-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+    card.style.setProperty('--my', (e.clientY - r.top) + 'px');
   });
-}, { threshold: 0.3 });
-document.querySelectorAll('.stat-value[data-target]').forEach(el => statObs.observe(el));
+});
 
-// Circuit board animation
-(function() {
-  const board = document.getElementById('circuitBoard');
-  const svg = document.getElementById('circuitSvg');
-  const core = document.querySelector('.circuit-core');
-  const nodes = document.querySelectorAll('.circuit-node');
-  if (!board || !svg || !core || !nodes.length) return;
-
-  let paths = [];
-  let particles = [];
-
-  function buildCircuit() {
-    svg.innerHTML = '';
-    paths = [];
-    particles = [];
-
-    const boardRect = board.getBoundingClientRect();
-    const cRect = core.getBoundingClientRect();
-    const cx = cRect.left + cRect.width / 2 - boardRect.left;
-    const cy = cRect.top + cRect.height / 2 - boardRect.top;
-
-    nodes.forEach(function(node, i) {
-      const nRect = node.getBoundingClientRect();
-      const nx = nRect.left + nRect.width / 2 - boardRect.left;
-      const ny = nRect.top + nRect.height / 2 - boardRect.top;
-
-      // Create circuit-like path with right angles
-      const dx = nx - cx;
-      const dy = ny - cy;
-      const midX = cx + dx * 0.5;
-
-      const pathD = `M ${cx} ${cy} L ${midX} ${cy} L ${midX} ${ny} L ${nx} ${ny}`;
-
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', pathD);
-      path.dataset.node = i;
-      svg.appendChild(path);
-      paths.push(path);
-
-      // Create particle
-      const particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      particle.setAttribute('r', '3');
-      particle.classList.add('particle');
-      particle.dataset.node = i;
-      svg.appendChild(particle);
-      particles.push(particle);
-    });
-  }
-
-  function animateParticle(pathEl, particle, duration) {
-    const length = pathEl.getTotalLength();
-    const start = performance.now();
-
-    function step(now) {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const point = pathEl.getPointAtLength(progress * length);
-      particle.setAttribute('cx', point.x);
-      particle.setAttribute('cy', point.y);
-      if (progress < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-  }
-
-  let activeIdx = -1;
-  function cycle() {
-    // Reset previous
-    if (activeIdx >= 0) {
-      nodes[activeIdx].classList.remove('active');
-      paths[activeIdx].classList.remove('active');
-      particles[activeIdx].classList.remove('active');
-    }
-
-    activeIdx = (activeIdx + 1) % nodes.length;
-    nodes[activeIdx].classList.add('active');
-    paths[activeIdx].classList.add('active');
-    particles[activeIdx].classList.add('active');
-
-    animateParticle(paths[activeIdx], particles[activeIdx], 800);
-
-    setTimeout(cycle, 1500);
-  }
-
-  buildCircuit();
-  window.addEventListener('resize', buildCircuit);
-  setTimeout(cycle, 500);
-})();
+// Counter
+function animateCounter(el, target) {
+  let cur = 0; const step = target / 40;
+  const t = setInterval(() => { cur += step; if (cur >= target) { cur = target; clearInterval(t); } el.textContent = Math.round(cur) + '%'; }, 30);
+}
+const cObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting && e.target.dataset.target) { animateCounter(e.target, parseInt(e.target.dataset.target)); cObs.unobserve(e.target); } });
+}, { threshold: 0.5 });
+document.querySelectorAll('.num[data-target]').forEach(el => cObs.observe(el));
 
 // Chat animation
 (function() {
   var confirmBtn = document.getElementById('confirmBtn');
+
   var msgs = [
-    { id: 'm1', delay: 1200 },
-    { id: 'typing', delay: 2400, showTyping: true },
-    { id: 'm2', delay: 4000, hideTyping: true },
-    { id: 'm3', delay: 6200 },
-    { id: 'typing', delay: 7200, showTyping: true },
-    { id: 'm4', delay: 8600, hideTyping: true },
-    { id: 'tapConfirm', delay: 10400 },
-    { id: 'typing', delay: 11400, showTyping: true },
-    { id: 'm5', delay: 13000, hideTyping: true }
+    { id: 'm1', delay: 1000 },
+    { id: 'typing', delay: 2200, showTyping: true },
+    { id: 'm2', delay: 3800, hideTyping: true },
+    { id: 'm3', delay: 6000 },
+    { id: 'typing', delay: 7000, showTyping: true },
+    { id: 'm4', delay: 8400, hideTyping: true },
+    { id: 'tapConfirm', delay: 10200 },
+    { id: 'typing', delay: 11200, showTyping: true },
+    { id: 'm5', delay: 12800, hideTyping: true }
   ];
 
   function playChat() {
