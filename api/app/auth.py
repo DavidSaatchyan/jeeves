@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from .config import get_settings
 from .db import get_db
 from .models import ApiKey, Tenant
+from .schemas import AuthOut, LoginIn, RegisterIn, TokenOut
 
 settings = get_settings()
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
