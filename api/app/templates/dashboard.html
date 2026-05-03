@@ -3,50 +3,245 @@
 <h1>Dashboard</h1>
 <p class="page-desc">Overview of your agent's performance and setup status.</p>
 
+<div id="gettingStarted" class="card" style="display:none;border-left:3px solid var(--accent)">
+  <div class="flex" style="justify-content:space-between;align-items:start">
+    <div>
+      <h2 style="margin:0">Getting started</h2>
+      <p class="muted" style="margin:4px 0 0">Complete these steps to activate your agent.</p>
+    </div>
+    <button class="ghost sm" onclick="dismissGettingStarted()">Dismiss</button>
+  </div>
+  <div id="stepsList" style="margin-top:16px"></div>
+</div>
+
 <div class="stats" id="stats">
   <div class="stat"><div class="n" id="s1">–</div><div class="l">Dialogs today</div></div>
   <div class="stat"><div class="n" id="s2">–</div><div class="l">Resolved today</div></div>
-  <div class="stat"><div class="n" id="s3">–</div><div class="l">Resolution rate (today)</div></div>
+  <div class="stat"><div class="n" id="s3">–</div><div class="l">Resolution rate</div></div>
+  <div class="stat"><div class="n" id="s6">–</div><div class="l">Avg response time</div></div>
   <div class="stat"><div class="n" id="s4">–</div><div class="l">Total dialogs</div></div>
-  <div class="stat"><div class="n" id="s5">–</div><div class="l">Overall resolution rate</div></div>
+  <div class="stat"><div class="n" id="s5">–</div><div class="l">Overall resolution</div></div>
 </div>
 
-<div class="card">
-  <h2>Getting started</h2>
-  <p class="muted" style="margin:0 0 20px">Three short steps. Only the first one is required to start chatting.</p>
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Dialogs — last 7 days</h2>
+    <canvas id="trendChart" height="200"></canvas>
+  </div>
+  <div class="card">
+    <h2>Peak hours (last 7 days)</h2>
+    <canvas id="hourlyChart" height="200"></canvas>
+  </div>
+</div>
 
-  <div class="step"><div class="step-num">1</div><div class="step-content">
-    <strong><a href="/admin/knowledge">Upload your knowledge base</a></strong>
-    <div class="muted">Drag-and-drop your FAQ, product docs, policies (.pdf/.txt/.md). The agent will answer questions using these.</div>
-  </div></div>
-
-  <div class="step"><div class="step-num">2</div><div class="step-content">
-    <strong><a href="/admin/channels">Put the chat widget on your website</a></strong>
-    <div class="muted">Copy a one-line script tag. A floating chat button will appear on your site.</div>
-  </div></div>
-
-  <div class="step"><div class="step-num">3</div><div class="step-content">
-    <strong><a href="/admin/integrations">Connect integrations & CRM</a> <span class="muted">(optional)</span></strong>
-    <div class="muted">Lets the agent <em>do things</em> — read a customer's plan, change tariff, etc. — instead of just answering. Skip if you only need Q&A.</div>
-  </div></div>
-
-  <div class="step"><div class="step-num">4</div><div class="step-content">
-    <strong><a href="/admin/proactive">Enable proactive messages</a> <span class="muted">(optional)</span></strong>
-    <div class="muted">Agent reaches out first when a user's activity drops. Requires CRM step.</div>
-  </div></div>
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Channels breakdown</h2>
+    <div id="channelsBreakdown"></div>
+  </div>
+  <div class="card">
+    <h2>Recent unresolved</h2>
+    <div id="unresolvedList"></div>
+  </div>
 </div>
 {% endblock %}
 {% block tail %}
 <script>
-(async ()=>{
+var dismissed = localStorage.getItem('jeeves_gs_dismiss');
+
+function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function loadStats(){
   try{
     const s = await api('/dashboard/stats');
     s1.textContent = s.dialogs_today;
     s2.textContent = s.resolved_today;
     s3.textContent = (s.resolution_rate_today*100).toFixed(0)+'%';
+    s6.textContent = s.avg_latency_ms ? s.avg_latency_ms+'ms' : '–';
     s4.textContent = s.total_dialogs;
     s5.textContent = (s.overall_resolution_rate*100).toFixed(0)+'%';
   }catch(e){ console.error(e); }
-})();
+}
+
+async function loadTrend(){
+  try{
+    const data = await api('/dashboard/trend');
+    drawTrendChart(data);
+  }catch(e){}
+}
+
+async function loadHourly(){
+  try{
+    const data = await api('/dashboard/hourly');
+    drawHourlyChart(data);
+  }catch(e){}
+}
+
+async function loadChannelsBreakdown(){
+  try{
+    const data = await api('/dashboard/channels-breakdown');
+    if(!data.length){
+      document.getElementById('channelsBreakdown').innerHTML = '<div class="muted" style="padding:20px;text-align:center">No data yet</div>';
+      return;
+    }
+    const total = data.reduce((a,b) => a+b.count, 0);
+    document.getElementById('channelsBreakdown').innerHTML = data.map(d => {
+      const pct = ((d.count/total)*100).toFixed(0);
+      const label = d.channel==='web_widget'?'Website':d.channel==='telegram'?'Telegram':d.channel==='whatsapp'?'WhatsApp':d.channel;
+      return `<div style="margin-bottom:12px">
+        <div class="flex" style="justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:13px;font-weight:600">${esc(label)}</span>
+          <span class="muted">${d.count} (${pct}%)</span>
+        </div>
+        <div style="height:6px;background:var(--bg);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:var(--accent);border-radius:3px"></div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){}
+}
+
+async function loadUnresolved(){
+  try{
+    const data = await api('/dashboard/recent-unresolved');
+    if(!data.length){
+      document.getElementById('unresolvedList').innerHTML = '<div class="muted" style="padding:20px;text-align:center">All clear — no escalations</div>';
+      return;
+    }
+    document.getElementById('unresolvedList').innerHTML = data.slice(0,5).map(r => {
+      const time = r.created_at.replace('T',' ').slice(0,16);
+      return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+        <div class="flex" style="justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:12px;font-weight:600">${esc(r.user_id)}</span>
+          <span class="muted">${esc(time)}</span>
+        </div>
+        <div class="muted" style="font-size:12px">${esc(r.message)}</div>
+      </div>`;
+    }).join('');
+  }catch(e){}
+}
+
+async function loadSetupStatus(){
+  if(dismissed) return;
+  try{
+    const s = await api('/dashboard/setup-status');
+    const steps = [];
+    if(!s.knowledge_uploaded) steps.push({num:1, label:'Upload knowledge base', desc:'Add FAQ, product docs, policies', href:'/admin/knowledge', done:false});
+    if(!s.channels_active || !s.channels_active.length) steps.push({num:steps.length+1, label:'Activate a channel', desc:'Widget, Telegram, or WhatsApp', href:'/admin/channels', done:false});
+    if(!s.crm_configured && !s.native_integrations) steps.push({num:steps.length+1, label:'Connect CRM or integration', desc:'Give the agent access to customer data', href:'/admin/integrations', done:false});
+    if(!s.tools_enabled) steps.push({num:steps.length+1, label:'Add agent tools', desc:'Let the agent perform actions', href:'/admin/tools', done:false});
+
+    if(steps.length > 0){
+      document.getElementById('gettingStarted').style.display = '';
+      document.getElementById('stepsList').innerHTML = steps.map(s =>
+        `<div class="step"><div class="step-num">${s.num}</div><div class="step-content">
+          <strong><a href="${s.href}">${s.label}</a></strong>
+          <div class="muted">${s.desc}</div>
+        </div></div>`
+      ).join('');
+    }
+  }catch(e){}
+}
+
+function dismissGettingStarted(){
+  document.getElementById('gettingStarted').style.display='none';
+  localStorage.setItem('jeeves_gs_dismiss','1');
+}
+
+function drawTrendChart(data){
+  var canvas = document.getElementById('trendChart');
+  if(!canvas || !data.length) return;
+  var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+  var rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 200 * dpr;
+  ctx.scale(dpr, dpr);
+  var W = rect.width, H = 200;
+  var pad = {t:10,r:10,b:28,l:36};
+  var cW = W-pad.l-pad.r, cH = H-pad.t-pad.b;
+  var max = Math.max.apply(null, data.map(function(d){return d.total}));
+  if(max===0) max=1;
+
+  ctx.strokeStyle='rgba(255,255,255,0.06)';
+  ctx.lineWidth=1;
+  for(var i=0;i<=4;i++){
+    var y=pad.t+cH*(i/4);
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+    ctx.fillStyle='#64748b';ctx.font='10px Inter';ctx.textAlign='right';
+    ctx.fillText(Math.round(max*(1-i/4)),pad.l-6,y+3);
+  }
+
+  var step = cW/(data.length-1||1);
+
+  // Filled area — total
+  ctx.beginPath();
+  ctx.moveTo(pad.l,pad.t+cH);
+  data.forEach(function(d,i){ctx.lineTo(pad.l+i*step,pad.t+cH-(d.total/max)*cH)});
+  ctx.lineTo(pad.l+(data.length-1)*step,pad.t+cH);
+  ctx.closePath();
+  var grad = ctx.createLinearGradient(0,pad.t,0,H-pad.b);
+  grad.addColorStop(0,'rgba(99,102,241,0.15)');grad.addColorStop(1,'rgba(99,102,241,0)');
+  ctx.fillStyle=grad;ctx.fill();
+
+  // Line — total
+  ctx.beginPath();
+  data.forEach(function(d,i){var x=pad.l+i*step,y=pad.t+cH-(d.total/max)*cH;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
+  ctx.strokeStyle='#6366f1';ctx.lineWidth=2;ctx.stroke();
+
+  // Line — resolved
+  ctx.beginPath();
+  data.forEach(function(d,i){var x=pad.l+i*step,y=pad.t+cH-(d.resolved/max)*cH;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
+  ctx.strokeStyle='#10b981';ctx.lineWidth=1.5;ctx.stroke();
+
+  // X labels
+  ctx.fillStyle='#64748b';ctx.font='10px Inter';ctx.textAlign='center';
+  data.forEach(function(d,i){
+    var label = d.date.slice(5);
+    ctx.fillText(label,pad.l+i*step,H-6);
+  });
+
+  // Legend
+  ctx.fillStyle='#6366f1';ctx.fillRect(W-160,4,10,3);
+  ctx.fillStyle='#94a3b8';ctx.font='10px Inter';ctx.textAlign='left';ctx.fillText('Total',W-146,8);
+  ctx.fillStyle='#10b981';ctx.fillRect(W-90,4,10,3);
+  ctx.fillStyle='#94a3b8';ctx.fillText('Resolved',W-76,8);
+}
+
+function drawHourlyChart(data){
+  var canvas = document.getElementById('hourlyChart');
+  if(!canvas || !data) return;
+  var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+  var rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 200 * dpr;
+  ctx.scale(dpr, dpr);
+  var W = rect.width, H = 200;
+  var pad = {t:10,r:10,b:28,l:36};
+  var cW = W-pad.l-pad.r, cH = H-pad.t-pad.b;
+  var max = Math.max.apply(null, data);
+  if(max===0) max=1;
+  var barW = cW/24-2;
+
+  data.forEach(function(v,i){
+    var x = pad.l+i*(cW/24)+1;
+    var barH = (v/max)*cH;
+    var y = pad.t+cH-barH;
+    ctx.fillStyle = v>0?'rgba(99,102,241,0.5)':'rgba(255,255,255,0.03)';
+    ctx.fillRect(x,y,barW,barH);
+    if(i%3===0){
+      ctx.fillStyle='#64748b';ctx.font='10px Inter';ctx.textAlign='center';
+      ctx.fillText(i+':00',x+barW/2,H-6);
+    }
+  });
+}
+
+loadStats();
+loadTrend();
+loadHourly();
+loadChannelsBreakdown();
+loadUnresolved();
+loadSetupStatus();
 </script>
 {% endblock %}
