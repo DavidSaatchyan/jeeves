@@ -26,7 +26,7 @@ Base = declarative_base()
 
 class Customer(Base):
     __tablename__ = "customers"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=lambda: uuid.uuid4())
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     external_id = Column(String(64), unique=True, nullable=False, index=True)
     name = Column(Text, nullable=False)
     email = Column(Text, nullable=False)
@@ -46,8 +46,8 @@ class Customer(Base):
 
 class Order(Base):
     __tablename__ = "orders"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=lambda: uuid.uuid4())
-    customer_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    customer_id = Column(String(36), nullable=False, index=True)
     order_number = Column(String(32), nullable=False)
     status = Column(String(32), default="pending")
     total = Column(Float, nullable=False)
@@ -59,8 +59,8 @@ class Order(Base):
 
 class ActivityLog(Base):
     __tablename__ = "activity_log"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=lambda: uuid.uuid4())
-    customer_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    customer_id = Column(String(36), nullable=False, index=True)
     date = Column(DateTime, nullable=False)
     logins = Column(Integer, default=0)
     page_views = Column(Integer, default=0)
