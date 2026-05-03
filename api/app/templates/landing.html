@@ -8,347 +8,245 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #030508;
-      --surface: #0a0f1e;
-      --surface2: #0d1325;
-      --border: rgba(255,255,255,0.12);
+      --bg-dark: #08090d;
+      --bg-light: #f5f6f8;
+      --surface-dark: #111218;
+      --surface-light: #ffffff;
+      --border-dark: rgba(255,255,255,0.08);
+      --border-light: rgba(0,0,0,0.08);
       --accent: #6366f1;
       --accent2: #8b5cf6;
       --accent3: #06b6d4;
-      --text: #f8fafc;
-      --muted: #64748b;
+      --text-dark: #e8eaf0;
+      --text-light: #1a1a2e;
+      --muted-dark: #6b7280;
+      --muted-light: #64748b;
       --green: #10b981;
       --red: #f87171;
+      --font: 'Inter', system-ui, -apple-system, sans-serif;
     }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+    body { font-family: var(--font); background: var(--bg-dark); color: var(--text-dark); overflow-x: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
     /* NAV */
-    nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 40px; position: fixed; top: 0; width: 100%; z-index: 100; backdrop-filter: blur(24px); background: rgba(3,5,8,0.85); border-bottom: 1px solid var(--border); }
-    .logo { font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
+    nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 40px; position: fixed; top: 0; width: 100%; z-index: 100; backdrop-filter: blur(20px); background: rgba(8,9,13,0.8); border-bottom: 1px solid var(--border-dark); }
+    .logo { font-size: 20px; font-weight: 800; letter-spacing: -.5px; }
     .logo span { color: var(--accent); }
-    .nav-links { display: flex; gap: 32px; align-items: center; }
-    .nav-links a { color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500; transition: color .2s; }
-    .nav-links a:hover { color: var(--text); }
-    .btn-nav { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff !important; padding: 10px 24px; border-radius: 10px; font-weight: 800; font-size: 14px; text-decoration: none; transition: all .25s; border: none; }
-    .btn-nav:hover { box-shadow: 0 8px 32px rgba(99,102,241,0.5); transform: translateY(-1px); }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a { color: #9ca3af; text-decoration: none; font-size: 13px; font-weight: 500; transition: color .2s; }
+    .nav-links a:hover { color: #fff; }
+    .btn-nav { background: var(--accent); color: #fff !important; padding: 8px 20px; border-radius: 8px; font-weight: 600; font-size: 13px; text-decoration: none; transition: all .2s; }
+    .btn-nav:hover { background: #4f46e5; }
 
     /* ===== HERO ===== */
-    .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 120px 24px 80px; position: relative; overflow: hidden; }
-    .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%); }
-    .hero-orb { position: absolute; border-radius: 50%; filter: blur(100px); pointer-events: none; }
-    .hero-orb.o1 { width: 500px; height: 500px; top: -10%; left: 10%; background: var(--accent); opacity: .18; animation: orbFloat 10s ease-in-out infinite; }
-    .hero-orb.o2 { width: 400px; height: 400px; top: 30%; right: 5%; background: var(--accent3); opacity: .14; animation: orbFloat 10s ease-in-out -3s infinite; }
-    .hero-orb.o3 { width: 350px; height: 350px; bottom: -5%; left: 35%; background: var(--accent2); opacity: .14; animation: orbFloat 10s ease-in-out -6s infinite; }
-    @keyframes orbFloat { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(30px,-20px) scale(1.08); } 66% { transform: translate(-20px,25px) scale(.95); } }
+    .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 100px 24px 60px; position: relative; overflow: hidden; background: var(--bg-dark); }
+    .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px); background-size: 64px 64px; mask-image: radial-gradient(ellipse at center, black 25%, transparent 75%); -webkit-mask-image: radial-gradient(ellipse at center, black 25%, transparent 75%); }
 
-    .badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.3); padding: 6px 16px; border-radius: 999px; font-size: 13px; color: #a5b4fc; margin-bottom: 32px; position: relative; z-index: 1; animation: fadeInDown .8s ease; box-shadow: 0 0 20px rgba(99,102,241,0.1); }
-    .badge .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; box-shadow: 0 0 12px var(--green); animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
-    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 999px; font-size: 12px; font-weight: 500; color: #9ca3af; margin-bottom: 28px; position: relative; z-index: 1; border: 1px solid var(--border-dark); background: rgba(255,255,255,0.02); }
+    .badge .dot { width: 5px; height: 5px; background: var(--green); border-radius: 50%; }
 
-    .hero-inner { display: flex; align-items: center; gap: 80px; max-width: 1200px; width: 100%; position: relative; z-index: 1; }
-    .hero-text { flex: 1; text-align: left; }
-    .hero-text h1 { font-size: clamp(42px, 6.5vw, 80px); font-weight: 900; line-height: .92; letter-spacing: -3px; margin-bottom: 24px; animation: fadeInUp .8s ease .1s both; }
-    .hero-text h1 .hl { background: linear-gradient(135deg, #fff 0%, #c7d2fe 15%, var(--accent) 30%, var(--accent2) 50%, var(--accent3) 70%, #34d399 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 200% 200%; animation: gradientShift 6s ease infinite; filter: drop-shadow(0 0 30px rgba(99,102,241,0.3)); }
-    @keyframes gradientShift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-    .hero-features { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; animation: fadeInUp .8s ease .15s both; }
-    .hero-feat { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #94a3b8; }
-    .hero-feat .dot { width: 6px; height: 6px; border-radius: 50%; }
-    .hero-feat:nth-child(1) .dot { background: var(--accent); }
-    .hero-feat:nth-child(2) .dot { background: var(--accent3); }
-    .hero-feat:nth-child(3) .dot { background: var(--green); }
-    .hero-text p { font-size: 17px; color: #94a3b8; max-width: 460px; line-height: 1.7; margin-bottom: 36px; animation: fadeInUp .8s ease .2s both; }
-    .hero-buttons { display: flex; gap: 14px; flex-wrap: wrap; animation: fadeInUp .8s ease .3s both; }
-    .btn-primary { background: #fff; color: #030508; padding: 16px 32px; border-radius: 14px; font-size: 15px; font-weight: 700; text-decoration: none; transition: all .3s; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 48px rgba(255,255,255,0.2); }
-    .btn-secondary { background: rgba(255,255,255,0.08); color: #e2e8f0; padding: 16px 32px; border-radius: 14px; font-size: 15px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,0.15); transition: all .3s; display: inline-flex; align-items: center; gap: 8px; }
-    .btn-secondary:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.12); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .hero-inner { display: flex; align-items: center; gap: 80px; max-width: 1100px; width: 100%; position: relative; z-index: 1; }
+    .hero-text { flex: 1; }
+    .hero-text h1 { font-size: clamp(36px, 5.5vw, 64px); font-weight: 800; line-height: 1.05; letter-spacing: -2px; margin-bottom: 20px; color: #fff; }
+    .hero-text h1 .hl { background: linear-gradient(135deg, #fff 30%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-text p { font-size: 16px; color: #9ca3af; max-width: 440px; line-height: 1.65; margin-bottom: 28px; }
+    .hero-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-primary { background: #fff; color: var(--bg-dark); padding: 14px 28px; border-radius: 10px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all .2s; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary:hover { background: #e5e7eb; }
+    .btn-secondary { background: transparent; color: #9ca3af; padding: 14px 28px; border-radius: 10px; font-size: 14px; font-weight: 500; text-decoration: none; border: 1px solid var(--border-dark); transition: all .2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
 
-    .hero-mockup { flex-shrink: 0; animation: fadeInUp .8s ease .4s both; position: relative; }
-    .hero-mockup::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 380px; height: 560px; background: radial-gradient(ellipse, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.08) 40%, transparent 70%); pointer-events: none; animation: phoneGlow 4s ease-in-out infinite; }
-    @keyframes phoneGlow { 0%,100% { opacity: 1; transform: translate(-50%,-50%) scale(1); } 50% { opacity: .7; transform: translate(-50%,-50%) scale(1.05); } }
-    .phone-frame { width: 300px; background: linear-gradient(180deg, #1a1f35 0%, #111827 100%); border-radius: 40px; border: 2px solid rgba(99,102,241,0.3); box-shadow: 0 60px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08) inset, 0 0 60px rgba(99,102,241,0.15); overflow: hidden; position: relative; }
-    /* Phone hardware buttons */
-    .phone-btn-side { position: absolute; right: -5px; top: 120px; width: 4px; height: 40px; background: #1f2937; border-radius: 0 2px 2px 0; }
-    .phone-btn-vol1 { position: absolute; left: -5px; top: 100px; width: 4px; height: 28px; background: #1f2937; border-radius: 2px 0 0 2px; }
-    .phone-btn-vol2 { position: absolute; left: -5px; top: 138px; width: 4px; height: 28px; background: #1f2937; border-radius: 2px 0 0 2px; }
-    .phone-screen { background: #0f172a; margin: 4px; border-radius: 34px; overflow: hidden; }
-    .phone-dynamic-island { width: 100px; height: 28px; background: #000; border-radius: 20px; margin: 8px auto 0; position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; }
-    .phone-island-cam { width: 8px; height: 8px; border-radius: 50%; background: #1a1f35; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 0 4px rgba(255,255,255,0.05); }
-    .phone-status { display: flex; justify-content: space-between; align-items: center; padding: 6px 22px 4px; font-size: 12px; font-weight: 600; color: #e2e8f0; }
-    .phone-status-time { font-size: 14px; font-weight: 700; }
-    .phone-status-icons { display: flex; gap: 4px; align-items: center; }
-    .phone-status-icons svg { width: 14px; height: 14px; fill: #e2e8f0; }
-    .phone-nav-bar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.08)); border-bottom: 1px solid rgba(99,102,241,0.15); }
-    .phone-back-btn { color: var(--accent); font-size: 22px; font-weight: 300; line-height: 1; }
-    .phone-bot-icon { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; box-shadow: 0 0 12px rgba(99,102,241,0.4); }
-    .phone-bot-info { flex: 1; }
-    .phone-bot-name { font-size: 13px; font-weight: 600; color: #f1f5f9; }
+    .hero-mockup { flex-shrink: 0; }
+    .phone-frame { width: 280px; background: #111218; border-radius: 36px; border: 1px solid var(--border-dark); box-shadow: 0 40px 80px rgba(0,0,0,0.5); overflow: hidden; position: relative; }
+    .phone-screen { background: #0c0d12; margin: 3px; border-radius: 32px; overflow: hidden; }
+    .phone-dynamic-island { width: 90px; height: 24px; background: #000; border-radius: 18px; margin: 6px auto 0; }
+    .phone-nav-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid var(--border-dark); }
+    .phone-bot-icon { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
+    .phone-bot-name { font-size: 13px; font-weight: 600; color: #fff; }
     .phone-bot-status { font-size: 10px; color: var(--green); }
-    .phone-body { height: 370px; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; position: relative; background: linear-gradient(180deg, #0f172a 0%, #0a0f1e 100%); scrollbar-width: none; }
+    .phone-body { height: 350px; padding: 10px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; scrollbar-width: none; }
     .phone-body::-webkit-scrollbar { display: none; }
-    .msg { display: flex; gap: 6px; max-width: 90%; opacity: 0; transform: translateY(6px); transition: opacity .35s, transform .35s; flex-shrink: 0; }
+    .msg { display: flex; gap: 6px; max-width: 88%; opacity: 0; transform: translateY(4px); transition: opacity .3s, transform .3s; flex-shrink: 0; }
     .msg.show { opacity: 1; transform: translateY(0); }
     .msg.user { align-self: flex-end; flex-direction: row-reverse; }
-    .msg-avatar { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; margin-top: 2px; }
-    .msg.bot .msg-avatar { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
-    .msg.user .msg-avatar { background: #1e293b; color: #94a3b8; border: 1px solid rgba(255,255,255,0.08); }
-    .msg-bubble { padding: 8px 12px; border-radius: 14px; font-size: 11.5px; line-height: 1.45; }
-    .msg.bot .msg-bubble { background: linear-gradient(135deg, #1e293b, #1a2332); border: 1px solid rgba(255,255,255,0.08); border-top-left-radius: 4px; color: #e2e8f0; }
-    .msg.user .msg-bubble { background: linear-gradient(135deg, var(--accent), #4f46e5); color: #fff; border-top-right-radius: 4px; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
+    .msg-avatar { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; margin-top: 2px; }
+    .msg.bot .msg-avatar { background: var(--accent); color: #fff; }
+    .msg.user .msg-avatar { background: #1f2937; color: #9ca3af; }
+    .msg-bubble { padding: 7px 11px; border-radius: 12px; font-size: 11px; line-height: 1.45; }
+    .msg.bot .msg-bubble { background: #1a1b22; border: 1px solid var(--border-dark); border-top-left-radius: 3px; color: #d1d5db; }
+    .msg.user .msg-bubble { background: var(--accent); color: #fff; border-top-right-radius: 3px; }
     .msg-bubble strong { color: #fff; }
-    .msg-confirmation { margin-top: 6px; padding: 8px 10px; background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.15); border-radius: 10px; }
-    .msg-confirm-text { font-size: 10px; color: #f87171; margin-bottom: 6px; font-weight: 500; }
-    .msg-confirm-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: var(--accent); color: #fff; border-radius: 8px; font-weight: 700; font-size: 10px; transition: all .3s; }
-    .msg-confirm-btn.tapped { background: var(--green); transform: scale(1.05); box-shadow: 0 0 12px rgba(16,185,129,0.4); }
-    .msg-confirm-btn.tapped::before { content: '✓ '; }
-    .msg-success { margin-top: 6px; padding: 6px 8px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.15); border-radius: 8px; font-size: 10px; color: var(--green); font-weight: 600; }
-    .typing-dots { display: none; align-items: center; gap: 5px; padding-left: 28px; flex-shrink: 0; }
+    .msg-confirmation { margin-top: 5px; padding: 6px 8px; background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.12); border-radius: 8px; }
+    .msg-confirm-text { font-size: 9px; color: #f87171; margin-bottom: 4px; font-weight: 500; }
+    .msg-confirm-btn { display: inline-flex; align-items: center; gap: 3px; padding: 3px 10px; background: var(--accent); color: #fff; border-radius: 6px; font-weight: 600; font-size: 9px; transition: all .3s; }
+    .msg-confirm-btn.tapped { background: var(--green); }
+    .msg-confirm-btn.tapped::before { content: '\2713 '; }
+    .msg-success { margin-top: 5px; padding: 4px 7px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.12); border-radius: 6px; font-size: 9px; color: var(--green); font-weight: 600; }
+    .typing-dots { display: none; align-items: center; gap: 4px; padding-left: 26px; flex-shrink: 0; }
     .typing-dots.active { display: flex; }
-    .typing-dots span { width: 5px; height: 5px; border-radius: 50%; background: #475569; animation: typing 1.4s ease-in-out infinite; }
+    .typing-dots span { width: 4px; height: 4px; border-radius: 50%; background: #4b5563; animation: typing 1.4s ease-in-out infinite; }
     .typing-dots span:nth-child(2) { animation-delay: .2s; }
     .typing-dots span:nth-child(3) { animation-delay: .4s; }
-    .phone-input { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border-top: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; background: #0f172a; }
-    .phone-input-field { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 7px 12px; font-size: 11px; color: #475569; }
-    .phone-send { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; }
-    .phone-send svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2; }
-    .phone-home-bar { width: 120px; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px; margin: 8px auto; }
+    .phone-input { display: flex; align-items: center; gap: 5px; padding: 8px 10px; border-top: 1px solid var(--border-dark); background: #0c0d12; }
+    .phone-input-field { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--border-dark); border-radius: 16px; padding: 6px 10px; font-size: 10px; color: #4b5563; }
+    .phone-home-bar { width: 100px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 6px auto; }
 
-    /* SECTION DIVIDER */
-    .section-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(99,102,241,0.2), rgba(139,92,246,0.15), rgba(6,182,212,0.2), transparent); }
+    /* SECTION BASE */
+    .section { padding: 80px 24px; }
+    .section-dark { background: var(--bg-dark); color: var(--text-dark); }
+    .section-light { background: var(--bg-light); color: var(--text-light); }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    .section-title { font-size: clamp(26px, 3.5vw, 40px); font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 12px; }
+    .section-sub { font-size: 15px; max-width: 480px; line-height: 1.6; }
+    .section-dark .section-sub { color: #9ca3af; }
+    .section-light .section-sub { color: #64748b; }
+    .section-dark .section-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent); }
+    .section-light .section-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(0,0,0,0.06), transparent); }
 
-    /* SECTIONS */
-    .section { padding: 60px 24px; max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
-    .section.alt-bg { background: linear-gradient(180deg, rgba(10,15,30,0.7) 0%, rgba(13,19,37,0.4) 50%, transparent 100%); max-width: 100%; padding-left: 0; padding-right: 0; }
-    .section.alt-bg .section-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-    .section-label { text-transform: uppercase; font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--accent); margin-bottom: 16px; }
-    .section-title { font-size: clamp(28px, 4vw, 48px); font-weight: 900; letter-spacing: -2px; margin-bottom: 16px; line-height: 1.05; }
-    .section-sub { color: #94a3b8; font-size: 17px; max-width: 520px; margin-bottom: 40px; line-height: 1.6; }
-
-    /* SCROLL REVEAL */
-    .reveal { opacity: 0; transform: translateY(40px); transition: opacity .7s ease, transform .7s ease; }
+    /* REVEAL */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
     .reveal.visible { opacity: 1; transform: translateY(0); }
 
-    /* ===== CAPABILITIES — BENTO ===== */
-    .caps-bento { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
-    .cap-b { background: var(--surface); border-radius: 20px; padding: 32px 28px; position: relative; overflow: hidden; transition: all .4s cubic-bezier(.4,0,.2,1); border: 1px solid rgba(255,255,255,0.12); }
-    .cap-b::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
-    .cap-b:hover { transform: translateY(-4px); }
-    .cap-b.b1 { grid-column: span 3; background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, var(--surface) 60%); border-color: rgba(99,102,241,0.3); }
-    .cap-b.b1::before { background: linear-gradient(90deg, var(--accent), transparent); }
-    .cap-b.b1:hover { border-color: rgba(99,102,241,0.5); box-shadow: 0 20px 60px rgba(99,102,241,0.15); }
-    .cap-b.b2 { grid-column: span 3; background: linear-gradient(135deg, rgba(6,182,212,0.12) 0%, var(--surface) 60%); border-color: rgba(6,182,212,0.3); }
-    .cap-b.b2::before { background: linear-gradient(90deg, var(--accent3), transparent); }
-    .cap-b.b2:hover { border-color: rgba(6,182,212,0.5); box-shadow: 0 20px 60px rgba(6,182,212,0.15); }
-    .cap-b.b3 { grid-column: span 2; background: linear-gradient(135deg, rgba(16,185,129,0.12) 0%, var(--surface) 60%); border-color: rgba(16,185,129,0.3); }
-    .cap-b.b3::before { background: linear-gradient(90deg, var(--green), transparent); }
-    .cap-b.b3:hover { border-color: rgba(16,185,129,0.5); box-shadow: 0 20px 60px rgba(16,185,129,0.15); }
-    .cap-b.b4 { grid-column: span 2; background: linear-gradient(135deg, rgba(139,92,246,0.12) 0%, var(--surface) 60%); border-color: rgba(139,92,246,0.3); }
-    .cap-b.b4::before { background: linear-gradient(90deg, var(--accent2), transparent); }
-    .cap-b.b4:hover { border-color: rgba(139,92,246,0.5); box-shadow: 0 20px 60px rgba(139,92,246,0.15); }
-    .cap-b.b5 { grid-column: span 2; background: linear-gradient(135deg, rgba(248,113,113,0.12) 0%, var(--surface) 60%); border-color: rgba(248,113,113,0.3); }
-    .cap-b.b5::before { background: linear-gradient(90deg, var(--red), transparent); }
-    .cap-b.b5:hover { border-color: rgba(248,113,113,0.5); box-shadow: 0 20px 60px rgba(248,113,113,0.15); }
-    .cap-b .cap-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-    .cap-b .cap-icon svg { width: 20px; height: 20px; }
-    .cap-b .cap-icon.c1 { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.2); box-shadow: 0 0 16px rgba(99,102,241,0.15); }
-    .cap-b .cap-icon.c1 svg { stroke: #818cf8; }
-    .cap-b .cap-icon.c2 { background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.2); box-shadow: 0 0 16px rgba(6,182,212,0.15); }
-    .cap-b .cap-icon.c2 svg { stroke: #22d3ee; }
-    .cap-b .cap-icon.c3 { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.2); box-shadow: 0 0 16px rgba(16,185,129,0.15); }
-    .cap-b .cap-icon.c3 svg { stroke: #34d399; }
-    .cap-b .cap-icon.c4 { background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.2); box-shadow: 0 0 16px rgba(139,92,246,0.15); }
-    .cap-b .cap-icon.c4 svg { stroke: #a78bfa; }
-    .cap-b .cap-icon.c5 { background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.2); box-shadow: 0 0 16px rgba(248,113,113,0.15); }
-    .cap-b .cap-icon.c5 svg { stroke: #fb7185; }
-    .cap-b .cap-icon.c6 { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.2); box-shadow: 0 0 16px rgba(99,102,241,0.15); }
-    .cap-b .cap-icon.c6 svg { stroke: #818cf8; }
-    .cap-b h3 { font-size: 17px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; letter-spacing: -.2px; }
-    .cap-b p { color: #cbd5e1; font-size: 14px; line-height: 1.65; }
-    .cap-b .cap-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; margin-top: 14px; }
-    .cap-b .cap-tag.t1 { background: rgba(99,102,241,0.1); color: #a5b4fc; }
-    .cap-b .cap-tag.t2 { background: rgba(6,182,212,0.1); color: #67e8f9; }
-    .cap-b .cap-tag.t3 { background: rgba(16,185,129,0.1); color: #6ee7b7; }
-    .cap-b .cap-tag.t4 { background: rgba(139,92,246,0.1); color: #c4b5fd; }
-    .cap-b .cap-tag.t5 { background: rgba(248,113,113,0.1); color: #fda4af; }
-    .cap-b .cap-tag.t6 { background: rgba(99,102,241,0.1); color: #a5b4fc; }
+    /* ===== STATS BAR ===== */
+    .stats-bar { padding: 40px 24px; background: var(--surface-dark); border-top: 1px solid var(--border-dark); border-bottom: 1px solid var(--border-dark); }
+    .stats-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
+    .stat-item { text-align: center; }
+    .stat-num { font-size: 42px; font-weight: 800; letter-spacing: -2px; color: #fff; line-height: 1; margin-bottom: 6px; }
+    .stat-num .stat-suffix { font-size: 28px; font-weight: 600; }
+    .stat-label { font-size: 13px; color: #6b7280; font-weight: 500; }
 
-    /* ===== HERO METRIC ===== */
-    .hero-metric { text-align: center; padding: 80px 0; }
-    .hero-metric .hm-wrap { position: relative; display: inline-block; }
-    .hero-metric .hm-wrap::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 350px; height: 350px; background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.1) 40%, transparent 70%); border-radius: 50%; pointer-events: none; }
-    .hm-num { font-size: clamp(90px, 16vw, 180px); font-weight: 900; letter-spacing: -8px; line-height: 0.85; position: relative; }
-    .hm-num .n-main { background: linear-gradient(135deg, #fff 0%, var(--accent) 40%, var(--accent2) 70%, var(--accent3) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 200% 200%; animation: gradientShift 5s ease infinite; }
-    .hm-num .n-pct { background: linear-gradient(135deg, var(--accent2), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .hm-tagline { font-size: clamp(14px, 2vw, 18px); font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 5px; margin-top: 16px; }
-    .hm-desc { max-width: 500px; margin: 28px auto 0; }
-    .hm-desc p { font-size: 16px; line-height: 1.7; color: #cbd5e1; }
-    .hm-desc p + p { margin-top: 8px; color: #94a3b8; font-size: 15px; }
-    .hm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 64px; max-width: 700px; margin-left: auto; margin-right: auto; border-radius: 16px; overflow: hidden; border: 1px solid rgba(99,102,241,0.2); box-shadow: 0 0 50px rgba(99,102,241,0.08); }
-    .hm-stat { padding: 32px 24px; background: var(--surface); transition: background .3s; }
-    .hm-stat:hover { background: rgba(99,102,241,0.06); }
-    .hm-stat .hs-val { font-size: 26px; font-weight: 800; color: #f1f5f9; letter-spacing: -.5px; margin-bottom: 6px; }
-    .hm-stat .hs-val.c1 { background: linear-gradient(135deg, var(--accent), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .hm-stat .hs-val.c2 { background: linear-gradient(135deg, var(--accent2), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .hm-stat .hs-val.c3 { background: linear-gradient(135deg, var(--green), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .hm-stat .hs-label { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+    /* ===== CAPABILITIES (LIGHT SECTION) ===== */
+    .caps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+    .cap-card { background: var(--surface-light); border-radius: 16px; padding: 28px 24px; border: 1px solid var(--border-light); transition: all .3s; }
+    .cap-card:hover { border-color: rgba(99,102,241,0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.06); }
+    .cap-card .cap-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(99,102,241,0.08); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .cap-card .cap-icon svg { width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .cap-card h3 { font-size: 15px; font-weight: 700; color: var(--text-light); margin-bottom: 6px; }
+    .cap-card p { font-size: 13px; color: #64748b; line-height: 1.6; }
 
-    /* ===== CHANNELS ===== */
-    .channels-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .channel-card { background: var(--surface); border: 1px solid rgba(255,255,255,0.15); border-radius: 24px; padding: 40px 32px; text-align: center; transition: all .5s; position: relative; overflow: hidden; }
-    .channel-card:hover { border-color: rgba(99,102,241,0.5); transform: translateY(-6px); box-shadow: 0 24px 64px rgba(0,0,0,0.4), 0 0 50px rgba(99,102,241,0.12); }
-    .channel-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
-    .channel-card p { color: #94a3b8; font-size: 14px; line-height: 1.7; }
-    .channel-logo { width: 64px; height: 64px; margin: 0 auto 24px; border-radius: 16px; display: flex; align-items: center; justify-content: center; transition: all .4s; }
-    .channel-card:hover .channel-logo { transform: scale(1.05); }
-    .channel-logo.widget { background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(99,102,241,0.05)); border: 1px solid rgba(99,102,241,0.25); box-shadow: 0 0 24px rgba(99,102,241,0.15); }
-    .channel-logo.tg { background: linear-gradient(135deg, rgba(38,165,227,0.2), rgba(38,165,227,0.05)); border: 1px solid rgba(38,165,227,0.25); box-shadow: 0 0 24px rgba(38,165,227,0.15); }
-    .channel-logo.wa { background: linear-gradient(135deg, rgba(37,211,102,0.2), rgba(37,211,102,0.05)); border: 1px solid rgba(37,211,102,0.25); box-shadow: 0 0 24px rgba(37,211,102,0.15); }
-    .channel-logo svg { width: 32px; height: 32px; }
+    /* ===== CHANNELS MATRIX ===== */
+    .channels-matrix { position: relative; margin-top: 48px; min-height: 480px; }
+    .channels-matrix svg.connections { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+    .channels-matrix svg.connections line { stroke: rgba(99,102,241,0.1); stroke-width: 1; transition: all .6s ease; }
+    .channels-matrix svg.connections line.active { stroke: rgba(99,102,241,0.6); stroke-width: 1.5; }
+
+    .cm-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 2; text-align: center; }
+    .cm-center-logo { width: 72px; height: 72px; border-radius: 20px; background: var(--surface-dark); border: 1px solid rgba(99,102,241,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 24px; font-weight: 800; color: var(--accent); box-shadow: 0 0 40px rgba(99,102,241,0.1); }
+    .cm-center-label { font-size: 14px; font-weight: 700; color: #fff; }
+    .cm-center-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+    .cm-layer-label { position: absolute; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #4b5563; z-index: 2; }
+    .cm-layer-label.top { top: 0; left: 50%; transform: translateX(-50%); }
+    .cm-layer-label.bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
+
+    .cm-tiles { position: absolute; z-index: 1; display: grid; gap: 10px; }
+    .cm-tiles.top-layer { top: 24px; left: 0; right: 0; grid-template-columns: repeat(5, 1fr); max-width: 700px; margin: 0 auto; justify-items: center; }
+    .cm-tiles.bottom-layer { bottom: 24px; left: 0; right: 0; grid-template-columns: repeat(4, 1fr); max-width: 560px; margin: 0 auto; justify-items: center; }
+
+    .cm-tile { background: var(--surface-dark); border: 1px solid var(--border-dark); border-radius: 12px; padding: 14px 16px; text-align: center; transition: all .4s ease; min-width: 100px; position: relative; }
+    .cm-tile.active { border-color: rgba(99,102,241,0.4); box-shadow: 0 0 24px rgba(99,102,241,0.1); }
+    .cm-tile .tile-icon { width: 32px; height: 32px; margin: 0 auto 6px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .cm-tile .tile-name { font-size: 11px; font-weight: 600; color: #d1d5db; }
+    .cm-tile .tile-type { font-size: 9px; color: #6b7280; margin-top: 1px; }
+
+    .cm-tile .tile-icon.tg { background: rgba(38,165,227,0.1); color: #26A5E4; }
+    .cm-tile .tile-icon.wa { background: rgba(37,211,102,0.1); color: #25D366; }
+    .cm-tile .tile-icon.widget { background: rgba(99,102,241,0.1); color: #818cf8; }
+    .cm-tile .tile-icon.email { background: rgba(244,63,94,0.1); color: #f87171; }
+    .cm-tile .tile-icon.api { background: rgba(6,182,212,0.1); color: #22d3ee; }
+    .cm-tile .tile-icon.crm { background: rgba(248,113,113,0.1); color: #f87171; }
+    .cm-tile .tile-icon.shopify { background: rgba(149,191,71,0.1); color: #95bf47; }
+    .cm-tile .tile-icon.stripe { background: rgba(99,102,241,0.1); color: #6366f1; }
+    .cm-tile .tile-icon.woo { background: rgba(154,69,172,0.1); color: #9c27b0; }
 
     /* ===== TIMELINE ===== */
-    .timeline { position: relative; padding: 60px 0; max-width: 900px; margin: 0 auto; }
-    .tl-track { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-50%); }
-    .tl-track-bg { width: 100%; height: 100%; background: var(--border); }
-    .tl-track-fill { position: absolute; top: 0; left: 0; width: 100%; height: 0; background: linear-gradient(180deg, var(--accent), var(--accent2), var(--accent3), var(--accent2), var(--green)); transition: height .6s ease; }
-
-    .tl-row { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 0; align-items: start; margin-bottom: 56px; position: relative; }
+    .timeline { position: relative; padding: 48px 0; max-width: 800px; margin: 0 auto; }
+    .tl-track { position: absolute; left: 28px; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.05); }
+    .tl-row { display: flex; gap: 24px; margin-bottom: 40px; position: relative; opacity: 0; transform: translateX(-16px); transition: all .5s ease; }
+    .tl-row.visible { opacity: 1; transform: translateX(0); }
     .tl-row:last-child { margin-bottom: 0; }
-    .tl-row.left .tl-card { grid-column: 1; justify-self: end; }
-    .tl-row.left .tl-node { grid-column: 2; justify-self: center; }
-    .tl-row.left .tl-void { grid-column: 3; }
-    .tl-row.right .tl-void { grid-column: 1; }
-    .tl-row.right .tl-node { grid-column: 2; justify-self: center; }
-    .tl-row.right .tl-card { grid-column: 3; justify-self: start; }
-
-    .tl-card { width: 100%; max-width: 380px; background: var(--surface); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 32px; opacity: 0; transition: all .6s ease; position: relative; overflow: hidden; }
-    .tl-row.left .tl-card { transform: translateX(-30px); }
-    .tl-row.right .tl-card { transform: translateX(30px); }
-    .tl-row.visible .tl-card { opacity: 1; transform: translateX(0); }
-    .tl-row.visible .tl-card { border-color: rgba(99,102,241,0.35); box-shadow: 0 16px 48px rgba(0,0,0,0.3), 0 0 40px rgba(99,102,241,0.08); }
-    .tl-card .tl-num { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-    .tl-card h3 { font-size: 19px; font-weight: 700; margin-bottom: 10px; color: #f1f5f9; }
-    .tl-card p { color: #cbd5e1; font-size: 14px; line-height: 1.7; }
-    .tl-card .tl-time { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; font-size: 12px; color: var(--green); font-weight: 600; background: rgba(16,185,129,0.06); padding: 5px 14px; border-radius: 999px; }
-
-    .tl-node { padding-top: 28px; position: relative; z-index: 2; }
-    .tl-dot { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: #fff; }
-    .tl-row.d1 .tl-dot { background: var(--accent); box-shadow: 0 0 20px rgba(99,102,241,0.4); }
-    .tl-row.d2 .tl-dot { background: var(--accent2); box-shadow: 0 0 20px rgba(139,92,246,0.4); }
-    .tl-row.d3 .tl-dot { background: var(--accent3); box-shadow: 0 0 20px rgba(6,182,212,0.4); }
-    .tl-row.d4 .tl-dot { background: var(--accent2); box-shadow: 0 0 20px rgba(139,92,246,0.4); }
-    .tl-row.d5 .tl-dot { background: var(--green); box-shadow: 0 0 20px rgba(16,185,129,0.4); }
+    .tl-dot { width: 56px; height: 56px; border-radius: 50%; background: var(--surface-dark); border: 1px solid var(--border-dark); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--accent); flex-shrink: 0; position: relative; z-index: 1; }
+    .tl-card { background: var(--surface-dark); border: 1px solid var(--border-dark); border-radius: 14px; padding: 24px; flex: 1; }
+    .tl-card .tl-num { font-size: 11px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+    .tl-card h3 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .tl-card p { font-size: 13px; color: #9ca3af; line-height: 1.6; }
+    .tl-card .tl-time { display: inline-block; margin-top: 10px; font-size: 11px; color: var(--green); font-weight: 600; }
 
     /* ===== PRICING ===== */
-    .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 1100px; margin: 0 auto; }
-    .price-card { background: var(--surface); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 36px 24px; text-align: center; position: relative; transition: all .4s; overflow: hidden; }
-    .price-card:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.2); }
-    .price-card.featured { border-color: rgba(99,102,241,0.5); background: linear-gradient(180deg, rgba(99,102,241,0.12) 0%, var(--surface) 60%); box-shadow: 0 0 60px rgba(99,102,241,0.15), 0 0 0 1px rgba(99,102,241,0.25); }
-    .price-card.featured::before { content: 'Most popular'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 999px; box-shadow: 0 4px 16px rgba(99,102,241,0.4); }
-    .price-card.featured:hover { box-shadow: 0 0 80px rgba(99,102,241,0.2), 0 0 0 1px rgba(99,102,241,0.35); }
-    .price-card .p-name { font-size: 13px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
-    .price-card .p-price { font-size: 44px; font-weight: 900; letter-spacing: -3px; color: #f1f5f9; }
-    .price-card .p-price .p-cur { font-size: 22px; vertical-align: super; margin-right: 2px; }
-    .price-card .p-period { font-size: 13px; color: #94a3b8; margin-top: 4px; margin-bottom: 24px; }
-    .price-card .p-features { list-style: none; text-align: left; margin-bottom: 28px; }
-    .price-card .p-features li { font-size: 13px; color: #cbd5e1; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; align-items: center; gap: 8px; }
-    .price-card .p-features li::before { content: '✓'; color: var(--green); font-weight: 700; font-size: 12px; flex-shrink: 0; }
-    .price-card .p-btn { display: block; width: 100%; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700; text-decoration: none; transition: all .3s; cursor: pointer; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 40px; }
+    .price-card { background: var(--surface-light); border: 1px solid var(--border-light); border-radius: 16px; padding: 28px 20px; position: relative; transition: all .3s; }
+    .price-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
+    .price-card.featured { border-color: var(--accent); background: #fff; box-shadow: 0 0 0 1px var(--accent), 0 12px 40px rgba(99,102,241,0.12); }
+    .price-card.featured .p-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 12px; border-radius: 999px; white-space: nowrap; }
+    .price-card .p-name { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+    .price-card .p-price { font-size: 36px; font-weight: 800; letter-spacing: -2px; color: var(--text-light); }
+    .price-card .p-price .p-cur { font-size: 18px; vertical-align: super; margin-right: 1px; }
+    .price-card .p-period { font-size: 12px; color: #94a3b8; margin-top: 2px; margin-bottom: 20px; }
+    .price-card .p-features { list-style: none; margin-bottom: 24px; }
+    .price-card .p-features li { font-size: 12px; color: #475569; padding: 6px 0; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; gap: 6px; }
+    .price-card .p-features li::before { content: '\2713'; color: var(--green); font-weight: 700; font-size: 11px; }
+    .price-card .p-btn { display: block; width: 100%; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all .2s; cursor: pointer; text-align: center; }
     .price-card .p-btn.primary { background: var(--accent); color: #fff; border: none; }
-    .price-card .p-btn.primary:hover { background: #4f46e5; box-shadow: 0 8px 24px rgba(99,102,241,0.3); }
-    .price-card .p-btn.secondary { background: rgba(255,255,255,0.06); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1); }
-    .price-card .p-btn.secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
-    .price-card .p-btn.outline { background: transparent; color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15); }
-    .price-card .p-btn.outline:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); }
-    .pricing-note { max-width: 700px; margin: 40px auto 0; text-align: center; }
-    .pricing-note .pn-row { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: var(--surface); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; margin-bottom: 12px; }
-    .pricing-note .pn-icon { font-size: 18px; flex-shrink: 0; }
-    .pricing-note .pn-text { font-size: 13px; color: #cbd5e1; line-height: 1.5; }
-    .pricing-note .pn-text strong { color: #f1f5f9; }
+    .price-card .p-btn.primary:hover { background: #4f46e5; }
+    .price-card .p-btn.secondary { background: #f1f5f9; color: var(--text-light); border: 1px solid var(--border-light); }
+    .price-card .p-btn.secondary:hover { background: #e2e8f0; }
+    .price-card .p-btn.outline { background: transparent; color: var(--text-light); border: 1px solid var(--border-light); }
+    .price-card .p-btn.outline:hover { border-color: #cbd5e1; }
+    .pricing-note { max-width: 600px; margin: 32px auto 0; }
+    .pricing-note .pn-row { display: flex; align-items: flex-start; gap: 8px; padding: 12px 16px; background: var(--surface-light); border: 1px solid var(--border-light); border-radius: 10px; margin-bottom: 8px; }
+    .pricing-note .pn-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+    .pricing-note .pn-text { font-size: 12px; color: #475569; line-height: 1.5; }
+    .pricing-note .pn-text strong { color: var(--text-light); }
 
     /* CTA */
-    .cta-section { background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.08) 100%); }
-    .cta { text-align: center; padding: 120px 24px; max-width: 1200px; margin: 0 auto; }
-    .cta h2 { font-size: clamp(32px, 5vw, 60px); font-weight: 900; letter-spacing: -2.5px; margin-bottom: 20px; line-height: 1.05; }
-    .cta p { color: #94a3b8; font-size: 18px; margin-bottom: 40px; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .cta-section { background: var(--bg-dark); border-top: 1px solid var(--border-dark); }
+    .cta { text-align: center; padding: 80px 24px; max-width: 700px; margin: 0 auto; }
+    .cta h2 { font-size: clamp(26px, 4vw, 42px); font-weight: 800; letter-spacing: -1.5px; margin-bottom: 14px; color: #fff; line-height: 1.1; }
+    .cta p { color: #9ca3af; font-size: 15px; margin-bottom: 32px; line-height: 1.6; }
 
-    footer { text-align: center; padding: 40px 24px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); }
+    footer { text-align: center; padding: 32px 24px; color: #6b7280; font-size: 12px; border-top: 1px solid var(--border-dark); background: var(--bg-dark); }
 
     @media (max-width: 1024px) {
-      .pricing-grid { grid-template-columns: 1fr 1fr; max-width: 600px; margin-left: auto; margin-right: auto; }
+      .pricing-grid { grid-template-columns: 1fr 1fr; max-width: 500px; margin-left: auto; margin-right: auto; }
     }
     @media (max-width: 900px) {
-      .hero-inner { flex-direction: column; text-align: center; gap: 48px; }
-      .hero-text { text-align: center; }
+      .hero-inner { flex-direction: column; text-align: center; gap: 40px; }
       .hero-text p { margin-left: auto; margin-right: auto; }
       .hero-buttons { justify-content: center; }
-      .caps-bento { grid-template-columns: 1fr 1fr; }
-      .cap-b.b1, .cap-b.b2 { grid-column: span 2; }
-      .cap-b.b3, .cap-b.b4, .cap-b.b5 { grid-column: span 1; }
-    }
-    @media (max-width: 768px) {
-      .section { padding: 48px 20px; }
-      .section.alt-bg .section-inner { padding: 0 20px; }
-      .section-sub { font-size: 15px; margin-bottom: 32px; }
-      .channels-grid { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; }
-      .hm-stats { max-width: 450px; margin-left: auto; margin-right: auto; }
+      .caps-grid { grid-template-columns: 1fr 1fr; }
+      .stats-inner { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+      .cm-tiles.top-layer { grid-template-columns: repeat(3, 1fr); }
+      .cm-tiles.bottom-layer { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 640px) {
       nav { padding: 12px 16px; }
-      .logo { font-size: 20px; }
       .nav-links a:not(.btn-nav) { display: none; }
-      .btn-nav { padding: 8px 16px; font-size: 13px; }
-      .hero { min-height: auto; padding: 90px 16px 50px; }
-      .hero-inner { gap: 36px; }
-      .hero-text h1 { font-size: 32px; letter-spacing: -1.5px; }
-      .hero-text p { font-size: 14px; margin-bottom: 24px; }
-      .hero-features { justify-content: center; margin-bottom: 20px; gap: 8px; }
-      .hero-feat { font-size: 12px; }
-      .hero-buttons { gap: 10px; }
-      .btn-primary, .btn-secondary { padding: 12px 22px; font-size: 14px; border-radius: 12px; }
-      .hero-mockup { transform: scale(.78); transform-origin: top center; }
-      .hero-mockup::before { width: 200px; height: 300px; }
-      .badge { font-size: 12px; padding: 5px 12px; }
-      .caps-bento { grid-template-columns: 1fr; gap: 12px; }
-      .cap-b.b1, .cap-b.b2 { grid-column: span 1; }
-      .cap-b { padding: 24px 20px; }
-      .cap-b h3 { font-size: 16px; }
-      .cap-b p { font-size: 13px; }
-      .hero-metric { padding: 36px 0 48px; }
-      .hm-num { font-size: 80px; letter-spacing: -4px; }
-      .hm-tagline { font-size: 11px; letter-spacing: 3px; }
-      .hm-desc { padding: 0 16px; }
-      .hm-desc p { font-size: 14px; }
-      .hm-desc p + p { font-size: 13px; }
-      .hm-stats { grid-template-columns: 1fr; max-width: 280px; border-radius: 12px; }
-      .hm-stat { padding: 20px 16px; }
-      .hm-stat .hs-val { font-size: 20px; }
-      .hm-stat .hs-label { font-size: 12px; }
-      .channel-card { padding: 28px 24px; }
-      .channel-card h3 { font-size: 18px; }
-      .channel-card p { font-size: 13px; }
-      /* Timeline mobile */
-      .timeline { max-width: none; padding: 40px 16px; }
+      .hero { min-height: auto; padding: 80px 16px 40px; }
+      .hero-inner { gap: 32px; }
+      .hero-text h1 { font-size: 28px; letter-spacing: -1px; }
+      .hero-text p { font-size: 14px; }
+      .btn-primary, .btn-secondary { padding: 11px 20px; font-size: 13px; }
+      .hero-mockup { transform: scale(.8); transform-origin: top center; }
+      .caps-grid { grid-template-columns: 1fr; }
+      .cap-card { padding: 20px; }
+      .section { padding: 48px 16px; }
+      .section-title { font-size: 24px; letter-spacing: -1px; }
+      .stats-inner { grid-template-columns: 1fr 1fr; }
+      .stat-num { font-size: 32px; }
+      .channels-matrix { min-height: 400px; }
+      .cm-tiles.top-layer { grid-template-columns: repeat(2, 1fr); }
+      .cm-tiles.bottom-layer { grid-template-columns: repeat(2, 1fr); }
+      .cm-tile { min-width: 80px; padding: 10px 12px; }
+      .tl-row { flex-direction: column; gap: 12px; padding-left: 0; }
       .tl-track { display: none; }
-      .tl-row.d1, .tl-row.d2, .tl-row.d3, .tl-row.d4, .tl-row.d5 { display: block; margin-bottom: 32px; }
-      .tl-row.d1:last-child, .tl-row.d2:last-child, .tl-row.d3:last-child, .tl-row.d4:last-child, .tl-row.d5:last-child { margin-bottom: 0; }
-      .tl-row.d1 .tl-void, .tl-row.d2 .tl-void, .tl-row.d3 .tl-void, .tl-row.d4 .tl-void, .tl-row.d5 .tl-void { display: none; }
-      .tl-row.d1 .tl-node, .tl-row.d2 .tl-node, .tl-row.d3 .tl-node, .tl-row.d4 .tl-node, .tl-row.d5 .tl-node { display: none; }
-      .tl-row.d1 .tl-card, .tl-row.d2 .tl-card, .tl-row.d3 .tl-card, .tl-row.d4 .tl-card, .tl-row.d5 .tl-card { display: block; max-width: none; width: 100%; transform: none !important; opacity: 1 !important; }
-      /* Pricing mobile: horizontal scroll */
-      .pricing-grid { display: flex; overflow-x: auto; gap: 12px; max-width: 100%; margin-left: -20px; margin-right: -20px; padding: 0 20px 12px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-      .pricing-grid::-webkit-scrollbar { display: none; }
-      .price-card { flex: 0 0 280px; scroll-snap-align: center; }
-      .pricing-note { margin-top: 24px; }
-      .pricing-note .pn-row { padding: 12px 14px; flex-direction: column; align-items: flex-start; gap: 6px; }
-      .pricing-note .pn-text { font-size: 12px; }
+      .tl-dot { width: 40px; height: 40px; font-size: 12px; }
+      .pricing-grid { display: flex; overflow-x: auto; max-width: 100%; padding-bottom: 8px; gap: 12px; }
+      .price-card { flex: 0 0 240px; }
       .cta { padding: 48px 16px; }
-      .cta h2 { font-size: 28px; letter-spacing: -1px; }
-      .cta p { font-size: 14px; margin-bottom: 24px; }
-      footer { padding: 24px 16px; }
+      .cta h2 { font-size: 24px; }
     }
   </style>
 </head>
@@ -357,6 +255,8 @@
 <nav>
   <div class="logo">Jeeves<span>.</span></div>
   <div class="nav-links">
+    <a href="#capabilities">Capabilities</a>
+    <a href="#channels">Channels</a>
     <a href="#how">How it works</a>
     <a href="#pricing">Pricing</a>
     <a href="/admin/login" class="btn-nav">Launch App</a>
@@ -366,184 +266,131 @@
 <!-- ===== HERO ===== -->
 <section class="hero">
   <div class="hero-grid"></div>
-  <div class="hero-orb o1"></div>
-  <div class="hero-orb o2"></div>
-  <div class="hero-orb o3"></div>
-
   <div class="hero-inner">
     <div class="hero-text">
-      <div class="badge"><span class="dot"></span> Now with Telegram & WhatsApp</div>
-      <h1><span class="hl">One AI agent.</span><br>Every channel.<br>Any question.</h1>
-      <div class="hero-features">
-        <span class="hero-feat"><span class="dot"></span> RAG-based</span>
-        <span class="hero-feat"><span class="dot"></span> Actionable</span>
-        <span class="hero-feat"><span class="dot"></span> Omnichannel</span>
-      </div>
+      <div class="badge"><span class="dot"></span> AI-powered customer support</div>
+      <h1><span class="hl">One agent.</span><br>Every channel.<br>Any question.</h1>
       <p>Jeeves answers from your knowledge base, acts on your CRM, and escalates when needed. Connect once — use everywhere.</p>
       <div class="hero-buttons">
-        <a href="/admin/login" class="btn-primary">Start Free →</a>
-        <a href="#capabilities" class="btn-secondary">See how it works ↓</a>
+        <a href="/admin/login" class="btn-primary">Start free</a>
+        <a href="#capabilities" class="btn-secondary">See capabilities</a>
       </div>
     </div>
-
     <div class="hero-mockup">
-    <div class="phone-frame">
-      <div class="phone-btn-side"></div>
-      <div class="phone-btn-vol1"></div>
-      <div class="phone-btn-vol2"></div>
-      <div class="phone-screen">
-        <div class="phone-dynamic-island"><div class="phone-island-cam"></div></div>
-        <div class="phone-status">
-          <span class="phone-status-time">9:41</span>
-          <span class="phone-status-icons">
-            <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
-            <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
-          </span>
-        </div>
-        <div class="phone-nav-bar">
-          <div class="phone-back-btn">‹</div>
-          <div class="phone-bot-icon">J</div>
-          <div class="phone-bot-info">
-            <div class="phone-bot-name">Jeeves</div>
-            <div class="phone-bot-status">● Online</div>
-          </div>
-        </div>
-        <div class="phone-body" id="chatBody">
-          <div class="msg user" id="m1">
-            <div class="msg-avatar">D</div>
-            <div class="msg-bubble">Hi, I want to upgrade to Pro plan</div>
-          </div>
-          <div class="msg bot" id="m2" style="display:none;">
-            <div class="msg-avatar">J</div>
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="phone-dynamic-island"></div>
+          <div class="phone-nav-bar">
+            <div class="phone-bot-icon">J</div>
             <div>
-              <div class="msg-bubble">Sure! I see you're on <strong>Starter</strong> ($49/mo). Pro is <strong>$149/mo</strong> with all channels, proactive alerts, and custom actions. Want me to switch?</div>
+              <div class="phone-bot-name">Jeeves</div>
+              <div class="phone-bot-status">Online</div>
             </div>
           </div>
-          <div class="msg user" id="m3" style="display:none;">
-            <div class="msg-avatar">D</div>
-            <div class="msg-bubble">Yes, do it</div>
-          </div>
-          <div class="msg bot" id="m4" style="display:none;">
-            <div class="msg-avatar">J</div>
-            <div>
-              <div class="msg-bubble">
-                <div class="msg-confirmation">
-                  <div class="msg-confirm-text">⚠ Confirm upgrade: Starter → Pro<br>$49/mo → $149/mo</div>
-                  <div class="msg-confirm-btn" id="confirmBtn">Confirm</div>
+          <div class="phone-body" id="chatBody">
+            <div class="msg user" id="m1">
+              <div class="msg-avatar">D</div>
+              <div class="msg-bubble">Upgrade to Pro plan</div>
+            </div>
+            <div class="msg bot" id="m2" style="display:none;">
+              <div class="msg-avatar">J</div>
+              <div><div class="msg-bubble">You're on <strong>Starter</strong> ($49/mo). Pro is <strong>$149/mo</strong>. Switch?</div></div>
+            </div>
+            <div class="msg user" id="m3" style="display:none;">
+              <div class="msg-avatar">D</div>
+              <div class="msg-bubble">Yes</div>
+            </div>
+            <div class="msg bot" id="m4" style="display:none;">
+              <div class="msg-avatar">J</div>
+              <div>
+                <div class="msg-bubble">
+                  <div class="msg-confirmation">
+                    <div class="msg-confirm-text">Starter → Pro · $49 → $149/mo</div>
+                    <div class="msg-confirm-btn" id="confirmBtn">Confirm</div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div class="msg bot" id="m5" style="display:none;">
-            <div class="msg-avatar">J</div>
-            <div>
-              <div class="msg-bubble">Done! Your plan is now <strong>Pro</strong>. All features active immediately. Billed $149/mo starting next cycle.</div>
-              <div class="msg-success">✓ Action: plan.upgrade completed</div>
+            <div class="msg bot" id="m5" style="display:none;">
+              <div class="msg-avatar">J</div>
+              <div>
+                <div class="msg-bubble">Done. Plan upgraded to <strong>Pro</strong>.</div>
+                <div class="msg-success">Plan upgraded</div>
+              </div>
             </div>
+            <div class="typing-dots" id="typing"><span></span><span></span><span></span></div>
           </div>
-          <div class="typing-dots" id="typing"><span></span><span></span><span></span></div>
+          <div class="phone-input">
+            <div class="phone-input-field">Message...</div>
+          </div>
+          <div class="phone-home-bar"></div>
         </div>
-        <div class="phone-input">
-          <div class="phone-input-field">Message...</div>
-          <div class="phone-send"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
-        </div>
-        <div class="phone-home-bar"></div>
       </div>
-    </div>
     </div>
   </div>
 </section>
 
-<div class="section-divider"></div>
+<!-- ===== STATS BAR ===== -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat-item reveal">
+      <div class="stat-num"><span class="stat-value" data-target="90">0</span><span class="stat-suffix">%</span></div>
+      <div class="stat-label">Queries resolved automatically</div>
+    </div>
+    <div class="stat-item reveal">
+      <div class="stat-num">&lt;<span class="stat-value" data-target="5">0</span><span class="stat-suffix">s</span></div>
+      <div class="stat-label">Average response time</div>
+    </div>
+    <div class="stat-item reveal">
+      <div class="stat-num"><span class="stat-value" data-target="80" data-suffix="%">0</span><span class="stat-suffix"></span></div>
+      <div class="stat-label">Lower cost vs human agents</div>
+    </div>
+    <div class="stat-item reveal">
+      <div class="stat-num"><span class="stat-value" data-target="24" data-suffix="/7">0</span><span class="stat-suffix"></span></div>
+      <div class="stat-label">Always online, never tired</div>
+    </div>
+  </div>
+</div>
 
 <!-- ===== CAPABILITIES ===== -->
-<div class="section" id="capabilities">
-  <div class="reveal">
-    <div class="section-title">Not just a chatbot.<br>A full support stack.</div>
-    <div class="section-sub">Everything you need to automate customer support without losing the human touch.</div>
-  </div>
-
-  <div class="hero-metric reveal">
-    <div class="hm-wrap">
-      <div class="hm-num"><span class="n-main">90</span><span class="n-pct">%</span></div>
+<div class="section section-light" id="capabilities">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="section-label">Capabilities</div>
+      <div class="section-title">Not just a chatbot.<br>A full support stack.</div>
+      <div class="section-sub">Everything you need to automate customer support without losing the human touch.</div>
     </div>
-    <div class="hm-tagline">Auto-resolved instantly</div>
-    <div class="hm-desc">
-      <p>Jeeves answers 90% of questions without a human.</p>
-      <p>The remaining 10%? Escalated with full context.</p>
-    </div>
-    <div class="hm-stats">
-      <div class="hm-stat">
-        <div class="hs-val c1">&lt;5s</div>
-        <div class="hs-label">Response time, 24/7. No queues.</div>
+    <div class="caps-grid">
+      <div class="cap-card reveal">
+        <div class="cap-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+        <h3>RAG-powered knowledge</h3>
+        <p>Upload PDFs, docs, FAQs — Jeeves retrieves with cosine similarity. Every answer has a source. No hallucinations.</p>
       </div>
-      <div class="hm-stat">
-        <div class="hs-val c2">1 brain</div>
-        <div class="hs-label">Unified memory across all channels.</div>
+      <div class="cap-card reveal">
+        <div class="cap-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 3l2 2 4-4"/></svg></div>
+        <h3>CRM context</h3>
+        <p>Connect HubSpot or any REST API. Jeeves sees customer name, tariff, order history, and past tickets instantly.</p>
       </div>
-      <div class="hm-stat">
-        <div class="hs-val c3">Proactive</div>
-        <div class="hs-label">Auto-messages users before problems.</div>
+      <div class="cap-card reveal">
+        <div class="cap-icon"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+        <h3>Custom actions</h3>
+        <p>Look up orders, change plans, create tickets. Confirmation required for destructive actions.</p>
       </div>
-    </div>
-  </div>
-
-  <div class="caps-bento">
-    <div class="cap-b b1 reveal">
-      <div class="cap-icon c1">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-        </svg>
+      <div class="cap-card reveal">
+        <div class="cap-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <h3>Proactive engine</h3>
+        <p>Monitors metrics via webhook. Auto-messages users when something drops — before they notice.</p>
       </div>
-      <h3>RAG-powered knowledge</h3>
-      <p>Upload PDFs, docs, FAQs — Jeeves chunks, embeds, and retrieves with cosine similarity. Every answer has a source attached. No hallucinations. No black box.</p>
-      <span class="cap-tag t1">Vector search</span>
-    </div>
-    <div class="cap-b b2 reveal">
-      <div class="cap-icon c2">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-          <path d="M16 3l2 2 4-4"/>
-        </svg>
+      <div class="cap-card reveal">
+        <div class="cap-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></div>
+        <h3>Full analytics</h3>
+        <p>Every conversation logged with sources, latency, resolution status. Built-in dashboards.</p>
       </div>
-      <h3>CRM Context</h3>
-      <p>Connects to HubSpot or any REST API. Jeeves greets customers by name, sees their tariff, order history, and past tickets.</p>
-      <span class="cap-tag t2">Any API</span>
-    </div>
-    <div class="cap-b b3 reveal">
-      <div class="cap-icon c3">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-        </svg>
+      <div class="cap-card reveal">
+        <div class="cap-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <h3>Escalation</h3>
+        <p>When Jeeves can't resolve, it hands off to a human with full context and suggested reply.</p>
       </div>
-      <h3>Custom Actions</h3>
-      <p>Look up orders, change plans, create tickets. With confirmation for destructive actions.</p>
-      <span class="cap-tag t3">Tool calling</span>
-    </div>
-    <div class="cap-b b4 reveal">
-      <div class="cap-icon c4">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
-      </div>
-      <h3>Proactive Engine</h3>
-      <p>Monitors metrics via webhook. Auto-messages users when something drops — before they notice.</p>
-      <span class="cap-tag t4">Webhook-driven</span>
-    </div>
-    <div class="cap-b b5 reveal">
-      <div class="cap-icon c5">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 3v18h18"/>
-          <path d="M18 17V9"/>
-          <path d="M13 17V5"/>
-          <path d="M8 17v-3"/>
-        </svg>
-      </div>
-      <h3>Full Analytics</h3>
-      <p>Every conversation logged with sources, latency, resolution status. Built-in dashboards.</p>
-      <span class="cap-tag t5">Audit-ready</span>
     </div>
   </div>
 </div>
@@ -551,112 +398,99 @@
 <div class="section-divider"></div>
 
 <!-- ===== CHANNELS ===== -->
-<div class="section alt-bg" id="channels">
+<div class="section section-dark" id="channels">
   <div class="section-inner">
-    <div class="reveal">
-      <div class="section-title">One brain.<br>Every surface.</div>
-      <div class="section-sub">Same knowledge, same quality. Just different front doors.</div>
+    <div class="reveal" style="text-align:center;">
+      <div class="section-label">Connections</div>
+      <div class="section-title">One brain. Every surface.</div>
+      <div class="section-sub" style="margin:0 auto;">Same knowledge, same quality. Different front doors.</div>
     </div>
 
-    <div class="channels-grid">
-      <div class="channel-card reveal">
-        <div class="channel-logo widget">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            <path d="M8 10h.01M12 10h.01M16 10h.01"/>
-          </svg>
-        </div>
-        <h3>Website Widget</h3>
-        <p>One line of script. Floating chat button with full customization. Works on any site.</p>
+    <div class="channels-matrix reveal" id="channelsMatrix">
+      <svg class="connections" id="connSvg"></svg>
+
+      <div class="cm-layer-label top">Input channels</div>
+      <div class="cm-tiles top-layer" id="topTiles">
+        <div class="cm-tile" data-tile="0"><div class="tile-icon widget">&#9670;</div><div class="tile-name">Widget</div><div class="tile-type">Web</div></div>
+        <div class="cm-tile" data-tile="1"><div class="tile-icon tg">&#9993;</div><div class="tile-name">Telegram</div><div class="tile-type">Messenger</div></div>
+        <div class="cm-tile" data-tile="2"><div class="tile-icon wa">&#9990;</div><div class="tile-name">WhatsApp</div><div class="tile-type">Messenger</div></div>
+        <div class="cm-tile" data-tile="3"><div class="tile-icon email">&#9993;</div><div class="tile-name">Email</div><div class="tile-type">Incoming</div></div>
+        <div class="cm-tile" data-tile="4"><div class="tile-icon api">&#128279;</div><div class="tile-name">API</div><div class="tile-type">Custom</div></div>
       </div>
-      <div class="channel-card reveal">
-        <div class="channel-logo tg">
-          <svg viewBox="0 0 24 24" fill="#26A5E4">
-            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-          </svg>
-        </div>
-        <h3>Telegram</h3>
-        <p>Webhook-based bot. 2-minute setup via @BotFather. Free and instant.</p>
+
+      <div class="cm-center">
+        <div class="cm-center-logo">J</div>
+        <div class="cm-center-label">Jeeves</div>
+        <div class="cm-center-sub">AI Agent</div>
       </div>
-      <div class="channel-card reveal">
-        <div class="channel-logo wa">
-          <svg viewBox="0 0 24 24" fill="#25D366">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
-          </svg>
-        </div>
-        <h3>WhatsApp</h3>
-        <p>Direct Cloud API integration. No BSP needed. Reaches billions worldwide.</p>
+
+      <div class="cm-layer-label bottom">Data systems</div>
+      <div class="cm-tiles bottom-layer" id="bottomTiles">
+        <div class="cm-tile" data-tile="5"><div class="tile-icon crm">&#9733;</div><div class="tile-name">CRM</div><div class="tile-type">Custom REST</div></div>
+        <div class="cm-tile" data-tile="6"><div class="tile-icon shopify">&#9733;</div><div class="tile-name">Shopify</div><div class="tile-type">E-commerce</div></div>
+        <div class="cm-tile" data-tile="7"><div class="tile-icon stripe">&#128179;</div><div class="tile-name">Stripe</div><div class="tile-type">Billing</div></div>
+        <div class="cm-tile" data-tile="8"><div class="tile-icon woo">&#9733;</div><div class="tile-name">WooCommerce</div><div class="tile-type">E-commerce</div></div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ===== HOW IT WORKS ===== -->
-<div class="section" id="how">
-  <div class="reveal" style="text-align:center;">
-    <div class="section-title">Live in 10 minutes</div>
-    <div class="section-sub" style="margin-left:auto;margin-right:auto;">No code. No credit card. Just answers.</div>
-  </div>
-
-  <div class="timeline">
-    <div class="tl-track">
-      <div class="tl-track-bg"></div>
-      <div class="tl-track-fill" id="tlProgress"></div>
+<div class="section section-dark" id="how">
+  <div class="section-inner">
+    <div class="reveal" style="text-align:center;">
+      <div class="section-label">Setup</div>
+      <div class="section-title">Live in 10 minutes</div>
+      <div class="section-sub" style="margin:0 auto;">No code. No credit card. Just answers.</div>
     </div>
 
-    <div class="tl-row left d1">
-      <div class="tl-card">
-        <div class="tl-num">Step 01</div>
-        <h3>Create your account</h3>
-        <p>Sign up with email. Get instant access to the full platform. 14-day free trial, no card needed.</p>
-        <div class="tl-time">⏱ 30 seconds</div>
+    <div class="timeline">
+      <div class="tl-track"></div>
+      <div class="tl-row">
+        <div class="tl-dot">1</div>
+        <div class="tl-card">
+          <div class="tl-num">Step 1</div>
+          <h3>Create your account</h3>
+          <p>Sign up with email. Instant access to the full platform. 14-day free trial.</p>
+          <div class="tl-time">30 seconds</div>
+        </div>
       </div>
-      <div class="tl-node"><div class="tl-dot">1</div></div>
-      <div class="tl-void"></div>
-    </div>
-
-    <div class="tl-row right d2">
-      <div class="tl-void"></div>
-      <div class="tl-node"><div class="tl-dot">2</div></div>
-      <div class="tl-card">
-        <div class="tl-num">Step 02</div>
-        <h3>Upload your knowledge</h3>
-        <p>Drag & drop PDFs, text files, or markdown. Jeeves auto-chunks, embeds, and indexes everything in seconds.</p>
-        <div class="tl-time">⏱ 2 minutes</div>
+      <div class="tl-row">
+        <div class="tl-dot">2</div>
+        <div class="tl-card">
+          <div class="tl-num">Step 2</div>
+          <h3>Upload your knowledge</h3>
+          <p>Drag & drop PDFs, text, or markdown. Jeeves auto-chunks, embeds, and indexes.</p>
+          <div class="tl-time">2 minutes</div>
+        </div>
       </div>
-    </div>
-
-    <div class="tl-row left d3">
-      <div class="tl-card">
-        <div class="tl-num">Step 03</div>
-        <h3>Connect your channels</h3>
-        <p>Enable the website widget, connect your Telegram bot, or set up WhatsApp — all from one dashboard.</p>
-        <div class="tl-time">⏱ 5 minutes</div>
+      <div class="tl-row">
+        <div class="tl-dot">3</div>
+        <div class="tl-card">
+          <div class="tl-num">Step 3</div>
+          <h3>Connect your channels</h3>
+          <p>Enable the website widget, connect Telegram bot, or set up WhatsApp — from one dashboard.</p>
+          <div class="tl-time">5 minutes</div>
+        </div>
       </div>
-      <div class="tl-node"><div class="tl-dot">3</div></div>
-      <div class="tl-void"></div>
-    </div>
-
-    <div class="tl-row right d4">
-      <div class="tl-void"></div>
-      <div class="tl-node"><div class="tl-dot">4</div></div>
-      <div class="tl-card">
-        <div class="tl-num">Step 04</div>
-        <h3>Wire your integrations</h3>
-        <p>Connect your CRM, set up custom actions, configure webhooks. Jeeves pulls customer data and takes real actions — not just chat.</p>
-        <div class="tl-time">⏱ 5 minutes</div>
+      <div class="tl-row">
+        <div class="tl-dot">4</div>
+        <div class="tl-card">
+          <div class="tl-num">Step 4</div>
+          <h3>Wire your integrations</h3>
+          <p>Connect CRM, set up actions, configure webhooks. Jeeves pulls data and takes real actions.</p>
+          <div class="tl-time">5 minutes</div>
+        </div>
       </div>
-    </div>
-
-    <div class="tl-row left d5">
-      <div class="tl-card">
-        <div class="tl-num">Step 05</div>
-        <h3>You're live</h3>
-        <p>Jeeves is already answering queries across every channel. Monitor, refine, and scale from the dashboard. Done.</p>
-        <div class="tl-time" style="color:var(--green);">🚀 Ready</div>
+      <div class="tl-row">
+        <div class="tl-dot" style="color:var(--green);">&#10003;</div>
+        <div class="tl-card">
+          <div class="tl-num">Step 5</div>
+          <h3>You're live</h3>
+          <p>Jeeves is answering across every channel. Monitor, refine, and scale.</p>
+          <div class="tl-time" style="color:var(--green);">Ready</div>
+        </div>
       </div>
-      <div class="tl-node"><div class="tl-dot">5</div></div>
-      <div class="tl-void"></div>
     </div>
   </div>
 </div>
@@ -664,94 +498,93 @@
 <div class="section-divider"></div>
 
 <!-- ===== PRICING ===== -->
-<div class="section" id="pricing" style="text-align:center;">
-  <div class="reveal">
-    <div class="section-title">Pay for results,<br>not promises.</div>
-    <div class="section-sub" style="margin-left:auto;margin-right:auto;">Cheaper than a single support agent. Scales with you.</div>
-  </div>
+<div class="section section-light" id="pricing" style="text-align:center;">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="section-label">Pricing</div>
+      <div class="section-title">Pay for results, not promises.</div>
+      <div class="section-sub" style="margin:0 auto;">Cheaper than a single support agent. Scales with you.</div>
+    </div>
 
-  <div class="pricing-grid">
-    <div class="price-card reveal">
-      <div class="p-name">Free</div>
-      <div class="p-price"><span class="p-cur">$</span>0</div>
-      <div class="p-period">/month</div>
-      <ul class="p-features">
-        <li>25 resolved / month</li>
-        <li>1 channel</li>
-        <li>Basic RAG</li>
-        <li>Community support</li>
-      </ul>
-      <a href="/admin/login" class="p-btn secondary">Get Started</a>
+    <div class="pricing-grid">
+      <div class="price-card reveal">
+        <div class="p-name">Free</div>
+        <div class="p-price"><span class="p-cur">$</span>0</div>
+        <div class="p-period">/month</div>
+        <ul class="p-features">
+          <li>25 resolved / month</li>
+          <li>1 channel</li>
+          <li>Basic RAG</li>
+          <li>Community support</li>
+        </ul>
+        <a href="/admin/login" class="p-btn secondary">Get Started</a>
+      </div>
+      <div class="price-card reveal">
+        <div class="p-name">Starter</div>
+        <div class="p-price"><span class="p-cur">$</span>49</div>
+        <div class="p-period">/month</div>
+        <ul class="p-features">
+          <li>500 resolved / month</li>
+          <li>3 channels</li>
+          <li>CRM Context</li>
+          <li>Email support</li>
+        </ul>
+        <a href="/admin/login" class="p-btn secondary">Get Started</a>
+      </div>
+      <div class="price-card featured reveal">
+        <div class="p-badge">Most popular</div>
+        <div class="p-name">Pro</div>
+        <div class="p-price"><span class="p-cur">$</span>149</div>
+        <div class="p-period">/month</div>
+        <ul class="p-features">
+          <li>2,000 resolved / month</li>
+          <li>All channels</li>
+          <li>Custom Actions</li>
+          <li>Proactive Engine</li>
+          <li>Priority support</li>
+        </ul>
+        <a href="/admin/login" class="p-btn primary">Get Started</a>
+      </div>
+      <div class="price-card reveal">
+        <div class="p-name">Enterprise</div>
+        <div class="p-price" style="font-size:28px;letter-spacing:-1px;">Custom</div>
+        <div class="p-period">tailored</div>
+        <ul class="p-features">
+          <li>Unlimited resolved</li>
+          <li>All channels + API</li>
+          <li>On-premise</li>
+          <li>SLA 99.9%</li>
+          <li>Dedicated team</li>
+        </ul>
+        <a href="/admin/login" class="p-btn outline">Contact Us</a>
+      </div>
     </div>
-    <div class="price-card reveal">
-      <div class="p-name">Starter</div>
-      <div class="p-price"><span class="p-cur">$</span>49</div>
-      <div class="p-period">/month</div>
-      <ul class="p-features">
-        <li>500 resolved / month</li>
-        <li>3 channels</li>
-        <li>CRM Context</li>
-        <li>Basic Actions</li>
-        <li>Email support</li>
-      </ul>
-      <a href="/admin/login" class="p-btn secondary">Get Started</a>
-    </div>
-    <div class="price-card featured reveal">
-      <div class="p-name">Pro</div>
-      <div class="p-price"><span class="p-cur">$</span>149</div>
-      <div class="p-period">/month</div>
-      <ul class="p-features">
-        <li>2,000 resolved / month</li>
-        <li>All channels</li>
-        <li>Custom Actions</li>
-        <li>Proactive Engine</li>
-        <li>Priority support</li>
-      </ul>
-      <a href="/admin/login" class="p-btn primary">Get Started</a>
-    </div>
-    <div class="price-card reveal">
-      <div class="p-name">Enterprise</div>
-      <div class="p-price" style="font-size:36px;letter-spacing:-2px;">Custom</div>
-      <div class="p-period">tailored</div>
-      <ul class="p-features">
-        <li>Unlimited resolved</li>
-        <li>All channels + API</li>
-        <li>On-premise</li>
-        <li>SLA 99.9%</li>
-        <li>Dedicated team</li>
-      </ul>
-      <a href="/admin/login" class="p-btn outline">Contact Us</a>
-    </div>
-  </div>
 
-  <div class="pricing-note reveal">
-    <div class="pn-row">
-      <div class="pn-icon">💡</div>
-      <div class="pn-text">Overage: <strong>$0.20 per resolution</strong> beyond your plan. Still 80% cheaper than Fin's $0.99/resolution.</div>
-    </div>
-    <div class="pn-row">
-      <div class="pn-icon">✨</div>
-      <div class="pn-text">Proactive engine auto-messages users before problems. <strong>Included in Pro.</strong> Not available anywhere else.</div>
+    <div class="pricing-note reveal">
+      <div class="pn-row">
+        <div class="pn-icon">&#9734;</div>
+        <div class="pn-text">Overage: <strong>$0.20 per resolution</strong> beyond your plan. 80% cheaper than alternatives.</div>
+      </div>
+      <div class="pn-row">
+        <div class="pn-icon">&#9889;</div>
+        <div class="pn-text">Proactive engine auto-messages users before problems. <strong>Included in Pro.</strong></div>
+      </div>
     </div>
   </div>
 </div>
-
-<div class="section-divider"></div>
 
 <!-- ===== CTA ===== -->
 <div class="cta-section">
   <div class="cta">
     <div class="reveal">
       <h2>Ready to automate<br>your support?</h2>
-      <p>Start free. No credit card. No setup fees. Just results.</p>
-      <a href="/admin/login" class="btn-primary">Get Started →</a>
+      <p>Start free. No credit card. No setup fees.</p>
+      <a href="/admin/login" class="btn-primary">Get Started</a>
     </div>
   </div>
 </div>
 
-<footer>
-  &copy; 2026 Jeeves. Built for teams that scale.
-</footer>
+<footer>&copy; 2026 Jeeves. Built for teams that scale.</footer>
 
 <script>
 // Scroll reveal
@@ -760,58 +593,99 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-// Timeline fill
-function updateTl() {
-  const steps = document.querySelectorAll('.tl-row');
-  const tl = document.querySelector('.timeline');
-  const fill = document.getElementById('tlProgress');
-  if (!tl || !fill) return;
-  const vis = Array.from(steps).filter(s => s.classList.contains('visible'));
-  if (!vis.length) return;
-  const last = vis[vis.length - 1];
-  const tlR = tl.getBoundingClientRect();
-  const sR = last.getBoundingClientRect();
-  const pct = ((sR.top - tlR.top + sR.height / 2) / tlR.height) * 100;
-  fill.style.height = Math.min(pct, 100) + '%';
-}
+// Timeline reveal
 const tlObs = new IntersectionObserver((entries) => {
-  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); updateTl(); } });
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.3 });
 document.querySelectorAll('.tl-row').forEach(el => tlObs.observe(el));
 
-// Spotlight
-document.querySelectorAll('.feat, .channel-card').forEach(card => {
-  card.addEventListener('mousemove', e => {
-    const r = card.getBoundingClientRect();
-    card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
-    card.style.setProperty('--my', (e.clientY - r.top) + 'px');
-  });
-});
+// Stats counter animation
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
-// Counter
-function animateCounter(el, target) {
-  let cur = 0; const step = target / 40;
-  const t = setInterval(() => { cur += step; if (cur >= target) { cur = target; clearInterval(t); } el.textContent = Math.round(cur) + '%'; }, 30);
+function animateValue(el, start, end, duration, suffix) {
+  const startTime = performance.now();
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = easeOutCubic(progress);
+    const current = Math.round(start + (end - start) * eased);
+    el.textContent = current + (suffix || '');
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
 }
-const cObs = new IntersectionObserver((entries) => {
-  entries.forEach(e => { if (e.isIntersecting && e.target.dataset.target) { animateCounter(e.target, parseInt(e.target.dataset.target)); cObs.unobserve(e.target); } });
+
+const statObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting && !e.target.dataset.animated) {
+      e.target.dataset.animated = 'true';
+      const target = parseInt(e.target.dataset.target);
+      const suffix = e.target.dataset.suffix || '';
+      animateValue(e.target, 0, target, 1200, suffix);
+    }
+  });
 }, { threshold: 0.5 });
-document.querySelectorAll('.num[data-target]').forEach(el => cObs.observe(el));
+document.querySelectorAll('.stat-value[data-target]').forEach(el => statObs.observe(el));
+
+// Channels matrix animation - sequential tile glow
+(function() {
+  const tiles = document.querySelectorAll('.cm-tile');
+  const svg = document.getElementById('connSvg');
+  const centerEl = document.querySelector('.cm-center-logo');
+  if (!svg || !centerEl || !tiles.length) return;
+
+  function drawLines() {
+    svg.innerHTML = '';
+    const matrix = document.getElementById('channelsMatrix');
+    const matrixRect = matrix.getBoundingClientRect();
+    const cRect = centerEl.getBoundingClientRect();
+    const cx = cRect.left + cRect.width / 2 - matrixRect.left;
+    const cy = cRect.top + cRect.height / 2 - matrixRect.top;
+
+    tiles.forEach(function(tile) {
+      const tRect = tile.getBoundingClientRect();
+      const tx = tRect.left + tRect.width / 2 - matrixRect.left;
+      const ty = tRect.top + tRect.height / 2 - matrixRect.top;
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', cx);
+      line.setAttribute('y1', cy);
+      line.setAttribute('x2', tx);
+      line.setAttribute('y2', ty);
+      line.dataset.tile = tile.dataset.tile;
+      svg.appendChild(line);
+    });
+  }
+
+  drawLines();
+  window.addEventListener('resize', drawLines);
+
+  let idx = 0;
+  setInterval(function() {
+    tiles.forEach(t => t.classList.remove('active'));
+    const lines = svg.querySelectorAll('line');
+    lines.forEach(l => l.classList.remove('active'));
+
+    tiles[idx].classList.add('active');
+    const line = svg.querySelector('line[data-tile="' + idx + '"]');
+    if (line) line.classList.add('active');
+
+    idx = (idx + 1) % tiles.length;
+  }, 1800);
+})();
 
 // Chat animation
 (function() {
   var confirmBtn = document.getElementById('confirmBtn');
-
   var msgs = [
-    { id: 'm1', delay: 1000 },
-    { id: 'typing', delay: 2200, showTyping: true },
-    { id: 'm2', delay: 3800, hideTyping: true },
-    { id: 'm3', delay: 6000 },
-    { id: 'typing', delay: 7000, showTyping: true },
-    { id: 'm4', delay: 8400, hideTyping: true },
-    { id: 'tapConfirm', delay: 10200 },
-    { id: 'typing', delay: 11200, showTyping: true },
-    { id: 'm5', delay: 12800, hideTyping: true }
+    { id: 'm1', delay: 1200 },
+    { id: 'typing', delay: 2400, showTyping: true },
+    { id: 'm2', delay: 4000, hideTyping: true },
+    { id: 'm3', delay: 6200 },
+    { id: 'typing', delay: 7200, showTyping: true },
+    { id: 'm4', delay: 8600, hideTyping: true },
+    { id: 'tapConfirm', delay: 10400 },
+    { id: 'typing', delay: 11400, showTyping: true },
+    { id: 'm5', delay: 13000, hideTyping: true }
   ];
 
   function playChat() {
