@@ -435,11 +435,15 @@
       .stat-label { font-size: 8px !important; }
       .stat-val { display: none !important; }
 
-      /* Caps bento: single column, text only */
-      .caps-bento { grid-template-columns: 1fr !important; gap: 10px !important; }
+      /* Caps bento: single column, with data */
+      .caps-bento { grid-template-columns: 1fr !important; gap: 12px !important; }
       .cap-b { padding: 18px 14px !important; border-radius: 12px !important; }
-      .cap-mono-block { display: none !important; }
-      .cap-audit-log { display: none !important; }
+      .cap-mono-block { display: block !important; overflow-x: auto !important; padding-bottom: 8px; }
+      .cap-mono-line { white-space: nowrap !important; font-size: 9px !important; padding: 2px 0 !important; }
+      .cap-audit-log { display: block !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; margin-bottom: 14px !important; }
+      .cap-audit-table { font-size: 8px !important; min-width: 480px !important; }
+      .cap-audit-table thead th { padding: 5px 6px !important; font-size: 7px !important; }
+      .cap-audit-table tbody td { padding: 4px 6px !important; }
       .cap-b h3 { font-size: 14px !important; }
       .cap-b p { font-size: 12.5px !important; }
 
@@ -1203,7 +1207,7 @@ document.querySelectorAll('.tl-row').forEach(el => tlObs.observe(el));
         var el = document.getElementById(m.id);
         if (!el) return;
         if (m.showTyping) { el.classList.add('active'); el.style.display = 'flex'; return; }
-        if (m.hideTyping) { el.classList.remove('active'); el.style.display = 'none'; return; }
+        if (m.hideTyping) { document.getElementById('typing').classList.remove('active'); document.getElementById('typing').style.display = 'none'; }
         el.style.display = 'flex';
         requestAnimationFrame(function() { requestAnimationFrame(function() {
           el.classList.add('show');
