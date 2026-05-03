@@ -87,7 +87,8 @@
     .phone-bot-info { flex: 1; }
     .phone-bot-name { font-size: 13px; font-weight: 600; color: #f1f5f9; }
     .phone-bot-status { font-size: 10px; color: var(--green); }
-    .phone-body { height: 370px; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; position: relative; background: #0f172a; }
+    .phone-body { height: 370px; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; position: relative; background: #0f172a; scrollbar-width: none; }
+    .phone-body::-webkit-scrollbar { display: none; }
     .msg { display: flex; gap: 6px; max-width: 90%; opacity: 0; transform: translateY(6px); transition: opacity .35s, transform .35s; flex-shrink: 0; }
     .msg.show { opacity: 1; transform: translateY(0); }
     .msg.user { align-self: flex-end; flex-direction: row-reverse; }
@@ -347,13 +348,13 @@
   <div class="hero-inner">
     <div class="hero-text">
       <div class="badge"><span class="dot"></span> Now with Telegram & WhatsApp</div>
-      <h1>Your AI support<br>agent, <span class="hl">everywhere.</span></h1>
+      <h1>One AI agent.<br>Every channel.<br><span class="hl">Any question.</span></h1>
       <div class="hero-features">
-        <span class="hero-feat"><span class="dot"></span> RAG Knowledge</span>
-        <span class="hero-feat"><span class="dot"></span> CRM Context</span>
-        <span class="hero-feat"><span class="dot"></span> Custom Actions</span>
+        <span class="hero-feat"><span class="dot"></span> Train on PDF, FAQ, website</span>
+        <span class="hero-feat"><span class="dot"></span> Read CRM, change plans</span>
+        <span class="hero-feat"><span class="dot"></span> Widget, WhatsApp, Telegram</span>
       </div>
-      <p>Train on your docs. Connect to any channel. Jeeves resolves queries, pulls CRM context, and escalates to humans — 24/7.</p>
+      <p>Jeeves answers from your knowledge base, acts on your CRM, and escalates when needed. Connect once — use everywhere.</p>
       <div class="hero-buttons">
         <a href="/admin/login" class="btn-primary">Start Free →</a>
         <a href="#features" class="btn-secondary">See how it works ↓</a>
@@ -761,9 +762,11 @@ document.querySelectorAll('.num[data-target]').forEach(el => cObs.observe(el));
   ];
 
   function playChat() {
+    var chatBody = document.getElementById('chatBody');
     document.querySelectorAll('.msg').forEach(function(m) { m.classList.remove('show'); m.style.display = 'none'; });
     document.getElementById('typing').classList.remove('active');
     if (confirmBtn) confirmBtn.classList.remove('tapped');
+    chatBody.scrollTop = 0;
 
     msgs.forEach(function(m) {
       setTimeout(function() {
@@ -773,10 +776,13 @@ document.querySelectorAll('.num[data-target]').forEach(el => cObs.observe(el));
         }
         var el = document.getElementById(m.id);
         if (!el) return;
-        if (m.showTyping) { el.classList.add('active'); return; }
+        if (m.showTyping) { el.classList.add('active'); }
         if (m.hideTyping) { el.classList.remove('active'); }
         el.style.display = 'flex';
-        requestAnimationFrame(function() { requestAnimationFrame(function() { el.classList.add('show'); }); });
+        requestAnimationFrame(function() { requestAnimationFrame(function() {
+          el.classList.add('show');
+          chatBody.scrollTop = chatBody.scrollHeight;
+        }); });
       }, m.delay);
     });
   }
