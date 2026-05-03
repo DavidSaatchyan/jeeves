@@ -1,6 +1,7 @@
-"""Auth: register, login, JWT issuing/validation, tenant dependency."""
+"""Auth: register, login, JWT issuing/validation, API key support, tenant dependency."""
 from __future__ import annotations
 
+import hashlib
 import uuid
 from datetime import datetime, timedelta
 from typing import Optional
@@ -12,12 +13,16 @@ from sqlalchemy.orm import Session
 
 from .config import get_settings
 from .db import get_db
-from .models import Tenant
-from .schemas import AuthOut, LoginIn, RegisterIn, TokenOut
+from .models import ApiKey, Tenant
 
 settings = get_settings()
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def _hash_key(key: str) -> str:
+    import hashlib
+    return hashlib.sha256(key.encode()).hexdigest()
 
 
 def _issue(tenant_id: uuid.UUID, kind: str, ttl) -> str:
@@ -54,6 +59,22 @@ def get_current_tenant(
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing bearer token")
     token = authorization.split(" ", 1)[1]
+
+    # API key path: starts with "sk_"
+    if token.startswith("sk_"):
+        from datetime import datetime
+        key_hash = _hash_key(token)
+        api_key = db.query(ApiKey).filter(ApiKey.key_hash == key_hash).first()
+        if not api_key:
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid API key")
+        api_key.last_used_at = datetime.utcnow()
+        db.commit()
+        tenant = db.get(Tenant, api_key.tenant_id)
+        if not tenant:
+            raise HTTPException(401, "Tenant not found")
+        return tenant
+
+    # JWT path
     payload = decode_token(token)
     if payload.get("kind") != "access":
         raise HTTPException(401, "Wrong token kind")

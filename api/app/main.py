@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pathlib import Path
 
-from . import admin, auth, dashboard_api, knowledge, routes_chat, routes_crm, routes_proactive, routes_tools, routes_mock, routes_integrations, routes_channels
+from . import admin, auth, dashboard_api, knowledge, routes_chat, routes_crm, routes_proactive, routes_tools, routes_mock, routes_integrations, routes_channels, routes_api_keys
 from .channels import widget as widget_channel
 from .db import Base, engine
 from .models import *  # noqa: F401,F403  # ensure models are registered
@@ -108,6 +108,17 @@ _MIGRATIONS = [
     )""",
     # Omnichannel: channel tracking on chat_logs
     "ALTER TABLE chat_logs ADD COLUMN IF NOT EXISTS channel varchar(32) NOT NULL DEFAULT 'web_widget'",
+    """CREATE TABLE IF NOT EXISTS api_keys (
+        id uuid PRIMARY KEY,
+        tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        name varchar(128) NOT NULL,
+        key_hash varchar(64) NOT NULL UNIQUE,
+        prefix varchar(8) NOT NULL,
+        created_at timestamp NOT NULL DEFAULT now(),
+        last_used_at timestamp
+    )""",
+    "CREATE INDEX IF NOT EXISTS ix_api_keys_tenant ON api_keys(tenant_id)",
+    "CREATE INDEX IF NOT EXISTS ix_api_keys_hash ON api_keys(key_hash)",
 ]
 
 
@@ -150,3 +161,4 @@ app.include_router(routes_mock.router)
 app.include_router(admin.router)
 app.include_router(routes_integrations.router)
 app.include_router(routes_channels.router)
+app.include_router(routes_api_keys.router)

@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>API integration</h1>
+<p class="page-desc">Build your own chat interface using Jeeves REST API. Same AI brain, your UI.</p>
+
+<div class="card">
+  <h2>Authentication</h2>
+  <p class="muted" style="margin:0 0 16px">All API requests require an API key in the Authorization header:</p>
+  <pre style="margin:0"><span class="muted">Authorization:</span> Bearer <span style="color:var(--green)">sk_your_api_key_here</span>
+
+<span class="muted">Content-Type:</span> application/json</pre>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2>API keys</h2>
+    <button onclick="createKey()">+ Generate key</button>
+  </div>
+  <div id="keysEmpty" class="empty-state">No API keys yet. Generate one to start integrating.</div>
+  <table id="keysTable" style="display:none">
+    <thead><tr><th>Name</th><th>Prefix</th><th>Created</th><th>Last used</th><th></th></tr></thead>
+    <tbody id="keysBody"></tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Send a message</h2>
+  <p class="muted" style="margin:0 0 16px">POST to <code>/chat</code> with the following body:</p>
+  <pre>{
+  "user_id": "customer_123",
+  "message": "What is my order status?"
+}</pre>
+  <p class="muted mt-12">Response:</p>
+  <pre>{
+  "response": "Your order #4567 is being prepared...",
+  "action_called": null,
+  "latency_ms": 1240
+}</pre>
+</div>
+
+<div class="card">
+  <h2>Example: cURL</h2>
+  <pre id="curlExample">curl -X POST https://your-domain.com/chat \
+  -H "Authorization: Bearer sk_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id":"customer_123","message":"Hello!"}'</pre>
+</div>
+
+<div class="card">
+  <h2>Example: JavaScript</h2>
+  <pre>const res = await fetch("https://your-domain.com/chat", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer sk_your_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    user_id: "customer_123",
+    message: "What is my order status?",
+  }),
+});
+const data = await res.json();
+console.log(data.response);</pre>
+</div>
+
+<div class="card">
+  <h2>Example: Python</h2>
+  <pre>import requests
+
+resp = requests.post(
+    "https://your-domain.com/chat",
+    headers={"Authorization": "Bearer sk_your_key"},
+    json={"user_id": "customer_123", "message": "What is my order status?"},
+)
+print(resp.json()["response"])</pre>
+</div>
+{% endblock %}
+{% block tail %}
+<script>
+function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function loadKeys(){
+  try{
+    const keys = await api('/api-keys');
+    if(!keys.length){
+      document.getElementById('keysEmpty').style.display='';
+      document.getElementById('keysTable').style.display='none';
+      return;
+    }
+    document.getElementById('keysEmpty').style.display='none';
+    document.getElementById('keysTable').style.display='';
+    document.getElementById('keysBody').innerHTML = keys.map(k => {
+      const used = k.last_used_at ? esc(k.last_used_at.replace('T',' ').slice(0,19)) : 'Never';
+      return `<tr>
+        <td><strong>${esc(k.name)}</strong></td>
+        <td><code>${esc(k.prefix)}••••••••</code></td>
+        <td class="muted">${esc(k.created_at.slice(0,10))}</td>
+        <td class="muted">${used}</td>
+        <td><button class="ghost sm danger" onclick="revokeKey('${k.id}','${esc(k.name)}')">Revoke</button></td>
+      </tr>`;
+    }).join('');
+  }catch(e){}
+}
+
+async function createKey(){
+  const name = prompt('Name for this API key (e.g. "Production", "Staging"):');
+  if(!name) return;
+  try{
+    const result = await api('/api-keys',{method:'POST',body:{name:name.trim()}});
+    alert('API key created!\n\n'+result.key+'\n\nIMPORTANT: Copy this key now. It will not be shown again.');
+    loadKeys();
+  }catch(e){ alert('Error: '+e.message); }
+}
+
+async function revokeKey(id, name){
+  if(!confirm('Revoke API key "'+name+'"? This cannot be undone.')) return;
+  try{
+    await api('/api-keys/'+id,{method:'DELETE'});
+    loadKeys();
+  }catch(e){ alert('Error: '+e.message); }
+}
+
+loadKeys();
+</script>
+{% endblock %}

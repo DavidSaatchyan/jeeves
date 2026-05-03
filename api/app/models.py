@@ -234,3 +234,16 @@ class ChannelConfig(Base):
     __table_args__ = (
         UniqueConstraint("tenant_id", "channel_type", name="uq_channels_config_tenant_type"),
     )
+
+
+class ApiKey(Base):
+    """Tenant API keys for server-to-server REST integrations."""
+    __tablename__ = "api_keys"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    name = Column(String(128), nullable=False)          # human-readable label (e.g. "Production", "Staging")
+    key_hash = Column(String(64), unique=True, nullable=False, index=True)  # SHA-256 of the raw key
+    prefix = Column(String(8), nullable=False)          # first 8 chars for identification (sk_abc12345...)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    last_used_at = Column(DateTime, nullable=True)

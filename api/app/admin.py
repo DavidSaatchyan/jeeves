@@ -83,6 +83,11 @@ def tools_page(request: Request):
     return templates.TemplateResponse("tools.html", _ctx(request))
 
 
+@router.get("/api", response_class=HTMLResponse)
+def api_page(request: Request):
+    return templates.TemplateResponse("api_docs.html", _ctx(request))
+
+
 # Old /admin/crm URL redirects to /admin/integrations
 @router.get("/crm", response_class=HTMLResponse)
 def crm_redirect(request: Request):
