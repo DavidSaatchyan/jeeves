@@ -206,14 +206,22 @@
     .cm-comment { color: #3d4a5c; }
 
     /* Audit log visual — strict, table-like */
-    .cap-audit-log { margin-bottom: 18px; }
-    .cap-audit-header { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 0; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.04); border-radius: 8px 8px 0 0; font-size: 9px; color: #4a5568; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-    .cap-audit-row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 0; padding: 7px 12px; background: rgba(0,0,0,0.2); border-left: 1px solid rgba(255,255,255,0.03); border-right: 1px solid rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 10px; font-family: 'SF Mono', 'Fira Code', monospace; }
-    .cap-audit-row:last-child { border-radius: 0 0 8px 8px; border-bottom-color: rgba(255,255,255,0.04); }
+    .cap-audit-log { margin-bottom: 18px; overflow-x: auto; }
+    .cap-audit-table { width: 100%; border-collapse: collapse; font-size: 10px; font-family: 'SF Mono', 'Fira Code', monospace; }
+    .cap-audit-table thead th { padding: 7px 10px; background: rgba(0,0,0,0.35); border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 8px; color: #4a5568; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; text-align: left; white-space: nowrap; }
+    .cap-audit-table thead th:first-child { border-radius: 8px 0 0 0; }
+    .cap-audit-table thead th:last-child { border-radius: 0 8px 0 0; }
+    .cap-audit-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.02); }
+    .cap-audit-table tbody tr:last-child { border-bottom: none; }
+    .cap-audit-table tbody td { padding: 6px 10px; background: rgba(0,0,0,0.15); white-space: nowrap; }
+    .cap-audit-table tbody tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+    .cap-audit-table tbody tr:last-child td:last-child { border-radius: 0 0 8px 0; }
+    .aa-time { color: #3d4a5c; }
     .aa-source { color: #5bc0be; }
     .aa-intent { color: #c9a85c; }
+    .aa-latency { color: #6b7a8d; }
     .aa-outcome { color: #d4d4d4; }
-    .aa-status { font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .aa-status { font-size: 8px; padding: 2px 7px; border-radius: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     .aa-status.resolved { background: rgba(45,154,110,0.12); color: #2d9a6e; }
     .aa-status.escalated { background: rgba(217,79,79,0.12); color: #d94f4f; }
     .aa-status.pending { background: rgba(201,168,92,0.12); color: #c9a85c; }
@@ -692,43 +700,59 @@
         <div class="cap-mono-line">}</div>
       </div>
       <h3>Custom Actions</h3>
-      <p>Jeeves connects to your APIs and performs real tasks — checking order status, updating subscriptions, creating support tickets. When an action changes something important, it asks the user to confirm first. Everything is logged.</p>
+      <p>Jeeves connects to your APIs and performs real tasks — checking order status, updating subscriptions, creating support tickets. Everything is logged.</p>
       <span class="cap-tag t3">Tool calling</span>
     </div>
 
     <!-- Analytics Card — audit log visual -->
     <div class="cap-b b5 reveal">
       <div class="cap-audit-log">
-        <div class="cap-audit-header">
-          <span>Source</span>
-          <span>Intent</span>
-          <span>Outcome</span>
-          <span></span>
-        </div>
-        <div class="cap-audit-row">
-          <span class="aa-source">Telegram</span>
-          <span class="aa-intent">order_status</span>
-          <span class="aa-outcome">replied</span>
-          <span class="aa-status resolved">resolved</span>
-        </div>
-        <div class="cap-audit-row">
-          <span class="aa-source">Widget</span>
-          <span class="aa-intent">refund_req</span>
-          <span class="aa-outcome">escalated</span>
-          <span class="aa-status escalated">human</span>
-        </div>
-        <div class="cap-audit-row">
-          <span class="aa-source">WhatsApp</span>
-          <span class="aa-intent">plan_change</span>
-          <span class="aa-outcome">applied</span>
-          <span class="aa-status resolved">resolved</span>
-        </div>
-        <div class="cap-audit-row">
-          <span class="aa-source">Email</span>
-          <span class="aa-intent">pricing</span>
-          <span class="aa-outcome">replied</span>
-          <span class="aa-status pending">pending</span>
-        </div>
+        <table class="cap-audit-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Source</th>
+              <th>Intent</th>
+              <th>Latency</th>
+              <th>Outcome</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="aa-time">09:41</td>
+              <td class="aa-source">Telegram</td>
+              <td class="aa-intent">order_status</td>
+              <td class="aa-latency">1.2s</td>
+              <td class="aa-outcome">replied</td>
+              <td><span class="aa-status resolved">resolved</span></td>
+            </tr>
+            <tr>
+              <td class="aa-time">09:43</td>
+              <td class="aa-source">Widget</td>
+              <td class="aa-intent">refund_req</td>
+              <td class="aa-latency">0.8s</td>
+              <td class="aa-outcome">escalated</td>
+              <td><span class="aa-status escalated">human</span></td>
+            </tr>
+            <tr>
+              <td class="aa-time">09:47</td>
+              <td class="aa-source">WhatsApp</td>
+              <td class="aa-intent">plan_change</td>
+              <td class="aa-latency">2.1s</td>
+              <td class="aa-outcome">applied</td>
+              <td><span class="aa-status resolved">resolved</span></td>
+            </tr>
+            <tr>
+              <td class="aa-time">09:52</td>
+              <td class="aa-source">Email</td>
+              <td class="aa-intent">pricing</td>
+              <td class="aa-latency">0.6s</td>
+              <td class="aa-outcome">replied</td>
+              <td><span class="aa-status pending">pending</span></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
       <h3>Full Analytics</h3>
       <p>Every conversation indexed by source, intent, and outcome. Track resolution rates, latency percentiles, and escalation patterns. Exportable audit trails.</p>
@@ -1178,8 +1202,8 @@ document.querySelectorAll('.tl-row').forEach(el => tlObs.observe(el));
         }
         var el = document.getElementById(m.id);
         if (!el) return;
-        if (m.showTyping) { el.classList.add('active'); }
-        if (m.hideTyping) { el.classList.remove('active'); }
+        if (m.showTyping) { el.classList.add('active'); el.style.display = 'flex'; return; }
+        if (m.hideTyping) { el.classList.remove('active'); el.style.display = 'none'; return; }
         el.style.display = 'flex';
         requestAnimationFrame(function() { requestAnimationFrame(function() {
           el.classList.add('show');
