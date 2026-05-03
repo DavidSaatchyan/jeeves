@@ -11,7 +11,7 @@
       --bg: #030508;
       --surface: #0a0f1e;
       --surface2: #0d1325;
-      --border: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.12);
       --accent: #6366f1;
       --accent2: #8b5cf6;
       --accent3: #06b6d4;
@@ -31,8 +31,8 @@
     .nav-links { display: flex; gap: 32px; align-items: center; }
     .nav-links a { color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500; transition: color .2s; }
     .nav-links a:hover { color: var(--text); }
-    .btn-nav { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; padding: 10px 24px; border-radius: 10px; font-weight: 800; font-size: 14px; text-decoration: none; transition: all .25s; border: none; }
-    .btn-nav:hover { box-shadow: 0 8px 32px rgba(99,102,241,0.4); transform: translateY(-1px); }
+    .btn-nav { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff !important; padding: 10px 24px; border-radius: 10px; font-weight: 800; font-size: 14px; text-decoration: none; transition: all .25s; border: none; }
+    .btn-nav:hover { box-shadow: 0 8px 32px rgba(99,102,241,0.5); transform: translateY(-1px); }
 
     /* ===== HERO ===== */
     .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 120px 24px 80px; position: relative; overflow: hidden; }
@@ -134,25 +134,24 @@
 
     /* ===== CAPABILITIES — BENTO ===== */
     .caps-bento { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
-    .cap-b { background: var(--surface); border-radius: 20px; padding: 32px 28px; position: relative; overflow: hidden; transition: all .4s cubic-bezier(.4,0,.2,1); border: 1px solid var(--border); }
-    .cap-b::after { content: ''; position: absolute; inset: 0; border-radius: 20px; padding: 1px; background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent 40%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+    .cap-b { background: var(--surface); border-radius: 20px; padding: 32px 28px; position: relative; overflow: hidden; transition: all .4s cubic-bezier(.4,0,.2,1); border: 1px solid rgba(255,255,255,0.12); }
     .cap-b::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
     .cap-b:hover { transform: translateY(-4px); }
-    .cap-b.b1 { grid-column: span 3; background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, var(--surface) 60%); border-color: rgba(99,102,241,0.15); }
+    .cap-b.b1 { grid-column: span 3; background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, var(--surface) 60%); border-color: rgba(99,102,241,0.3); }
     .cap-b.b1::before { background: linear-gradient(90deg, var(--accent), transparent); }
-    .cap-b.b1:hover { border-color: rgba(99,102,241,0.35); box-shadow: 0 20px 60px rgba(99,102,241,0.12); }
-    .cap-b.b2 { grid-column: span 3; background: linear-gradient(135deg, rgba(6,182,212,0.1) 0%, var(--surface) 60%); border-color: rgba(6,182,212,0.15); }
+    .cap-b.b1:hover { border-color: rgba(99,102,241,0.5); box-shadow: 0 20px 60px rgba(99,102,241,0.15); }
+    .cap-b.b2 { grid-column: span 3; background: linear-gradient(135deg, rgba(6,182,212,0.12) 0%, var(--surface) 60%); border-color: rgba(6,182,212,0.3); }
     .cap-b.b2::before { background: linear-gradient(90deg, var(--accent3), transparent); }
-    .cap-b.b2:hover { border-color: rgba(6,182,212,0.35); box-shadow: 0 20px 60px rgba(6,182,212,0.12); }
-    .cap-b.b3 { grid-column: span 2; background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, var(--surface) 60%); border-color: rgba(16,185,129,0.15); }
+    .cap-b.b2:hover { border-color: rgba(6,182,212,0.5); box-shadow: 0 20px 60px rgba(6,182,212,0.15); }
+    .cap-b.b3 { grid-column: span 2; background: linear-gradient(135deg, rgba(16,185,129,0.12) 0%, var(--surface) 60%); border-color: rgba(16,185,129,0.3); }
     .cap-b.b3::before { background: linear-gradient(90deg, var(--green), transparent); }
-    .cap-b.b3:hover { border-color: rgba(16,185,129,0.35); box-shadow: 0 20px 60px rgba(16,185,129,0.12); }
-    .cap-b.b4 { grid-column: span 2; background: linear-gradient(135deg, rgba(139,92,246,0.1) 0%, var(--surface) 60%); border-color: rgba(139,92,246,0.15); }
+    .cap-b.b3:hover { border-color: rgba(16,185,129,0.5); box-shadow: 0 20px 60px rgba(16,185,129,0.15); }
+    .cap-b.b4 { grid-column: span 2; background: linear-gradient(135deg, rgba(139,92,246,0.12) 0%, var(--surface) 60%); border-color: rgba(139,92,246,0.3); }
     .cap-b.b4::before { background: linear-gradient(90deg, var(--accent2), transparent); }
-    .cap-b.b4:hover { border-color: rgba(139,92,246,0.35); box-shadow: 0 20px 60px rgba(139,92,246,0.12); }
-    .cap-b.b5 { grid-column: span 2; background: linear-gradient(135deg, rgba(248,113,113,0.1) 0%, var(--surface) 60%); border-color: rgba(248,113,113,0.15); }
+    .cap-b.b4:hover { border-color: rgba(139,92,246,0.5); box-shadow: 0 20px 60px rgba(139,92,246,0.15); }
+    .cap-b.b5 { grid-column: span 2; background: linear-gradient(135deg, rgba(248,113,113,0.12) 0%, var(--surface) 60%); border-color: rgba(248,113,113,0.3); }
     .cap-b.b5::before { background: linear-gradient(90deg, var(--red), transparent); }
-    .cap-b.b5:hover { border-color: rgba(248,113,113,0.35); box-shadow: 0 20px 60px rgba(248,113,113,0.12); }
+    .cap-b.b5:hover { border-color: rgba(248,113,113,0.5); box-shadow: 0 20px 60px rgba(248,113,113,0.15); }
     .cap-b .cap-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
     .cap-b .cap-icon svg { width: 20px; height: 20px; }
     .cap-b .cap-icon.c1 { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.2); box-shadow: 0 0 16px rgba(99,102,241,0.15); }
@@ -188,7 +187,7 @@
     .hm-desc { max-width: 500px; margin: 28px auto 0; }
     .hm-desc p { font-size: 16px; line-height: 1.7; color: #cbd5e1; }
     .hm-desc p + p { margin-top: 8px; color: #94a3b8; font-size: 15px; }
-    .hm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 64px; max-width: 700px; margin-left: auto; margin-right: auto; border-radius: 16px; overflow: hidden; border: 1px solid rgba(99,102,241,0.15); box-shadow: 0 0 40px rgba(99,102,241,0.06); }
+    .hm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 64px; max-width: 700px; margin-left: auto; margin-right: auto; border-radius: 16px; overflow: hidden; border: 1px solid rgba(99,102,241,0.2); box-shadow: 0 0 50px rgba(99,102,241,0.08); }
     .hm-stat { padding: 32px 24px; background: var(--surface); transition: background .3s; }
     .hm-stat:hover { background: rgba(99,102,241,0.06); }
     .hm-stat .hs-val { font-size: 26px; font-weight: 800; color: #f1f5f9; letter-spacing: -.5px; margin-bottom: 6px; }
@@ -199,9 +198,8 @@
 
     /* ===== CHANNELS ===== */
     .channels-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .channel-card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 40px 32px; text-align: center; transition: all .5s; position: relative; overflow: hidden; }
-    .channel-card::after { content: ''; position: absolute; inset: 0; border-radius: 24px; padding: 1px; background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent 40%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
-    .channel-card:hover { border-color: rgba(99,102,241,0.3); transform: translateY(-6px); box-shadow: 0 24px 64px rgba(0,0,0,0.4), 0 0 40px rgba(99,102,241,0.08); }
+    .channel-card { background: var(--surface); border: 1px solid rgba(255,255,255,0.15); border-radius: 24px; padding: 40px 32px; text-align: center; transition: all .5s; position: relative; overflow: hidden; }
+    .channel-card:hover { border-color: rgba(99,102,241,0.5); transform: translateY(-6px); box-shadow: 0 24px 64px rgba(0,0,0,0.4), 0 0 50px rgba(99,102,241,0.12); }
     .channel-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
     .channel-card p { color: #94a3b8; font-size: 14px; line-height: 1.7; }
     .channel-logo { width: 64px; height: 64px; margin: 0 auto 24px; border-radius: 16px; display: flex; align-items: center; justify-content: center; transition: all .4s; }
@@ -226,12 +224,11 @@
     .tl-row.right .tl-node { grid-column: 2; justify-self: center; }
     .tl-row.right .tl-card { grid-column: 3; justify-self: start; }
 
-    .tl-card { width: 100%; max-width: 380px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px; opacity: 0; transition: all .6s ease; position: relative; overflow: hidden; }
-    .tl-card::after { content: ''; position: absolute; inset: 0; border-radius: 20px; padding: 1px; background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent 40%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+    .tl-card { width: 100%; max-width: 380px; background: var(--surface); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 32px; opacity: 0; transition: all .6s ease; position: relative; overflow: hidden; }
     .tl-row.left .tl-card { transform: translateX(-30px); }
     .tl-row.right .tl-card { transform: translateX(30px); }
     .tl-row.visible .tl-card { opacity: 1; transform: translateX(0); }
-    .tl-row.visible .tl-card { border-color: rgba(99,102,241,0.25); box-shadow: 0 16px 48px rgba(0,0,0,0.3), 0 0 30px rgba(99,102,241,0.06); }
+    .tl-row.visible .tl-card { border-color: rgba(99,102,241,0.35); box-shadow: 0 16px 48px rgba(0,0,0,0.3), 0 0 40px rgba(99,102,241,0.08); }
     .tl-card .tl-num { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
     .tl-card h3 { font-size: 19px; font-weight: 700; margin-bottom: 10px; color: #f1f5f9; }
     .tl-card p { color: #cbd5e1; font-size: 14px; line-height: 1.7; }
@@ -247,12 +244,11 @@
 
     /* ===== PRICING ===== */
     .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 1100px; margin: 0 auto; }
-    .price-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 36px 24px; text-align: center; position: relative; transition: all .4s; overflow: hidden; }
-    .price-card::after { content: ''; position: absolute; inset: 0; border-radius: 20px; padding: 1px; background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent 40%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
-    .price-card:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.12); }
-    .price-card.featured { border-color: rgba(99,102,241,0.4); background: linear-gradient(180deg, rgba(99,102,241,0.12) 0%, var(--surface) 60%); box-shadow: 0 0 60px rgba(99,102,241,0.15), 0 0 0 1px rgba(99,102,241,0.2); }
+    .price-card { background: var(--surface); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 36px 24px; text-align: center; position: relative; transition: all .4s; overflow: hidden; }
+    .price-card:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.2); }
+    .price-card.featured { border-color: rgba(99,102,241,0.5); background: linear-gradient(180deg, rgba(99,102,241,0.12) 0%, var(--surface) 60%); box-shadow: 0 0 60px rgba(99,102,241,0.15), 0 0 0 1px rgba(99,102,241,0.25); }
     .price-card.featured::before { content: 'Most popular'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 999px; box-shadow: 0 4px 16px rgba(99,102,241,0.4); }
-    .price-card.featured:hover { box-shadow: 0 0 80px rgba(99,102,241,0.2), 0 0 0 1px rgba(99,102,241,0.3); }
+    .price-card.featured:hover { box-shadow: 0 0 80px rgba(99,102,241,0.2), 0 0 0 1px rgba(99,102,241,0.35); }
     .price-card .p-name { font-size: 13px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
     .price-card .p-price { font-size: 44px; font-weight: 900; letter-spacing: -3px; color: #f1f5f9; }
     .price-card .p-price .p-cur { font-size: 22px; vertical-align: super; margin-right: 2px; }
@@ -268,8 +264,7 @@
     .price-card .p-btn.outline { background: transparent; color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15); }
     .price-card .p-btn.outline:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); }
     .pricing-note { max-width: 700px; margin: 40px auto 0; text-align: center; }
-    .pricing-note .pn-row { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 12px; position: relative; overflow: hidden; }
-    .pricing-note .pn-row::after { content: ''; position: absolute; inset: 0; border-radius: 14px; padding: 1px; background: linear-gradient(135deg, rgba(255,255,255,0.06), transparent 40%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+    .pricing-note .pn-row { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: var(--surface); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; margin-bottom: 12px; }
     .pricing-note .pn-icon { font-size: 18px; flex-shrink: 0; }
     .pricing-note .pn-text { font-size: 13px; color: #cbd5e1; line-height: 1.5; }
     .pricing-note .pn-text strong { color: #f1f5f9; }
@@ -468,6 +463,31 @@
     <div class="section-sub">Everything you need to automate customer support without losing the human touch.</div>
   </div>
 
+  <div class="hero-metric reveal">
+    <div class="hm-wrap">
+      <div class="hm-num"><span class="n-main">90</span><span class="n-pct">%</span></div>
+    </div>
+    <div class="hm-tagline">Auto-resolved instantly</div>
+    <div class="hm-desc">
+      <p>Jeeves answers 90% of questions without a human.</p>
+      <p>The remaining 10%? Escalated with full context.</p>
+    </div>
+    <div class="hm-stats">
+      <div class="hm-stat">
+        <div class="hs-val c1">&lt;5s</div>
+        <div class="hs-label">Response time, 24/7. No queues.</div>
+      </div>
+      <div class="hm-stat">
+        <div class="hs-val c2">1 brain</div>
+        <div class="hs-label">Unified memory across all channels.</div>
+      </div>
+      <div class="hm-stat">
+        <div class="hs-val c3">Proactive</div>
+        <div class="hs-label">Auto-messages users before problems.</div>
+      </div>
+    </div>
+  </div>
+
   <div class="caps-bento">
     <div class="cap-b b1 reveal">
       <div class="cap-icon c1">
@@ -524,31 +544,6 @@
       <h3>Full Analytics</h3>
       <p>Every conversation logged with sources, latency, resolution status. Built-in dashboards.</p>
       <span class="cap-tag t5">Audit-ready</span>
-    </div>
-  </div>
-
-  <div class="hero-metric reveal">
-    <div class="hm-wrap">
-      <div class="hm-num"><span class="n-main">90</span><span class="n-pct">%</span></div>
-    </div>
-    <div class="hm-tagline">Auto-resolved instantly</div>
-    <div class="hm-desc">
-      <p>Jeeves answers 90% of questions without a human.</p>
-      <p>The remaining 10%? Escalated with full context.</p>
-    </div>
-    <div class="hm-stats">
-      <div class="hm-stat">
-        <div class="hs-val c1">&lt;5s</div>
-        <div class="hs-label">Response time, 24/7. No queues.</div>
-      </div>
-      <div class="hm-stat">
-        <div class="hs-val c2">1 brain</div>
-        <div class="hs-label">Unified memory across all channels.</div>
-      </div>
-      <div class="hm-stat">
-        <div class="hs-val c3">Proactive</div>
-        <div class="hs-label">Auto-messages users before problems.</div>
-      </div>
     </div>
   </div>
 </div>
