@@ -31,7 +31,7 @@
     .nav-links a { color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500; transition: color .2s; }
     .nav-links a:hover { color: var(--text); }
     .btn-nav { background: #fff; color: #030508; padding: 10px 24px; border-radius: 10px; font-weight: 800; font-size: 14px; text-decoration: none; transition: all .25s; border: none; }
-    .btn-nav:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(255,255,255,0.15); background: #e2e8f0; }
+    .btn-nav:hover { background: #f1f5f9; box-shadow: 0 8px 24px rgba(255,255,255,0.2); transform: translateY(-1px); }
 
     /* ===== HERO ===== */
     .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 120px 24px 80px; position: relative; overflow: hidden; }
@@ -118,63 +118,75 @@
     /* SECTION DIVIDER */
     .section-divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); }
 
-    /* SECTIONS - alternating backgrounds */
-    .section { padding: 100px 24px; max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+    /* SECTIONS */
+    .section { padding: 60px 24px; max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
     .section.alt-bg { background: linear-gradient(180deg, rgba(10,15,30,0.5) 0%, transparent 100%); max-width: 100%; padding-left: 0; padding-right: 0; }
     .section.alt-bg .section-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
     .section-label { text-transform: uppercase; font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--accent); margin-bottom: 16px; }
     .section-title { font-size: clamp(28px, 4vw, 48px); font-weight: 900; letter-spacing: -2px; margin-bottom: 16px; line-height: 1.05; }
-    .section-sub { color: var(--muted); font-size: 17px; max-width: 520px; margin-bottom: 60px; line-height: 1.6; }
+    .section-sub { color: var(--muted); font-size: 17px; max-width: 520px; margin-bottom: 40px; line-height: 1.6; }
 
     /* SCROLL REVEAL */
     .reveal { opacity: 0; transform: translateY(40px); transition: opacity .7s ease, transform .7s ease; }
     .reveal.visible { opacity: 1; transform: translateY(0); }
 
-    /* ===== CAPABILITIES ===== */
-    .caps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    .cap-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px 32px 36px; position: relative; overflow: hidden; transition: all .4s cubic-bezier(.4,0,.2,1); }
-    .cap-card:hover { border-color: rgba(99,102,241,0.2); transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-    .cap-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(600px circle at var(--mx,50%) var(--my,50%), rgba(99,102,241,0.06) 0%, transparent 40%); pointer-events: none; opacity: 0; transition: opacity .3s; }
-    .cap-card:hover::before { opacity: 1; }
-    .cap-card .cap-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
-    .cap-card .cap-icon svg { width: 24px; height: 24px; }
-    .cap-card .cap-icon.r1 { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.12); }
-    .cap-card .cap-icon.r1 svg { stroke: #818cf8; }
-    .cap-card .cap-icon.r2 { background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.12); }
-    .cap-card .cap-icon.r2 svg { stroke: #22d3ee; }
-    .cap-card .cap-icon.r3 { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.12); }
-    .cap-card .cap-icon.r3 svg { stroke: #34d399; }
-    .cap-card .cap-icon.r4 { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.12); }
-    .cap-card .cap-icon.r4 svg { stroke: #a78bfa; }
-    .cap-card .cap-icon.r5 { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.12); }
-    .cap-card .cap-icon.r5 svg { stroke: #fb7185; }
-    .cap-card .cap-icon.r6 { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.12); }
-    .cap-card .cap-icon.r6 svg { stroke: #818cf8; }
-    .cap-card h3 { font-size: 18px; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; letter-spacing: -.3px; }
-    .cap-card p { color: #cbd5e1; font-size: 14.5px; line-height: 1.7; }
-    .cap-card .cap-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; margin-top: 18px; }
-    .cap-card .cap-tag.t1 { background: rgba(99,102,241,0.1); color: #a5b4fc; }
-    .cap-card .cap-tag.t2 { background: rgba(6,182,212,0.1); color: #67e8f9; }
-    .cap-card .cap-tag.t3 { background: rgba(16,185,129,0.1); color: #6ee7b7; }
-    .cap-card .cap-tag.t4 { background: rgba(139,92,246,0.1); color: #c4b5fd; }
-    .cap-card .cap-tag.t5 { background: rgba(248,113,113,0.1); color: #fda4af; }
-    .cap-card .cap-tag.t6 { background: rgba(99,102,241,0.1); color: #a5b4fc; }
+    /* ===== CAPABILITIES — BENTO ===== */
+    .caps-bento { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+    .cap-b { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px 28px; position: relative; overflow: hidden; transition: all .4s cubic-bezier(.4,0,.2,1); }
+    .cap-b:hover { border-color: rgba(99,102,241,0.2); transform: translateY(-3px); }
+    .cap-b::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+    .cap-b.b1 { grid-column: span 3; background: linear-gradient(135deg, rgba(99,102,241,0.06) 0%, var(--surface) 60%); }
+    .cap-b.b1::before { background: linear-gradient(90deg, var(--accent), transparent); }
+    .cap-b.b2 { grid-column: span 3; background: linear-gradient(135deg, rgba(6,182,212,0.06) 0%, var(--surface) 60%); }
+    .cap-b.b2::before { background: linear-gradient(90deg, var(--accent3), transparent); }
+    .cap-b.b3 { grid-column: span 2; background: linear-gradient(135deg, rgba(16,185,129,0.06) 0%, var(--surface) 60%); }
+    .cap-b.b3::before { background: linear-gradient(90deg, var(--green), transparent); }
+    .cap-b.b4 { grid-column: span 2; background: linear-gradient(135deg, rgba(139,92,246,0.06) 0%, var(--surface) 60%); }
+    .cap-b.b4::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+    .cap-b.b5 { grid-column: span 2; background: linear-gradient(135deg, rgba(248,113,113,0.06) 0%, var(--surface) 60%); }
+    .cap-b.b5::before { background: linear-gradient(90deg, var(--red), transparent); }
+    .cap-b .cap-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    .cap-b .cap-icon svg { width: 20px; height: 20px; }
+    .cap-b .cap-icon.c1 { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.12); }
+    .cap-b .cap-icon.c1 svg { stroke: #818cf8; }
+    .cap-b .cap-icon.c2 { background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.12); }
+    .cap-b .cap-icon.c2 svg { stroke: #22d3ee; }
+    .cap-b .cap-icon.c3 { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.12); }
+    .cap-b .cap-icon.c3 svg { stroke: #34d399; }
+    .cap-b .cap-icon.c4 { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.12); }
+    .cap-b .cap-icon.c4 svg { stroke: #a78bfa; }
+    .cap-b .cap-icon.c5 { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.12); }
+    .cap-b .cap-icon.c5 svg { stroke: #fb7185; }
+    .cap-b .cap-icon.c6 { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.12); }
+    .cap-b .cap-icon.c6 svg { stroke: #818cf8; }
+    .cap-b h3 { font-size: 17px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; letter-spacing: -.2px; }
+    .cap-b p { color: #cbd5e1; font-size: 14px; line-height: 1.65; }
+    .cap-b .cap-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; margin-top: 14px; }
+    .cap-b .cap-tag.t1 { background: rgba(99,102,241,0.1); color: #a5b4fc; }
+    .cap-b .cap-tag.t2 { background: rgba(6,182,212,0.1); color: #67e8f9; }
+    .cap-b .cap-tag.t3 { background: rgba(16,185,129,0.1); color: #6ee7b7; }
+    .cap-b .cap-tag.t4 { background: rgba(139,92,246,0.1); color: #c4b5fd; }
+    .cap-b .cap-tag.t5 { background: rgba(248,113,113,0.1); color: #fda4af; }
+    .cap-b .cap-tag.t6 { background: rgba(99,102,241,0.1); color: #a5b4fc; }
 
     /* ===== HERO METRIC ===== */
-    .hero-metric { display: grid; grid-template-columns: 1.2fr 1fr; gap: 60px; align-items: center; padding: 100px 0; }
-    .hm-left { position: relative; }
-    .hm-left::before { content: ''; position: absolute; top: -40px; left: -60px; width: 140px; height: 140px; background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%); border-radius: 50%; pointer-events: none; }
-    .hm-num { font-size: clamp(80px, 14vw, 160px); font-weight: 900; letter-spacing: -6px; line-height: 0.85; color: #fff; position: relative; }
-    .hm-num span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .hm-tagline { font-size: 15px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 4px; margin-top: 12px; }
-    .hm-desc { max-width: 400px; margin-top: 20px; }
-    .hm-desc p { font-size: 15px; line-height: 1.7; color: #cbd5e1; }
-    .hm-desc p + p { margin-top: 6px; color: #94a3b8; font-size: 14px; }
-    .hm-right { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
-    .hm-stat { padding: 28px 32px; background: var(--surface); border-bottom: 1px solid var(--border); transition: background .3s; }
-    .hm-stat:last-child { border-bottom: none; }
-    .hm-stat:hover { background: rgba(99,102,241,0.03); }
-    .hm-stat .hs-val { font-size: 24px; font-weight: 800; color: #f1f5f9; letter-spacing: -.5px; margin-bottom: 4px; }
+    .hero-metric { text-align: center; padding: 80px 0; }
+    .hero-metric .hm-wrap { position: relative; display: inline-block; }
+    .hero-metric .hm-wrap::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 300px; height: 300px; background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.08) 40%, transparent 70%); border-radius: 50%; pointer-events: none; }
+    .hm-num { font-size: clamp(90px, 16vw, 180px); font-weight: 900; letter-spacing: -8px; line-height: 0.85; position: relative; }
+    .hm-num .n-main { background: linear-gradient(135deg, #fff 0%, var(--accent) 40%, var(--accent2) 70%, var(--accent3) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 200% 200%; animation: gradientShift 5s ease infinite; }
+    .hm-num .n-pct { background: linear-gradient(135deg, var(--accent2), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hm-tagline { font-size: clamp(14px, 2vw, 18px); font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 5px; margin-top: 16px; }
+    .hm-desc { max-width: 500px; margin: 28px auto 0; }
+    .hm-desc p { font-size: 16px; line-height: 1.7; color: #cbd5e1; }
+    .hm-desc p + p { margin-top: 8px; color: #94a3b8; font-size: 15px; }
+    .hm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 64px; max-width: 700px; margin-left: auto; margin-right: auto; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+    .hm-stat { padding: 32px 24px; background: var(--surface); transition: background .3s; }
+    .hm-stat:hover { background: rgba(99,102,241,0.04); }
+    .hm-stat .hs-val { font-size: 26px; font-weight: 800; color: #f1f5f9; letter-spacing: -.5px; margin-bottom: 6px; }
+    .hm-stat .hs-val.c1 { background: linear-gradient(135deg, var(--accent), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hm-stat .hs-val.c2 { background: linear-gradient(135deg, var(--accent2), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hm-stat .hs-val.c3 { background: linear-gradient(135deg, var(--green), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .hm-stat .hs-label { font-size: 13px; color: #94a3b8; line-height: 1.5; }
 
     /* ===== CHANNELS ===== */
@@ -216,18 +228,31 @@
     .tl-card .tl-time { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; font-size: 12px; color: var(--green); font-weight: 600; background: rgba(16,185,129,0.06); padding: 5px 14px; border-radius: 999px; }
 
     .tl-node { padding-top: 28px; position: relative; z-index: 2; }
-    .tl-dot { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: #fff; box-shadow: 0 0 20px rgba(99,102,241,0.3); }
-    .tl-row:nth-child(1) .tl-dot { background: var(--accent); }
-    .tl-row:nth-child(2) .tl-dot { background: var(--accent2); box-shadow: 0 0 20px rgba(139,92,246,0.3); }
-    .tl-row:nth-child(3) .tl-dot { background: var(--accent3); box-shadow: 0 0 20px rgba(6,182,212,0.3); }
-    .tl-row:nth-child(4) .tl-dot { background: var(--accent2); box-shadow: 0 0 20px rgba(139,92,246,0.3); }
-    .tl-row:nth-child(5) .tl-dot { background: var(--green); box-shadow: 0 0 20px rgba(16,185,129,0.3); }
-    .tl-dot::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid rgba(99,102,241,0.15); animation: nodeRing 2.5s ease-in-out infinite; }
-    .tl-row:nth-child(2) .tl-dot::after { border-color: rgba(139,92,246,0.15); }
-    .tl-row:nth-child(3) .tl-dot::after { border-color: rgba(6,182,212,0.15); }
-    .tl-row:nth-child(4) .tl-dot::after { border-color: rgba(139,92,246,0.15); }
-    .tl-row:nth-child(5) .tl-dot::after { border-color: rgba(16,185,129,0.15); }
-    @keyframes nodeRing { 0%,100% { transform: scale(1); opacity: .4; } 50% { transform: scale(1.12); opacity: 1; } }
+    .tl-dot { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: #fff; }
+    .tl-row:nth-child(1) .tl-dot { background: var(--accent); box-shadow: 0 0 20px rgba(99,102,241,0.4); }
+    .tl-row:nth-child(2) .tl-dot { background: var(--accent2); box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+    .tl-row:nth-child(3) .tl-dot { background: var(--accent3); box-shadow: 0 0 20px rgba(6,182,212,0.4); }
+    .tl-row:nth-child(4) .tl-dot { background: var(--accent2); box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+    .tl-row:nth-child(5) .tl-dot { background: var(--green); box-shadow: 0 0 20px rgba(16,185,129,0.4); }
+
+    /* ===== PRICING ===== */
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 900px; margin: 0 auto; }
+    .price-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px 32px; text-align: center; position: relative; transition: all .4s; }
+    .price-card:hover { transform: translateY(-4px); }
+    .price-card.featured { border-color: rgba(99,102,241,0.3); background: linear-gradient(180deg, rgba(99,102,241,0.06) 0%, var(--surface) 40%); }
+    .price-card.featured::before { content: 'Most popular'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 999px; }
+    .price-card .p-name { font-size: 14px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
+    .price-card .p-price { font-size: 48px; font-weight: 900; letter-spacing: -3px; color: #f1f5f9; }
+    .price-card .p-price .p-cur { font-size: 24px; vertical-align: super; margin-right: 2px; }
+    .price-card .p-period { font-size: 14px; color: #94a3b8; margin-top: 4px; margin-bottom: 28px; }
+    .price-card .p-features { list-style: none; text-align: left; margin-bottom: 32px; }
+    .price-card .p-features li { font-size: 14px; color: #cbd5e1; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; align-items: center; gap: 10px; }
+    .price-card .p-features li::before { content: '✓'; color: var(--green); font-weight: 700; font-size: 13px; flex-shrink: 0; }
+    .price-card .p-btn { display: block; width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 700; text-decoration: none; transition: all .3s; border: none; cursor: pointer; }
+    .price-card .p-btn.primary { background: var(--accent); color: #fff; }
+    .price-card .p-btn.primary:hover { background: #4f46e5; box-shadow: 0 8px 24px rgba(99,102,241,0.3); }
+    .price-card .p-btn.secondary { background: rgba(255,255,255,0.06); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1); }
+    .price-card .p-btn.secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
 
     /* CTA */
     .cta-section { background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.04) 100%); }
@@ -242,9 +267,11 @@
       .hero-text { text-align: center; }
       .hero-text p { margin-left: auto; margin-right: auto; }
       .hero-buttons { justify-content: center; }
-      .caps-grid { grid-template-columns: repeat(2, 1fr); }
-      .hero-metric { grid-template-columns: 1fr; gap: 40px; padding: 60px 0; }
-      .stat-row { grid-template-columns: 1fr; }
+      .caps-bento { grid-template-columns: 1fr 1fr; }
+      .cap-b.b1, .cap-b.b2 { grid-column: span 2; }
+      .cap-b.b3, .cap-b.b4, .cap-b.b5 { grid-column: span 1; }
+      .hero-metric { padding: 50px 0; }
+      .hm-stats { grid-template-columns: 1fr; max-width: 320px; }
       .channels-grid { grid-template-columns: 1fr; }
       /* Timeline mobile: all content on right, track on left */
       .tl-track { left: 22px; }
@@ -252,6 +279,7 @@
       .tl-row.left .tl-card, .tl-row.right .tl-card { grid-column: 2; justify-self: start; transform: translateX(-20px) !important; width: 100%; max-width: none; }
       .tl-row.left .tl-node, .tl-row.right .tl-node { grid-column: 1; justify-self: center; }
       .tl-row.left .tl-void, .tl-row.right .tl-void { display: none; }
+      .pricing-grid { grid-template-columns: 1fr; max-width: 360px; margin: 0 auto; }
     }
     @media (max-width: 640px) {
       nav { padding: 14px 20px; }
@@ -270,6 +298,8 @@
 <nav>
   <div class="logo">Jeeves<span>.</span></div>
   <div class="nav-links">
+    <a href="#capabilities">Product</a>
+    <a href="#pricing">Pricing</a>
     <a href="#channels">Channels</a>
     <a href="#how">How it works</a>
     <a href="/admin/login" class="btn-nav">Launch App</a>
@@ -329,7 +359,7 @@
           <div class="msg bot" id="m2" style="display:none;">
             <div class="msg-avatar">J</div>
             <div>
-              <div class="msg-bubble">Sure! I see you're on <strong>Pro</strong> ($49/mo). Business is <strong>$99/mo</strong> with unlimited conversations, proactive alerts, and custom actions. Want me to switch?</div>
+              <div class="msg-bubble">Sure! I see you're on <strong>Growth</strong> ($29/mo). Scale is <strong>$79/mo</strong> with unlimited conversations, proactive alerts, and custom actions. Want me to switch?</div>
             </div>
           </div>
           <div class="msg user" id="m3" style="display:none;">
@@ -341,7 +371,7 @@
             <div>
               <div class="msg-bubble">
                 <div class="msg-confirmation">
-                  <div class="msg-confirm-text">⚠ Confirm upgrade: Pro → Business<br>$49/mo → $99/mo</div>
+                  <div class="msg-confirm-text">⚠ Confirm upgrade: Growth → Scale<br>$29/mo → $79/mo</div>
                   <div class="msg-confirm-btn" id="confirmBtn">Confirm</div>
                 </div>
               </div>
@@ -350,7 +380,7 @@
           <div class="msg bot" id="m5" style="display:none;">
             <div class="msg-avatar">J</div>
             <div>
-              <div class="msg-bubble">Done! Your plan is now <strong>Business</strong>. All features active immediately. Billed $99/mo starting next cycle.</div>
+              <div class="msg-bubble">Done! Your plan is now <strong>Scale</strong>. All features active immediately. Billed $79/mo starting next cycle.</div>
               <div class="msg-success">✓ Action: plan.upgrade completed</div>
             </div>
           </div>
@@ -372,25 +402,24 @@
 <!-- ===== CAPABILITIES ===== -->
 <div class="section" id="capabilities">
   <div class="reveal">
-    <div class="section-label">Capabilities</div>
     <div class="section-title">Not just a chatbot.<br>A full support stack.</div>
     <div class="section-sub">Everything you need to automate customer support without losing the human touch.</div>
   </div>
 
-  <div class="caps-grid">
-    <div class="cap-card reveal">
-      <div class="cap-icon r1">
+  <div class="caps-bento">
+    <div class="cap-b b1 reveal">
+      <div class="cap-icon c1">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
         </svg>
       </div>
       <h3>RAG-powered knowledge</h3>
-      <p>Upload PDFs, docs, FAQs — Jeeves chunks, embeds, and retrieves with cosine similarity. Every answer has a source attached, so you can audit the reasoning. No hallucinations. No black box.</p>
+      <p>Upload PDFs, docs, FAQs — Jeeves chunks, embeds, and retrieves with cosine similarity. Every answer has a source attached. No hallucinations. No black box.</p>
       <span class="cap-tag t1">Vector search</span>
     </div>
-    <div class="cap-card reveal">
-      <div class="cap-icon r2">
+    <div class="cap-b b2 reveal">
+      <div class="cap-icon c2">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
           <circle cx="12" cy="7" r="4"/>
@@ -398,31 +427,31 @@
         </svg>
       </div>
       <h3>CRM Context</h3>
-      <p>Connects to HubSpot or any REST API. Jeeves greets customers by name, sees their tariff, order history, and past tickets before answering.</p>
+      <p>Connects to HubSpot or any REST API. Jeeves greets customers by name, sees their tariff, order history, and past tickets.</p>
       <span class="cap-tag t2">Any API</span>
     </div>
-    <div class="cap-card reveal">
-      <div class="cap-icon r3">
+    <div class="cap-b b3 reveal">
+      <div class="cap-icon c3">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
         </svg>
       </div>
       <h3>Custom Actions</h3>
-      <p>Define tools: look up orders, change plans, create tickets. With confirmation flow for destructive actions (cancel, refund). Jeeves does, not just talks.</p>
+      <p>Look up orders, change plans, create tickets. With confirmation for destructive actions.</p>
       <span class="cap-tag t3">Tool calling</span>
     </div>
-    <div class="cap-card reveal">
-      <div class="cap-icon r4">
+    <div class="cap-b b4 reveal">
+      <div class="cap-icon c4">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
         </svg>
       </div>
       <h3>Proactive Engine</h3>
-      <p>Monitors metrics via webhook. Auto-messages users when something drops — before they even notice a problem.</p>
+      <p>Monitors metrics via webhook. Auto-messages users when something drops — before they notice.</p>
       <span class="cap-tag t4">Webhook-driven</span>
     </div>
-    <div class="cap-card reveal">
-      <div class="cap-icon r5">
+    <div class="cap-b b5 reveal">
+      <div class="cap-icon c5">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 3v18h18"/>
           <path d="M18 17V9"/>
@@ -431,43 +460,31 @@
         </svg>
       </div>
       <h3>Full Analytics</h3>
-      <p>Every conversation logged with sources, latency, resolution status, and tool call traces. Built-in dashboards. No surprises.</p>
+      <p>Every conversation logged with sources, latency, resolution status. Built-in dashboards.</p>
       <span class="cap-tag t5">Audit-ready</span>
-    </div>
-    <div class="cap-card reveal">
-      <div class="cap-icon r6">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="2" y1="12" x2="22" y2="12"/>
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-        </svg>
-      </div>
-      <h3>Omnichannel</h3>
-      <p>One agent. Everywhere. Website widget, WhatsApp, Telegram, email. Same memory, same Jeeves.</p>
-      <span class="cap-tag t6">3 channels</span>
     </div>
   </div>
 
   <div class="hero-metric reveal">
-    <div class="hm-left">
-      <div class="hm-num">90<span>%</span></div>
-      <div class="hm-tagline">Auto-resolved instantly</div>
-      <div class="hm-desc">
-        <p>Jeeves answers 90% of questions without a human.</p>
-        <p>The remaining 10%? Escalated with full context.</p>
-      </div>
+    <div class="hm-wrap">
+      <div class="hm-num"><span class="n-main">90</span><span class="n-pct">%</span></div>
     </div>
-    <div class="hm-right">
+    <div class="hm-tagline">Auto-resolved instantly</div>
+    <div class="hm-desc">
+      <p>Jeeves answers 90% of questions without a human.</p>
+      <p>The remaining 10%? Escalated with full context.</p>
+    </div>
+    <div class="hm-stats">
       <div class="hm-stat">
-        <div class="hs-val">&lt;5s</div>
+        <div class="hs-val c1">&lt;5s</div>
         <div class="hs-label">Response time, 24/7. No queues.</div>
       </div>
       <div class="hm-stat">
-        <div class="hs-val">1 brain</div>
+        <div class="hs-val c2">1 brain</div>
         <div class="hs-label">Unified memory across all channels.</div>
       </div>
       <div class="hm-stat">
-        <div class="hs-val">Proactive</div>
+        <div class="hs-val c3">Proactive</div>
         <div class="hs-label">Auto-messages users before problems.</div>
       </div>
     </div>
@@ -480,7 +497,6 @@
 <div class="section alt-bg" id="channels">
   <div class="section-inner">
     <div class="reveal">
-      <div class="section-label">Omnichannel</div>
       <div class="section-title">One brain.<br>Every surface.</div>
       <div class="section-sub">Same knowledge, same quality. Just different front doors.</div>
     </div>
@@ -524,7 +540,6 @@
 <!-- ===== HOW IT WORKS ===== -->
 <div class="section" id="how">
   <div class="reveal" style="text-align:center;">
-    <div class="section-label">Getting started</div>
     <div class="section-title">Live in 10 minutes</div>
     <div class="section-sub" style="margin-left:auto;margin-right:auto;">No code. No credit card. Just answers.</div>
   </div>
@@ -588,6 +603,57 @@
       </div>
       <div class="tl-node"><div class="tl-dot">5</div></div>
       <div class="tl-void"></div>
+    </div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ===== PRICING ===== -->
+<div class="section" id="pricing" style="text-align:center;">
+  <div class="reveal">
+    <div class="section-title">Pay for results,<br>not promises.</div>
+    <div class="section-sub" style="margin-left:auto;margin-right:auto;">Cheaper than a single support agent. Scales with your volume.</div>
+  </div>
+
+  <div class="pricing-grid">
+    <div class="price-card reveal">
+      <div class="p-name">Starter</div>
+      <div class="p-price"><span class="p-cur">$</span>0</div>
+      <div class="p-period">Free forever</div>
+      <ul class="p-features">
+        <li>50 resolutions / month</li>
+        <li>1 channel</li>
+        <li>Basic knowledge base</li>
+        <li>Community support</li>
+      </ul>
+      <a href="/admin/login" class="p-btn secondary">Get Started</a>
+    </div>
+    <div class="price-card featured reveal">
+      <div class="p-name">Growth</div>
+      <div class="p-price"><span class="p-cur">$</span>29</div>
+      <div class="p-period">per month</div>
+      <ul class="p-features">
+        <li>500 resolutions / month</li>
+        <li>3 channels</li>
+        <li>CRM integration</li>
+        <li>Custom actions</li>
+        <li>Priority support</li>
+      </ul>
+      <a href="/admin/login" class="p-btn primary">Get Started</a>
+    </div>
+    <div class="price-card reveal">
+      <div class="p-name">Scale</div>
+      <div class="p-price"><span class="p-cur">$</span>79</div>
+      <div class="p-period">per month</div>
+      <ul class="p-features">
+        <li>Unlimited resolutions</li>
+        <li>All channels + email</li>
+        <li>Proactive engine</li>
+        <li>Full analytics</li>
+        <li>Dedicated support</li>
+      </ul>
+      <a href="/admin/login" class="p-btn secondary">Get Started</a>
     </div>
   </div>
 </div>
