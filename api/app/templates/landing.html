@@ -164,135 +164,123 @@
 
     /* Common stage */
     .rag-stage { display: flex; flex-direction: column; align-items: center; gap: 10px; flex-shrink: 0; position: relative; z-index: 2; }
-    .rag-stage-label { font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; white-space: nowrap; }
+    .rag-stage-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; white-space: nowrap; }
 
-    /* Stage 1: Document Ingestion — conveyor belt of documents flowing in */
-    .rag-ingest { width: 100px; }
-    .rag-ingest-visual { position: relative; width: 100px; height: 90px; }
-    .rag-ingest-feed { position: absolute; width: 100px; height: 36px; border: 1px solid rgba(255,255,255,0.04); border-radius: 4px; background: rgba(0,0,0,0.2); overflow: hidden; }
-    .rag-ingest-feed.f1 { top: 0; }
-    .rag-ingest-feed.f2 { top: 27px; }
-    .rag-ingest-feed.f3 { top: 54px; }
-    .rag-feed-doc { position: absolute; height: 26px; background: linear-gradient(170deg, #1a2332, #131b2b); border: 1px solid rgba(255,255,255,0.06); border-radius: 3px; display: flex; align-items: center; gap: 4px; padding: 0 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
-    .rag-feed-doc .fd-icon { width: 12px; height: 14px; border-radius: 2px; flex-shrink: 0; }
-    .rag-feed-doc:nth-child(1) .fd-icon { background: rgba(99,102,241,0.25); }
-    .rag-feed-doc:nth-child(2) .fd-icon { background: rgba(168,85,247,0.25); }
-    .rag-feed-doc:nth-child(3) .fd-icon { background: rgba(236,72,153,0.25); }
-    .rag-feed-doc .fd-lines { display: flex; flex-direction: column; gap: 2px; width: 32px; }
-    .rag-feed-doc .fd-lines span { height: 1.5px; border-radius: 1px; }
-    .rag-feed-doc .fd-lines span:nth-child(1) { width: 80%; background: rgba(255,255,255,0.12); }
-    .rag-feed-doc .fd-lines span:nth-child(2) { width: 55%; background: rgba(255,255,255,0.07); }
-    .rag-feed-doc:nth-child(1) { left: 4px; top: 5px; }
-    .rag-feed-doc:nth-child(2) { left: 38px; top: 5px; }
-    .rag-feed-doc:nth-child(3) { left: 70px; top: 5px; }
-    .rag-feed-arrow { position: absolute; right: -10px; top: 50%; transform: translateY(-50%); width: 6px; height: 10px; }
-    .rag-feed-arrow svg { width: 100%; height: 100%; stroke: rgba(99,102,241,0.3); fill: none; stroke-width: 1.5; }
-    .rag-ingest-label { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 2px; }
-    .rag-ingest-count { font-size: 8px; color: rgba(99,102,241,0.4); font-family: 'SF Mono', monospace; }
+    /* Stage 1: Document Ingestion — stacked file cards */
+    .rag-ingest { width: 88px; }
+    .rag-ingest-stack { position: relative; width: 88px; height: 90px; }
+    .rag-ingest-doc { position: absolute; width: 54px; height: 68px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; display: flex; flex-direction: column; padding: 6px 6px 0; gap: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+    .rag-ingest-doc:nth-child(1) { left: 4px; top: 16px; z-index: 3; transform: rotate(-3deg); }
+    .rag-ingest-doc:nth-child(2) { left: 18px; top: 9px; z-index: 2; transform: rotate(2deg); }
+    .rag-ingest-doc:nth-child(3) { left: 30px; top: 2px; z-index: 1; transform: rotate(-4deg); }
+    .rag-ingest-doc .doc-type { height: 8px; width: 20px; border-radius: 3px; }
+    .rag-ingest-doc:nth-child(1) .doc-type { background: rgba(99,102,241,0.7); }
+    .rag-ingest-doc:nth-child(2) .doc-type { background: rgba(168,85,247,0.7); }
+    .rag-ingest-doc:nth-child(3) .doc-type { background: rgba(236,72,153,0.7); }
+    .rag-ingest-doc .doc-fold { position: absolute; top: 0; right: 0; width: 10px; height: 10px; border-bottom-left-radius: 5px; background: rgba(255,255,255,0.04); border-left: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .rag-ingest-doc .doc-lines { display: flex; flex-direction: column; gap: 3px; width: 36px; }
+    .rag-ingest-doc .doc-lines span { height: 2px; border-radius: 1px; }
+    .rag-ingest-doc .doc-lines span:nth-child(1) { width: 100%; background: rgba(255,255,255,0.5); }
+    .rag-ingest-doc .doc-lines span:nth-child(2) { width: 75%; background: rgba(255,255,255,0.3); }
+    .rag-ingest-doc .doc-lines span:nth-child(3) { width: 55%; background: rgba(255,255,255,0.2); }
+    .rag-ingest-doc .doc-lines span:nth-child(4) { width: 85%; background: rgba(255,255,255,0.15); }
+    .rag-ingest-doc .doc-badge { display: inline-block; padding: 1px 4px; border-radius: 2px; font-size: 6px; font-family: 'SF Mono', monospace; font-weight: 700; }
+    .rag-ingest-doc:nth-child(1) .doc-badge { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+    .rag-ingest-doc:nth-child(2) .doc-badge { background: rgba(168,85,247,0.15); color: #c4b5fd; }
+    .rag-ingest-doc:nth-child(3) .doc-badge { background: rgba(236,72,153,0.15); color: #f9a8d4; }
 
     /* Stage 2: Chunking — document being sliced with measured segments */
     .rag-chunk { width: 108px; }
     .rag-chunk-visual { position: relative; width: 108px; height: 90px; }
-    .rag-chunk-source { position: absolute; left: 50%; transform: translateX(-50%); top: 4px; width: 86px; height: 24px; background: linear-gradient(170deg, #1a2332, #131b2b); border: 1px solid rgba(255,255,255,0.06); border-radius: 4px; display: flex; flex-direction: column; justify-content: center; padding: 0 8px; gap: 3px; box-shadow: 0 3px 10px rgba(0,0,0,0.3); }
+    .rag-chunk-source { position: absolute; left: 50%; transform: translateX(-50%); top: 4px; width: 86px; height: 24px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; display: flex; flex-direction: column; justify-content: center; padding: 0 8px; gap: 3px; box-shadow: 0 3px 10px rgba(0,0,0,0.4); }
     .rag-chunk-source .cs-line { height: 1.5px; border-radius: 1px; }
-    .rag-chunk-source .cs-line:nth-child(1) { width: 90%; background: rgba(255,255,255,0.15); }
-    .rag-chunk-source .cs-line:nth-child(2) { width: 65%; background: rgba(255,255,255,0.08); }
+    .rag-chunk-source .cs-line:nth-child(1) { width: 90%; background: rgba(255,255,255,0.55); }
+    .rag-chunk-source .cs-line:nth-child(2) { width: 65%; background: rgba(255,255,255,0.3); }
     .rag-chunk-blade { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; }
-    .rag-chunk-blade .blade-line { width: 1px; height: 14px; background: linear-gradient(180deg, transparent, rgba(99,102,241,0.4), transparent); }
+    .rag-chunk-blade .blade-line { width: 1px; height: 14px; background: linear-gradient(180deg, transparent, rgba(99,102,241,0.7), transparent); }
     .rag-chunk-blade .blade-icon { width: 6px; height: 10px; }
-    .rag-chunk-blade .blade-icon svg { width: 100%; height: 100%; stroke: rgba(99,102,241,0.4); fill: none; stroke-width: 1.5; }
+    .rag-chunk-blade .blade-icon svg { width: 100%; height: 100%; stroke: #818cf8; fill: none; stroke-width: 1.5; }
     .rag-chunk-pieces { position: absolute; bottom: 2px; left: 0; right: 0; display: flex; gap: 3px; justify-content: center; }
-    .rag-chunk-piece { flex: 1; max-width: 22px; height: 30px; background: linear-gradient(170deg, #1a2332, #131b2b); border: 1px solid rgba(99,102,241,0.08); border-radius: 3px; display: flex; flex-direction: column; padding: 4px 3px; gap: 2px; box-shadow: 0 2px 6px rgba(0,0,0,0.25); position: relative; }
-    .rag-chunk-piece::before { content: attr(data-idx); position: absolute; top: -6px; right: -2px; font-size: 6px; color: rgba(99,102,241,0.3); font-family: 'SF Mono', monospace; }
+    .rag-chunk-piece { flex: 1; max-width: 22px; height: 30px; background: #1e293b; border: 1px solid rgba(99,102,241,0.2); border-radius: 3px; display: flex; flex-direction: column; padding: 4px 3px; gap: 2px; box-shadow: 0 2px 6px rgba(0,0,0,0.35); position: relative; }
+    .rag-chunk-piece::before { content: attr(data-idx); position: absolute; top: -6px; right: -2px; font-size: 6px; color: #818cf8; font-family: 'SF Mono', monospace; font-weight: 700; }
     .rag-chunk-piece .cp-line { height: 1.5px; border-radius: 1px; }
-    .rag-chunk-piece:nth-child(1) .cp-line { background: rgba(99,102,241,0.35); }
+    .rag-chunk-piece:nth-child(1) .cp-line { background: rgba(99,102,241,0.8); }
     .rag-chunk-piece:nth-child(1) .cp-line:nth-child(1) { width: 90%; }
     .rag-chunk-piece:nth-child(1) .cp-line:nth-child(2) { width: 65%; }
     .rag-chunk-piece:nth-child(1) .cp-line:nth-child(3) { width: 78%; }
     .rag-chunk-piece:nth-child(1) .cp-line:nth-child(4) { width: 45%; }
-    .rag-chunk-piece:nth-child(2) .cp-line { background: rgba(168,85,247,0.3); }
+    .rag-chunk-piece:nth-child(2) .cp-line { background: rgba(168,85,247,0.7); }
     .rag-chunk-piece:nth-child(2) .cp-line:nth-child(1) { width: 82%; }
     .rag-chunk-piece:nth-child(2) .cp-line:nth-child(2) { width: 55%; }
     .rag-chunk-piece:nth-child(2) .cp-line:nth-child(3) { width: 70%; }
     .rag-chunk-piece:nth-child(2) .cp-line:nth-child(4) { width: 50%; }
-    .rag-chunk-piece:nth-child(3) .cp-line { background: rgba(236,72,153,0.3); }
+    .rag-chunk-piece:nth-child(3) .cp-line { background: rgba(236,72,153,0.7); }
     .rag-chunk-piece:nth-child(3) .cp-line:nth-child(1) { width: 88%; }
     .rag-chunk-piece:nth-child(3) .cp-line:nth-child(2) { width: 52%; }
     .rag-chunk-piece:nth-child(3) .cp-line:nth-child(3) { width: 68%; }
     .rag-chunk-piece:nth-child(3) .cp-line:nth-child(4) { width: 42%; }
-    .rag-chunk-piece:nth-child(4) .cp-line { background: rgba(59,130,246,0.3); }
+    .rag-chunk-piece:nth-child(4) .cp-line { background: rgba(59,130,246,0.7); }
     .rag-chunk-piece:nth-child(4) .cp-line:nth-child(1) { width: 75%; }
     .rag-chunk-piece:nth-child(4) .cp-line:nth-child(2) { width: 60%; }
     .rag-chunk-piece:nth-child(4) .cp-line:nth-child(3) { width: 55%; }
     .rag-chunk-piece:nth-child(4) .cp-line:nth-child(4) { width: 70%; }
 
-    /* Stage 3: Vector Embedding — text block transforming into floating number dimensions */
-    .rag-embed { width: 118px; }
-    .rag-embed-visual { position: relative; width: 118px; height: 90px; }
-    .rag-embed-input { position: absolute; left: 4px; top: 50%; transform: translateY(-50%); width: 36px; height: 44px; background: linear-gradient(170deg, #1a2332, #131b2b); border: 1px solid rgba(255,255,255,0.06); border-radius: 4px; display: flex; flex-direction: column; padding: 4px 4px; gap: 2px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-    .rag-embed-input .ei-line { height: 1.5px; border-radius: 1px; }
-    .rag-embed-input .ei-line:nth-child(1) { width: 100%; background: rgba(255,255,255,0.15); }
-    .rag-embed-input .ei-line:nth-child(2) { width: 80%; background: rgba(255,255,255,0.1); }
-    .rag-embed-input .ei-line:nth-child(3) { width: 65%; background: rgba(255,255,255,0.07); }
-    .rag-embed-input .ei-line:nth-child(4) { width: 90%; background: rgba(255,255,255,0.08); }
-    .rag-embed-input .ei-line:nth-child(5) { width: 55%; background: rgba(255,255,255,0.05); }
-    .rag-embed-input .ei-line:nth-child(6) { width: 75%; background: rgba(255,255,255,0.06); }
-    .rag-embed-arrow { position: absolute; left: 44px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; }
-    .rag-embed-arrow .ea-line { width: 16px; height: 1px; background: linear-gradient(90deg, rgba(99,102,241,0.1), rgba(99,102,241,0.4)); }
-    .rag-embed-arrow .ea-tip { width: 0; height: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 5px solid rgba(99,102,241,0.4); }
-    .rag-embed-output { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 56px; height: 70px; background: linear-gradient(170deg, #1a2340, #111827); border: 1px solid rgba(99,102,241,0.12); border-radius: 6px; display: flex; flex-direction: column; padding: 4px 5px; gap: 1px; box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 10px rgba(99,102,241,0.04); overflow: hidden; }
-    .rag-embed-output .eo-label { font-size: 6px; color: rgba(99,102,241,0.4); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px; }
-    .rag-embed-output .eo-row { display: flex; align-items: baseline; gap: 2px; }
-    .rag-embed-output .eo-idx { font-size: 6px; color: rgba(255,255,255,0.15); font-family: 'SF Mono', monospace; width: 10px; flex-shrink: 0; }
-    .rag-embed-output .eo-val { font-size: 7px; color: rgba(99,102,241,0.5); font-family: 'SF Mono', monospace; }
-    .rag-embed-output .eo-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.04); border-radius: 2px; overflow: hidden; }
-    .rag-embed-output .eo-bar-fill { height: 100%; border-radius: 2px; }
-    .rag-embed-output:nth-of-type(1) .eo-bar-fill, .rag-embed-output .eo-row:nth-child(2) .eo-bar-fill { background: rgba(99,102,241,0.4); }
+    /* Stage 3: Vector Embedding — vector dimension table */
+    .rag-embed { width: 110px; }
+    .rag-embed-visual { width: 110px; height: 90px; display: flex; align-items: center; justify-content: center; }
+    .rag-embed-output { width: 110px; height: 90px; background: #1e293b; border: 1px solid rgba(99,102,241,0.2); border-radius: 6px; display: flex; flex-direction: column; padding: 5px 6px; gap: 0; box-shadow: 0 4px 14px rgba(0,0,0,0.4), 0 0 12px rgba(99,102,241,0.08); overflow: hidden; }
+    .rag-embed-output .eo-label { font-size: 7px; color: #818cf8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-weight: 700; }
+    .rag-embed-output .eo-row { display: flex; align-items: baseline; gap: 3px; }
+    .rag-embed-output .eo-idx { font-size: 7px; color: #64748b; font-family: 'SF Mono', monospace; width: 14px; flex-shrink: 0; font-weight: 700; }
+    .rag-embed-output .eo-val { font-size: 8px; color: #c7d2fe; font-family: 'SF Mono', monospace; font-weight: 700; min-width: 26px; }
+    .rag-embed-output .eo-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+    .rag-embed-output .eo-bar-fill { height: 100%; border-radius: 2px; background: #818cf8; }
 
     /* Stage 4: Retrieval — funnel filtering results */
-    .rag-retrieve { width: 100px; }
-    .rag-retrieve-visual { position: relative; width: 100px; height: 90px; }
-    .rag-funnel { position: absolute; left: 50%; transform: translateX(-50%); top: 0; width: 90px; height: 52px; }
-    .rag-funnel-top { width: 90px; height: 10px; background: linear-gradient(170deg, #1a2332, #131b2b); border: 1px solid rgba(255,255,255,0.06); border-radius: 3px 3px 0 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
-    .rag-funnel-top .ft-label { font-size: 6px; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.5px; }
-    .rag-funnel-body { position: relative; width: 90px; height: 28px; background: linear-gradient(180deg, rgba(99,102,241,0.06), rgba(99,102,241,0.02)); clip-path: polygon(0 0, 100% 0, 70% 100%, 30% 100%); border: 1px solid rgba(99,102,241,0.08); }
-    .rag-funnel-body::before { content: ''; position: absolute; inset: 2px; background: linear-gradient(180deg, rgba(99,102,241,0.04), transparent); clip-path: polygon(0 0, 100% 0, 68% 100%, 32% 100%); }
-    .rag-funnel-bottom { width: 36px; height: 10px; background: rgba(45,154,110,0.08); border: 1px solid rgba(45,154,110,0.15); border-radius: 0 0 4px 4px; margin: 0 auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 8px rgba(45,154,110,0.06); }
-    .rag-funnel-bottom .fb-label { font-size: 6px; color: rgba(45,154,110,0.5); font-weight: 600; }
-    .rag-funnel-results { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 90px; display: flex; flex-direction: column; gap: 2px; }
-    .rag-funnel-rrow { display: flex; align-items: center; gap: 4px; padding: 2px 4px; background: rgba(0,0,0,0.15); border-radius: 2px; }
-    .rag-funnel-rrow.fr-pass { background: rgba(45,154,110,0.06); border: 1px solid rgba(45,154,110,0.1); }
-    .rag-funnel-rrow.fr-fail { opacity: 0.35; }
-    .rag-funnel-rrow .fr-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
-    .rag-funnel-rrow.fr-pass .fr-dot { background: #2d9a6e; box-shadow: 0 0 4px rgba(45,154,110,0.4); }
+    .rag-retrieve { width: 108px; }
+    .rag-retrieve-visual { position: relative; width: 108px; height: 90px; }
+    .rag-funnel { position: absolute; left: 50%; transform: translateX(-50%); top: 0; width: 80px; height: 44px; }
+    .rag-funnel-top { width: 80px; height: 10px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 3px 3px 0 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+    .rag-funnel-top .ft-label { font-size: 6px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+    .rag-funnel-body { position: relative; width: 80px; height: 22px; background: linear-gradient(180deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05)); clip-path: polygon(0 0, 100% 0, 68% 100%, 32% 100%); }
+    .rag-funnel-bottom { width: 28px; height: 8px; background: rgba(45,154,110,0.2); border: 1px solid rgba(45,154,110,0.3); border-radius: 0 0 3px 3px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+    .rag-funnel-bottom .fb-label { font-size: 6px; color: #34d399; font-weight: 700; }
+    .rag-funnel-results { position: absolute; top: 48px; left: 50%; transform: translateX(-50%); width: 96px; display: flex; flex-direction: column; gap: 2px; }
+    .rag-funnel-rrow { display: flex; align-items: center; gap: 3px; padding: 2px 4px; background: rgba(15,23,42,0.6); border-radius: 2px; border: 1px solid rgba(255,255,255,0.06); }
+    .rag-funnel-rrow.fr-pass { background: rgba(45,154,110,0.12); border: 1px solid rgba(45,154,110,0.2); }
+    .rag-funnel-rrow.fr-fail { opacity: 0.45; }
+    .rag-funnel-rrow .fr-dot { width: 3px; height: 3px; border-radius: 50%; flex-shrink: 0; }
+    .rag-funnel-rrow.fr-pass .fr-dot { background: #34d399; box-shadow: 0 0 4px rgba(45,154,110,0.5); }
     .rag-funnel-rrow.fr-fail .fr-dot { background: #64748b; }
-    .rag-funnel-rrow .fr-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.04); border-radius: 2px; overflow: hidden; }
+    .rag-funnel-rrow .fr-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
     .rag-funnel-rrow .fr-bar-fill { height: 100%; border-radius: 2px; }
-    .rag-funnel-rrow.fr-pass .fr-bar-fill { background: #2d9a6e; }
+    .rag-funnel-rrow.fr-pass .fr-bar-fill { background: #34d399; }
     .rag-funnel-rrow.fr-fail .fr-bar-fill { background: #475569; }
+    .rag-funnel-rrow .fr-pct { font-size: 6px; font-family: 'SF Mono', monospace; font-weight: 700; color: #94a3b8; min-width: 16px; text-align: right; }
+    .rag-funnel-rrow.fr-pass .fr-pct { color: #34d399; }
 
     /* Stage 5: Generation — clean response card with quote-style layout */
     .rag-generate { width: 118px; }
-    .rag-answer-box { width: 118px; background: linear-gradient(170deg, #1a2332, #111827); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+    .rag-answer-box { width: 118px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
     .rag-answer-body { padding: 10px 10px 8px; display: flex; flex-direction: column; gap: 7px; }
     .rag-answer-quote { position: relative; padding-left: 10px; }
-    .rag-answer-quote::before { content: ''; position: absolute; left: 0; top: 2px; bottom: 2px; width: 2px; border-radius: 1px; background: linear-gradient(180deg, rgba(99,102,241,0.4), rgba(45,154,110,0.3)); }
-    .rag-answer-text { font-size: 10px; color: #e2e8f0; line-height: 1.4; }
+    .rag-answer-quote::before { content: ''; position: absolute; left: 0; top: 2px; bottom: 2px; width: 2px; border-radius: 1px; background: linear-gradient(180deg, #6366f1, #2d9a6e); }
+    .rag-answer-text { font-size: 10px; color: #f1f5f9; line-height: 1.4; }
     .rag-answer-text .rag-cursor { display: inline-block; width: 1px; height: 10px; background: #34d399; animation: abCursorBlink 1s step-end infinite; vertical-align: text-bottom; }
-    .rag-answer-cite { display: inline-flex; align-items: center; gap: 4px; padding: 3px 6px; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.1); border-radius: 3px; width: fit-content; }
-    .rag-answer-cite .ac-icon { width: 8px; height: 8px; border-radius: 2px; background: rgba(99,102,241,0.2); display: flex; align-items: center; justify-content: center; }
-    .rag-answer-cite .ac-icon svg { width: 5px; height: 5px; stroke: rgba(99,102,241,0.5); fill: none; stroke-width: 2; }
-    .rag-answer-cite .ac-text { font-size: 7px; color: #a5b4fc; font-family: 'SF Mono', monospace; }
-    .rag-answer-footer { display: flex; align-items: center; justify-content: space-between; padding: 5px 10px; border-top: 1px solid rgba(255,255,255,0.04); }
+    .rag-answer-cite { display: inline-flex; align-items: center; gap: 4px; padding: 3px 6px; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.15); border-radius: 3px; width: fit-content; }
+    .rag-answer-cite .ac-icon { width: 8px; height: 8px; border-radius: 2px; background: rgba(99,102,241,0.3); display: flex; align-items: center; justify-content: center; }
+    .rag-answer-cite .ac-icon svg { width: 5px; height: 5px; stroke: #a5b4fc; fill: none; stroke-width: 2; }
+    .rag-answer-cite .ac-text { font-size: 7px; color: #a5b4fc; font-family: 'SF Mono', monospace; font-weight: 600; }
+    .rag-answer-footer { display: flex; align-items: center; justify-content: space-between; padding: 5px 10px; border-top: 1px solid rgba(255,255,255,0.06); }
     .rag-grounded-tag { font-size: 7px; color: #34d399; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
-    .rag-grounded-tag::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #34d399; box-shadow: 0 0 6px rgba(45,154,110,0.4); }
-    .rag-answer-time { font-size: 7px; color: #475569; font-family: 'SF Mono', monospace; }
+    .rag-grounded-tag::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #34d399; box-shadow: 0 0 6px rgba(45,154,110,0.5); }
+    .rag-answer-time { font-size: 7px; color: #64748b; font-family: 'SF Mono', monospace; font-weight: 600; }
 
     /* Flow connectors */
     .rag-flow-line { display: flex; align-items: center; height: 90px; width: 20px; flex-shrink: 0; position: relative; }
-    .rag-flow-line .fl-track { width: 100%; height: 1px; background: linear-gradient(90deg, rgba(99,102,241,0.05), rgba(99,102,241,0.15)); position: relative; }
-    .rag-flow-line .fl-track::after { content: ''; position: absolute; right: -3px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 4px solid rgba(99,102,241,0.25); border-top: 2.5px solid transparent; border-bottom: 2.5px solid transparent; }
-    .rag-flow-line .fl-packet { position: absolute; top: -2px; width: 4px; height: 4px; border-radius: 50%; background: rgba(99,102,241,0.5); box-shadow: 0 0 5px rgba(99,102,241,0.3); animation: ragPacket 2.8s ease-in-out infinite; }
+    .rag-flow-line .fl-track { width: 100%; height: 1px; background: linear-gradient(90deg, rgba(99,102,241,0.08), rgba(99,102,241,0.25)); position: relative; }
+    .rag-flow-line .fl-track::after { content: ''; position: absolute; right: -3px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 4px solid rgba(99,102,241,0.35); border-top: 2.5px solid transparent; border-bottom: 2.5px solid transparent; }
+    .rag-flow-line .fl-packet { position: absolute; top: -2px; width: 4px; height: 4px; border-radius: 50%; background: #818cf8; box-shadow: 0 0 6px rgba(99,102,241,0.5); animation: ragPacket 2.8s ease-in-out infinite; }
     .rag-flow-line .fl-packet.fp2 { animation-delay: 0.9s; }
     .rag-flow-line .fl-packet.fp3 { animation-delay: 1.8s; }
     @keyframes ragPacket { 0% { left: 0; opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { left: calc(100% - 4px); opacity: 0; } }
@@ -768,22 +756,10 @@
 
         <!-- Stage 1: Document Ingestion -->
         <div class="rag-stage rag-ingest">
-          <div class="rag-ingest-visual">
-            <div class="rag-ingest-feed f1">
-              <div class="rag-feed-doc"><div class="fd-icon"></div><div class="fd-lines"><span></span><span></span></div></div>
-              <div class="rag-feed-doc"><div class="fd-icon"></div><div class="fd-lines"><span></span><span></span></div></div>
-              <div class="rag-feed-doc"><div class="fd-icon"></div><div class="fd-lines"><span></span><span></span></div></div>
-            </div>
-            <div class="rag-ingest-feed f2">
-              <div class="rag-feed-doc"><div class="fd-icon"></div><div class="fd-lines"><span></span><span></span></div></div>
-              <div class="rag-feed-doc"><div class="fd-icon"></div><div class="fd-lines"><span></span><span></span></div></div>
-              <div class="rag-feed-doc"><div class="fd-icon"></div><div class="fd-lines"><span></span><span></span></div></div>
-            </div>
-            <div class="rag-ingest-feed f3">
-              <div class="rag-feed-doc"><div class="fd-icon"></div><div class="fd-lines"><span></span><span></span></div></div>
-              <div class="rag-feed-doc"><div class="fd-icon"></div><div class="fd-lines"><span></span><span></span></div></div>
-              <div class="rag-feed-doc"><div class="fd-icon"></div><div class="fd-lines"><span></span><span></span></div></div>
-            </div>
+          <div class="rag-ingest-stack">
+            <div class="rag-ingest-doc"><div class="doc-type"></div><div class="doc-fold"></div><div class="doc-lines"><span></span><span></span><span></span><span></span></div><span class="doc-badge">PDF</span></div>
+            <div class="rag-ingest-doc"><div class="doc-type"></div><div class="doc-fold"></div><div class="doc-lines"><span></span><span></span><span></span><span></span></div><span class="doc-badge">DOCX</span></div>
+            <div class="rag-ingest-doc"><div class="doc-type"></div><div class="doc-fold"></div><div class="doc-lines"><span></span><span></span><span></span><span></span></div><span class="doc-badge">TXT</span></div>
           </div>
           <span class="rag-stage-label">Ingest</span>
         </div>
@@ -829,18 +805,6 @@
         <!-- Stage 3: Vector Embedding -->
         <div class="rag-stage rag-embed">
           <div class="rag-embed-visual">
-            <div class="rag-embed-input">
-              <div class="ei-line"></div>
-              <div class="ei-line"></div>
-              <div class="ei-line"></div>
-              <div class="ei-line"></div>
-              <div class="ei-line"></div>
-              <div class="ei-line"></div>
-            </div>
-            <div class="rag-embed-arrow">
-              <div class="ea-line"></div>
-              <div class="ea-tip"></div>
-            </div>
             <div class="rag-embed-output">
               <div class="eo-label">vector[384]</div>
               <div class="eo-row"><span class="eo-idx">d0</span><span class="eo-val">0.82</span><div class="eo-bar"><div class="eo-bar-fill" style="width:82%"></div></div></div>
@@ -873,11 +837,11 @@
               <div class="rag-funnel-bottom"><span class="fb-label">top-k</span></div>
             </div>
             <div class="rag-funnel-results">
-              <div class="rag-funnel-rrow fr-pass"><div class="fr-dot"></div><div class="fr-bar"><div class="fr-bar-fill" style="width:94%"></div></div></div>
-              <div class="rag-funnel-rrow fr-pass"><div class="fr-dot"></div><div class="fr-bar"><div class="fr-bar-fill" style="width:78%"></div></div></div>
-              <div class="rag-funnel-rrow fr-pass"><div class="fr-dot"></div><div class="fr-bar"><div class="fr-bar-fill" style="width:65%"></div></div></div>
-              <div class="rag-funnel-rrow fr-fail"><div class="fr-dot"></div><div class="fr-bar"><div class="fr-bar-fill" style="width:31%"></div></div></div>
-              <div class="rag-funnel-rrow fr-fail"><div class="fr-dot"></div><div class="fr-bar"><div class="fr-bar-fill" style="width:18%"></div></div></div>
+              <div class="rag-funnel-rrow fr-pass"><div class="fr-dot"></div><div class="fr-bar"><div class="fr-bar-fill" style="width:94%"></div></div><span class="fr-pct">0.94</span></div>
+              <div class="rag-funnel-rrow fr-pass"><div class="fr-dot"></div><div class="fr-bar"><div class="fr-bar-fill" style="width:78%"></div></div><span class="fr-pct">0.78</span></div>
+              <div class="rag-funnel-rrow fr-pass"><div class="fr-dot"></div><div class="fr-bar"><div class="fr-bar-fill" style="width:65%"></div></div><span class="fr-pct">0.65</span></div>
+              <div class="rag-funnel-rrow fr-fail"><div class="fr-dot"></div><div class="fr-bar"><div class="fr-bar-fill" style="width:31%"></div></div><span class="fr-pct">0.31</span></div>
+              <div class="rag-funnel-rrow fr-fail"><div class="fr-dot"></div><div class="fr-bar"><div class="fr-bar-fill" style="width:18%"></div></div><span class="fr-pct">0.18</span></div>
             </div>
           </div>
           <span class="rag-stage-label">Retrieve</span>
