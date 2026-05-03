@@ -197,43 +197,31 @@
     .hm-stat .hs-label { font-size: 13px; color: #94a3b8; line-height: 1.5; }
 
     /* ===== CHANNELS CIRCUIT ===== */
-    .channel-board { background: var(--surface); border: 1px solid rgba(255,255,255,0.12); border-radius: 28px; padding: 32px; position: relative; overflow: hidden; min-height: 560px; margin-top: 8px; }
+    .channel-board { background: var(--surface); border: 1px solid rgba(255,255,255,0.12); border-radius: 28px; padding: 28px; position: relative; overflow: hidden; min-height: 540px; margin-top: 8px; }
     .channel-board::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px); background-size: 28px 28px; pointer-events: none; }
     .cb-svg { position: absolute; inset: 0; pointer-events: none; }
     .cb-svg .cb-path { fill: none; stroke: rgba(255,255,255,0.03); stroke-width: 1; }
     .cb-svg .cb-path.active { stroke: rgba(99,102,241,0.5); stroke-width: 1.5; }
     .cb-svg .cb-particle { fill: var(--accent); opacity: 0; filter: drop-shadow(0 0 8px var(--accent)); }
     .cb-svg .cb-particle.active { opacity: 1; }
-    .cb-svg .cb-glow { fill: var(--accent); opacity: 0; }
-    .cb-svg .cb-glow.active { opacity: 0.15; }
 
     .cb-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 3; text-align: center; }
-    .cb-core { width: 90px; height: 90px; border-radius: 22px; background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.03)); border: 1px solid rgba(99,102,241,0.2); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 900; color: #4b5563; margin: 0 auto 8px; position: relative; transition: all .3s ease; }
-    .cb-core.lit { background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(99,102,241,0.1)); border-color: rgba(99,102,241,0.5); color: var(--accent); box-shadow: 0 0 30px rgba(99,102,241,0.2); }
-    .cb-core-label { font-size: 14px; font-weight: 700; color: #4b5563; transition: color .3s; }
-    .cb-core.lit + .cb-core-label, .cb-core-label.lit { color: #f1f5f9; }
-    .cb-core-sub { font-size: 10px; color: #374151; transition: color .3s; }
-
-    .cb-node { position: absolute; z-index: 2; text-align: center; transition: all .3s ease; }
-    .cb-node.active .cb-node-box { border-color: rgba(99,102,241,0.5); box-shadow: 0 0 28px rgba(99,102,241,0.25); background: rgba(99,102,241,0.06); }
-    .cb-node.active .cb-node-name { color: #fff; }
-    .cb-node.active .cb-node-type { color: #6b7280; }
-    .cb-node-box { width: 64px; height: 64px; border-radius: 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; transition: all .3s; }
-    .cb-node-box svg { width: 28px; height: 28px; }
-    .cb-node-name { font-size: 12px; font-weight: 600; color: #94a3b8; white-space: nowrap; transition: color .3s; }
-    .cb-node-type { font-size: 10px; color: #4b5563; margin-top: 1px; transition: color .3s; }
+    .cb-core { width: 96px; height: 96px; border-radius: 24px; background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.03)); border: 1px solid rgba(99,102,241,0.2); display: flex; align-items: center; justify-content: center; font-size: 34px; font-weight: 900; color: #4b5563; margin: 0 auto 10px; position: relative; transition: all .3s ease; }
+    .cb-core.lit { background: linear-gradient(135deg, rgba(99,102,241,0.35), rgba(99,102,241,0.1)); border-color: rgba(99,102,241,0.6); color: var(--accent); box-shadow: 0 0 40px rgba(99,102,241,0.25); }
     .cb-core::before { content: ''; position: absolute; inset: -8px; border-radius: 32px; border: 1px solid rgba(99,102,241,0.15); animation: cbPulse 2.5s ease-in-out infinite; }
     @keyframes cbPulse { 0%,100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 0; transform: scale(1.08); } }
-    .cb-core-label { font-size: 15px; font-weight: 700; color: #f1f5f9; }
-    .cb-core-sub { font-size: 11px; color: #64748b; margin-top: 2px; }
+    .cb-core-label { font-size: 15px; font-weight: 700; color: #4b5563; transition: color .3s; }
+    .cb-core-label.lit { color: #f1f5f9; }
+    .cb-core-sub { font-size: 11px; color: #374151; margin-top: 2px; transition: color .3s; }
 
-    .cb-node { position: absolute; z-index: 2; text-align: center; transition: all .35s ease; }
-    .cb-node.active .cb-node-box { border-color: rgba(99,102,241,0.5); box-shadow: 0 0 24px rgba(99,102,241,0.2); }
+    .cb-node { position: absolute; z-index: 2; text-align: center; transition: all .3s ease; }
+    .cb-node.active .cb-node-box { border-color: rgba(99,102,241,0.5); box-shadow: 0 0 30px rgba(99,102,241,0.25); background: rgba(99,102,241,0.08); }
     .cb-node.active .cb-node-name { color: #fff; }
-    .cb-node-box { width: 56px; height: 56px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; transition: all .35s; }
-    .cb-node-box svg { width: 24px; height: 24px; }
-    .cb-node-name { font-size: 11px; font-weight: 600; color: #94a3b8; white-space: nowrap; transition: color .35s; }
-    .cb-node-type { font-size: 9px; color: #4b5563; margin-top: 1px; }
+    .cb-node.active .cb-node-type { color: #6b7280; }
+    .cb-node-box { width: 72px; height: 72px; border-radius: 18px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; transition: all .3s; }
+    .cb-node-box svg { width: 32px; height: 32px; }
+    .cb-node-name { font-size: 13px; font-weight: 600; color: #94a3b8; white-space: nowrap; transition: color .3s; }
+    .cb-node-type { font-size: 10px; color: #4b5563; margin-top: 2px; transition: color .3s; }
 
     /* ===== TIMELINE ===== */
     .timeline { position: relative; padding: 60px 0; max-width: 900px; margin: 0 auto; }
@@ -599,8 +587,8 @@
         <div class="cb-core-sub">AI Agent</div>
       </div>
 
-      <!-- MODULES - chaotic positions, no symmetry -->
-      <div class="cb-node" data-idx="0" style="top:6%;left:14%;">
+      <!-- MODULES - chaotic positions, no rows, no symmetry -->
+      <div class="cb-node" data-idx="0" style="top:3%;left:6%;">
         <div class="cb-node-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
         </div>
@@ -608,7 +596,7 @@
         <div class="cb-node-type">Web</div>
       </div>
 
-      <div class="cb-node" data-idx="1" style="top:5%;left:48%;transform:translateX(-50%);">
+      <div class="cb-node" data-idx="1" style="top:18%;left:32%;">
         <div class="cb-node-box">
           <svg viewBox="0 0 24 24" fill="#26A5E4"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
         </div>
@@ -616,7 +604,7 @@
         <div class="cb-node-type">Messenger</div>
       </div>
 
-      <div class="cb-node" data-idx="2" style="top:7%;right:10%;">
+      <div class="cb-node" data-idx="2" style="top:5%;right:8%;">
         <div class="cb-node-box">
           <svg viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
         </div>
@@ -624,7 +612,7 @@
         <div class="cb-node-type">Messenger</div>
       </div>
 
-      <div class="cb-node" data-idx="3" style="top:28%;left:3%;">
+      <div class="cb-node" data-idx="3" style="top:42%;left:2%;">
         <div class="cb-node-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
         </div>
@@ -632,7 +620,7 @@
         <div class="cb-node-type">Incoming</div>
       </div>
 
-      <div class="cb-node" data-idx="4" style="top:30%;right:4%;">
+      <div class="cb-node" data-idx="4" style="top:38%;right:3%;">
         <div class="cb-node-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
         </div>
@@ -640,7 +628,7 @@
         <div class="cb-node-type">Custom</div>
       </div>
 
-      <div class="cb-node" data-idx="5" style="bottom:28%;left:5%;">
+      <div class="cb-node" data-idx="5" style="bottom:14%;left:10%;">
         <div class="cb-node-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
@@ -648,7 +636,7 @@
         <div class="cb-node-type">Custom REST</div>
       </div>
 
-      <div class="cb-node" data-idx="6" style="bottom:25%;right:6%;">
+      <div class="cb-node" data-idx="6" style="bottom:6%;right:24%;">
         <div class="cb-node-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
         </div>
@@ -656,7 +644,7 @@
         <div class="cb-node-type">Monitoring</div>
       </div>
 
-      <div class="cb-node" data-idx="7" style="bottom:8%;left:18%;">
+      <div class="cb-node" data-idx="7" style="top:12%;left:62%;">
         <div class="cb-node-box">
           <svg viewBox="0 0 24 24" fill="#95bf47"><path d="M19.27 5.33C18.61 5.02 17.91 4.8 17.19 4.69c-.08-.01-.15-.03-.23-.04-.15-.02-.3-.04-.45-.05-.16-.01-.32-.02-.48-.02H5.97c-.16 0-.32.01-.48.02-.15.01-.3.03-.45.05-.08.01-.15.03-.23.04-.72.11-1.42.33-2.07.64L12 16.07l7.27-10.74z"/></svg>
         </div>
@@ -664,7 +652,7 @@
         <div class="cb-node-type">E-commerce</div>
       </div>
 
-      <div class="cb-node" data-idx="8" style="bottom:10%;left:50%;transform:translateX(-50%);">
+      <div class="cb-node" data-idx="8" style="bottom:32%;right:28%;">
         <div class="cb-node-box">
           <svg viewBox="0 0 24 24" fill="#635bff"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.57 0 7.524.654 6.09 1.965 4.688 3.27 4.034 5.1 4.034 7.39c0 4.198 2.56 5.892 6.694 7.442 2.634.964 3.544 1.631 3.544 2.67 0 1.07-.936 1.696-2.61 1.696-2.097 0-4.937-.858-7.035-2.075l-.915 5.557C5.283 23.467 8.64 24 12.33 24c2.953 0 5.243-.593 6.71-1.89 1.556-1.365 2.418-3.406 2.418-5.955 0-4.28-2.61-5.984-7.482-7.005z"/></svg>
         </div>
@@ -672,7 +660,7 @@
         <div class="cb-node-type">Billing</div>
       </div>
 
-      <div class="cb-node" data-idx="9" style="bottom:6%;right:16%;">
+      <div class="cb-node" data-idx="9" style="bottom:4%;right:6%;">
         <div class="cb-node-box">
           <svg viewBox="0 0 24 24" fill="#9c27b0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
         </div>
