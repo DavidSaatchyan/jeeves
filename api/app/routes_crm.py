@@ -50,6 +50,7 @@ def save_cfg(
     cfg.capabilities = crm.capabilities(cfg) | (body.capabilities or {})
     cfg.primary_identifier = body.primary_identifier or "email"
     db.commit()
+    crm._invalidate_cache(tenant.id)
     return CRMConfigOut(
         provider=cfg.provider,
         read_url=cfg.read_url,

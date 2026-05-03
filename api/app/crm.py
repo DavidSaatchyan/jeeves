@@ -25,6 +25,34 @@ DEFAULT_CAPABILITIES = {
     "require_confirmation": True,
 }
 
+# Simple TTL cache for CRM reads: {cache_key: (data, expires_at)}
+_customer_cache: dict[str, tuple[dict, float]] = {}
+_CACHE_TTL = 300  # 5 minutes
+
+
+def _get_cached(tenant_id: UUID, user_id: str) -> dict | None:
+    key = f"{tenant_id}:{user_id}"
+    entry = _customer_cache.get(key)
+    if entry and time.time() < entry[1]:
+        return entry[0]
+    _customer_cache.pop(key, None)
+    return None
+
+
+def _set_cached(tenant_id: UUID, user_id: str, data: dict):
+    key = f"{tenant_id}:{user_id}"
+    _customer_cache[key] = (data, time.time() + _CACHE_TTL)
+
+
+def _invalidate_cache(tenant_id: UUID, user_id: str | None = None):
+    if user_id:
+        _customer_cache.pop(f"{tenant_id}:{user_id}", None)
+    else:
+        # Invalidate all entries for this tenant
+        to_remove = [k for k in _customer_cache if k.startswith(f"{tenant_id}:")]
+        for k in to_remove:
+            del _customer_cache[k]
+
 
 def resolve_identifier(cfg: CRMConfig | None, user_id: str, extra_fields: dict | None = None) -> str:
     """Return the actual lookup value based on CRMConfig.primary_identifier.
@@ -167,19 +195,29 @@ async def read_customer(
     delegate to the appropriate connector module using the resolved identifier.
     Falls back to HubSpot or custom REST as before.
 
+    Results are cached for 5 minutes per tenant+user to avoid repeated API calls.
+
     extra_fields: optional dict from widget.identify() for custom identifier lookup.
     """
     cfg = get_config(db, tenant_id)
     lookup_key = resolve_identifier(cfg, user_id, extra_fields)
 
+    # Check cache first
+    cached = _get_cached(tenant_id, lookup_key)
+    if cached is not None:
+        return cached
+
     # 1. Try native connectors first
     native_data = await _read_from_native_connectors(db, tenant_id, lookup_key)
     if native_data:
+        _set_cached(tenant_id, lookup_key, native_data)
         return native_data
 
     # 2. Fall back to HubSpot
     if cfg and cfg.provider == "hubspot":
-        return await hubspot.get_customer(db, tenant_id, user_id)
+        data = await hubspot.get_customer(db, tenant_id, user_id)
+        _set_cached(tenant_id, lookup_key, data)
+        return data
 
     # 3. Fall back to custom REST
     if not cfg or not cfg.read_url:
@@ -191,7 +229,9 @@ async def read_customer(
         r = await client.get(url, headers=cfg.headers or {})
         r.raise_for_status()
         payload = r.json()
-    return _apply_mapping(payload, cfg.read_mapping or {}) | {"raw": payload}
+    result = _apply_mapping(payload, cfg.read_mapping or {}) | {"raw": payload}
+    _set_cached(tenant_id, lookup_key, result)
+    return result
 
 
 async def _read_from_native_connectors(db: Session, tenant_id: UUID, lookup_key: str) -> dict:
@@ -260,10 +300,11 @@ async def write_customer(db: Session, tenant_id: UUID, user_id: str, updates: di
     async with httpx.AsyncClient(timeout=10.0) as client:
         r = await client.patch(url, json=body, headers=cfg.headers or {})
         r.raise_for_status()
-        try:
-            return r.json()
-        except Exception:
-            return {"ok": True}
+    _invalidate_cache(tenant_id, user_id)
+    try:
+        return r.json()
+    except Exception:
+        return {"ok": True}
 
 
 async def test_connection(db: Session, tenant_id: UUID, sample_user_id: str = "test") -> dict:

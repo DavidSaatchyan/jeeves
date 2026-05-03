@@ -55,8 +55,10 @@
         <div id="crmHowItWorks" style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;font-size:13px">
           <strong style="font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted)">How it works</strong>
           <p style="margin:8px 0 0;color:var(--muted);line-height:1.5">
-            <strong style="color:var(--fg)">Read</strong> — Jeeves calls this endpoint <em>on every message</em> to learn who the customer is (plan, status, orders, etc.).
+            <strong style="color:var(--fg)">Read</strong> — Jeeves calls this endpoint to learn who the customer is (plan, status, orders, etc.).
+            Data is cached for 5 minutes to avoid repeated requests within the same conversation.
             <br><strong style="color:var(--fg)">Write</strong> — (optional) Lets the AI change data in your CRM, e.g. update a plan or status.
+            Cache is invalidated on write.
           </p>
         </div>
 
@@ -354,7 +356,7 @@ async function loadCrm(){
 
     // Show API key status indicator if headers are configured
     var headers = c.headers || {};
-    var hasKey = Object.keys(headers).length > 0;
+    var hasKey = Object.keys(headers).some(function(k){ return headers[k] !== '********' && headers[k] !== ''; });
     var apiKeyStatus = document.getElementById('apiKeyStatus');
     if(hasKey){
       apiKeyStatus.style.display = '';
