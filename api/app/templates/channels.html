@@ -1,46 +1,35 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>Channels</h1>
+<p class="page-desc">Connect your customers where they are. All channels share the same knowledge base and AI brain.</p>
 
-<div class="help">
-  <h3>Connect your customers where they are</h3>
-  <p>Each channel is a separate way for users to reach Jeeves. All channels share the same knowledge base and AI brain — you just pick where to be available.</p>
-</div>
-
-<!-- ═══ CHANNEL CARDS ════════════════════════════════════════════════════════ -->
-<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:24px">
-  <!-- Website Widget -->
-  <div class="channel-card active" onclick="selectChannel('web_widget')" style="padding:24px;background:var(--card);border:2px solid var(--bord);border-radius:14px;cursor:pointer;text-align:center;transition:border-color .2s,background .2s">
-    <span style="font-size:40px;display:block;margin-bottom:12px;font-family:monospace;font-weight:700;color:var(--acc)">&#9670;</span>
-    <div style="font-weight:700;font-size:16px">Website Widget</div>
-    <div class="muted" style="font-size:12px;margin-top:4px">Chat widget on your site</div>
+<div class="grid grid-3" style="margin-bottom:24px">
+  <div class="channel-card active" onclick="selectChannel('web_widget')" style="padding:24px;background:var(--surface);border:2px solid var(--border);border-radius:14px;cursor:pointer;text-align:center;transition:all .2s">
+    <span style="font-size:32px;display:block;margin-bottom:12px;color:var(--accent)">&#9670;</span>
+    <div style="font-weight:700;font-size:15px;margin-bottom:4px">Website Widget</div>
+    <div class="muted" style="font-size:12px">Chat widget on your site</div>
     <span id="badge-web_widget" class="pill muted" style="margin-top:10px;display:inline-block">—</span>
   </div>
-  <!-- Telegram -->
-  <div class="channel-card" onclick="selectChannel('telegram')" style="padding:24px;background:var(--card);border:2px solid var(--bord);border-radius:14px;cursor:pointer;text-align:center;transition:border-color .2s,background .2s">
-    <span style="font-size:40px;display:block;margin-bottom:12px;font-family:monospace;font-weight:700;color:#2AABEE">&#9654;</span>
-    <div style="font-weight:700;font-size:16px">Telegram</div>
-    <div class="muted" style="font-size:12px;margin-top:4px">Bot — free, instant setup</div>
+  <div class="channel-card" onclick="selectChannel('telegram')" style="padding:24px;background:var(--surface);border:2px solid var(--border);border-radius:14px;cursor:pointer;text-align:center;transition:all .2s">
+    <span style="font-size:32px;display:block;margin-bottom:12px;color:#2AABEE">&#9654;</span>
+    <div style="font-weight:700;font-size:15px;margin-bottom:4px">Telegram</div>
+    <div class="muted" style="font-size:12px">Bot — free, instant setup</div>
     <span id="badge-telegram" class="pill muted" style="margin-top:10px;display:inline-block">—</span>
   </div>
-  <!-- WhatsApp -->
-  <div class="channel-card" onclick="selectChannel('whatsapp')" style="padding:24px;background:var(--card);border:2px solid var(--bord);border-radius:14px;cursor:pointer;text-align:center;transition:border-color .2s,background .2s">
-    <span style="font-size:40px;display:block;margin-bottom:12px;font-family:monospace;font-weight:700;color:#25D366">&#9654;</span>
-    <div style="font-weight:700;font-size:16px">WhatsApp</div>
-    <div class="muted" style="font-size:12px;margin-top:4px">Business Cloud API</div>
+  <div class="channel-card" onclick="selectChannel('whatsapp')" style="padding:24px;background:var(--surface);border:2px solid var(--border);border-radius:14px;cursor:pointer;text-align:center;transition:all .2s">
+    <span style="font-size:32px;display:block;margin-bottom:12px;color:#25D366">&#9654;</span>
+    <div style="font-weight:700;font-size:15px;margin-bottom:4px">WhatsApp</div>
+    <div class="muted" style="font-size:12px">Business Cloud API</div>
     <span id="badge-whatsapp" class="pill muted" style="margin-top:10px;display:inline-block">—</span>
   </div>
 </div>
 
-<!-- ═══ CHANNEL CONFIG PANELS ═══════════════════════════════════════════════ -->
-
-<!-- Website Widget panel -->
-<div id="panel-web_widget" class="channel-panel" style="display:none">
+<div id="panel-web_widget" class="channel-panel">
   <div class="card">
     <h2>Website Widget</h2>
-    <p class="muted" style="margin:0 0 16px">Embed a floating chat button on any website. Copy the script below and paste before <code>&lt;/body&gt;</code>.</p>
+    <p class="muted" style="margin:0 0 20px">Embed a floating chat button on any website. Copy the script below and paste before <code>&lt;/body&gt;</code>.</p>
 
-    <div class="grid" style="margin-bottom:16px">
+    <div class="grid grid-2" style="margin-bottom:20px">
       <div>
         <label>Widget title</label>
         <input id="wTitle" type="text" value="Jeeves support"/>
@@ -65,65 +54,65 @@
       </div>
     </div>
 
-    <div class="card" style="background:#0b1228;border:1px solid var(--bord)">
-      <h2 style="font-size:14px">Install snippet</h2>
-      <pre id="snippet" style="font-size:12px;max-height:120px;overflow:auto"></pre>
-      <div class="row">
-        <button onclick="copySnip()" style="font-size:13px;padding:6px 10px">Copy</button>
-        <span id="copied" class="muted"></span>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div class="flex" style="justify-content:space-between;margin-bottom:10px">
+        <span class="muted" style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Install snippet</span>
+        <div class="flex gap-sm">
+          <button class="ghost sm" onclick="copySnip()">Copy</button>
+          <span id="copied" class="muted"></span>
+        </div>
       </div>
+      <pre id="snippet" style="font-size:12px;margin:0;max-height:120px;overflow:auto;border:none;padding:0;background:transparent"></pre>
     </div>
   </div>
 </div>
 
-<!-- Telegram panel -->
 <div id="panel-telegram" class="channel-panel" style="display:none">
   <div class="card">
-    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:4px">
+    <div class="flex" style="justify-content:space-between;margin-bottom:16px">
       <h2 style="margin:0">Telegram</h2>
       <span id="tgStatus" class="pill muted">not configured</span>
     </div>
 
-    <div class="help" style="margin:16px 0">
+    <div class="help">
       <h3>How to set up (2 minutes)</h3>
-      <div class="step"><div class="num">1</div><div>Open Telegram, find <strong>@BotFather</strong></div></div>
-      <div class="step"><div class="num">2</div><div>Send <code>/newbot</code>, follow instructions, get the <strong>token</strong></div></div>
-      <div class="step"><div class="num">3</div><div>Paste the token below and click Test</div></div>
+      <div class="step"><div class="step-num">1</div><div class="step-content">Open Telegram, find <strong>@BotFather</strong></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content">Send <code>/newbot</code>, follow instructions, get the <strong>token</strong></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content">Paste the token below and click Test</div></div>
     </div>
 
     <label>Bot Token</label>
     <input id="tgToken" type="password" placeholder="123456:ABC-DEF..."/>
     <p class="muted">Format: <code>123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11</code></p>
 
-    <label style="margin-top:8px;display:block">Webhook URL <span class="muted">(auto-filled)</span></label>
+    <label>Webhook URL <span class="muted">(auto-filled)</span></label>
     <input id="tgWebhook" type="url" readonly style="opacity:0.6"/>
     <p class="muted">Telegram will send messages here. Must be publicly accessible with HTTPS.</p>
 
-    <div class="row" style="margin-top:14px;gap:8px;flex-wrap:wrap">
-      <button onclick="saveTelegram()" style="font-size:13px;padding:7px 12px">Save &amp; Test</button>
-      <button class="ghost" onclick="disconnectTelegram()" id="tgDisconnect" style="display:none;font-size:13px;padding:7px 12px;color:var(--err)">Disconnect</button>
+    <div class="flex mt-16 flex-wrap">
+      <button onclick="saveTelegram()">Save &amp; Test</button>
+      <button class="ghost danger" onclick="disconnectTelegram()" id="tgDisconnect" style="display:none">Disconnect</button>
       <span id="tgMsg" class="muted"></span>
     </div>
     <div class="err-msg" id="tgErr"></div>
   </div>
 </div>
 
-<!-- WhatsApp panel -->
 <div id="panel-whatsapp" class="channel-panel" style="display:none">
   <div class="card">
-    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:4px">
+    <div class="flex" style="justify-content:space-between;margin-bottom:16px">
       <h2 style="margin:0">WhatsApp</h2>
       <span id="waStatus" class="pill muted">not configured</span>
     </div>
 
-    <div class="help" style="margin:16px 0">
+    <div class="help">
       <h3>How to set up (10 minutes)</h3>
-      <div class="step"><div class="num">1</div><div>Create an app at <a href="https://developers.facebook.com/" target="_blank" style="color:var(--acc)">developers.facebook.com</a></div></div>
-      <div class="step"><div class="num">2</div><div>Add WhatsApp product, get <strong>Phone Number ID</strong> and <strong>Access Token</strong></div></div>
-      <div class="step"><div class="num">3</div><div>Fill in the fields below, set your verify token, and click Test</div></div>
+      <div class="step"><div class="step-num">1</div><div class="step-content">Create an app at <a href="https://developers.facebook.com/" target="_blank">developers.facebook.com</a></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content">Add WhatsApp product, get <strong>Phone Number ID</strong> and <strong>Access Token</strong></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content">Fill in the fields below, set your verify token, and click Test</div></div>
     </div>
 
-    <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px">
+    <div class="grid grid-2">
       <div>
         <label>Phone Number ID</label>
         <input id="waPhoneId" type="text" placeholder="123456789"/>
@@ -134,45 +123,41 @@
       </div>
     </div>
 
-    <label style="margin-top:10px;display:block">Access Token</label>
+    <label>Access Token</label>
     <input id="waToken" type="password" placeholder="EAA..."/>
 
-    <label style="margin-top:10px;display:block">Verify Token <span class="muted">(you choose this, used for webhook verification)</span></label>
+    <label>Verify Token <span class="muted">(you choose this)</span></label>
     <input id="waVerifyToken" type="text" placeholder="my-secret-123"/>
 
-    <label style="margin-top:10px;display:block">Webhook URL <span class="muted">(auto-filled, set this in Meta App)</span></label>
+    <label>Webhook URL <span class="muted">(auto-filled, set this in Meta App)</span></label>
     <input id="waWebhook" type="url" readonly style="opacity:0.6"/>
     <p class="muted">In your Meta App → WhatsApp → Configuration → Callback URL: paste this URL. Verify Token: paste the one you chose above.</p>
 
-    <div class="row" style="margin-top:14px;gap:8px;flex-wrap:wrap">
-      <button onclick="saveWhatsApp()" style="font-size:13px;padding:7px 12px">Save &amp; Test</button>
-      <button class="ghost" onclick="disconnectWhatsApp()" id="waDisconnect" style="display:none;font-size:13px;padding:7px 12px;color:var(--err)">Disconnect</button>
+    <div class="flex mt-16 flex-wrap">
+      <button onclick="saveWhatsApp()">Save &amp; Test</button>
+      <button class="ghost danger" onclick="disconnectWhatsApp()" id="waDisconnect" style="display:none">Disconnect</button>
       <span id="waMsg" class="muted"></span>
     </div>
     <div class="err-msg" id="waErr"></div>
   </div>
 </div>
-
-<style>
-.channel-card.selected{border-color:var(--acc)!important;background:#162040!important}
-.channel-card:hover{border-color:#3a4a6a}
-.pill.muted{color:var(--mut);border-color:var(--bord)}
-</style>
-
 {% endblock %}
 {% block tail %}
+<style>
+.channel-card.selected{border-color:var(--accent)!important;background:rgba(99,102,241,0.04)!important}
+.channel-card:hover{border-color:rgba(99,102,241,0.3)}
+</style>
 <script>
 var BASE = location.origin;
 var webhookBase = BASE;
 
-// ═══ Channel selector ══════════════════════════════════════════════════════
 function selectChannel(ch){
   document.querySelectorAll('.channel-panel').forEach(function(el){ el.style.display='none'; });
-  document.querySelectorAll('.channel-card').forEach(function(el){ el.className='channel-card'; });
+  document.querySelectorAll('.channel-card').forEach(function(el){ el.classList.remove('selected'); });
   var panel = document.getElementById('panel-'+ch);
   var card = document.querySelector('.channel-card[onclick="selectChannel(\''+ch+'\')"]');
   if(panel) panel.style.display='';
-  if(card) card.className='channel-card selected';
+  if(card) card.classList.add('selected');
 
   if(ch==='web_widget') buildSnippet();
   if(ch==='telegram') document.getElementById('tgWebhook').value = webhookBase+'/channels/telegram/webhook';
@@ -181,7 +166,6 @@ function selectChannel(ch){
   }
 }
 
-// ═══ Website Widget ════════════════════════════════════════════════════════
 var tid = tenantId() || 'YOUR_TENANT_ID';
 var base = '{{ public_base_url }}';
 var wFields = ['wTitle','wSubtitle','wGreeting','wAccent','wPosition','wEmail'];
@@ -219,7 +203,6 @@ async function copySnip(){
   setTimeout(function(){ document.getElementById('copied').textContent=''; }, 1800);
 }
 
-// ═══ Load channel statuses ═════════════════════════════════════════════════
 async function loadChannels(){
   try {
     var channels = await api('/channels');
@@ -239,7 +222,6 @@ async function loadChannels(){
       }
     });
 
-    // Telegram specific
     var tg = channels.find(function(c){ return c.channel_type==='telegram'; });
     if(tg && tg.status==='active'){
       document.getElementById('tgStatus').textContent='connected';
@@ -248,7 +230,6 @@ async function loadChannels(){
       document.getElementById('tgToken').value='••••••••';
     }
 
-    // WhatsApp specific
     var wa = channels.find(function(c){ return c.channel_type==='whatsapp'; });
     if(wa && wa.status==='active'){
       document.getElementById('waStatus').textContent='connected';
@@ -262,17 +243,12 @@ async function loadChannels(){
   } catch(e) {}
 }
 
-// ═══ Telegram ══════════════════════════════════════════════════════════════
 async function saveTelegram(){
   document.getElementById('tgErr').textContent='';
   document.getElementById('tgMsg').textContent='Testing…';
   try {
     var token = document.getElementById('tgToken').value.trim();
     if(!token || token==='••••••••'){
-      // If masked, don't overwrite — fetch current and use it
-      var ch = await api('/channels/telegram');
-      // We need to re-save with existing config, but we can't retrieve the token.
-      // Just test instead.
       var testResult = await api('/channels/telegram/test', {method:'POST'});
       document.getElementById('tgMsg').textContent = testResult.ok ? '✅ '+testResult.message : '❌ '+testResult.message;
       document.getElementById('tgStatus').textContent = testResult.ok ? 'connected' : 'error';
@@ -306,7 +282,6 @@ async function disconnectTelegram(){
   } catch(e){ document.getElementById('tgErr').textContent=e.message; }
 }
 
-// ═══ WhatsApp ══════════════════════════════════════════════════════════════
 async function saveWhatsApp(){
   document.getElementById('waErr').textContent='';
   document.getElementById('waMsg').textContent='Testing…';
@@ -358,7 +333,6 @@ async function disconnectWhatsApp(){
   } catch(e){ document.getElementById('waErr').textContent=e.message; }
 }
 
-// Init
 selectChannel('web_widget');
 loadChannels();
 </script>

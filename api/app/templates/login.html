@@ -1,22 +1,32 @@
 {% extends "base.html" %}
 {% block body %}
-<style>aside{display:none}main{max-width:none}</style>
-<div class="card" style="max-width:440px;margin:60px auto">
-  <h1>Sign in / Sign up</h1>
-  <div id="tabs" class="row" style="margin-bottom:14px">
-    <button id="tabLogin" class="ghost" onclick="setMode('login')">Login</button>
-    <button id="tabReg" class="ghost" onclick="setMode('register')">Register</button>
+<style>aside{display:none}main{max-width:none;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}</style>
+<div class="card" style="max-width:440px;width:100%;padding:32px">
+  <div style="text-align:center;margin-bottom:28px">
+    <h1 style="font-size:22px;margin-bottom:4px">Jeeves<span style="color:var(--accent)">.</span></h1>
+    <div class="muted" style="font-size:13px">Sign in to your admin panel</div>
   </div>
+
+  <div class="flex gap-sm mb-16" style="justify-content:center">
+    <button id="tabLogin" class="ghost" onclick="setMode('login')" style="min-width:120px">Login</button>
+    <button id="tabReg" class="ghost" onclick="setMode('register')" style="min-width:120px">Register</button>
+  </div>
+
   <div id="regFields" style="display:none">
     <label>Company / tenant name</label>
     <input id="tname" type="text" placeholder="Acme Inc."/>
   </div>
+
   <label>Email</label>
   <input id="email" type="email" placeholder="you@company.com"/>
+
   <label>Password (min 8 chars)</label>
   <input id="password" type="password"/>
-  <div style="margin-top:16px"><button id="submit" onclick="go()">Continue</button></div>
-  <div class="err-msg" id="err"></div>
+
+  <div style="margin-top:24px">
+    <button id="submit" onclick="go()" style="width:100%;justify-content:center;padding:12px">Continue</button>
+  </div>
+  <div class="err-msg" id="err" style="text-align:center;margin-top:12px"></div>
 </div>
 {% endblock %}
 {% block tail %}
@@ -25,10 +35,10 @@ let mode='login';
 function setMode(m){
   mode=m;
   document.getElementById('regFields').style.display = m==='register'?'block':'none';
-  document.getElementById('tabLogin').style.background = m==='login'?'var(--acc)':'transparent';
-  document.getElementById('tabLogin').style.color = m==='login'?'#0b1020':'var(--fg)';
-  document.getElementById('tabReg').style.background = m==='register'?'var(--acc)':'transparent';
-  document.getElementById('tabReg').style.color = m==='register'?'#0b1020':'var(--fg)';
+  document.getElementById('tabLogin').className = m==='login'?'':'ghost';
+  document.getElementById('tabReg').className = m==='register'?'':'ghost';
+  if(m==='login'){ document.getElementById('tabLogin').classList.remove('ghost'); document.getElementById('tabReg').classList.add('ghost'); }
+  else { document.getElementById('tabReg').classList.remove('ghost'); document.getElementById('tabLogin').classList.add('ghost'); }
 }
 setMode('login');
 async function go(){

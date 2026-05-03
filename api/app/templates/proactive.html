@@ -1,28 +1,25 @@
 {% extends "base.html" %}
 {% block body %}
-<h1>Proactive engine <span class="muted" style="font-size:13px;font-weight:400">— optional</span></h1>
+<h1>Proactive engine</h1>
+<p class="page-desc">Normally the agent only replies when a user writes first. Proactive engine flips that: Jeeves writes to the user first when activity drops.</p>
 
-<div class="help">
-  <h3>What is this?</h3>
-  <p>Normally the agent only replies <strong>when a user writes first</strong>. Proactive engine flips that: Jeeves <strong>writes to the user first</strong> when something looks wrong — for example, when a user's activity suddenly drops.</p>
-  <p>Typical use: a user stops logging in, agent pings them with <em>"Hi! I noticed you haven't been around. Need any help?"</em> — recovers churn before it happens.</p>
-</div>
-
-<div class="help" style="border-left-color:#f0c36d;background:#1f1a0e;border-color:#5a4820">
+<div class="help" style="border-left-color:var(--amber);background:rgba(245,158,11,0.04);border-color:rgba(245,158,11,0.15)">
   <h3>How to set it up</h3>
-  <div class="step"><div class="num">1</div><div>Provide a <strong>metric URL</strong> from your product/CRM that returns a numeric activity time-series for a user (e.g. logins per day for the last week). Use <code>{id}</code> for the user ID.</div></div>
-  <div class="step"><div class="num">2</div><div>Pick a <strong>drop threshold</strong> in percent. If today's value is X% below the 3-day average, Jeeves writes to the user.</div></div>
-  <div class="step"><div class="num">3</div><div>That's it. The worker checks every hour and won't bother the same user more often than every 3 days.</div></div>
-  <p style="margin-top:10px"><strong>Expected response shape</strong> (any of these works): <code>{"data":{"series":[10,12,11,2]}}</code> · <code>{"series":[10,12,11,2]}</code> · <code>{"data":{"activity":[10,12,11,2]}}</code>. The last value is "today", the rest are the baseline.</p>
+  <div class="step"><div class="step-num">1</div><div class="step-content">Provide a <strong>metric URL</strong> from your product/CRM that returns a numeric activity time-series for a user (e.g. logins per day). Use <code>{id}</code> for the user ID.</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-content">Pick a <strong>drop threshold</strong> in percent. If today's value is X% below the 3-day average, Jeeves writes to the user.</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-content">That's it. The worker checks every hour and won't bother the same user more often than every 3 days.</div></div>
+  <p style="margin-top:12px"><strong>Expected response shape</strong> (any of these works): <code>{"data":{"series":[10,12,11,2]}}</code> · <code>{"series":[10,12,11,2]}</code> · <code>{"data":{"activity":[10,12,11,2]}}</code>. The last value is "today", the rest are the baseline.</p>
 </div>
 
 <div class="card">
   <h2>Configuration</h2>
-  <label>Metric URL (use <code>{id}</code> for user_id)</label>
+  <label>Metric URL <span class="muted">(use {id} for user_id)</span></label>
   <input id="metric_url" type="url" placeholder="https://crm.example.com/api/user/{id}/activity"/>
+
   <label>Drop threshold (%)</label>
-  <input id="threshold" type="number" min="1" max="100" value="30"/>
-  <div class="row" style="margin-top:14px">
+  <input id="threshold" type="number" min="1" max="100" value="30" style="max-width:120px"/>
+
+  <div class="flex mt-16">
     <button onclick="save()">Save</button>
     <span id="status" class="muted"></span>
   </div>
