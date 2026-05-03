@@ -163,8 +163,8 @@
     .rag-pipeline { display: flex; align-items: center; justify-content: center; gap: 0; overflow-x: auto; padding: 8px 0; }
 
     /* Common stage */
-    .rag-stage { display: flex; flex-direction: column; align-items: center; gap: 10px; flex-shrink: 0; position: relative; z-index: 2; }
-    .rag-stage-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; white-space: nowrap; }
+    .rag-stage { display: flex; flex-direction: column; align-items: center; gap: 12px; flex-shrink: 0; position: relative; z-index: 2; }
+    .rag-stage-label { font-size: 9px; color: #f1f5f9; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; white-space: nowrap; }
 
     /* Stage 1: Document Ingestion — stacked file cards */
     .rag-ingest { width: 88px; }
@@ -277,13 +277,18 @@
     .rag-answer-time { font-size: 7px; color: #64748b; font-family: 'SF Mono', monospace; font-weight: 600; }
 
     /* Flow connectors */
-    .rag-flow-line { display: flex; align-items: center; height: 90px; width: 20px; flex-shrink: 0; position: relative; }
+    .rag-flow-line { display: flex; align-items: center; height: 90px; width: 20px; flex-shrink: 0; position: relative; opacity: 0; transition: opacity 0.5s ease; }
+    .rag-flow-line.fl-visible { opacity: 1; }
     .rag-flow-line .fl-track { width: 100%; height: 1px; background: linear-gradient(90deg, rgba(99,102,241,0.08), rgba(99,102,241,0.25)); position: relative; }
     .rag-flow-line .fl-track::after { content: ''; position: absolute; right: -3px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 4px solid rgba(99,102,241,0.35); border-top: 2.5px solid transparent; border-bottom: 2.5px solid transparent; }
     .rag-flow-line .fl-packet { position: absolute; top: -2px; width: 4px; height: 4px; border-radius: 50%; background: #818cf8; box-shadow: 0 0 6px rgba(99,102,241,0.5); animation: ragPacket 2.8s ease-in-out infinite; }
     .rag-flow-line .fl-packet.fp2 { animation-delay: 0.9s; }
     .rag-flow-line .fl-packet.fp3 { animation-delay: 1.8s; }
     @keyframes ragPacket { 0% { left: 0; opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { left: calc(100% - 4px); opacity: 0; } }
+
+    /* Pipeline sequential animation */
+    .rag-pipeline .rag-stage { opacity: 0; transform: translateY(8px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .rag-pipeline .rag-stage.stage-visible { opacity: 1; transform: translateY(0); }
 
     /* Stats */
     .stats-row { display: flex; gap: 0; border-top: 1px solid rgba(255,255,255,0.06); }
@@ -1447,6 +1452,51 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
   playChat();
   setInterval(playChat, 16000);
+})();
+
+// RAG pipeline sequential animation
+(function() {
+  var pipeline = document.querySelector('.rag-pipeline');
+  if (!pipeline) return;
+
+  var stages = pipeline.querySelectorAll('.rag-stage');
+  var flows = pipeline.querySelectorAll('.rag-flow-line');
+  var totalCycle = 8000;
+  var stageHold = 800;
+  var flowHold = 400;
+
+  function runCycle() {
+    // Reset
+    stages.forEach(function(s) { s.classList.remove('stage-visible'); });
+    flows.forEach(function(f) { f.classList.remove('fl-visible'); });
+
+    var t = 300;
+    stages.forEach(function(stage, i) {
+      setTimeout(function() {
+        stage.classList.add('stage-visible');
+      }, t);
+      t += stageHold;
+      if (i < flows.length) {
+        setTimeout(function() {
+          flows[i].classList.add('fl-visible');
+        }, t);
+        t += flowHold;
+      }
+    });
+
+    setTimeout(runCycle, totalCycle);
+  }
+
+  var observed = false;
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting && !observed) {
+        observed = true;
+        runCycle();
+      }
+    });
+  }, { threshold: 0.2 });
+  obs.observe(pipeline);
 })();
 </script>
 
