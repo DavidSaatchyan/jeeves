@@ -35,14 +35,14 @@
 
     /* ===== HERO ===== */
     .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 120px 24px 80px; position: relative; overflow: hidden; }
-    .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%); }
+    .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%); }
     .hero-orb { position: absolute; border-radius: 50%; filter: blur(100px); pointer-events: none; }
-    .hero-orb.o1 { width: 500px; height: 500px; top: -10%; left: 10%; background: var(--accent); opacity: .1; animation: orbFloat 10s ease-in-out infinite; }
+    .hero-orb.o1 { width: 500px; height: 500px; top: -10%; left: 10%; background: var(--accent); opacity: .12; animation: orbFloat 10s ease-in-out infinite; }
     .hero-orb.o2 { width: 400px; height: 400px; top: 30%; right: 5%; background: var(--accent3); opacity: .08; animation: orbFloat 10s ease-in-out -3s infinite; }
     .hero-orb.o3 { width: 350px; height: 350px; bottom: -5%; left: 35%; background: var(--accent2); opacity: .08; animation: orbFloat 10s ease-in-out -6s infinite; }
     @keyframes orbFloat { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(30px,-20px) scale(1.08); } 66% { transform: translate(-20px,25px) scale(.95); } }
 
-    .badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.15); padding: 6px 16px; border-radius: 999px; font-size: 13px; color: #a5b4fc; margin-bottom: 36px; position: relative; z-index: 1; animation: fadeInDown .8s ease; }
+    .badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); padding: 6px 16px; border-radius: 999px; font-size: 13px; color: #a5b4fc; margin-bottom: 32px; position: relative; z-index: 1; animation: fadeInDown .8s ease; }
     .badge .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
     @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
@@ -50,50 +50,70 @@
 
     .hero-inner { display: flex; align-items: center; gap: 80px; max-width: 1200px; width: 100%; position: relative; z-index: 1; }
     .hero-text { flex: 1; text-align: left; }
-    .hero-text h1 { font-size: clamp(40px, 6vw, 72px); font-weight: 900; line-height: .95; letter-spacing: -3px; margin-bottom: 24px; animation: fadeInUp .8s ease .1s both; }
-    .hero-text h1 .hl { background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 40%, var(--accent3) 70%, var(--green) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 300% 300%; animation: gradientShift 5s ease infinite; }
+    .hero-text h1 { font-size: clamp(42px, 6.5vw, 80px); font-weight: 900; line-height: .92; letter-spacing: -3px; margin-bottom: 24px; color: #fff; animation: fadeInUp .8s ease .1s both; }
+    .hero-text h1 .hl { background: linear-gradient(135deg, #fff 0%, #c7d2fe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-text h1 .accent-word { background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 40%, var(--accent3) 70%, var(--green) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 300% 300%; animation: gradientShift 5s ease infinite; }
     @keyframes gradientShift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-    .hero-text p { font-size: 18px; color: var(--muted); max-width: 480px; line-height: 1.7; margin-bottom: 40px; animation: fadeInUp .8s ease .2s both; }
-    .hero-buttons { display: flex; gap: 16px; flex-wrap: wrap; animation: fadeInUp .8s ease .3s both; }
-    .btn-primary { background: var(--accent); color: #fff; padding: 16px 36px; border-radius: 14px; font-size: 16px; font-weight: 700; text-decoration: none; transition: all .3s; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 48px rgba(99,102,241,0.4); background: #7c7ff7; }
-    .btn-secondary { background: rgba(255,255,255,0.03); color: var(--text); padding: 16px 36px; border-radius: 14px; font-size: 16px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,0.1); transition: all .3s; display: inline-flex; align-items: center; gap: 8px; }
-    .btn-secondary:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); transform: translateY(-2px); }
+    .hero-features { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; animation: fadeInUp .8s ease .15s both; }
+    .hero-feat { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #94a3b8; }
+    .hero-feat .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .hero-feat:nth-child(1) .dot { background: var(--accent); }
+    .hero-feat:nth-child(2) .dot { background: var(--accent3); }
+    .hero-feat:nth-child(3) .dot { background: var(--green); }
+    .hero-text p { font-size: 17px; color: #94a3b8; max-width: 460px; line-height: 1.7; margin-bottom: 36px; animation: fadeInUp .8s ease .2s both; }
+    .hero-buttons { display: flex; gap: 14px; flex-wrap: wrap; animation: fadeInUp .8s ease .3s both; }
+    .btn-primary { background: #fff; color: #030508; padding: 16px 32px; border-radius: 14px; font-size: 15px; font-weight: 700; text-decoration: none; transition: all .3s; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 48px rgba(255,255,255,0.15); }
+    .btn-secondary { background: rgba(255,255,255,0.06); color: #e2e8f0; padding: 16px 32px; border-radius: 14px; font-size: 15px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,0.12); transition: all .3s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.1); transform: translateY(-2px); }
 
-    .hero-mockup { flex-shrink: 0; animation: fadeInUp .8s ease .4s both; }
-    .phone-frame { width: 300px; background: #0a0f1e; border-radius: 36px; border: 3px solid rgba(255,255,255,0.1); box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset, 0 0 60px rgba(99,102,241,0.08); overflow: hidden; position: relative; }
-    .phone-notch { width: 120px; height: 28px; background: #0a0f1e; border-radius: 0 0 16px 16px; margin: 0 auto; position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; gap: 6px; }
-    .phone-notch-cam { width: 10px; height: 10px; border-radius: 50%; background: #1a1f35; border: 1px solid rgba(255,255,255,0.05); }
-    .phone-status { display: flex; justify-content: space-between; align-items: center; padding: 4px 20px 8px; font-size: 11px; font-weight: 600; color: var(--muted); }
-    .phone-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: rgba(99,102,241,0.06); border-bottom: 1px solid var(--border); }
-    .phone-back { color: var(--accent); font-size: 18px; }
-    .phone-bot-icon { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; flex-shrink: 0; }
-    .phone-bot-name { font-size: 13px; font-weight: 600; }
+    .hero-mockup { flex-shrink: 0; animation: fadeInUp .8s ease .4s both; position: relative; }
+    .hero-mockup::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 340px; height: 500px; background: radial-gradient(ellipse, rgba(99,102,241,0.12) 0%, transparent 70%); pointer-events: none; }
+    .phone-frame { width: 300px; background: #111827; border-radius: 40px; border: 3px solid #1f2937; box-shadow: 0 60px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset; overflow: hidden; position: relative; }
+    /* Phone hardware buttons */
+    .phone-btn-side { position: absolute; right: -5px; top: 120px; width: 4px; height: 40px; background: #1f2937; border-radius: 0 2px 2px 0; }
+    .phone-btn-vol1 { position: absolute; left: -5px; top: 100px; width: 4px; height: 28px; background: #1f2937; border-radius: 2px 0 0 2px; }
+    .phone-btn-vol2 { position: absolute; left: -5px; top: 138px; width: 4px; height: 28px; background: #1f2937; border-radius: 2px 0 0 2px; }
+    .phone-screen { background: #0f172a; margin: 4px; border-radius: 34px; overflow: hidden; }
+    .phone-dynamic-island { width: 100px; height: 28px; background: #000; border-radius: 20px; margin: 8px auto 0; position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; }
+    .phone-island-cam { width: 8px; height: 8px; border-radius: 50%; background: #1a1f35; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 0 4px rgba(255,255,255,0.05); }
+    .phone-status { display: flex; justify-content: space-between; align-items: center; padding: 6px 22px 4px; font-size: 12px; font-weight: 600; color: #e2e8f0; }
+    .phone-status-time { font-size: 14px; font-weight: 700; }
+    .phone-status-icons { display: flex; gap: 4px; align-items: center; }
+    .phone-status-icons svg { width: 14px; height: 14px; fill: #e2e8f0; }
+    .phone-nav-bar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: rgba(99,102,241,0.08); border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .phone-back-btn { color: var(--accent); font-size: 22px; font-weight: 300; line-height: 1; }
+    .phone-bot-icon { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; }
+    .phone-bot-info { flex: 1; }
+    .phone-bot-name { font-size: 13px; font-weight: 600; color: #f1f5f9; }
     .phone-bot-status { font-size: 10px; color: var(--green); }
-    .phone-body { height: 380px; padding: 14px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; position: relative; }
-    .msg { display: flex; gap: 6px; max-width: 88%; opacity: 0; transform: translateY(6px); transition: opacity .35s, transform .35s; flex-shrink: 0; }
+    .phone-body { height: 370px; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; position: relative; background: #0f172a; }
+    .msg { display: flex; gap: 6px; max-width: 90%; opacity: 0; transform: translateY(6px); transition: opacity .35s, transform .35s; flex-shrink: 0; }
     .msg.show { opacity: 1; transform: translateY(0); }
     .msg.user { align-self: flex-end; flex-direction: row-reverse; }
-    .msg-avatar { width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; margin-top: 2px; }
+    .msg-avatar { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; margin-top: 2px; }
     .msg.bot .msg-avatar { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
-    .msg.user .msg-avatar { background: #1e293b; color: #94a3b8; border: 1px solid var(--border); }
-    .msg-bubble { padding: 8px 12px; border-radius: 12px; font-size: 12px; line-height: 1.45; }
-    .msg.bot .msg-bubble { background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.1); border-top-left-radius: 3px; color: #cbd5e1; }
-    .msg.user .msg-bubble { background: var(--accent); color: #fff; border-top-right-radius: 3px; }
-    .msg-source { font-size: 9px; color: var(--muted); margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.04); }
-    .msg-source strong { color: #818cf8; }
-    .msg-confirmation { margin-top: 6px; padding: 6px 10px; background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.12); border-radius: 8px; font-size: 10px; color: #f87171; }
-    .msg-confirmation .confirm-btn { display: inline-block; margin-top: 4px; padding: 3px 10px; background: var(--accent); color: #fff; border-radius: 6px; font-weight: 600; font-size: 10px; }
-    .msg-success { margin-top: 6px; padding: 4px 8px; background: rgba(16,185,129,0.08); border-radius: 6px; font-size: 10px; color: var(--green); font-weight: 600; }
-    .typing-dots { display: none; align-items: center; gap: 6px; padding-left: 30px; flex-shrink: 0; }
+    .msg.user .msg-avatar { background: #1e293b; color: #94a3b8; border: 1px solid rgba(255,255,255,0.08); }
+    .msg-bubble { padding: 8px 12px; border-radius: 14px; font-size: 11.5px; line-height: 1.45; }
+    .msg.bot .msg-bubble { background: #1e293b; border: 1px solid rgba(255,255,255,0.06); border-top-left-radius: 4px; color: #e2e8f0; }
+    .msg.user .msg-bubble { background: var(--accent); color: #fff; border-top-right-radius: 4px; }
+    .msg-bubble strong { color: #fff; }
+    .msg-confirmation { margin-top: 6px; padding: 8px 10px; background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.15); border-radius: 10px; }
+    .msg-confirm-text { font-size: 10px; color: #f87171; margin-bottom: 6px; font-weight: 500; }
+    .msg-confirm-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: var(--accent); color: #fff; border-radius: 8px; font-weight: 700; font-size: 10px; transition: all .3s; }
+    .msg-confirm-btn.tapped { background: var(--green); transform: scale(1.05); box-shadow: 0 0 12px rgba(16,185,129,0.4); }
+    .msg-confirm-btn.tapped::before { content: '✓ '; }
+    .msg-success { margin-top: 6px; padding: 6px 8px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.15); border-radius: 8px; font-size: 10px; color: var(--green); font-weight: 600; }
+    .typing-dots { display: none; align-items: center; gap: 5px; padding-left: 28px; flex-shrink: 0; }
     .typing-dots.active { display: flex; }
-    .typing-dots span { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); animation: typing 1.4s ease-in-out infinite; }
+    .typing-dots span { width: 5px; height: 5px; border-radius: 50%; background: #475569; animation: typing 1.4s ease-in-out infinite; }
     .typing-dots span:nth-child(2) { animation-delay: .2s; }
     .typing-dots span:nth-child(3) { animation-delay: .4s; }
-    .phone-input { display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-top: 1px solid var(--border); flex-shrink: 0; }
-    .phone-input-field { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 18px; padding: 7px 12px; font-size: 11px; color: var(--muted); }
+    .phone-input { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border-top: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; background: #0f172a; }
+    .phone-input-field { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 7px 12px; font-size: 11px; color: #475569; }
     .phone-send { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; }
     .phone-send svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2; }
+    .phone-home-bar { width: 120px; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px; margin: 8px auto; }
 
     /* SECTION DIVIDER */
     .section-divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); }
@@ -299,6 +319,7 @@
       .nav-links a:not(.btn-nav) { display: none; }
       .hero { padding: 100px 20px 60px; }
       .hero-text h1 { font-size: 34px; letter-spacing: -1.5px; }
+      .hero-features { justify-content: center; }
       .hero-text p { font-size: 15px; }
       .hero-mockup { transform: scale(.85); transform-origin: top center; }
     }
@@ -327,6 +348,11 @@
     <div class="hero-text">
       <div class="badge"><span class="dot"></span> Now with Telegram & WhatsApp</div>
       <h1>Your AI support<br>agent, <span class="hl">everywhere.</span></h1>
+      <div class="hero-features">
+        <span class="hero-feat"><span class="dot"></span> RAG Knowledge</span>
+        <span class="hero-feat"><span class="dot"></span> CRM Context</span>
+        <span class="hero-feat"><span class="dot"></span> Custom Actions</span>
+      </div>
       <p>Train on your docs. Connect to any channel. Jeeves resolves queries, pulls CRM context, and escalates to humans — 24/7.</p>
       <div class="hero-buttons">
         <a href="/admin/login" class="btn-primary">Start Free →</a>
@@ -336,53 +362,68 @@
 
     <div class="hero-mockup">
     <div class="phone-frame">
-      <div class="phone-notch"><div class="phone-notch-cam"></div></div>
-      <div class="phone-status"><span>9:41</span><span>●●● WiFi 🔋</span></div>
-      <div class="phone-header">
-        <div class="phone-back">‹</div>
-        <div class="phone-bot-icon">J</div>
-        <div>
-          <div class="phone-bot-name">Jeeves</div>
-          <div class="phone-bot-status">● Online</div>
+      <div class="phone-btn-side"></div>
+      <div class="phone-btn-vol1"></div>
+      <div class="phone-btn-vol2"></div>
+      <div class="phone-screen">
+        <div class="phone-dynamic-island"><div class="phone-island-cam"></div></div>
+        <div class="phone-status">
+          <span class="phone-status-time">9:41</span>
+          <span class="phone-status-icons">
+            <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+          </span>
         </div>
-      </div>
-      <div class="phone-body" id="chatBody">
-        <div class="msg user" id="m1">
-          <div class="msg-avatar">D</div>
-          <div class="msg-bubble">Hi, I want to upgrade to Business plan</div>
-        </div>
-        <div class="msg bot" id="m2" style="display:none;">
-          <div class="msg-avatar">J</div>
-          <div>
-            <div class="msg-bubble">Sure! I see you're on <strong>Pro</strong> ($49/mo). Business is <strong>$99/mo</strong> with unlimited conversations, proactive alerts, and custom actions. Want me to switch?</div>
+        <div class="phone-nav-bar">
+          <div class="phone-back-btn">‹</div>
+          <div class="phone-bot-icon">J</div>
+          <div class="phone-bot-info">
+            <div class="phone-bot-name">Jeeves</div>
+            <div class="phone-bot-status">● Online</div>
           </div>
         </div>
-        <div class="msg user" id="m3" style="display:none;">
-          <div class="msg-avatar">D</div>
-          <div class="msg-bubble">Yes, do it</div>
-        </div>
-        <div class="msg bot" id="m4" style="display:none;">
-          <div class="msg-avatar">J</div>
-          <div>
-            <div class="msg-bubble">
-              <div class="msg-confirmation">⚠ Confirm upgrade: Pro → Business<br><span class="confirm-btn">✓ Confirm</span></div>
+        <div class="phone-body" id="chatBody">
+          <div class="msg user" id="m1">
+            <div class="msg-avatar">D</div>
+            <div class="msg-bubble">Hi, I want to upgrade to Business plan</div>
+          </div>
+          <div class="msg bot" id="m2" style="display:none;">
+            <div class="msg-avatar">J</div>
+            <div>
+              <div class="msg-bubble">Sure! I see you're on <strong>Pro</strong> ($49/mo). Business is <strong>$99/mo</strong> with unlimited conversations, proactive alerts, and custom actions. Want me to switch?</div>
             </div>
           </div>
-        </div>
-        <div class="msg bot" id="m5" style="display:none;">
-          <div class="msg-avatar">J</div>
-          <div>
-            <div class="msg-bubble">Done! Your plan is now <strong>Business</strong>. All features are active immediately. You'll be billed $99/mo starting next cycle.</div>
-            <div class="msg-success">✓ Action: plan.upgrade completed</div>
+          <div class="msg user" id="m3" style="display:none;">
+            <div class="msg-avatar">D</div>
+            <div class="msg-bubble">Yes, do it</div>
           </div>
+          <div class="msg bot" id="m4" style="display:none;">
+            <div class="msg-avatar">J</div>
+            <div>
+              <div class="msg-bubble">
+                <div class="msg-confirmation">
+                  <div class="msg-confirm-text">⚠ Confirm upgrade: Pro → Business<br>$49/mo → $99/mo</div>
+                  <div class="msg-confirm-btn" id="confirmBtn">Confirm</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="msg bot" id="m5" style="display:none;">
+            <div class="msg-avatar">J</div>
+            <div>
+              <div class="msg-bubble">Done! Your plan is now <strong>Business</strong>. All features active immediately. Billed $99/mo starting next cycle.</div>
+              <div class="msg-success">✓ Action: plan.upgrade completed</div>
+            </div>
+          </div>
+          <div class="typing-dots" id="typing"><span></span><span></span><span></span></div>
         </div>
-        <div class="typing-dots" id="typing"><span></span><span></span><span></span></div>
+        <div class="phone-input">
+          <div class="phone-input-field">Message...</div>
+          <div class="phone-send"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+        </div>
+        <div class="phone-home-bar"></div>
       </div>
-      <div class="phone-input">
-        <div class="phone-input-field">Message...</div>
-        <div class="phone-send"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
-      </div>
-      </div>
+    </div>
     </div>
   </div>
 </section>
@@ -705,22 +746,31 @@ document.querySelectorAll('.num[data-target]').forEach(el => cObs.observe(el));
 
 // Chat animation
 (function() {
+  var confirmBtn = document.getElementById('confirmBtn');
+
   var msgs = [
-    { id: 'm1', delay: 800 },
-    { id: 'typing', delay: 2000, showTyping: true },
-    { id: 'm2', delay: 3500, hideTyping: true },
-    { id: 'm3', delay: 5500 },
-    { id: 'typing', delay: 6500, showTyping: true },
-    { id: 'm4', delay: 7800, hideTyping: true },
-    { id: 'm5', delay: 10500 }
+    { id: 'm1', delay: 1000 },
+    { id: 'typing', delay: 2200, showTyping: true },
+    { id: 'm2', delay: 3800, hideTyping: true },
+    { id: 'm3', delay: 6000 },
+    { id: 'typing', delay: 7000, showTyping: true },
+    { id: 'm4', delay: 8400, hideTyping: true },
+    { id: 'tapConfirm', delay: 10200 },
+    { id: 'typing', delay: 11200, showTyping: true },
+    { id: 'm5', delay: 12800, hideTyping: true }
   ];
 
   function playChat() {
     document.querySelectorAll('.msg').forEach(function(m) { m.classList.remove('show'); m.style.display = 'none'; });
     document.getElementById('typing').classList.remove('active');
+    if (confirmBtn) confirmBtn.classList.remove('tapped');
 
     msgs.forEach(function(m) {
       setTimeout(function() {
+        if (m.id === 'tapConfirm') {
+          if (confirmBtn) confirmBtn.classList.add('tapped');
+          return;
+        }
         var el = document.getElementById(m.id);
         if (!el) return;
         if (m.showTyping) { el.classList.add('active'); return; }
@@ -732,7 +782,7 @@ document.querySelectorAll('.num[data-target]').forEach(el => cObs.observe(el));
   }
 
   playChat();
-  setInterval(playChat, 14000);
+  setInterval(playChat, 16000);
 })();
 </script>
 
