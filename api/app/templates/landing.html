@@ -143,59 +143,130 @@
     .reveal.visible { opacity: 1; transform: translateY(0); }
 
     /* ===== CAPABILITIES ===== */
-    /* RAG HERO */
-    .rag-hero { margin: 40px 0 48px; padding: 48px 36px; background: #fff; border: 1px solid #e5e7eb; border-radius: 20px; position: relative; overflow: hidden; perspective: 800px; }
-    .rag-hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(99,102,241,0.5), transparent); }
-    .rag-hero::after { content: ''; position: absolute; bottom: -80px; left: 50%; transform: translateX(-50%); width: 350px; height: 160px; background: radial-gradient(ellipse, rgba(99,102,241,0.06) 0%, transparent 70%); pointer-events: none; }
+    /* RAG HERO — deep architecture visualization */
+    .rag-hero { margin: 40px 0 48px; padding: 0; background: linear-gradient(165deg, #111827 0%, #1a2340 40%, #0f1729 70%, #111827 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; position: relative; overflow: hidden; perspective: 1000px; }
+    .rag-hero::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 24px 24px; pointer-events: none; z-index: 1; }
+    .rag-hero::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(99,102,241,0.25), transparent); z-index: 2; }
 
-    .rag-pipeline-wrap { position: relative; z-index: 1; margin-bottom: 36px; }
-    .rag-pipeline { display: flex; align-items: center; justify-content: center; gap: 0; position: relative; transform-style: preserve-3d; }
+    .rag-glow-orb { position: absolute; border-radius: 50%; filter: blur(60px); pointer-events: none; z-index: 0; }
+    .rag-glow-orb.go1 { width: 300px; height: 200px; top: -60px; left: 10%; background: rgba(99,102,241,0.06); }
+    .rag-glow-orb.go2 { width: 250px; height: 160px; bottom: -40px; right: 15%; background: rgba(45,154,110,0.04); }
 
-    .rag-stage { display: flex; flex-direction: column; align-items: center; gap: 10px; position: relative; z-index: 2; transform-style: preserve-3d; transition: transform 0.3s ease; }
-    .rag-stage:hover { transform: translateZ(12px); }
+    .rag-content { text-align: center; position: relative; z-index: 3; padding: 32px 36px 0; }
+    .rag-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); border-radius: 999px; font-size: 11px; font-weight: 600; color: #818cf8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+    .rag-hero h3 { font-size: clamp(20px, 3vw, 28px); font-weight: 800; color: #e5e7eb; letter-spacing: -.5px; line-height: 1.2; margin-bottom: 10px; }
+    .rag-hero p { color: #9ca3af; font-size: 15px; max-width: 560px; margin: 0 auto 28px; line-height: 1.6; }
+
+    .rag-architecture { position: relative; z-index: 3; padding: 0 28px 32px; }
+    .rag-pipeline-wrap { position: relative; }
+    .rag-pipeline { display: flex; align-items: flex-start; justify-content: center; gap: 0; position: relative; }
+
+    .rag-stage { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; z-index: 2; }
     .rag-stage-label { font-size: 9px; color: #6b7280; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
 
-    .rag-doc-stack { position: relative; width: 80px; height: 64px; transform-style: preserve-3d; }
-    .rag-doc { width: 44px; height: 54px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; display: flex; align-items: center; justify-content: center; position: absolute; transition: all .3s; box-shadow: 0 6px 16px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.15); }
-    .rag-doc:nth-child(1) { left: 0; top: 6px; z-index: 3; transform: translateZ(6px); }
-    .rag-doc:nth-child(2) { left: 12px; top: 2px; z-index: 2; transform: rotate(-4deg) translateZ(3px); }
-    .rag-doc:nth-child(3) { left: 24px; top: -2px; z-index: 1; transform: rotate(-8deg) translateZ(0); }
-    .rag-doc svg { width: 20px; height: 20px; stroke: #94a3b8; }
+    /* Stage 1: Document Ingestion */
+    .rag-ingest { width: 90px; }
+    .rag-ingest-stack { position: relative; width: 100%; height: 72px; }
+    .rag-ingest-doc { position: absolute; width: 50px; height: 60px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.25); transition: all 0.3s ease; }
+    .rag-ingest-doc:nth-child(1) { left: 0; top: 6px; z-index: 3; }
+    .rag-ingest-doc:nth-child(2) { left: 16px; top: 3px; z-index: 2; transform: rotate(-6deg); }
+    .rag-ingest-doc:nth-child(3) { left: 32px; top: 0; z-index: 1; transform: rotate(-12deg); }
+    .rag-ingest-doc svg { width: 18px; height: 18px; }
+    .rag-ingest-doc .doc-lines { width: 24px; display: flex; flex-direction: column; gap: 2px; }
+    .rag-ingest-doc .doc-lines span { height: 2px; border-radius: 1px; }
+    .rag-ingest-doc .doc-lines span:nth-child(1) { background: #475569; width: 100%; }
+    .rag-ingest-doc .doc-lines span:nth-child(2) { background: #334155; width: 75%; }
+    .rag-ingest-doc .doc-lines span:nth-child(3) { background: #334155; width: 55%; }
 
-    .rag-flow-line { display: flex; align-items: center; height: 64px; width: 48px; position: relative; overflow: visible; }
-    .rag-flow-line .fl-track { width: 100%; height: 1px; background: rgba(99,102,241,0.2); }
-    .rag-flow-line .fl-dot { position: absolute; top: 50%; transform: translateY(-50%); width: 4px; height: 4px; border-radius: 50%; background: var(--accent); animation: ragDotFlow 1.8s ease-in-out infinite; }
-    .rag-flow-line .fl-dot.d2 { animation-delay: 0.6s; }
-    .rag-flow-line .fl-dot.d3 { animation-delay: 1.2s; }
-    @keyframes ragDotFlow { 0% { left: 0; opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { left: calc(100% - 4px); opacity: 0; } }
+    /* Stage 2: Chunking */
+    .rag-chunk { width: 90px; }
+    .rag-chunk-visual { position: relative; width: 100%; height: 72px; }
+    .rag-chunk-text { position: absolute; left: 50%; transform: translateX(-50%); top: 0; width: 72px; height: 20px; background: #1e293b; border: 1px solid #334155; border-radius: 4px; display: flex; align-items: center; padding: 0 6px; gap: 2px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    .rag-chunk-text .ct-line { height: 2px; border-radius: 1px; }
+    .rag-chunk-text .ct-line:nth-child(1) { width: 40%; background: #64748b; }
+    .rag-chunk-text .ct-line:nth-child(2) { width: 60%; background: #475569; }
+    .rag-chunk-text .ct-line:nth-child(3) { width: 35%; background: #334155; }
+    .rag-chunk-arrow { position: absolute; top: 24px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; }
+    .rag-chunk-arrow svg { width: 100%; height: 100%; stroke: #4b5563; }
+    .rag-chunk-pieces { position: absolute; bottom: 0; left: 0; right: 0; display: flex; gap: 3px; justify-content: center; }
+    .rag-chunk-piece { width: 18px; height: 28px; background: #1e293b; border: 1px solid rgba(99,102,241,0.15); border-radius: 3px; display: flex; flex-direction: column; align-items: center; padding: 3px 2px; gap: 2px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+    .rag-chunk-piece .cp-line { height: 1.5px; border-radius: 1px; }
+    .rag-chunk-piece:nth-child(1) .cp-line { background: rgba(99,102,241,0.4); width: 70%; }
+    .rag-chunk-piece:nth-child(1) .cp-line:last-child { width: 50%; }
+    .rag-chunk-piece:nth-child(2) .cp-line { background: rgba(99,102,241,0.3); width: 80%; }
+    .rag-chunk-piece:nth-child(2) .cp-line:last-child { width: 60%; }
+    .rag-chunk-piece:nth-child(3) .cp-line { background: rgba(99,102,241,0.4); width: 65%; }
+    .rag-chunk-piece:nth-child(3) .cp-line:last-child { width: 45%; }
+    .rag-chunk-piece:nth-child(4) .cp-line { background: rgba(99,102,241,0.3); width: 75%; }
+    .rag-chunk-piece:nth-child(4) .cp-line:last-child { width: 55%; }
 
-    .rag-processor { width: 84px; height: 84px; border-radius: 16px; background: #1e293b; border: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; position: relative; box-shadow: 0 12px 40px rgba(0,0,0,0.2), 0 0 24px rgba(99,102,241,0.1), 0 4px 12px rgba(0,0,0,0.15); transform: translateZ(8px); }
-    .rag-processor::before { content: ''; position: absolute; inset: -1px; border-radius: 17px; border: 1px solid rgba(99,102,241,0.25); animation: ragSpin 4s linear infinite; }
-    @keyframes ragSpin { 0% { opacity: 0.3; } 50% { opacity: 0.6; } 100% { opacity: 0.3; } }
-    .rag-processor svg { width: 26px; height: 26px; stroke: #818cf8; position: relative; z-index: 1; }
-    .rag-processor .rp-label { font-size: 8px; color: #818cf8; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; position: relative; z-index: 1; }
+    /* Stage 3: Vector Embedding */
+    .rag-embed { width: 110px; }
+    .rag-vector-space { width: 110px; height: 80px; background: #1e293b; border: 1px solid rgba(99,102,241,0.15); border-radius: 10px; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 0 16px rgba(99,102,241,0.06); }
+    .rag-vector-space::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(99,102,241,0.03), transparent 50%); }
+    .rag-vdot { position: absolute; width: 5px; height: 5px; border-radius: 50%; }
+    .rag-vdot.vd1 { top: 20px; left: 18px; background: rgba(99,102,241,0.5); box-shadow: 0 0 6px rgba(99,102,241,0.3); }
+    .rag-vdot.vd2 { top: 35px; left: 28px; background: rgba(99,102,241,0.35); }
+    .rag-vdot.vd3 { top: 15px; left: 38px; background: rgba(99,102,241,0.4); }
+    .rag-vdot.vd4 { top: 45px; left: 22px; background: rgba(99,102,241,0.3); }
+    .rag-vdot.vd5 { top: 28px; left: 48px; background: rgba(99,102,241,0.25); }
+    .rag-vdot.vd6 { top: 55px; left: 42px; background: rgba(99,102,241,0.35); }
+    .rag-vdot.vd7 { top: 12px; left: 58px; background: rgba(99,102,241,0.3); }
+    .rag-vdot.vd8 { top: 38px; left: 62px; background: rgba(99,102,241,0.25); }
+    .rag-vdot.vd9 { top: 50px; left: 72px; background: rgba(99,102,241,0.3); }
+    .rag-vdot.vd10 { top: 22px; left: 82px; background: rgba(99,102,241,0.35); }
+    .rag-vdot.vd11 { top: 60px; left: 88px; background: rgba(99,102,241,0.25); }
+    .rag-vdot.vd12 { top: 30px; left: 92px; background: rgba(99,102,241,0.3); }
+    .rag-vdot.query { top: 32px; left: 44px; width: 8px; height: 8px; background: #2d9a6e; box-shadow: 0 0 10px rgba(45,154,110,0.5); z-index: 2; }
+    .rag-vdot.query::after { content: ''; position: absolute; inset: -6px; border: 1px solid rgba(45,154,110,0.3); border-radius: 50%; animation: ragQueryPulse 2s ease-in-out infinite; }
+    @keyframes ragQueryPulse { 0%,100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.5); opacity: 0; } }
+    .rag-vector-axes { position: absolute; inset: 0; pointer-events: none; }
+    .rag-vector-axes .vaxis { position: absolute; background: rgba(255,255,255,0.04); }
+    .rag-vector-axes .vaxis.h { width: 100%; height: 1px; top: 50%; }
+    .rag-vector-axes .vaxis.v { height: 100%; width: 1px; left: 50%; }
 
-    .rag-output { position: relative; }
-    .rag-answer-box { width: 110px; padding: 14px; background: #1e293b; border: 1px solid rgba(45,154,110,0.25); border-radius: 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; box-shadow: 0 12px 32px rgba(0,0,0,0.2), 0 0 20px rgba(45,154,110,0.06), 0 4px 10px rgba(0,0,0,0.15); transform: translateZ(10px); }
-    .rag-answer-box .ab-icon { width: 28px; height: 28px; border-radius: 50%; background: rgba(45,154,110,0.1); display: flex; align-items: center; justify-content: center; }
-    .rag-answer-box .ab-icon svg { width: 16px; height: 16px; stroke: #2d9a6e; }
-    .rag-answer-box .ab-text { font-size: 11px; color: #2d9a6e; font-weight: 600; text-align: center; line-height: 1.3; }
-    .rag-answer-box .ab-src { font-size: 8px; color: #94a3b8; font-family: 'SF Mono', 'Fira Code', monospace; }
-    .rag-answer-box .ab-cursor { display: inline-block; width: 1px; height: 11px; background: #2d9a6e; animation: abCursorBlink 1s step-end infinite; vertical-align: middle; }
+    /* Stage 4: Retrieval / Similarity */
+    .rag-retrieve { width: 100px; }
+    .rag-retrieve-visual { width: 100px; height: 80px; display: flex; flex-direction: column; gap: 4px; }
+    .rag-sim-row { display: flex; align-items: center; gap: 6px; padding: 4px 6px; background: #1e293b; border: 1px solid #334155; border-radius: 5px; }
+    .rag-sim-row.match { border-color: rgba(45,154,110,0.3); background: rgba(45,154,110,0.04); }
+    .rag-sim-rank { width: 14px; height: 14px; border-radius: 3px; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #94a3b8; font-weight: 700; flex-shrink: 0; }
+    .rag-sim-row.match .rag-sim-rank { background: rgba(45,154,110,0.2); color: #2d9a6e; }
+    .rag-sim-bar { flex: 1; height: 6px; background: #0f172a; border-radius: 3px; overflow: hidden; }
+    .rag-sim-fill { height: 100%; border-radius: 3px; }
+    .rag-sim-row.match .rag-sim-fill { background: #2d9a6e; }
+    .rag-sim-row:nth-child(2) .rag-sim-fill { background: #64748b; }
+    .rag-sim-row:nth-child(3) .rag-sim-fill { background: #475569; }
+    .rag-sim-score { font-size: 8px; color: #64748b; font-family: 'SF Mono', 'Fira Code', monospace; flex-shrink: 0; }
+    .rag-sim-row.match .rag-sim-score { color: #2d9a6e; }
+
+    /* Stage 5: Generation */
+    .rag-generate { width: 110px; }
+    .rag-answer-box { width: 110px; padding: 12px 10px; background: #1e293b; border: 1px solid rgba(45,154,110,0.25); border-radius: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 0 16px rgba(45,154,110,0.06); }
+    .rag-answer-line { display: flex; align-items: center; gap: 4px; }
+    .rag-answer-line .al-text { font-size: 10px; color: #d1d5db; line-height: 1.3; }
+    .rag-answer-line .al-cite { display: inline-block; padding: 1px 4px; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); border-radius: 3px; font-size: 7px; color: #818cf8; font-family: 'SF Mono', 'Fira Code', monospace; white-space: nowrap; }
+    .rag-answer-cursor, .ab-cursor { display: inline-block; width: 1px; height: 10px; background: #2d9a6e; animation: abCursorBlink 1s step-end infinite; }
     @keyframes abCursorBlink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+    .rag-grounded-tag { font-size: 7px; color: #2d9a6e; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; display: flex; align-items: center; gap: 3px; }
+    .rag-grounded-tag::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #2d9a6e; }
 
-    .rag-content { text-align: center; position: relative; z-index: 1; }
-    .rag-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.15); border-radius: 999px; font-size: 11px; font-weight: 600; color: #6366f1; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
-    .rag-hero h3 { font-size: clamp(20px, 3vw, 28px); font-weight: 800; color: #111827; letter-spacing: -.5px; line-height: 1.2; margin-bottom: 10px; }
-    .rag-hero p { color: #4b5563; font-size: 15px; max-width: 520px; margin: 0 auto; line-height: 1.6; }
+    /* Flow connectors between stages */
+    .rag-flow-line { display: flex; align-items: center; height: 80px; width: 32px; position: relative; }
+    .rag-flow-line .fl-track { width: 100%; height: 1px; background: rgba(99,102,241,0.15); position: relative; }
+    .rag-flow-line .fl-track::before { content: ''; position: absolute; right: -3px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 5px solid rgba(99,102,241,0.25); border-top: 3px solid transparent; border-bottom: 3px solid transparent; }
+    .rag-flow-line .fl-packet { position: absolute; top: -2px; width: 5px; height: 5px; border-radius: 50%; background: rgba(99,102,241,0.6); animation: ragPacket 2.5s ease-in-out infinite; }
+    .rag-flow-line .fl-packet.fp2 { animation-delay: 0.8s; }
+    .rag-flow-line .fl-packet.fp3 { animation-delay: 1.6s; }
+    @keyframes ragPacket { 0% { left: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { left: calc(100% - 5px); opacity: 0; } }
 
-    /* STATS */
-    .stats-row { display: flex; gap: 2px; margin: 40px 0 0; border-radius: 14px; overflow: hidden; border: 1px solid #d1d5db; }
-    .stat-card { flex: 1; background: #f9fafb; padding: 32px 24px; text-align: center; border-right: 1px solid #d1d5db; }
+    /* Stats */
+    .stats-row { display: flex; gap: 2px; margin: 0; border-radius: 0; overflow: hidden; border-top: 1px solid rgba(255,255,255,0.06); }
+    .stat-card { flex: 1; background: rgba(0,0,0,0.15); padding: 28px 20px; text-align: center; border-right: 1px solid rgba(255,255,255,0.04); }
     .stat-card:last-child { border-right: none; }
-    .stat-num { font-size: clamp(32px, 5vw, 48px); font-weight: 800; letter-spacing: -2px; line-height: 1; color: #111827; }
-    .stat-label { font-size: 11px; color: #4b5563; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-    .stat-val { font-size: 12px; color: #6b7280; margin-top: 4px; }
+    .stat-num { font-size: clamp(28px, 4vw, 40px); font-weight: 800; letter-spacing: -2px; line-height: 1; color: #e5e7eb; }
+    .stat-label { font-size: 10px; color: #9ca3af; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+    .stat-val { font-size: 11px; color: #6b7280; margin-top: 4px; }
 
     /* ===== CAPABILITIES — BENTO ===== */
     .caps-bento { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -290,9 +361,9 @@
     .cb-pcb::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.15) 100%); pointer-events: none; z-index: 2; }
 
     .cb-svg { position: absolute; inset: 0; pointer-events: none; z-index: 5; visibility: hidden; }
-    .cb-svg .cb-path { fill: none; stroke: transparent; stroke-width: 2; stroke-linecap: round; }
-    .cb-svg .cb-path.active { stroke: rgba(99,102,241,0.6); stroke-width: 2; }
-    .cb-svg .cb-particle { fill: #fff; opacity: 0; filter: drop-shadow(0 0 6px var(--accent)); }
+    .cb-svg .cb-path { fill: none; stroke: transparent; stroke-width: 1.5; stroke-linecap: round; }
+    .cb-svg .cb-path.active { stroke: rgba(99,102,241,0.35); stroke-width: 1.5; }
+    .cb-svg .cb-particle { fill: rgba(99,102,241,0.7); opacity: 0; filter: drop-shadow(0 0 3px rgba(99,102,241,0.4)); }
     .cb-svg .cb-particle.active { opacity: 1; }
 
     .cb-tile {
@@ -305,55 +376,52 @@
       justify-content: center;
       position: relative;
       overflow: hidden;
-      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.5s ease;
     }
-    .cb-tile::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent); opacity: 0; transition: opacity 0.5s ease; }
-    .cb-tile:hover { border-color: rgba(99,102,241,0.3); }
+    .cb-tile::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(99,102,241,0.2), transparent); opacity: 0; transition: opacity 0.4s ease; }
+    .cb-tile:hover { border-color: rgba(99,102,241,0.2); }
     .cb-tile:hover::before { opacity: 1; }
     .cb-tile svg { width: 24px; height: 24px; margin-bottom: 4px; flex-shrink: 0; }
-    .cb-tile .cb-tile-name { font-size: 11px; font-weight: 600; color: #8a94a6; white-space: nowrap; transition: color 0.6s ease; }
-    .cb-tile .cb-tile-type { font-size: 9px; color: #3d4a5c; margin-top: 2px; transition: color 0.6s ease; }
+    .cb-tile .cb-tile-name { font-size: 11px; font-weight: 600; color: #8a94a6; white-space: nowrap; transition: color 0.4s ease; }
+    .cb-tile .cb-tile-type { font-size: 9px; color: #3d4a5c; margin-top: 2px; transition: color 0.4s ease; }
 
     .cb-tile.cb-jeeves {
       background: #111827;
-      border: 1px solid rgba(99,102,241,0.15);
+      border: 1px solid rgba(99,102,241,0.12);
       border-radius: 10px;
-      box-shadow: 0 0 30px rgba(99,102,241,0.06), inset 0 0 20px rgba(99,102,241,0.02);
-      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.5s ease;
     }
     .cb-tile.cb-jeeves .cb-tile-core {
-      font-size: 38px; font-weight: 900; color: rgba(99,102,241,0.25);
+      font-size: 38px; font-weight: 900; color: rgba(99,102,241,0.2);
       display: flex; align-items: center; justify-content: center;
       width: 52px; height: 52px; border-radius: 14px;
-      background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.1);
+      background: rgba(99,102,241,0.04); border: 1px solid rgba(99,102,241,0.08);
       margin: 0 auto 6px;
-      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.5s ease;
     }
-    .cb-tile.cb-jeeves .cb-tile-label { font-size: 14px; font-weight: 700; color: #8a94a6; transition: color 0.6s ease; }
-    .cb-tile.cb-jeeves .cb-tile-sub { font-size: 10px; color: #3d4a5c; margin-top: 2px; transition: color 0.6s ease; }
+    .cb-tile.cb-jeeves .cb-tile-label { font-size: 14px; font-weight: 700; color: #8a94a6; transition: color 0.4s ease; }
+    .cb-tile.cb-jeeves .cb-tile-sub { font-size: 10px; color: #3d4a5c; margin-top: 2px; transition: color 0.4s ease; }
 
     .cb-tile.cb-jeeves.lit {
-      border-color: rgba(99,102,241,0.5);
-      background: #fff;
-      box-shadow: 0 0 40px rgba(99,102,241,0.2), 0 0 0 2px rgba(99,102,241,0.08);
+      border-color: rgba(99,102,241,0.35);
+      box-shadow: 0 0 20px rgba(99,102,241,0.08), 0 0 0 1px rgba(99,102,241,0.06);
     }
     .cb-tile.cb-jeeves.lit::before { opacity: 1; }
     .cb-tile.cb-jeeves.lit .cb-tile-core {
       color: var(--accent);
-      background: rgba(99,102,241,0.08);
-      border-color: rgba(99,102,241,0.2);
+      background: rgba(99,102,241,0.06);
+      border-color: rgba(99,102,241,0.15);
     }
-    .cb-tile.cb-jeeves.lit .cb-tile-label { color: #0f172a; }
-    .cb-tile.cb-jeeves.lit .cb-tile-sub { color: #64748b; }
+    .cb-tile.cb-jeeves.lit .cb-tile-label { color: #d4d4d4; }
+    .cb-tile.cb-jeeves.lit .cb-tile-sub { color: #6b7a8d; }
 
     .cb-tile.active {
-      background: #fff;
-      border-color: rgba(99,102,241,0.35);
-      box-shadow: 0 0 24px rgba(99,102,241,0.12), 0 2px 8px rgba(0,0,0,0.1);
+      border-color: rgba(99,102,241,0.25);
+      box-shadow: 0 0 12px rgba(99,102,241,0.06);
     }
     .cb-tile.active::before { opacity: 1; }
-    .cb-tile.active .cb-tile-name { color: #0f172a; }
-    .cb-tile.active .cb-tile-type { color: #64748b; }
+    .cb-tile.active .cb-tile-name { color: #d4d4d4; }
+    .cb-tile.active .cb-tile-type { color: #6b7a8d; }
 
     /* ===== TIMELINE ===== */
     /* ===== HOW IT WORKS — Terminal ===== */
@@ -418,6 +486,7 @@
       .hero-text p { margin-left: auto; margin-right: auto; }
       .hero-buttons { justify-content: center; }
       .caps-bento { grid-template-columns: 1fr; }
+      .rag-pipeline { transform: scale(0.85); transform-origin: center center; }
     }
     @media (max-width: 768px) {
       .section { padding: 48px 20px; }
@@ -645,65 +714,150 @@
   <div class="rag-hero reveal">
     <div class="rag-glow-orb go1"></div>
     <div class="rag-glow-orb go2"></div>
-    <div class="rag-pipeline-wrap">
-      <div class="rag-pipeline">
-        <!-- Stage 1: Docs -->
-        <div class="rag-stage">
-          <div class="rag-doc-stack">
-            <div class="rag-doc"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
-            <div class="rag-doc"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
-            <div class="rag-doc"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
-          </div>
-          <span class="rag-stage-label">Docs</span>
-        </div>
 
-        <!-- Flow Line 1 -->
-        <div class="rag-flow-line">
-          <div class="fl-track"></div>
-          <div class="fl-dot"></div>
-          <div class="fl-dot d2"></div>
-          <div class="fl-dot d3"></div>
-        </div>
-
-        <!-- Stage 2: Processor -->
-        <div class="rag-stage">
-          <div class="rag-processor">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 11a9 9 0 0 1 9 9"/>
-              <path d="M4 4a16 16 0 0 1 16 16"/>
-              <circle cx="5" cy="19" r="1"/>
-            </svg>
-            <span class="rp-label">Vector</span>
-          </div>
-          <span class="rag-stage-label">Embed</span>
-        </div>
-
-        <!-- Flow Line 2 -->
-        <div class="rag-flow-line">
-          <div class="fl-track"></div>
-          <div class="fl-dot"></div>
-          <div class="fl-dot d2"></div>
-          <div class="fl-dot d3"></div>
-        </div>
-
-        <!-- Stage 3: Answer -->
-        <div class="rag-stage">
-          <div class="rag-output">
-            <div class="rag-answer-box">
-              <div class="ab-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-              <div class="ab-text">Answer with source<span class="ab-cursor"></span></div>
-              <div class="ab-src">doc_v3.pdf §2.1</div>
-            </div>
-          </div>
-          <span class="rag-stage-label">Response</span>
-        </div>
-      </div>
-    </div>
     <div class="rag-content">
       <div class="rag-badge">RAG Architecture</div>
       <h3>Your knowledge.<br>Accurate retrieval. Zero hallucinations.</h3>
       <p>Upload PDFs, docs, FAQs — Jeeves auto-chunks, embeds, and retrieves with cosine similarity. Every answer cites a source. No black box, no made-up facts.</p>
     </div>
+
+    <div class="rag-architecture">
+      <div class="rag-pipeline-wrap">
+        <div class="rag-pipeline">
+
+          <!-- Stage 1: Document Ingestion -->
+          <div class="rag-stage rag-ingest">
+            <div class="rag-ingest-stack">
+              <div class="rag-ingest-doc">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <div class="doc-lines"><span></span><span></span><span></span></div>
+              </div>
+              <div class="rag-ingest-doc">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <div class="doc-lines"><span></span><span></span><span></span></div>
+              </div>
+              <div class="rag-ingest-doc">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <div class="doc-lines"><span></span><span></span><span></span></div>
+              </div>
+            </div>
+            <span class="rag-stage-label">Ingest</span>
+          </div>
+
+          <!-- Flow 1 -->
+          <div class="rag-flow-line">
+            <div class="fl-track"></div>
+            <div class="fl-packet"></div>
+            <div class="fl-packet fp2"></div>
+            <div class="fl-packet fp3"></div>
+          </div>
+
+          <!-- Stage 2: Chunking -->
+          <div class="rag-stage rag-chunk">
+            <div class="rag-chunk-visual">
+              <div class="rag-chunk-text">
+                <div class="ct-line"></div>
+                <div class="ct-line"></div>
+                <div class="ct-line"></div>
+              </div>
+              <div class="rag-chunk-arrow">
+                <svg viewBox="0 0 12 12" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 1v8M3 6l3 3 3-3"/></svg>
+              </div>
+              <div class="rag-chunk-pieces">
+                <div class="rag-chunk-piece"><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div></div>
+                <div class="rag-chunk-piece"><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div></div>
+                <div class="rag-chunk-piece"><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div></div>
+                <div class="rag-chunk-piece"><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div></div>
+              </div>
+            </div>
+            <span class="rag-stage-label">Chunk</span>
+          </div>
+
+          <!-- Flow 2 -->
+          <div class="rag-flow-line">
+            <div class="fl-track"></div>
+            <div class="fl-packet"></div>
+            <div class="fl-packet fp2"></div>
+            <div class="fl-packet fp3"></div>
+          </div>
+
+          <!-- Stage 3: Vector Embedding -->
+          <div class="rag-stage rag-embed">
+            <div class="rag-vector-space">
+              <div class="rag-vector-axes"><div class="vaxis h"></div><div class="vaxis v"></div></div>
+              <div class="rag-vdot vd1"></div>
+              <div class="rag-vdot vd2"></div>
+              <div class="rag-vdot vd3"></div>
+              <div class="rag-vdot vd4"></div>
+              <div class="rag-vdot vd5"></div>
+              <div class="rag-vdot vd6"></div>
+              <div class="rag-vdot vd7"></div>
+              <div class="rag-vdot vd8"></div>
+              <div class="rag-vdot vd9"></div>
+              <div class="rag-vdot vd10"></div>
+              <div class="rag-vdot vd11"></div>
+              <div class="rag-vdot vd12"></div>
+              <div class="rag-vdot query"></div>
+            </div>
+            <span class="rag-stage-label">Embed</span>
+          </div>
+
+          <!-- Flow 3 -->
+          <div class="rag-flow-line">
+            <div class="fl-track"></div>
+            <div class="fl-packet"></div>
+            <div class="fl-packet fp2"></div>
+            <div class="fl-packet fp3"></div>
+          </div>
+
+          <!-- Stage 4: Retrieval -->
+          <div class="rag-stage rag-retrieve">
+            <div class="rag-retrieve-visual">
+              <div class="rag-sim-row match">
+                <div class="rag-sim-rank">1</div>
+                <div class="rag-sim-bar"><div class="rag-sim-fill" style="width:94%"></div></div>
+                <div class="rag-sim-score">0.94</div>
+              </div>
+              <div class="rag-sim-row">
+                <div class="rag-sim-rank">2</div>
+                <div class="rag-sim-bar"><div class="rag-sim-fill" style="width:71%"></div></div>
+                <div class="rag-sim-score">0.71</div>
+              </div>
+              <div class="rag-sim-row">
+                <div class="rag-sim-rank">3</div>
+                <div class="rag-sim-bar"><div class="rag-sim-fill" style="width:58%"></div></div>
+                <div class="rag-sim-score">0.58</div>
+              </div>
+            </div>
+            <span class="rag-stage-label">Retrieve</span>
+          </div>
+
+          <!-- Flow 4 -->
+          <div class="rag-flow-line">
+            <div class="fl-track"></div>
+            <div class="fl-packet"></div>
+            <div class="fl-packet fp2"></div>
+            <div class="fl-packet fp3"></div>
+          </div>
+
+          <!-- Stage 5: Generation -->
+          <div class="rag-stage rag-generate">
+            <div class="rag-answer-box">
+              <div class="rag-answer-line">
+                <span class="al-text">Refunds within 30 days<span class="ab-cursor"></span></span>
+              </div>
+              <div class="rag-answer-line">
+                <span class="al-cite">doc_v3.pdf §2.1</span>
+              </div>
+              <div class="rag-grounded-tag">Grounded</div>
+            </div>
+            <span class="rag-stage-label">Generate</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-num s1">0%</div>
@@ -1162,7 +1316,7 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
       paths.push(path);
 
       const particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      particle.setAttribute('r', '3');
+      particle.setAttribute('r', '2');
       particle.classList.add('cb-particle');
       particle.dataset.idx = tile.dataset.idx;
       svg.appendChild(particle);
@@ -1174,13 +1328,18 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
     const length = pathEl.getTotalLength();
     const start = performance.now();
 
+    function easeInOut(t) {
+      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    }
+
     function step(now) {
       const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
+      const rawProgress = Math.min(elapsed / duration, 1);
+      const progress = easeInOut(rawProgress);
       const point = pathEl.getPointAtLength(progress * length);
       particle.setAttribute('cx', point.x);
       particle.setAttribute('cy', point.y);
-      if (progress < 1) {
+      if (rawProgress < 1) {
         requestAnimationFrame(step);
       } else if (cb) {
         cb();
@@ -1205,8 +1364,8 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
     particles[activeIdx].classList.add('active');
 
     // Particle travels along path
-    animateParticle(paths[activeIdx], particles[activeIdx], 500, function() {
-      // After particle arrives, hold then clear everything together
+    animateParticle(paths[activeIdx], particles[activeIdx], 800, function() {
+      // After particle arrived, hold then clear everything together
       setTimeout(function() {
         jeevesTile.classList.remove('lit');
         tiles[activeIdx].classList.remove('active');
@@ -1214,8 +1373,8 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
         particles[activeIdx].classList.remove('active');
 
         // Pause before next cycle
-        setTimeout(cycle, 2200);
-      }, 1200);
+        setTimeout(cycle, 3200);
+      }, 1400);
     });
   }
 
