@@ -196,32 +196,68 @@
     .hm-stat .hs-val.c3 { background: linear-gradient(135deg, var(--green), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .hm-stat .hs-label { font-size: 13px; color: #94a3b8; line-height: 1.5; }
 
-    /* ===== CHANNELS CIRCUIT ===== */
-    .channel-board { background: var(--surface); border: 1px solid rgba(255,255,255,0.12); border-radius: 28px; padding: 28px; position: relative; overflow: hidden; min-height: 540px; margin-top: 8px; }
-    .channel-board::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px); background-size: 28px 28px; pointer-events: none; }
-    .cb-svg { position: absolute; inset: 0; pointer-events: none; }
-    .cb-svg .cb-path { fill: none; stroke: rgba(255,255,255,0.03); stroke-width: 1; }
-    .cb-svg .cb-path.active { stroke: rgba(99,102,241,0.5); stroke-width: 1.5; }
-    .cb-svg .cb-particle { fill: var(--accent); opacity: 0; filter: drop-shadow(0 0 8px var(--accent)); }
+    /* ===== CHANNELS CIRCUIT (CHIP LAYOUT) ===== */
+    .channel-board {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 3px;
+      min-height: 480px;
+      padding: 3px;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 28px;
+      position: relative;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .cb-svg { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+    .cb-svg .cb-path { fill: none; stroke: transparent; stroke-width: 2; transition: stroke .2s; }
+    .cb-svg .cb-path.active { stroke: rgba(99,102,241,0.6); }
+    .cb-svg .cb-particle { fill: var(--accent); opacity: 0; filter: drop-shadow(0 0 6px var(--accent)); }
     .cb-svg .cb-particle.active { opacity: 1; }
 
-    .cb-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 3; text-align: center; }
-    .cb-core { width: 96px; height: 96px; border-radius: 24px; background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.03)); border: 1px solid rgba(99,102,241,0.2); display: flex; align-items: center; justify-content: center; font-size: 34px; font-weight: 900; color: #4b5563; margin: 0 auto 10px; position: relative; transition: all .3s ease; }
-    .cb-core.lit { background: linear-gradient(135deg, rgba(99,102,241,0.35), rgba(99,102,241,0.1)); border-color: rgba(99,102,241,0.6); color: var(--accent); box-shadow: 0 0 40px rgba(99,102,241,0.25); }
-    .cb-core::before { content: ''; position: absolute; inset: -8px; border-radius: 32px; border: 1px solid rgba(99,102,241,0.15); animation: cbPulse 2.5s ease-in-out infinite; }
-    @keyframes cbPulse { 0%,100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 0; transform: scale(1.08); } }
-    .cb-core-label { font-size: 15px; font-weight: 700; color: #4b5563; transition: color .3s; }
-    .cb-core-label.lit { color: #f1f5f9; }
-    .cb-core-sub { font-size: 11px; color: #374151; margin-top: 2px; transition: color .3s; }
+    .cb-tile {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: all .3s ease;
+      position: relative;
+      overflow: hidden;
+      padding: 8px 4px;
+    }
+    .cb-tile svg { width: 28px; height: 28px; margin-bottom: 4px; flex-shrink: 0; }
+    .cb-tile .cb-tile-name { font-size: 12px; font-weight: 600; color: #94a3b8; white-space: nowrap; transition: color .3s; }
+    .cb-tile .cb-tile-type { font-size: 10px; color: #4b5563; margin-top: 1px; transition: color .3s; }
 
-    .cb-node { position: absolute; z-index: 2; text-align: center; transition: all .3s ease; }
-    .cb-node.active .cb-node-box { border-color: rgba(99,102,241,0.5); box-shadow: 0 0 30px rgba(99,102,241,0.25); background: rgba(99,102,241,0.08); }
-    .cb-node.active .cb-node-name { color: #fff; }
-    .cb-node.active .cb-node-type { color: #6b7280; }
-    .cb-node-box { width: 72px; height: 72px; border-radius: 18px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; transition: all .3s; }
-    .cb-node-box svg { width: 32px; height: 32px; }
-    .cb-node-name { font-size: 13px; font-weight: 600; color: #94a3b8; white-space: nowrap; transition: color .3s; }
-    .cb-node-type { font-size: 10px; color: #4b5563; margin-top: 2px; transition: color .3s; }
+    .cb-tile.cb-jeeves {
+      background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(99,102,241,0.02));
+      border-color: rgba(99,102,241,0.15);
+    }
+    .cb-tile.cb-jeeves .cb-tile-core { font-size: 36px; font-weight: 900; color: #4b5563; transition: all .3s; }
+    .cb-tile.cb-jeeves .cb-tile-label { font-size: 14px; font-weight: 700; color: #4b5563; transition: color .3s; }
+    .cb-tile.cb-jeeves .cb-tile-sub { font-size: 10px; color: #374151; transition: color .3s; }
+
+    .cb-tile.cb-jeeves.lit {
+      background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(99,102,241,0.08));
+      border-color: rgba(99,102,241,0.5);
+      box-shadow: 0 0 30px rgba(99,102,241,0.2);
+    }
+    .cb-tile.cb-jeeves.lit .cb-tile-core { color: var(--accent); text-shadow: 0 0 20px rgba(99,102,241,0.5); }
+    .cb-tile.cb-jeeves.lit .cb-tile-label { color: #f1f5f9; }
+    .cb-tile.cb-jeeves.lit .cb-tile-sub { color: #64748b; }
+
+    .cb-tile.active {
+      border-color: rgba(99,102,241,0.5);
+      box-shadow: 0 0 24px rgba(99,102,241,0.2);
+      background: rgba(99,102,241,0.06);
+    }
+    .cb-tile.active .cb-tile-name { color: #fff; }
+    .cb-tile.active .cb-tile-type { color: #6b7280; }
 
     /* ===== TIMELINE ===== */
     .timeline { position: relative; padding: 60px 0; max-width: 900px; margin: 0 auto; }
@@ -308,12 +344,13 @@
       .section.alt-bg .section-inner { padding: 0 20px; }
       .section-sub { font-size: 15px; margin-bottom: 32px; }
       .hm-stats { max-width: 450px; margin-left: auto; margin-right: auto; }
-      .channel-board { min-height: 420px; padding: 20px 12px; }
-      .cb-core { width: 64px; height: 64px; font-size: 24px; border-radius: 16px; }
-      .cb-node-box { width: 48px; height: 48px; border-radius: 12px; }
-      .cb-node-box svg { width: 20px; height: 20px; }
-      .cb-node-name { font-size: 10px; }
-      .cb-node-type { font-size: 8px; }
+      .channel-board { min-height: 400px; }
+      .cb-tile { border-radius: 10px; }
+      .cb-tile svg { width: 22px; height: 22px; }
+      .cb-tile .cb-tile-name { font-size: 11px; }
+      .cb-tile .cb-tile-type { font-size: 9px; }
+      .cb-tile.cb-jeeves .cb-tile-core { font-size: 28px; }
+      .cb-tile.cb-jeeves .cb-tile-label { font-size: 12px; }
     }
     @media (max-width: 640px) {
       nav { padding: 12px 16px; }
@@ -349,6 +386,19 @@
       .channel-card { padding: 28px 24px; }
       .channel-card h3 { font-size: 18px; }
       .channel-card p { font-size: 13px; }
+      .channel-board { grid-template-columns: repeat(3, 1fr); grid-template-rows: auto; min-height: auto; gap: 6px; padding: 10px; }
+      .cb-tile[data-idx="0"] { grid-column: 1/3; grid-row: auto; }
+      .cb-tile[data-idx="1"] { grid-column: 3; grid-row: auto; }
+      .cb-tile[data-idx="2"] { grid-column: 1; grid-row: auto; }
+      .cb-tile[data-idx="3"] { grid-column: 2/4; grid-row: auto; }
+      .cb-tile[data-idx="4"] { grid-column: 1/3; grid-row: auto; }
+      .cb-tile[data-idx="5"] { grid-column: 3; grid-row: auto; }
+      .cb-tile.cb-jeeves { grid-column: 1/4 !important; grid-row: auto !important; padding: 16px; }
+      .cb-tile[data-idx="6"] { grid-column: 1/3; grid-row: auto; }
+      .cb-tile[data-idx="7"] { grid-column: 3; grid-row: auto; }
+      .cb-tile[data-idx="8"] { grid-column: 1/3; grid-row: auto; }
+      .cb-tile[data-idx="9"] { grid-column: 3; grid-row: auto; }
+      .cb-tile[data-idx="10"] { grid-column: 1/4; grid-row: auto; }
       /* Timeline mobile */
       .timeline { max-width: none; padding: 40px 16px; }
       .tl-track { display: none; }
@@ -580,92 +630,72 @@
     <div class="channel-board reveal" id="channelBoard">
       <svg class="cb-svg" id="cbSvg"></svg>
 
-      <!-- CENTER: Jeeves -->
-      <div class="cb-center">
-        <div class="cb-core">J</div>
-        <div class="cb-core-label">Jeeves</div>
-        <div class="cb-core-sub">AI Agent</div>
+      <!-- ROW 1 -->
+      <div class="cb-tile" data-idx="0" style="grid-column:1/3;grid-row:1;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
+        <div class="cb-tile-name">Widget</div>
+        <div class="cb-tile-type">Web Chat</div>
+      </div>
+      <div class="cb-tile" data-idx="1" style="grid-column:3;grid-row:1;">
+        <svg viewBox="0 0 24 24" fill="#26A5E4"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+        <div class="cb-tile-name">Telegram</div>
+        <div class="cb-tile-type">Messenger</div>
+      </div>
+      <div class="cb-tile" data-idx="2" style="grid-column:4;grid-row:1;">
+        <svg viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+        <div class="cb-tile-name">WhatsApp</div>
+        <div class="cb-tile-type">Messenger</div>
+      </div>
+      <div class="cb-tile" data-idx="3" style="grid-column:5;grid-row:1;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ff7a59" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M6 12h12"/></svg>
+        <div class="cb-tile-name">HubSpot</div>
+        <div class="cb-tile-type">CRM</div>
       </div>
 
-      <!-- MODULES - chaotic positions, no rows, no symmetry -->
-      <div class="cb-node" data-idx="0" style="top:3%;left:6%;">
-        <div class="cb-node-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
-        </div>
-        <div class="cb-node-name">Widget</div>
-        <div class="cb-node-type">Web</div>
+      <!-- ROW 2 -->
+      <div class="cb-tile" data-idx="4" style="grid-column:1/3;grid-row:2;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        <div class="cb-tile-name">Email</div>
+        <div class="cb-tile-type">Incoming</div>
+      </div>
+      <div class="cb-tile cb-jeeves" id="jeevesTile" style="grid-column:3/5;grid-row:2/4;">
+        <div class="cb-tile-core">J</div>
+        <div class="cb-tile-label">Jeeves</div>
+        <div class="cb-tile-sub">AI Agent</div>
+      </div>
+      <div class="cb-tile" data-idx="5" style="grid-column:5;grid-row:2;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+        <div class="cb-tile-name">API</div>
+        <div class="cb-tile-type">Custom</div>
       </div>
 
-      <div class="cb-node" data-idx="1" style="top:18%;left:32%;">
-        <div class="cb-node-box">
-          <svg viewBox="0 0 24 24" fill="#26A5E4"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
-        </div>
-        <div class="cb-node-name">Telegram</div>
-        <div class="cb-node-type">Messenger</div>
+      <!-- ROW 3 -->
+      <div class="cb-tile" data-idx="6" style="grid-column:1/3;grid-row:3;">
+        <svg viewBox="0 0 24 24" fill="#95bf47"><path d="M19.27 5.33C18.61 5.02 17.91 4.8 17.19 4.69c-.08-.01-.15-.03-.23-.04-.15-.02-.3-.04-.45-.05-.16-.01-.32-.02-.48-.02H5.97c-.16 0-.32.01-.48.02-.15.01-.3.03-.45.05-.08.01-.15.03-.23.04-.72.11-1.42.33-2.07.64L12 16.07l7.27-10.74z"/></svg>
+        <div class="cb-tile-name">Shopify</div>
+        <div class="cb-tile-type">E-commerce</div>
+      </div>
+      <div class="cb-tile" data-idx="7" style="grid-column:5;grid-row:3;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <div class="cb-tile-name">CRM</div>
+        <div class="cb-tile-type">Custom REST</div>
       </div>
 
-      <div class="cb-node" data-idx="2" style="top:5%;right:8%;">
-        <div class="cb-node-box">
-          <svg viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
-        </div>
-        <div class="cb-node-name">WhatsApp</div>
-        <div class="cb-node-type">Messenger</div>
+      <!-- ROW 4 -->
+      <div class="cb-tile" data-idx="8" style="grid-column:1/3;grid-row:4;">
+        <svg viewBox="0 0 24 24" fill="#9c27b0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        <div class="cb-tile-name">WooCommerce</div>
+        <div class="cb-tile-type">E-commerce</div>
       </div>
-
-      <div class="cb-node" data-idx="3" style="top:42%;left:2%;">
-        <div class="cb-node-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-        </div>
-        <div class="cb-node-name">Email</div>
-        <div class="cb-node-type">Incoming</div>
+      <div class="cb-tile" data-idx="9" style="grid-column:3;grid-row:4;">
+        <svg viewBox="0 0 24 24" fill="#635bff"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.57 0 7.524.654 6.09 1.965 4.688 3.27 4.034 5.1 4.034 7.39c0 4.198 2.56 5.892 6.694 7.442 2.634.964 3.544 1.631 3.544 2.67 0 1.07-.936 1.696-2.61 1.696-2.097 0-4.937-.858-7.035-2.075l-.915 5.557C5.283 23.467 8.64 24 12.33 24c2.953 0 5.243-.593 6.71-1.89 1.556-1.365 2.418-3.406 2.418-5.955 0-4.28-2.61-5.984-7.482-7.005z"/></svg>
+        <div class="cb-tile-name">Stripe</div>
+        <div class="cb-tile-type">Billing</div>
       </div>
-
-      <div class="cb-node" data-idx="4" style="top:38%;right:3%;">
-        <div class="cb-node-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
-        </div>
-        <div class="cb-node-name">API</div>
-        <div class="cb-node-type">Custom</div>
-      </div>
-
-      <div class="cb-node" data-idx="5" style="bottom:14%;left:10%;">
-        <div class="cb-node-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        <div class="cb-node-name">CRM</div>
-        <div class="cb-node-type">Custom REST</div>
-      </div>
-
-      <div class="cb-node" data-idx="6" style="bottom:6%;right:24%;">
-        <div class="cb-node-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
-        </div>
-        <div class="cb-node-name">Analytics</div>
-        <div class="cb-node-type">Monitoring</div>
-      </div>
-
-      <div class="cb-node" data-idx="7" style="top:12%;left:62%;">
-        <div class="cb-node-box">
-          <svg viewBox="0 0 24 24" fill="#95bf47"><path d="M19.27 5.33C18.61 5.02 17.91 4.8 17.19 4.69c-.08-.01-.15-.03-.23-.04-.15-.02-.3-.04-.45-.05-.16-.01-.32-.02-.48-.02H5.97c-.16 0-.32.01-.48.02-.15.01-.3.03-.45.05-.08.01-.15.03-.23.04-.72.11-1.42.33-2.07.64L12 16.07l7.27-10.74z"/></svg>
-        </div>
-        <div class="cb-node-name">Shopify</div>
-        <div class="cb-node-type">E-commerce</div>
-      </div>
-
-      <div class="cb-node" data-idx="8" style="bottom:32%;right:28%;">
-        <div class="cb-node-box">
-          <svg viewBox="0 0 24 24" fill="#635bff"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.57 0 7.524.654 6.09 1.965 4.688 3.27 4.034 5.1 4.034 7.39c0 4.198 2.56 5.892 6.694 7.442 2.634.964 3.544 1.631 3.544 2.67 0 1.07-.936 1.696-2.61 1.696-2.097 0-4.937-.858-7.035-2.075l-.915 5.557C5.283 23.467 8.64 24 12.33 24c2.953 0 5.243-.593 6.71-1.89 1.556-1.365 2.418-3.406 2.418-5.955 0-4.28-2.61-5.984-7.482-7.005z"/></svg>
-        </div>
-        <div class="cb-node-name">Stripe</div>
-        <div class="cb-node-type">Billing</div>
-      </div>
-
-      <div class="cb-node" data-idx="9" style="bottom:4%;right:6%;">
-        <div class="cb-node-box">
-          <svg viewBox="0 0 24 24" fill="#9c27b0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-        </div>
-        <div class="cb-node-name">WooCommerce</div>
-        <div class="cb-node-type">E-commerce</div>
+      <div class="cb-tile" data-idx="10" style="grid-column:4/6;grid-row:4;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        <div class="cb-tile-name">Analytics</div>
+        <div class="cb-tile-type">Monitoring</div>
       </div>
     </div>
   </div>
@@ -863,9 +893,9 @@ document.querySelectorAll('.tl-row').forEach(el => tlObs.observe(el));
 (function() {
   const board = document.getElementById('channelBoard');
   const svg = document.getElementById('cbSvg');
-  const core = document.querySelector('.cb-core');
-  const nodes = document.querySelectorAll('.cb-node');
-  if (!board || !svg || !core || !nodes.length) return;
+  const jeevesTile = document.getElementById('jeevesTile');
+  const tiles = document.querySelectorAll('.cb-tile[data-idx]');
+  if (!board || !svg || !jeevesTile || !tiles.length) return;
 
   let paths = [];
   let particles = [];
@@ -876,32 +906,32 @@ document.querySelectorAll('.tl-row').forEach(el => tlObs.observe(el));
     particles = [];
 
     const boardRect = board.getBoundingClientRect();
-    const cRect = core.getBoundingClientRect();
-    const cx = cRect.left + cRect.width / 2 - boardRect.left;
-    const cy = cRect.top + cRect.height / 2 - boardRect.top;
+    const jRect = jeevesTile.getBoundingClientRect();
+    const jx = jRect.left + jRect.width / 2 - boardRect.left;
+    const jy = jRect.top + jRect.height / 2 - boardRect.top;
 
-    nodes.forEach(function(node) {
-      const nRect = node.getBoundingClientRect();
-      const nx = nRect.left + nRect.width / 2 - boardRect.left;
-      const ny = nRect.top + nRect.height / 2 - boardRect.top;
+    tiles.forEach(function(tile) {
+      const tRect = tile.getBoundingClientRect();
+      const tx = tRect.left + tRect.width / 2 - boardRect.left;
+      const ty = tRect.top + tRect.height / 2 - boardRect.top;
 
-      // Circuit-style path: horizontal then vertical then horizontal
-      const dx = nx - cx;
-      const dy = ny - cy;
-      const midX = cx + dx * 0.5;
-      const pathD = 'M ' + cx + ' ' + cy + ' L ' + midX + ' ' + cy + ' L ' + midX + ' ' + ny + ' L ' + nx + ' ' + ny;
+      // Circuit-style path with right-angle turns
+      const dx = tx - jx;
+      const dy = ty - jy;
+      const midX = jx + dx * 0.5;
+      const pathD = 'M ' + jx + ' ' + jy + ' L ' + midX + ' ' + jy + ' L ' + midX + ' ' + ty + ' L ' + tx + ' ' + ty;
 
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', pathD);
       path.classList.add('cb-path');
-      path.dataset.idx = node.dataset.idx;
+      path.dataset.idx = tile.dataset.idx;
       svg.appendChild(path);
       paths.push(path);
 
       const particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       particle.setAttribute('r', '3');
       particle.classList.add('cb-particle');
-      particle.dataset.idx = node.dataset.idx;
+      particle.dataset.idx = tile.dataset.idx;
       svg.appendChild(particle);
       particles.push(particle);
     });
@@ -926,35 +956,33 @@ document.querySelectorAll('.tl-row').forEach(el => tlObs.observe(el));
   function cycle() {
     // Reset previous
     if (activeIdx >= 0) {
-      nodes[activeIdx].classList.remove('active');
+      tiles[activeIdx].classList.remove('active');
       paths[activeIdx].classList.remove('active');
       particles[activeIdx].classList.remove('active');
-      core.classList.remove('lit');
-      document.querySelector('.cb-core-label').classList.remove('lit');
     }
+    jeevesTile.classList.remove('lit');
 
     // Pick random index (not the same as previous)
     let nextIdx;
     do {
-      nextIdx = Math.floor(Math.random() * nodes.length);
-    } while (nextIdx === activeIdx && nodes.length > 1);
+      nextIdx = Math.floor(Math.random() * tiles.length);
+    } while (nextIdx === activeIdx && tiles.length > 1);
     activeIdx = nextIdx;
 
-    // Activate: Jeeves + module + path + particle
-    core.classList.add('lit');
-    document.querySelector('.cb-core-label').classList.add('lit');
-    nodes[activeIdx].classList.add('active');
+    // Activate: Jeeves + tile + path + particle
+    jeevesTile.classList.add('lit');
+    tiles[activeIdx].classList.add('active');
     paths[activeIdx].classList.add('active');
     particles[activeIdx].classList.add('active');
 
-    animateParticle(paths[activeIdx], particles[activeIdx], 500);
+    animateParticle(paths[activeIdx], particles[activeIdx], 450);
 
-    setTimeout(cycle, 2000);
+    setTimeout(cycle, 1800);
   }
 
   buildCircuit();
   window.addEventListener('resize', buildCircuit);
-  setTimeout(cycle, 800);
+  setTimeout(cycle, 600);
 })();
 
 // Chat animation
