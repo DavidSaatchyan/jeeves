@@ -21,7 +21,15 @@ templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
 
 def _ctx(request: Request) -> dict:
     s = get_settings()
-    return {"request": request, "public_base_url": s.public_base_url}
+    # Derive public_base_url from the incoming request for production correctness.
+    # If PUBLIC_BASE_URL env var is set (e.g. behind a reverse proxy that rewrites
+    # host headers), use that instead.
+    base = s.public_base_url
+    if not base or base == "http://localhost:8000":
+        scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
+        host = request.headers.get("x-forwarded-host", request.url.netloc)
+        base = f"{scheme}://{host}"
+    return {"request": request, "public_base_url": base}
 
 
 @router.get("", response_class=HTMLResponse)
