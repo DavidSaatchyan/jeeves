@@ -5,46 +5,43 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Jeeves — AI Support Agent for Every Channel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-dark: #08090d;
-      --bg-light: #f5f6f8;
-      --surface-dark: #111218;
-      --surface-light: #ffffff;
-      --border-dark: rgba(255,255,255,0.08);
-      --border-light: rgba(0,0,0,0.08);
+      --bg: #08090d;
+      --surface: #111218;
+      --surface2: #18191f;
+      --border: rgba(255,255,255,0.07);
       --accent: #6366f1;
       --accent2: #8b5cf6;
       --accent3: #06b6d4;
-      --text-dark: #e8eaf0;
-      --text-light: #1a1a2e;
-      --muted-dark: #6b7280;
-      --muted-light: #64748b;
+      --text: #e8eaf0;
+      --muted: #6b7280;
       --green: #10b981;
       --red: #f87171;
-      --font: 'Inter', system-ui, -apple-system, sans-serif;
+      --font: 'Inter', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
-    body { font-family: var(--font); background: var(--bg-dark); color: var(--text-dark); overflow-x: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
 
     /* NAV */
-    nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 40px; position: fixed; top: 0; width: 100%; z-index: 100; backdrop-filter: blur(20px); background: rgba(8,9,13,0.8); border-bottom: 1px solid var(--border-dark); }
+    nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 40px; position: fixed; top: 0; width: 100%; z-index: 100; backdrop-filter: blur(20px); background: rgba(8,9,13,0.85); border-bottom: 1px solid var(--border); }
     .logo { font-size: 20px; font-weight: 800; letter-spacing: -.5px; }
     .logo span { color: var(--accent); }
-    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
     .nav-links a { color: #9ca3af; text-decoration: none; font-size: 13px; font-weight: 500; transition: color .2s; }
     .nav-links a:hover { color: #fff; }
     .btn-nav { background: var(--accent); color: #fff !important; padding: 8px 20px; border-radius: 8px; font-weight: 600; font-size: 13px; text-decoration: none; transition: all .2s; }
     .btn-nav:hover { background: #4f46e5; }
 
     /* ===== HERO ===== */
-    .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 100px 24px 60px; position: relative; overflow: hidden; background: var(--bg-dark); }
-    .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px); background-size: 64px 64px; mask-image: radial-gradient(ellipse at center, black 25%, transparent 75%); -webkit-mask-image: radial-gradient(ellipse at center, black 25%, transparent 75%); }
+    .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 100px 24px 60px; position: relative; }
+    .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 64px 64px; mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%); }
 
-    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 999px; font-size: 12px; font-weight: 500; color: #9ca3af; margin-bottom: 28px; position: relative; z-index: 1; border: 1px solid var(--border-dark); background: rgba(255,255,255,0.02); }
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 999px; font-size: 12px; font-weight: 500; color: #9ca3af; margin-bottom: 28px; position: relative; z-index: 1; border: 1px solid var(--border); }
     .badge .dot { width: 5px; height: 5px; background: var(--green); border-radius: 50%; }
 
     .hero-inner { display: flex; align-items: center; gap: 80px; max-width: 1100px; width: 100%; position: relative; z-index: 1; }
@@ -53,16 +50,16 @@
     .hero-text h1 .hl { background: linear-gradient(135deg, #fff 30%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .hero-text p { font-size: 16px; color: #9ca3af; max-width: 440px; line-height: 1.65; margin-bottom: 28px; }
     .hero-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
-    .btn-primary { background: #fff; color: var(--bg-dark); padding: 14px 28px; border-radius: 10px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all .2s; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: #fff; color: var(--bg); padding: 14px 28px; border-radius: 10px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all .2s; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
     .btn-primary:hover { background: #e5e7eb; }
-    .btn-secondary { background: transparent; color: #9ca3af; padding: 14px 28px; border-radius: 10px; font-size: 14px; font-weight: 500; text-decoration: none; border: 1px solid var(--border-dark); transition: all .2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-secondary { background: transparent; color: #9ca3af; padding: 14px 28px; border-radius: 10px; font-size: 14px; font-weight: 500; text-decoration: none; border: 1px solid var(--border); transition: all .2s; display: inline-flex; align-items: center; gap: 6px; }
     .btn-secondary:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
 
     .hero-mockup { flex-shrink: 0; }
-    .phone-frame { width: 280px; background: #111218; border-radius: 36px; border: 1px solid var(--border-dark); box-shadow: 0 40px 80px rgba(0,0,0,0.5); overflow: hidden; position: relative; }
+    .phone-frame { width: 280px; background: var(--surface); border-radius: 36px; border: 1px solid var(--border); box-shadow: 0 40px 80px rgba(0,0,0,0.5); overflow: hidden; }
     .phone-screen { background: #0c0d12; margin: 3px; border-radius: 32px; overflow: hidden; }
     .phone-dynamic-island { width: 90px; height: 24px; background: #000; border-radius: 18px; margin: 6px auto 0; }
-    .phone-nav-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid var(--border-dark); }
+    .phone-nav-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid var(--border); }
     .phone-bot-icon { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
     .phone-bot-name { font-size: 13px; font-weight: 600; color: #fff; }
     .phone-bot-status { font-size: 10px; color: var(--green); }
@@ -75,7 +72,7 @@
     .msg.bot .msg-avatar { background: var(--accent); color: #fff; }
     .msg.user .msg-avatar { background: #1f2937; color: #9ca3af; }
     .msg-bubble { padding: 7px 11px; border-radius: 12px; font-size: 11px; line-height: 1.45; }
-    .msg.bot .msg-bubble { background: #1a1b22; border: 1px solid var(--border-dark); border-top-left-radius: 3px; color: #d1d5db; }
+    .msg.bot .msg-bubble { background: #1a1b22; border: 1px solid var(--border); border-top-left-radius: 3px; color: #d1d5db; }
     .msg.user .msg-bubble { background: var(--accent); color: #fff; border-top-right-radius: 3px; }
     .msg-bubble strong { color: #fff; }
     .msg-confirmation { margin-top: 5px; padding: 6px 8px; background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.12); border-radius: 8px; }
@@ -89,137 +86,151 @@
     .typing-dots span { width: 4px; height: 4px; border-radius: 50%; background: #4b5563; animation: typing 1.4s ease-in-out infinite; }
     .typing-dots span:nth-child(2) { animation-delay: .2s; }
     .typing-dots span:nth-child(3) { animation-delay: .4s; }
-    .phone-input { display: flex; align-items: center; gap: 5px; padding: 8px 10px; border-top: 1px solid var(--border-dark); background: #0c0d12; }
-    .phone-input-field { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--border-dark); border-radius: 16px; padding: 6px 10px; font-size: 10px; color: #4b5563; }
+    .phone-input { display: flex; align-items: center; gap: 5px; padding: 8px 10px; border-top: 1px solid var(--border); background: #0c0d12; }
+    .phone-input-field { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 16px; padding: 6px 10px; font-size: 10px; color: #4b5563; }
     .phone-home-bar { width: 100px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 6px auto; }
 
-    /* SECTION BASE */
-    .section { padding: 80px 24px; }
-    .section-dark { background: var(--bg-dark); color: var(--text-dark); }
-    .section-light { background: var(--bg-light); color: var(--text-light); }
-    .section-inner { max-width: 1100px; margin: 0 auto; }
-    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
-    .section-title { font-size: clamp(26px, 3.5vw, 40px); font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 12px; }
-    .section-sub { font-size: 15px; max-width: 480px; line-height: 1.6; }
-    .section-dark .section-sub { color: #9ca3af; }
-    .section-light .section-sub { color: #64748b; }
-    .section-dark .section-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent); }
-    .section-light .section-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(0,0,0,0.06), transparent); }
+    /* ===== STATS BAR ===== */
+    .stats-section { padding: 0 24px; background: var(--bg); }
+    .stats-inner { max-width: 1100px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px 32px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; position: relative; overflow: hidden; }
+    .stats-inner::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0.4; }
+    .stat-item { text-align: center; position: relative; }
+    .stat-item:not(:last-child)::after { content: ''; position: absolute; right: -12px; top: 20%; height: 60%; width: 1px; background: var(--border); }
+    .stat-num { font-size: 48px; font-weight: 800; letter-spacing: -3px; color: #fff; line-height: 1; margin-bottom: 8px; font-family: var(--mono); }
+    .stat-num .stat-suffix { font-size: 32px; font-weight: 600; color: var(--accent); }
+    .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; line-height: 1.4; }
+
+    /* ===== CAPABILITIES ===== */
+    .caps-section { padding: 80px 24px; background: var(--bg); }
+    .caps-inner { max-width: 1100px; margin: 0 auto; }
+    .caps-header { text-align: center; margin-bottom: 48px; }
+    .caps-header h2 { font-size: clamp(26px, 3.5vw, 40px); font-weight: 800; letter-spacing: -1.5px; margin-bottom: 12px; color: #fff; }
+    .caps-header p { font-size: 15px; color: var(--muted); max-width: 480px; margin: 0 auto; line-height: 1.6; }
+
+    .caps-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .caps-main { grid-column: 1 / -1; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 36px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    .cap-item { position: relative; }
+    .cap-item .cap-num { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-bottom: 12px; font-weight: 600; }
+    .cap-item h3 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .cap-item p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .cap-item .cap-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(99,102,241,0.1); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+    .cap-item .cap-icon svg { width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+    .cap-feature { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; position: relative; overflow: hidden; }
+    .cap-feature .cap-f-bg { position: absolute; top: 0; right: 0; width: 200px; height: 200px; background: radial-gradient(circle at top right, rgba(99,102,241,0.08), transparent); pointer-events: none; }
+    .cap-feature h3 { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .cap-feature p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .cap-feature .cap-metric { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 24px; }
+    .cap-feature .cap-metric .cm-val { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--accent); }
+    .cap-feature .cap-metric .cm-label { font-size: 11px; color: var(--muted); }
+
+    /* ===== CIRCUIT BOARD ===== */
+    .circuit-section { padding: 80px 24px; background: var(--bg); }
+    .circuit-inner { max-width: 1100px; margin: 0 auto; text-align: center; }
+    .circuit-header { margin-bottom: 40px; }
+    .circuit-header h2 { font-size: clamp(26px, 3.5vw, 40px); font-weight: 800; letter-spacing: -1.5px; margin-bottom: 12px; color: #fff; }
+    .circuit-header p { font-size: 15px; color: var(--muted); max-width: 480px; margin: 0 auto; line-height: 1.6; }
+
+    .circuit-board { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 40px; position: relative; overflow: hidden; min-height: 500px; }
+    .circuit-board::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 32px 32px; pointer-events: none; }
+
+    .circuit-svg { position: absolute; inset: 0; pointer-events: none; }
+    .circuit-svg path { fill: none; stroke: rgba(99,102,241,0.08); stroke-width: 1.5; }
+    .circuit-svg path.active { stroke: rgba(99,102,241,0.5); }
+    .circuit-svg .particle { fill: var(--accent); opacity: 0; }
+    .circuit-svg .particle.active { opacity: 1; }
+
+    .circuit-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 3; }
+    .circuit-core { width: 80px; height: 80px; border-radius: 20px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; color: #fff; box-shadow: 0 0 60px rgba(99,102,241,0.3); position: relative; }
+    .circuit-core::before { content: ''; position: absolute; inset: -4px; border-radius: 24px; border: 1px solid rgba(99,102,241,0.3); animation: corePulse 2s ease-in-out infinite; }
+    @keyframes corePulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.05); } }
+    .circuit-core-label { text-align: center; margin-top: 10px; font-size: 13px; font-weight: 700; color: #fff; }
+    .circuit-core-sub { font-size: 11px; color: var(--muted); }
+
+    .circuit-node { position: absolute; z-index: 2; text-align: center; transition: all .4s ease; }
+    .circuit-node.active { transform: scale(1.08); }
+    .circuit-node .node-icon { width: 48px; height: 48px; border-radius: 12px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; transition: all .4s; }
+    .circuit-node.active .node-icon { border-color: rgba(99,102,241,0.4); box-shadow: 0 0 20px rgba(99,102,241,0.15); }
+    .circuit-node .node-icon svg { width: 24px; height: 24px; }
+    .circuit-node .node-name { font-size: 11px; font-weight: 600; color: #d1d5db; white-space: nowrap; }
+    .circuit-node .node-type { font-size: 9px; color: var(--muted); }
+
+    .circuit-label { position: absolute; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #4b5563; z-index: 2; }
+    .circuit-label.top { top: 16px; left: 50%; transform: translateX(-50%); }
+    .circuit-label.bottom { bottom: 16px; left: 50%; transform: translateX(-50%); }
+
+    /* ===== TIMELINE ===== */
+    .how-section { padding: 80px 24px; background: var(--bg); }
+    .how-inner { max-width: 800px; margin: 0 auto; text-align: center; }
+    .how-inner > h2 { font-size: clamp(26px, 3.5vw, 40px); font-weight: 800; letter-spacing: -1.5px; margin-bottom: 12px; color: #fff; }
+    .how-inner > p { font-size: 15px; color: var(--muted); margin-bottom: 48px; line-height: 1.6; }
+
+    .timeline { position: relative; text-align: left; }
+    .tl-track { position: absolute; left: 28px; top: 0; bottom: 0; width: 1px; background: var(--border); }
+    .tl-row { display: flex; gap: 24px; margin-bottom: 36px; position: relative; opacity: 0; transform: translateX(-12px); transition: all .5s ease; }
+    .tl-row.visible { opacity: 1; transform: translateX(0); }
+    .tl-row:last-child { margin-bottom: 0; }
+    .tl-dot { width: 56px; height: 56px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--accent); flex-shrink: 0; position: relative; z-index: 1; }
+    .tl-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; flex: 1; }
+    .tl-card .tl-num { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-bottom: 6px; font-weight: 600; }
+    .tl-card h3 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .tl-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .tl-card .tl-time { display: inline-block; margin-top: 10px; font-family: var(--mono); font-size: 11px; color: var(--green); font-weight: 600; }
+
+    /* ===== PRICING ===== */
+    .pricing-section { padding: 80px 24px; background: var(--bg); }
+    .pricing-inner { max-width: 1100px; margin: 0 auto; text-align: center; }
+    .pricing-inner > h2 { font-size: clamp(26px, 3.5vw, 40px); font-weight: 800; letter-spacing: -1.5px; margin-bottom: 12px; color: #fff; }
+    .pricing-inner > p { font-size: 15px; color: var(--muted); margin-bottom: 40px; line-height: 1.6; }
+
+    .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .price-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px 20px; position: relative; transition: all .3s; text-align: left; }
+    .price-card:hover { border-color: rgba(255,255,255,0.12); }
+    .price-card.featured { border-color: var(--accent); box-shadow: 0 0 40px rgba(99,102,241,0.1); }
+    .price-card.featured .p-badge { display: inline-block; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 999px; margin-bottom: 16px; }
+    .price-card .p-name { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+    .price-card .p-price { font-size: 36px; font-weight: 800; letter-spacing: -2px; color: #fff; }
+    .price-card .p-price .p-cur { font-size: 18px; vertical-align: super; margin-right: 1px; }
+    .price-card .p-period { font-size: 12px; color: var(--muted); margin-top: 2px; margin-bottom: 20px; }
+    .price-card .p-features { list-style: none; margin-bottom: 24px; }
+    .price-card .p-features li { font-size: 12px; color: #9ca3af; padding: 6px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
+    .price-card .p-features li::before { content: '\2713'; color: var(--green); font-weight: 700; font-size: 11px; }
+    .price-card .p-btn { display: block; width: 100%; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all .2s; cursor: pointer; text-align: center; }
+    .price-card .p-btn.primary { background: var(--accent); color: #fff; border: none; }
+    .price-card .p-btn.primary:hover { background: #4f46e5; }
+    .price-card .p-btn.secondary { background: var(--surface2); color: #d1d5db; border: 1px solid var(--border); }
+    .price-card .p-btn.secondary:hover { border-color: rgba(255,255,255,0.15); }
+    .price-card .p-btn.outline { background: transparent; color: #d1d5db; border: 1px solid var(--border); }
+    .price-card .p-btn.outline:hover { border-color: rgba(255,255,255,0.2); }
+
+    .pricing-note { max-width: 600px; margin: 32px auto 0; text-align: left; }
+    .pricing-note .pn-row { display: flex; align-items: flex-start; gap: 8px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
+    .pricing-note .pn-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+    .pricing-note .pn-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .pricing-note .pn-text strong { color: #d1d5db; }
+
+    /* CTA */
+    .cta-section { border-top: 1px solid var(--border); }
+    .cta { text-align: center; padding: 80px 24px; max-width: 700px; margin: 0 auto; }
+    .cta h2 { font-size: clamp(26px, 4vw, 42px); font-weight: 800; letter-spacing: -1.5px; margin-bottom: 14px; color: #fff; line-height: 1.1; }
+    .cta p { color: var(--muted); font-size: 15px; margin-bottom: 32px; line-height: 1.6; }
+
+    footer { text-align: center; padding: 32px 24px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); }
 
     /* REVEAL */
     .reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
     .reveal.visible { opacity: 1; transform: translateY(0); }
 
-    /* ===== STATS BAR ===== */
-    .stats-bar { padding: 40px 24px; background: var(--surface-dark); border-top: 1px solid var(--border-dark); border-bottom: 1px solid var(--border-dark); }
-    .stats-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
-    .stat-item { text-align: center; }
-    .stat-num { font-size: 42px; font-weight: 800; letter-spacing: -2px; color: #fff; line-height: 1; margin-bottom: 6px; }
-    .stat-num .stat-suffix { font-size: 28px; font-weight: 600; }
-    .stat-label { font-size: 13px; color: #6b7280; font-weight: 500; }
-
-    /* ===== CAPABILITIES (LIGHT SECTION) ===== */
-    .caps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
-    .cap-card { background: var(--surface-light); border-radius: 16px; padding: 28px 24px; border: 1px solid var(--border-light); transition: all .3s; }
-    .cap-card:hover { border-color: rgba(99,102,241,0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.06); }
-    .cap-card .cap-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(99,102,241,0.08); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
-    .cap-card .cap-icon svg { width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-    .cap-card h3 { font-size: 15px; font-weight: 700; color: var(--text-light); margin-bottom: 6px; }
-    .cap-card p { font-size: 13px; color: #64748b; line-height: 1.6; }
-
-    /* ===== CHANNELS MATRIX ===== */
-    .channels-matrix { position: relative; margin-top: 48px; min-height: 480px; }
-    .channels-matrix svg.connections { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
-    .channels-matrix svg.connections line { stroke: rgba(99,102,241,0.1); stroke-width: 1; transition: all .6s ease; }
-    .channels-matrix svg.connections line.active { stroke: rgba(99,102,241,0.6); stroke-width: 1.5; }
-
-    .cm-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 2; text-align: center; }
-    .cm-center-logo { width: 72px; height: 72px; border-radius: 20px; background: var(--surface-dark); border: 1px solid rgba(99,102,241,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 24px; font-weight: 800; color: var(--accent); box-shadow: 0 0 40px rgba(99,102,241,0.1); }
-    .cm-center-label { font-size: 14px; font-weight: 700; color: #fff; }
-    .cm-center-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
-
-    .cm-layer-label { position: absolute; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #4b5563; z-index: 2; }
-    .cm-layer-label.top { top: 0; left: 50%; transform: translateX(-50%); }
-    .cm-layer-label.bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
-
-    .cm-tiles { position: absolute; z-index: 1; display: grid; gap: 10px; }
-    .cm-tiles.top-layer { top: 24px; left: 0; right: 0; grid-template-columns: repeat(5, 1fr); max-width: 700px; margin: 0 auto; justify-items: center; }
-    .cm-tiles.bottom-layer { bottom: 24px; left: 0; right: 0; grid-template-columns: repeat(4, 1fr); max-width: 560px; margin: 0 auto; justify-items: center; }
-
-    .cm-tile { background: var(--surface-dark); border: 1px solid var(--border-dark); border-radius: 12px; padding: 14px 16px; text-align: center; transition: all .4s ease; min-width: 100px; position: relative; }
-    .cm-tile.active { border-color: rgba(99,102,241,0.4); box-shadow: 0 0 24px rgba(99,102,241,0.1); }
-    .cm-tile .tile-icon { width: 32px; height: 32px; margin: 0 auto 6px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-    .cm-tile .tile-name { font-size: 11px; font-weight: 600; color: #d1d5db; }
-    .cm-tile .tile-type { font-size: 9px; color: #6b7280; margin-top: 1px; }
-
-    .cm-tile .tile-icon.tg { background: rgba(38,165,227,0.1); color: #26A5E4; }
-    .cm-tile .tile-icon.wa { background: rgba(37,211,102,0.1); color: #25D366; }
-    .cm-tile .tile-icon.widget { background: rgba(99,102,241,0.1); color: #818cf8; }
-    .cm-tile .tile-icon.email { background: rgba(244,63,94,0.1); color: #f87171; }
-    .cm-tile .tile-icon.api { background: rgba(6,182,212,0.1); color: #22d3ee; }
-    .cm-tile .tile-icon.crm { background: rgba(248,113,113,0.1); color: #f87171; }
-    .cm-tile .tile-icon.shopify { background: rgba(149,191,71,0.1); color: #95bf47; }
-    .cm-tile .tile-icon.stripe { background: rgba(99,102,241,0.1); color: #6366f1; }
-    .cm-tile .tile-icon.woo { background: rgba(154,69,172,0.1); color: #9c27b0; }
-
-    /* ===== TIMELINE ===== */
-    .timeline { position: relative; padding: 48px 0; max-width: 800px; margin: 0 auto; }
-    .tl-track { position: absolute; left: 28px; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.05); }
-    .tl-row { display: flex; gap: 24px; margin-bottom: 40px; position: relative; opacity: 0; transform: translateX(-16px); transition: all .5s ease; }
-    .tl-row.visible { opacity: 1; transform: translateX(0); }
-    .tl-row:last-child { margin-bottom: 0; }
-    .tl-dot { width: 56px; height: 56px; border-radius: 50%; background: var(--surface-dark); border: 1px solid var(--border-dark); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--accent); flex-shrink: 0; position: relative; z-index: 1; }
-    .tl-card { background: var(--surface-dark); border: 1px solid var(--border-dark); border-radius: 14px; padding: 24px; flex: 1; }
-    .tl-card .tl-num { font-size: 11px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
-    .tl-card h3 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-    .tl-card p { font-size: 13px; color: #9ca3af; line-height: 1.6; }
-    .tl-card .tl-time { display: inline-block; margin-top: 10px; font-size: 11px; color: var(--green); font-weight: 600; }
-
-    /* ===== PRICING ===== */
-    .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 40px; }
-    .price-card { background: var(--surface-light); border: 1px solid var(--border-light); border-radius: 16px; padding: 28px 20px; position: relative; transition: all .3s; }
-    .price-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
-    .price-card.featured { border-color: var(--accent); background: #fff; box-shadow: 0 0 0 1px var(--accent), 0 12px 40px rgba(99,102,241,0.12); }
-    .price-card.featured .p-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 12px; border-radius: 999px; white-space: nowrap; }
-    .price-card .p-name { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
-    .price-card .p-price { font-size: 36px; font-weight: 800; letter-spacing: -2px; color: var(--text-light); }
-    .price-card .p-price .p-cur { font-size: 18px; vertical-align: super; margin-right: 1px; }
-    .price-card .p-period { font-size: 12px; color: #94a3b8; margin-top: 2px; margin-bottom: 20px; }
-    .price-card .p-features { list-style: none; margin-bottom: 24px; }
-    .price-card .p-features li { font-size: 12px; color: #475569; padding: 6px 0; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; gap: 6px; }
-    .price-card .p-features li::before { content: '\2713'; color: var(--green); font-weight: 700; font-size: 11px; }
-    .price-card .p-btn { display: block; width: 100%; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all .2s; cursor: pointer; text-align: center; }
-    .price-card .p-btn.primary { background: var(--accent); color: #fff; border: none; }
-    .price-card .p-btn.primary:hover { background: #4f46e5; }
-    .price-card .p-btn.secondary { background: #f1f5f9; color: var(--text-light); border: 1px solid var(--border-light); }
-    .price-card .p-btn.secondary:hover { background: #e2e8f0; }
-    .price-card .p-btn.outline { background: transparent; color: var(--text-light); border: 1px solid var(--border-light); }
-    .price-card .p-btn.outline:hover { border-color: #cbd5e1; }
-    .pricing-note { max-width: 600px; margin: 32px auto 0; }
-    .pricing-note .pn-row { display: flex; align-items: flex-start; gap: 8px; padding: 12px 16px; background: var(--surface-light); border: 1px solid var(--border-light); border-radius: 10px; margin-bottom: 8px; }
-    .pricing-note .pn-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
-    .pricing-note .pn-text { font-size: 12px; color: #475569; line-height: 1.5; }
-    .pricing-note .pn-text strong { color: var(--text-light); }
-
-    /* CTA */
-    .cta-section { background: var(--bg-dark); border-top: 1px solid var(--border-dark); }
-    .cta { text-align: center; padding: 80px 24px; max-width: 700px; margin: 0 auto; }
-    .cta h2 { font-size: clamp(26px, 4vw, 42px); font-weight: 800; letter-spacing: -1.5px; margin-bottom: 14px; color: #fff; line-height: 1.1; }
-    .cta p { color: #9ca3af; font-size: 15px; margin-bottom: 32px; line-height: 1.6; }
-
-    footer { text-align: center; padding: 32px 24px; color: #6b7280; font-size: 12px; border-top: 1px solid var(--border-dark); background: var(--bg-dark); }
-
     @media (max-width: 1024px) {
       .pricing-grid { grid-template-columns: 1fr 1fr; max-width: 500px; margin-left: auto; margin-right: auto; }
+      .caps-main { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 900px) {
       .hero-inner { flex-direction: column; text-align: center; gap: 40px; }
       .hero-text p { margin-left: auto; margin-right: auto; }
       .hero-buttons { justify-content: center; }
-      .caps-grid { grid-template-columns: 1fr 1fr; }
       .stats-inner { grid-template-columns: repeat(2, 1fr); gap: 24px; }
-      .cm-tiles.top-layer { grid-template-columns: repeat(3, 1fr); }
-      .cm-tiles.bottom-layer { grid-template-columns: repeat(2, 1fr); }
+      .stat-item:nth-child(2)::after { display: none; }
     }
     @media (max-width: 640px) {
       nav { padding: 12px 16px; }
@@ -230,16 +241,12 @@
       .hero-text p { font-size: 14px; }
       .btn-primary, .btn-secondary { padding: 11px 20px; font-size: 13px; }
       .hero-mockup { transform: scale(.8); transform-origin: top center; }
-      .caps-grid { grid-template-columns: 1fr; }
-      .cap-card { padding: 20px; }
-      .section { padding: 48px 16px; }
-      .section-title { font-size: 24px; letter-spacing: -1px; }
-      .stats-inner { grid-template-columns: 1fr 1fr; }
-      .stat-num { font-size: 32px; }
-      .channels-matrix { min-height: 400px; }
-      .cm-tiles.top-layer { grid-template-columns: repeat(2, 1fr); }
-      .cm-tiles.bottom-layer { grid-template-columns: repeat(2, 1fr); }
-      .cm-tile { min-width: 80px; padding: 10px 12px; }
+      .caps-section, .circuit-section, .how-section, .pricing-section { padding: 48px 16px; }
+      .caps-main { grid-template-columns: 1fr; gap: 24px; padding: 24px; }
+      .stats-inner { grid-template-columns: 1fr 1fr; padding: 24px 16px; }
+      .stat-item::after { display: none !important; }
+      .stat-num { font-size: 36px; letter-spacing: -2px; }
+      .circuit-board { padding: 24px 16px; min-height: 400px; }
       .tl-row { flex-direction: column; gap: 12px; padding-left: 0; }
       .tl-track { display: none; }
       .tl-dot { width: 40px; height: 40px; font-size: 12px; }
@@ -255,8 +262,6 @@
 <nav>
   <div class="logo">Jeeves<span>.</span></div>
   <div class="nav-links">
-    <a href="#capabilities">Capabilities</a>
-    <a href="#channels">Channels</a>
     <a href="#how">How it works</a>
     <a href="#pricing">Pricing</a>
     <a href="/admin/login" class="btn-nav">Launch App</a>
@@ -273,7 +278,7 @@
       <p>Jeeves answers from your knowledge base, acts on your CRM, and escalates when needed. Connect once — use everywhere.</p>
       <div class="hero-buttons">
         <a href="/admin/login" class="btn-primary">Start free</a>
-        <a href="#capabilities" class="btn-secondary">See capabilities</a>
+        <a href="#how" class="btn-secondary">How it works</a>
       </div>
     </div>
     <div class="hero-mockup">
@@ -330,118 +335,191 @@
   </div>
 </section>
 
-<!-- ===== STATS BAR ===== -->
-<div class="stats-bar">
-  <div class="stats-inner">
-    <div class="stat-item reveal">
+<!-- ===== STATS ===== -->
+<div class="stats-section">
+  <div class="stats-inner reveal">
+    <div class="stat-item">
       <div class="stat-num"><span class="stat-value" data-target="90">0</span><span class="stat-suffix">%</span></div>
-      <div class="stat-label">Queries resolved automatically</div>
+      <div class="stat-label">Queries resolved<br>without human help</div>
     </div>
-    <div class="stat-item reveal">
+    <div class="stat-item">
       <div class="stat-num">&lt;<span class="stat-value" data-target="5">0</span><span class="stat-suffix">s</span></div>
-      <div class="stat-label">Average response time</div>
+      <div class="stat-label">Average response<br>time, 24/7</div>
     </div>
-    <div class="stat-item reveal">
-      <div class="stat-num"><span class="stat-value" data-target="80" data-suffix="%">0</span><span class="stat-suffix"></span></div>
-      <div class="stat-label">Lower cost vs human agents</div>
+    <div class="stat-item">
+      <div class="stat-num"><span class="stat-value" data-target="6">0</span><span class="stat-suffix">+</span></div>
+      <div class="stat-label">Channels &<br>integrations</div>
     </div>
-    <div class="stat-item reveal">
-      <div class="stat-num"><span class="stat-value" data-target="24" data-suffix="/7">0</span><span class="stat-suffix"></span></div>
-      <div class="stat-label">Always online, never tired</div>
+    <div class="stat-item">
+      <div class="stat-num"><span class="stat-value" data-target="10">0</span><span class="stat-suffix">min</span></div>
+      <div class="stat-label">From signup<br>to live agent</div>
     </div>
   </div>
 </div>
 
 <!-- ===== CAPABILITIES ===== -->
-<div class="section section-light" id="capabilities">
-  <div class="section-inner">
-    <div class="reveal">
-      <div class="section-label">Capabilities</div>
-      <div class="section-title">Not just a chatbot.<br>A full support stack.</div>
-      <div class="section-sub">Everything you need to automate customer support without losing the human touch.</div>
+<div class="caps-section">
+  <div class="caps-inner">
+    <div class="caps-header reveal">
+      <h2>A full support stack,<br>not just a chatbot</h2>
+      <p>Everything you need to automate customer support without losing the human touch.</p>
     </div>
-    <div class="caps-grid">
-      <div class="cap-card reveal">
+
+    <div class="caps-main reveal">
+      <div class="cap-item">
         <div class="cap-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
-        <h3>RAG-powered knowledge</h3>
-        <p>Upload PDFs, docs, FAQs — Jeeves retrieves with cosine similarity. Every answer has a source. No hallucinations.</p>
+        <div class="cap-num">01</div>
+        <h3>RAG knowledge</h3>
+        <p>Upload PDFs, docs, FAQs. Every answer has a source attached. No hallucinations.</p>
       </div>
-      <div class="cap-card reveal">
+      <div class="cap-item">
         <div class="cap-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 3l2 2 4-4"/></svg></div>
+        <div class="cap-num">02</div>
         <h3>CRM context</h3>
-        <p>Connect HubSpot or any REST API. Jeeves sees customer name, tariff, order history, and past tickets instantly.</p>
+        <p>Connect HubSpot or any REST API. Jeeves sees customer name, plan, history instantly.</p>
       </div>
-      <div class="cap-card reveal">
+      <div class="cap-item">
         <div class="cap-icon"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+        <div class="cap-num">03</div>
         <h3>Custom actions</h3>
-        <p>Look up orders, change plans, create tickets. Confirmation required for destructive actions.</p>
+        <p>Look up orders, change plans, create tickets. Confirmation for destructive actions.</p>
       </div>
-      <div class="cap-card reveal">
+      <div class="cap-item">
         <div class="cap-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-        <h3>Proactive engine</h3>
-        <p>Monitors metrics via webhook. Auto-messages users when something drops — before they notice.</p>
+        <div class="cap-num">04</div>
+        <h3>Proactive alerts</h3>
+        <p>Monitors metrics via webhook. Auto-messages users when something drops.</p>
       </div>
-      <div class="cap-card reveal">
+      <div class="cap-item">
         <div class="cap-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></div>
+        <div class="cap-num">05</div>
         <h3>Full analytics</h3>
-        <p>Every conversation logged with sources, latency, resolution status. Built-in dashboards.</p>
+        <p>Every conversation logged with sources, latency, resolution status.</p>
       </div>
-      <div class="cap-card reveal">
+      <div class="cap-item">
         <div class="cap-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-        <h3>Escalation</h3>
-        <p>When Jeeves can't resolve, it hands off to a human with full context and suggested reply.</p>
+        <div class="cap-num">06</div>
+        <h3>Human escalation</h3>
+        <p>Hands off to a human with full context and suggested reply when needed.</p>
+      </div>
+    </div>
+
+    <div class="cap-feature reveal" style="margin-top:16px;">
+      <div class="cap-f-bg"></div>
+      <h3>How it works in practice</h3>
+      <p>A customer writes "Where is my order?" — Jeeves reads the CRM for their name and plan, checks Shopify for order status, and replies with the tracking number. All in under 5 seconds. No human involved.</p>
+      <div class="cap-metric">
+        <div><div class="cm-val">&lt;5s</div><div class="cm-label">response time</div></div>
+        <div><div class="cm-val">3</div><div class="cm-label">systems queried</div></div>
+        <div><div class="cm-val">0</div><div class="cm-label">human agents needed</div></div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="section-divider"></div>
-
-<!-- ===== CHANNELS ===== -->
-<div class="section section-dark" id="channels">
-  <div class="section-inner">
-    <div class="reveal" style="text-align:center;">
-      <div class="section-label">Connections</div>
-      <div class="section-title">One brain. Every surface.</div>
-      <div class="section-sub" style="margin:0 auto;">Same knowledge, same quality. Different front doors.</div>
+<!-- ===== CIRCUIT BOARD ===== -->
+<div class="circuit-section">
+  <div class="circuit-inner">
+    <div class="circuit-header reveal">
+      <h2>Connects to what you use</h2>
+      <p>Channels for communication. Systems for data. Jeeves in the middle.</p>
     </div>
 
-    <div class="channels-matrix reveal" id="channelsMatrix">
-      <svg class="connections" id="connSvg"></svg>
+    <div class="circuit-board reveal" id="circuitBoard">
+      <svg class="circuit-svg" id="circuitSvg"></svg>
 
-      <div class="cm-layer-label top">Input channels</div>
-      <div class="cm-tiles top-layer" id="topTiles">
-        <div class="cm-tile" data-tile="0"><div class="tile-icon widget">&#9670;</div><div class="tile-name">Widget</div><div class="tile-type">Web</div></div>
-        <div class="cm-tile" data-tile="1"><div class="tile-icon tg">&#9993;</div><div class="tile-name">Telegram</div><div class="tile-type">Messenger</div></div>
-        <div class="cm-tile" data-tile="2"><div class="tile-icon wa">&#9990;</div><div class="tile-name">WhatsApp</div><div class="tile-type">Messenger</div></div>
-        <div class="cm-tile" data-tile="3"><div class="tile-icon email">&#9993;</div><div class="tile-name">Email</div><div class="tile-type">Incoming</div></div>
-        <div class="cm-tile" data-tile="4"><div class="tile-icon api">&#128279;</div><div class="tile-name">API</div><div class="tile-type">Custom</div></div>
+      <div class="circuit-label top">Channels</div>
+      <div class="circuit-label bottom">Systems</div>
+
+      <div class="circuit-center">
+        <div class="circuit-core">J</div>
+        <div class="circuit-core-label">Jeeves</div>
+        <div class="circuit-core-sub">AI Agent</div>
       </div>
 
-      <div class="cm-center">
-        <div class="cm-center-logo">J</div>
-        <div class="cm-center-label">Jeeves</div>
-        <div class="cm-center-sub">AI Agent</div>
+      <!-- Channel nodes (top half) -->
+      <div class="circuit-node" data-node="0" style="top:14%;left:8%;">
+        <div class="node-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
+        </div>
+        <div class="node-name">Widget</div>
+        <div class="node-type">Web</div>
       </div>
 
-      <div class="cm-layer-label bottom">Data systems</div>
-      <div class="cm-tiles bottom-layer" id="bottomTiles">
-        <div class="cm-tile" data-tile="5"><div class="tile-icon crm">&#9733;</div><div class="tile-name">CRM</div><div class="tile-type">Custom REST</div></div>
-        <div class="cm-tile" data-tile="6"><div class="tile-icon shopify">&#9733;</div><div class="tile-name">Shopify</div><div class="tile-type">E-commerce</div></div>
-        <div class="cm-tile" data-tile="7"><div class="tile-icon stripe">&#128179;</div><div class="tile-name">Stripe</div><div class="tile-type">Billing</div></div>
-        <div class="cm-tile" data-tile="8"><div class="tile-icon woo">&#9733;</div><div class="tile-name">WooCommerce</div><div class="tile-type">E-commerce</div></div>
+      <div class="circuit-node" data-node="1" style="top:14%;left:27%;">
+        <div class="node-icon">
+          <svg viewBox="0 0 24 24" fill="#26A5E4"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+        </div>
+        <div class="node-name">Telegram</div>
+        <div class="node-type">Messenger</div>
+      </div>
+
+      <div class="circuit-node" data-node="2" style="top:14%;right:27%;">
+        <div class="node-icon">
+          <svg viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+        </div>
+        <div class="node-name">WhatsApp</div>
+        <div class="node-type">Messenger</div>
+      </div>
+
+      <div class="circuit-node" data-node="3" style="top:14%;right:8%;">
+        <div class="node-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        </div>
+        <div class="node-name">Email</div>
+        <div class="node-type">Incoming</div>
+      </div>
+
+      <div class="circuit-node" data-node="4" style="top:14%;left:50%;transform:translateX(-50%);">
+        <div class="node-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+        </div>
+        <div class="node-name">API</div>
+        <div class="node-type">Custom</div>
+      </div>
+
+      <!-- System nodes (bottom half) -->
+      <div class="circuit-node" data-node="5" style="bottom:14%;left:12%;">
+        <div class="node-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="node-name">CRM</div>
+        <div class="node-type">Custom REST</div>
+      </div>
+
+      <div class="circuit-node" data-node="6" style="bottom:14%;left:34%;">
+        <div class="node-icon">
+          <svg viewBox="0 0 24 24" fill="#95bf47"><path d="M19.27 5.33C18.61 5.02 17.91 4.8 17.19 4.69c-.08-.01-.15-.03-.23-.04-.15-.02-.3-.04-.45-.05-.16-.01-.32-.02-.48-.02H5.97c-.16 0-.32.01-.48.02-.15.01-.3.03-.45.05-.08.01-.15.03-.23.04-.72.11-1.42.33-2.07.64L12 16.07l7.27-10.74zm-2.63.35c.56.06 1.1.17 1.62.34L12 13.4 5.74 5.68c.52-.17 1.06-.28 1.62-.34.14-.02.28-.03.43-.04h8.42c.15.01.29.02.43.04zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+        </div>
+        <div class="node-name">Shopify</div>
+        <div class="node-type">E-commerce</div>
+      </div>
+
+      <div class="circuit-node" data-node="7" style="bottom:14%;right:34%;">
+        <div class="node-icon">
+          <svg viewBox="0 0 24 24" fill="#635bff"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.57 0 7.524.654 6.09 1.965 4.688 3.27 4.034 5.1 4.034 7.39c0 4.198 2.56 5.892 6.694 7.442 2.634.964 3.544 1.631 3.544 2.67 0 1.07-.936 1.696-2.61 1.696-2.097 0-4.937-.858-7.035-2.075l-.915 5.557C5.283 23.467 8.64 24 12.33 24c2.953 0 5.243-.593 6.71-1.89 1.556-1.365 2.418-3.406 2.418-5.955 0-4.28-2.61-5.984-7.482-7.005z"/></svg>
+        </div>
+        <div class="node-name">Stripe</div>
+        <div class="node-type">Billing</div>
+      </div>
+
+      <div class="circuit-node" data-node="8" style="bottom:14%;right:12%;">
+        <div class="node-icon">
+          <svg viewBox="0 0 24 24" fill="#9c27b0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        </div>
+        <div class="node-name">WooCommerce</div>
+        <div class="node-type">E-commerce</div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ===== HOW IT WORKS ===== -->
-<div class="section section-dark" id="how">
-  <div class="section-inner">
-    <div class="reveal" style="text-align:center;">
-      <div class="section-label">Setup</div>
-      <div class="section-title">Live in 10 minutes</div>
-      <div class="section-sub" style="margin:0 auto;">No code. No credit card. Just answers.</div>
+<div class="how-section">
+  <div class="how-inner">
+    <div class="reveal">
+      <h2>Live in 10 minutes</h2>
+      <p>No code. No credit card. Just answers.</p>
     </div>
 
     <div class="timeline">
@@ -483,7 +561,7 @@
         </div>
       </div>
       <div class="tl-row">
-        <div class="tl-dot" style="color:var(--green);">&#10003;</div>
+        <div class="tl-dot" style="color:var(--green);">✓</div>
         <div class="tl-card">
           <div class="tl-num">Step 5</div>
           <h3>You're live</h3>
@@ -495,15 +573,12 @@
   </div>
 </div>
 
-<div class="section-divider"></div>
-
 <!-- ===== PRICING ===== -->
-<div class="section section-light" id="pricing" style="text-align:center;">
-  <div class="section-inner">
+<div class="pricing-section">
+  <div class="pricing-inner">
     <div class="reveal">
-      <div class="section-label">Pricing</div>
-      <div class="section-title">Pay for results, not promises.</div>
-      <div class="section-sub" style="margin:0 auto;">Cheaper than a single support agent. Scales with you.</div>
+      <h2>Pay for results, not promises.</h2>
+      <p>Cheaper than a single support agent. Scales with you.</p>
     </div>
 
     <div class="pricing-grid">
@@ -562,11 +637,11 @@
 
     <div class="pricing-note reveal">
       <div class="pn-row">
-        <div class="pn-icon">&#9734;</div>
+        <div class="pn-icon">◆</div>
         <div class="pn-text">Overage: <strong>$0.20 per resolution</strong> beyond your plan. 80% cheaper than alternatives.</div>
       </div>
       <div class="pn-row">
-        <div class="pn-icon">&#9889;</div>
+        <div class="pn-icon">⚡</div>
         <div class="pn-text">Proactive engine auto-messages users before problems. <strong>Included in Pro.</strong></div>
       </div>
     </div>
@@ -599,17 +674,17 @@ const tlObs = new IntersectionObserver((entries) => {
 }, { threshold: 0.3 });
 document.querySelectorAll('.tl-row').forEach(el => tlObs.observe(el));
 
-// Stats counter animation
-function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+// Stats counter with smooth animation
+function easeOutExpo(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
 
 function animateValue(el, start, end, duration, suffix) {
   const startTime = performance.now();
   function update(currentTime) {
     const elapsed = currentTime - startTime;
     const progress = Math.min(elapsed / duration, 1);
-    const eased = easeOutCubic(progress);
+    const eased = easeOutExpo(progress);
     const current = Math.round(start + (end - start) * eased);
-    el.textContent = current + (suffix || '');
+    el.textContent = current + suffix;
     if (progress < 1) requestAnimationFrame(update);
   }
   requestAnimationFrame(update);
@@ -620,57 +695,98 @@ const statObs = new IntersectionObserver((entries) => {
     if (e.isIntersecting && !e.target.dataset.animated) {
       e.target.dataset.animated = 'true';
       const target = parseInt(e.target.dataset.target);
-      const suffix = e.target.dataset.suffix || '';
-      animateValue(e.target, 0, target, 1200, suffix);
+      animateValue(e.target, 0, target, 1500, '');
     }
   });
-}, { threshold: 0.5 });
+}, { threshold: 0.3 });
 document.querySelectorAll('.stat-value[data-target]').forEach(el => statObs.observe(el));
 
-// Channels matrix animation - sequential tile glow
+// Circuit board animation
 (function() {
-  const tiles = document.querySelectorAll('.cm-tile');
-  const svg = document.getElementById('connSvg');
-  const centerEl = document.querySelector('.cm-center-logo');
-  if (!svg || !centerEl || !tiles.length) return;
+  const board = document.getElementById('circuitBoard');
+  const svg = document.getElementById('circuitSvg');
+  const core = document.querySelector('.circuit-core');
+  const nodes = document.querySelectorAll('.circuit-node');
+  if (!board || !svg || !core || !nodes.length) return;
 
-  function drawLines() {
+  let paths = [];
+  let particles = [];
+
+  function buildCircuit() {
     svg.innerHTML = '';
-    const matrix = document.getElementById('channelsMatrix');
-    const matrixRect = matrix.getBoundingClientRect();
-    const cRect = centerEl.getBoundingClientRect();
-    const cx = cRect.left + cRect.width / 2 - matrixRect.left;
-    const cy = cRect.top + cRect.height / 2 - matrixRect.top;
+    paths = [];
+    particles = [];
 
-    tiles.forEach(function(tile) {
-      const tRect = tile.getBoundingClientRect();
-      const tx = tRect.left + tRect.width / 2 - matrixRect.left;
-      const ty = tRect.top + tRect.height / 2 - matrixRect.top;
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', cx);
-      line.setAttribute('y1', cy);
-      line.setAttribute('x2', tx);
-      line.setAttribute('y2', ty);
-      line.dataset.tile = tile.dataset.tile;
-      svg.appendChild(line);
+    const boardRect = board.getBoundingClientRect();
+    const cRect = core.getBoundingClientRect();
+    const cx = cRect.left + cRect.width / 2 - boardRect.left;
+    const cy = cRect.top + cRect.height / 2 - boardRect.top;
+
+    nodes.forEach(function(node, i) {
+      const nRect = node.getBoundingClientRect();
+      const nx = nRect.left + nRect.width / 2 - boardRect.left;
+      const ny = nRect.top + nRect.height / 2 - boardRect.top;
+
+      // Create circuit-like path with right angles
+      const dx = nx - cx;
+      const dy = ny - cy;
+      const midX = cx + dx * 0.5;
+
+      const pathD = `M ${cx} ${cy} L ${midX} ${cy} L ${midX} ${ny} L ${nx} ${ny}`;
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', pathD);
+      path.dataset.node = i;
+      svg.appendChild(path);
+      paths.push(path);
+
+      // Create particle
+      const particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      particle.setAttribute('r', '3');
+      particle.classList.add('particle');
+      particle.dataset.node = i;
+      svg.appendChild(particle);
+      particles.push(particle);
     });
   }
 
-  drawLines();
-  window.addEventListener('resize', drawLines);
+  function animateParticle(pathEl, particle, duration) {
+    const length = pathEl.getTotalLength();
+    const start = performance.now();
 
-  let idx = 0;
-  setInterval(function() {
-    tiles.forEach(t => t.classList.remove('active'));
-    const lines = svg.querySelectorAll('line');
-    lines.forEach(l => l.classList.remove('active'));
+    function step(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const point = pathEl.getPointAtLength(progress * length);
+      particle.setAttribute('cx', point.x);
+      particle.setAttribute('cy', point.y);
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
 
-    tiles[idx].classList.add('active');
-    const line = svg.querySelector('line[data-tile="' + idx + '"]');
-    if (line) line.classList.add('active');
+  let activeIdx = -1;
+  function cycle() {
+    // Reset previous
+    if (activeIdx >= 0) {
+      nodes[activeIdx].classList.remove('active');
+      paths[activeIdx].classList.remove('active');
+      particles[activeIdx].classList.remove('active');
+    }
 
-    idx = (idx + 1) % tiles.length;
-  }, 1800);
+    activeIdx = (activeIdx + 1) % nodes.length;
+    nodes[activeIdx].classList.add('active');
+    paths[activeIdx].classList.add('active');
+    particles[activeIdx].classList.add('active');
+
+    animateParticle(paths[activeIdx], particles[activeIdx], 800);
+
+    setTimeout(cycle, 1500);
+  }
+
+  buildCircuit();
+  window.addEventListener('resize', buildCircuit);
+  setTimeout(cycle, 500);
 })();
 
 // Chat animation
