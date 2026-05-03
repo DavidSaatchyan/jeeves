@@ -160,36 +160,22 @@
     .cap-card .cap-tag.t5 { background: rgba(248,113,113,0.1); color: #fda4af; }
     .cap-card .cap-tag.t6 { background: rgba(99,102,241,0.1); color: #a5b4fc; }
 
-    /* ===== VALUE PROPOSITION (replaces Before/After) ===== */
-    .value-prop { display: flex; flex-direction: column; gap: 16px; margin-top: 60px; }
-    .vp-row { display: flex; align-items: center; gap: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px 28px; transition: all .3s; }
-    .vp-row:hover { border-color: rgba(99,102,241,0.15); }
-    .vp-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
-    .vp-icon.problem { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.1); }
-    .vp-icon.solution { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.1); }
-    .vp-arrow { flex-shrink: 0; color: var(--accent); font-size: 20px; }
-    .vp-text { flex: 1; }
-    .vp-text .problem { font-size: 14px; color: var(--red); margin-bottom: 4px; }
-    .vp-text .solution { font-size: 14px; color: var(--green); font-weight: 600; }
-    .vp-metric { flex-shrink: 0; text-align: right; }
-    .vp-metric .val { font-size: 28px; font-weight: 900; letter-spacing: -1px; }
-    .vp-metric .val.red { color: var(--red); }
-    .vp-metric .val.green { color: var(--green); }
-    .vp-metric .lbl { font-size: 11px; color: var(--muted); }
-
     /* ===== HERO METRIC ===== */
-    .hero-metric { text-align: center; padding: 80px 24px 100px; }
-    .hero-metric .big-num { font-size: clamp(100px, 18vw, 200px); font-weight: 900; letter-spacing: -8px; line-height: 0.85; background: linear-gradient(180deg, #fff 0%, var(--accent) 50%, var(--accent2) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; position: relative; display: inline-block; }
-    .hero-metric .big-num::after { content: '%'; }
-    .hero-metric .big-sub { font-size: clamp(16px, 2.5vw, 22px); font-weight: 600; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; margin-top: 8px; }
-    .hero-metric .big-desc { max-width: 560px; margin: 32px auto 0; }
-    .hero-metric .big-desc p { font-size: 16px; line-height: 1.7; color: #cbd5e1; }
-    .hero-metric .big-desc p + p { margin-top: 8px; color: #94a3b8; font-size: 14px; }
-    .hero-metric .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border-radius: 20px; margin-top: 64px; overflow: hidden; }
-    .hero-metric .stat-block { background: var(--surface); padding: 40px 32px; transition: background .3s; }
-    .hero-metric .stat-block:hover { background: rgba(99,102,241,0.04); }
-    .hero-metric .stat-block .s-num { font-size: 28px; font-weight: 800; color: #f1f5f9; letter-spacing: -1px; margin-bottom: 8px; }
-    .hero-metric .stat-block .s-label { font-size: 13px; color: #94a3b8; line-height: 1.6; }
+    .hero-metric { display: grid; grid-template-columns: 1.2fr 1fr; gap: 60px; align-items: center; padding: 100px 0; }
+    .hm-left { position: relative; }
+    .hm-left::before { content: ''; position: absolute; top: -40px; left: -60px; width: 140px; height: 140px; background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%); border-radius: 50%; pointer-events: none; }
+    .hm-num { font-size: clamp(80px, 14vw, 160px); font-weight: 900; letter-spacing: -6px; line-height: 0.85; color: #fff; position: relative; }
+    .hm-num span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hm-tagline { font-size: 15px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 4px; margin-top: 12px; }
+    .hm-desc { max-width: 400px; margin-top: 20px; }
+    .hm-desc p { font-size: 15px; line-height: 1.7; color: #cbd5e1; }
+    .hm-desc p + p { margin-top: 6px; color: #94a3b8; font-size: 14px; }
+    .hm-right { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+    .hm-stat { padding: 28px 32px; background: var(--surface); border-bottom: 1px solid var(--border); transition: background .3s; }
+    .hm-stat:last-child { border-bottom: none; }
+    .hm-stat:hover { background: rgba(99,102,241,0.03); }
+    .hm-stat .hs-val { font-size: 24px; font-weight: 800; color: #f1f5f9; letter-spacing: -.5px; margin-bottom: 4px; }
+    .hm-stat .hs-label { font-size: 13px; color: #94a3b8; line-height: 1.5; }
 
     /* ===== CHANNELS ===== */
     .channels-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
@@ -257,11 +243,9 @@
       .hero-text p { margin-left: auto; margin-right: auto; }
       .hero-buttons { justify-content: center; }
       .caps-grid { grid-template-columns: repeat(2, 1fr); }
+      .hero-metric { grid-template-columns: 1fr; gap: 40px; padding: 60px 0; }
       .stat-row { grid-template-columns: 1fr; }
       .channels-grid { grid-template-columns: 1fr; }
-      .vp-row { flex-direction: column; text-align: center; }
-      .vp-arrow { transform: rotate(90deg); }
-      .vp-metric { text-align: center; }
       /* Timeline mobile: all content on right, track on left */
       .tl-track { left: 22px; }
       .tl-row, .tl-row.right { flex-direction: row !important; }
@@ -466,77 +450,27 @@
     </div>
   </div>
 
-  <!-- VALUE PROP (replaces before/after) -->
-  <div class="value-prop reveal">
-    <div class="vp-row">
-      <div class="vp-icon problem">⏳</div>
-      <div class="vp-text">
-        <div class="problem">4+ hour average response time</div>
-        <div class="solution">12-second AI responses, 24/7</div>
-      </div>
-      <div class="vp-arrow">→</div>
-      <div class="vp-metric">
-        <div class="val red">4h →</div>
-        <div class="val green">12s</div>
-      </div>
-    </div>
-    <div class="vp-row">
-      <div class="vp-icon problem">🔄</div>
-      <div class="vp-text">
-        <div class="problem">Agents answer the same questions 200x/day</div>
-        <div class="solution">AI resolves 85% of queries instantly</div>
-      </div>
-      <div class="vp-arrow">→</div>
-      <div class="vp-metric">
-        <div class="val green">85%</div>
-        <div class="lbl">auto-resolved</div>
-      </div>
-    </div>
-    <div class="vp-row">
-      <div class="vp-icon problem">🔇</div>
-      <div class="vp-text">
-        <div class="problem">No context between channels</div>
-        <div class="solution">One brain across widget, Telegram, WhatsApp</div>
-      </div>
-      <div class="vp-arrow">→</div>
-      <div class="vp-metric">
-        <div class="val green">3</div>
-        <div class="lbl">unified channels</div>
-      </div>
-    </div>
-    <div class="vp-row">
-      <div class="vp-icon problem">📵</div>
-      <div class="vp-text">
-        <div class="problem">Proactive outreach is completely manual</div>
-        <div class="solution">Auto-messages users when issues arise</div>
-      </div>
-      <div class="vp-arrow">→</div>
-      <div class="vp-metric">
-        <div class="val green">24/7</div>
-        <div class="lbl">proactive monitoring</div>
-      </div>
-    </div>
-  </div>
-
   <div class="hero-metric reveal">
-    <div class="big-num">90</div>
-    <div class="big-sub">auto-resolved instantly</div>
-    <div class="big-desc">
-      <p>Jeeves answers 90% of questions without a human.</p>
-      <p>The remaining 10%? Escalated with full context.</p>
+    <div class="hm-left">
+      <div class="hm-num">90<span>%</span></div>
+      <div class="hm-tagline">Auto-resolved instantly</div>
+      <div class="hm-desc">
+        <p>Jeeves answers 90% of questions without a human.</p>
+        <p>The remaining 10%? Escalated with full context.</p>
+      </div>
     </div>
-    <div class="stat-row">
-      <div class="stat-block">
-        <div class="s-num">&lt;5s</div>
-        <div class="s-label">Response time, 24/7.<br>No queues.</div>
+    <div class="hm-right">
+      <div class="hm-stat">
+        <div class="hs-val">&lt;5s</div>
+        <div class="hs-label">Response time, 24/7. No queues.</div>
       </div>
-      <div class="stat-block">
-        <div class="s-num">1 brain</div>
-        <div class="s-label">Unified memory across<br>all channels.</div>
+      <div class="hm-stat">
+        <div class="hs-val">1 brain</div>
+        <div class="hs-label">Unified memory across all channels.</div>
       </div>
-      <div class="stat-block">
-        <div class="s-num">Proactive</div>
-        <div class="s-label">Auto-messages users<br>before problems.</div>
+      <div class="hm-stat">
+        <div class="hs-val">Proactive</div>
+        <div class="hs-label">Auto-messages users before problems.</div>
       </div>
     </div>
   </div>
