@@ -51,33 +51,49 @@
             <div><strong style="font-size:14px">Custom REST API</strong><span class="muted" style="display:block;font-size:11px">Any internal CRM or backend</span></div>
           </div>
         </div>
-        <p class="muted" style="margin:8px 0 14px">Specify the endpoint where Jeeves will fetch customer data. Use <code>{user_id}</code> as placeholder.</p>
 
-        <label>API endpoint</label>
+        <div id="crmHowItWorks" style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;font-size:13px">
+          <strong style="font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted)">How it works</strong>
+          <p style="margin:8px 0 0;color:var(--muted);line-height:1.5">
+            <strong style="color:var(--fg)">Read</strong> — Jeeves calls this endpoint <em>on every message</em> to learn who the customer is (plan, status, orders, etc.).
+            <br><strong style="color:var(--fg)">Write</strong> — (optional) Lets the AI change data in your CRM, e.g. update a plan or status.
+          </p>
+        </div>
+
+        <strong style="font-size:13px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted)">Read</strong>
+        <label style="margin-top:10px">API endpoint <span class="muted">— GET, returns customer data</span></label>
         <input id="read_url" type="url" placeholder="https://yourapp.com/api/customers/{user_id}"/>
 
-        <label>API key</label>
-        <input id="api_key" type="password" placeholder="sk-… (saved securely)"/>
+        <label>API key <span class="muted">— sent as Authorization header</span></label>
+        <div class="flex" style="gap:8px;align-items:center">
+          <input id="api_key" type="password" placeholder="Enter key…" style="flex:1"/>
+          <span id="apiKeyStatus" class="pill muted" style="font-size:11px;display:none">configured</span>
+        </div>
 
-        <label>Fields for Jeeves</label>
+        <label style="margin-top:12px">Fields for Jeeves <span class="muted">— what to extract from the response</span></label>
         <div id="fieldsList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
         <button class="ghost sm" onclick="addField()">+ Add field</button>
-        <p class="muted">Fields from the API response that Jeeves should know about: <code>plan</code>, <code>orders_count</code>, etc.</p>
+        <p class="muted">Fields that will be visible to Jeeves during conversation: <code>plan</code>, <code>status</code>, <code>orders_count</code>, etc.</p>
 
         <div class="divider"></div>
         <strong style="font-size:13px">Capabilities</strong>
-        <label class="flex" style="margin-top:8px;cursor:pointer"><input id="capRead" type="checkbox" checked style="width:auto"/> Read customer profile</label>
-        <label class="flex" style="margin-top:4px;cursor:pointer"><input id="capUpdate" type="checkbox" style="width:auto"/> Change plan / tariff</label>
-        <label class="flex" style="margin-top:4px;cursor:pointer"><input id="capConfirm" type="checkbox" checked style="width:auto"/> Ask confirmation before writing</label>
+        <label class="flex" style="margin-top:8px;cursor:pointer"><input id="capRead" type="checkbox" checked style="width:auto"/> Read customer profile <span class="muted" style="font-size:11px;margin-left:6px">(always on)</span></label>
+        <label class="flex" style="margin-top:4px;cursor:pointer"><input id="capUpdate" type="checkbox" style="width:auto" onchange="toggleWriteSection()"/> Update customer data (write) <span class="muted" style="font-size:11px;margin-left:6px">— lets AI change records</span></label>
+        <label class="flex" style="margin-top:4px;cursor:pointer"><input id="capConfirm" type="checkbox" checked style="width:auto"/> Ask confirmation before writing <span class="muted" style="font-size:11px;margin-left:6px">— AI asks "are you sure?" in chat</span></label>
+
+        <div id="writeSection" style="display:none">
+          <div class="divider"></div>
+          <strong style="font-size:13px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted)">Write</strong>
+          <label style="margin-top:10px">Update URL <span class="muted">— PATCH, modifies customer data</span></label>
+          <input id="write_url" type="url" placeholder="https://yourapp.com/api/customers/{user_id}"/>
+          <p class="muted">The AI will call this to change customer records (e.g. update plan, status). Requires the endpoint to accept PATCH with JSON body.</p>
+        </div>
 
         <div class="divider"></div>
-        <label>Update URL <span class="muted">(for writes, optional)</span></label>
-        <input id="write_url" type="url" placeholder="https://yourapp.com/api/customers/{user_id}"/>
-
-        <div class="flex mt-16 flex-wrap">
+        <div class="flex mt-16 flex-wrap" style="gap:10px;align-items:center">
           <button onclick="saveCrm()">Save</button>
-          <button class="ghost" onclick="testCrm()">Test</button>
-          <input id="test_user" type="text" placeholder="test user ID" style="max-width:150px"/>
+          <button class="ghost" onclick="testCrm()">Test Connection</button>
+          <input id="test_user" type="text" placeholder="e.g. cust_alice_001 or email" style="max-width:200px"/>
           <span id="crmSaveStatus" class="muted"></span>
         </div>
         <div class="err-msg" id="crmErr"></div>
@@ -91,8 +107,8 @@
     <div class="divider"></div>
     <div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:10px">
       <div>
-        <strong style="font-size:14px">How to find customers</strong>
-        <span class="muted" style="display:block;font-size:11px">Which field to use for lookup in connected systems</span>
+        <strong style="font-size:14px">Customer lookup field</strong>
+        <span class="muted" style="display:block;font-size:11px">Which value Jeeves uses to find the customer in your system</span>
       </div>
       <span id="identBadge" class="pill muted">email</span>
     </div>
@@ -323,12 +339,31 @@ function setCapabilities(c){
   document.getElementById('capConfirm').checked = c.require_confirmation !== false;
 }
 
+function toggleWriteSection(){
+  var show = document.getElementById('capUpdate').checked;
+  document.getElementById('writeSection').style.display = show ? '' : 'none';
+}
+
 async function loadCrm(){
   try {
     var c = await api('/crm/config');
     document.getElementById('read_url').value = c.read_url || '';
     document.getElementById('write_url').value = c.write_url || '';
     setCapabilities(c.capabilities);
+    toggleWriteSection();
+
+    // Show API key status indicator if headers are configured
+    var headers = c.headers || {};
+    var hasKey = Object.keys(headers).length > 0;
+    var apiKeyStatus = document.getElementById('apiKeyStatus');
+    if(hasKey){
+      apiKeyStatus.style.display = '';
+      apiKeyStatus.textContent = 'key configured';
+      apiKeyStatus.className = 'pill ok';
+    } else {
+      apiKeyStatus.style.display = 'none';
+    }
+
     var mapping = c.read_mapping || {};
     crmFields = Object.entries(mapping).map(function(e){ return {name:e[0], label:e[0].replace(/_/g,' ')}; });
     if(!crmFields.length) crmFields = [{name:'plan',label:'subscription plan'}];
@@ -361,7 +396,16 @@ async function saveCrm(){
   document.getElementById('crmSaveStatus').textContent='Saving…';
   try {
     var keyVal = document.getElementById('api_key').value.trim();
-    var headers = keyVal && keyVal!=='••••••••' ? {'Authorization':'Bearer '+keyVal} : {};
+    var apiKeyStatus = document.getElementById('apiKeyStatus');
+    var headers = {};
+    if(keyVal && keyVal !== '********'){
+      headers = {'Authorization':'Bearer '+keyVal};
+      apiKeyStatus.style.display = '';
+      apiKeyStatus.textContent = 'key configured';
+      apiKeyStatus.className = 'pill ok';
+    } else if(keyVal === '********'){
+      // Keep existing key, don't send it
+    }
     var body = {
       provider: 'custom_rest',
       read_url: document.getElementById('read_url').value.trim()||null,
