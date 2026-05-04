@@ -3,8 +3,28 @@
 <h1>Dashboard</h1>
 <p class="page-desc">Performance overview for the last 7 days.</p>
 
-<!-- Content wrapper: hidden until data loads -->
-<div id="dashContent" style="opacity:0;transition:opacity 0.4s ease">
+<!-- Content wrapper with skeleton loader -->
+<div id="dashSkeleton">
+  <div class="sk-getting-started ds-skeleton" id="skGettingStarted" style="display:none"></div>
+  <div class="sk-hero">
+    <div class="sk-hero-card ds-skeleton"></div>
+    <div class="sk-hero-card ds-skeleton"></div>
+    <div class="sk-hero-card ds-skeleton"></div>
+    <div class="sk-hero-card ds-skeleton"></div>
+  </div>
+  <div class="sk-sub ds-skeleton"></div>
+  <div class="grid grid-2">
+    <div class="card"><h2>Dialogs — last 7 days</h2><div class="sk-chart ds-skeleton"></div></div>
+    <div class="card"><h2>Peak hours</h2><div class="sk-chart ds-skeleton"></div></div>
+  </div>
+  <div class="grid grid-2">
+    <div class="card"><h2>Channels</h2><div class="sk-list ds-skeleton"></div></div>
+    <div class="card"><h2>Recent escalations</h2><div class="sk-list ds-skeleton"></div></div>
+  </div>
+</div>
+
+<!-- Real content: hidden until data loads -->
+<div id="dashContent" style="display:none">
 
 <div id="gettingStarted" class="card" style="display:none;border-top:2px solid var(--accent)">
   <div class="flex" style="justify-content:space-between;align-items:start">
@@ -107,13 +127,27 @@
 .ds-chart-card canvas { display:block; }
 
 /* Heatmap */
-.ds-heatmap { display:grid; grid-template-columns:repeat(12,1fr); gap:3px; }
-.ds-hm-label { grid-column:1/-1; font-size:10px; color:var(--muted2); margin-top:6px; display:flex; justify-content:space-between; }
+.ds-heatmap-wrap { display:flex; flex-direction:column; gap:4px; }
+.ds-hm-row { display:grid; grid-template-columns:28px repeat(12,1fr); gap:3px; align-items:center; }
+.ds-hm-row-label { font-size:10px; color:var(--muted2); font-weight:600; text-align:right; padding-right:4px; }
 .ds-hm-cell { aspect-ratio:1; border-radius:3px; background:rgba(255,255,255,0.03); position:relative; cursor:default; }
 .ds-hm-cell:hover { outline:1px solid rgba(255,255,255,0.15); }
 .ds-hm-cell[data-tooltip]:hover::after { content:attr(data-tooltip); position:absolute; bottom:calc(100% + 4px); left:50%; transform:translateX(-50%); background:#1e293b; color:#f1f5f9; font-size:10px; padding:2px 6px; border-radius:4px; white-space:nowrap; z-index:10; pointer-events:none; }
+.ds-hm-hours { display:grid; grid-template-columns:28px repeat(12,1fr); gap:3px; margin-bottom:4px; }
+.ds-hm-hours span { font-size:9px; color:var(--muted2); text-align:center; }
+.ds-hm-hours span:first-child { visibility:hidden; }
 
 @media(max-width:768px){ .ds-hero{grid-template-columns:1fr 1fr} .ds-sub-stats{flex-wrap:wrap;gap:12px} }
+
+/* Skeleton loader */
+.ds-skeleton { animation:ds-pulse 1.5s ease-in-out infinite; background:rgba(255,255,255,0.04); border-radius:8px; }
+@keyframes ds-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.sk-hero { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:14px; }
+.sk-hero-card { height:72px; border-radius:12px; }
+.sk-sub { height:20px; width:80px; margin-bottom:20px; }
+.sk-chart { height:220px; border-radius:12px; }
+.sk-list { height:120px; border-radius:12px; }
+.sk-getting-started { height:100px; border-radius:12px; margin-bottom:14px; }
 </style>
 <script>
 var dismissed = localStorage.getItem('jeeves_gs_dismiss');
@@ -305,15 +339,32 @@ function drawHeatmap(data){
   if(!el || !data) return;
   var max = Math.max.apply(null, data);
   if(max===0) max=1;
-  var html = '<div class="ds-heatmap">';
-  for(var h=0;h<24;h++){
+  var html = '<div class="ds-heatmap-wrap">';
+  // Hour labels row
+  html += '<div class="ds-hm-hours">';
+  html += '<span></span>';
+  for(var h=0;h<12;h++) html += '<span>'+h+'</span>';
+  html += '</div>';
+  // AM row (0-11)
+  html += '<div class="ds-hm-row"><span class="ds-hm-row-label">AM</span>';
+  for(var h=0;h<12;h++){
     var v = data[h]||0;
     var intensity = v/max;
     var bg = intensity>0.7?'rgba(129,140,248,0.7)':intensity>0.4?'rgba(129,140,248,0.45)':intensity>0.1?'rgba(129,140,248,0.25)':intensity>0?'rgba(129,140,248,0.12)':'rgba(255,255,255,0.03)';
-    html += '<div class="ds-hm-cell" style="background:'+bg+'" data-tooltip="'+h+':00 — '+v+' dialogs"></div>';
+    var label = h===0?'12 AM':h<12?h+' AM':'';
+    html += '<div class="ds-hm-cell" style="background:'+bg+'" data-tooltip="'+label+' \u2014 '+v+' dialogs"></div>';
   }
   html += '</div>';
-  html += '<div class="ds-hm-label"><span>00:00</span><span>12:00</span><span>23:00</span></div>';
+  // PM row (12-23)
+  html += '<div class="ds-hm-row"><span class="ds-hm-row-label">PM</span>';
+  for(var h=12;h<24;h++){
+    var v = data[h]||0;
+    var intensity = v/max;
+    var bg = intensity>0.7?'rgba(129,140,248,0.7)':intensity>0.4?'rgba(129,140,248,0.45)':intensity>0.1?'rgba(129,140,248,0.25)':intensity>0?'rgba(129,140,248,0.12)':'rgba(255,255,255,0.03)';
+    var label = h===12?'12 PM':(h-12)+' PM';
+    html += '<div class="ds-hm-cell" style="background:'+bg+'" data-tooltip="'+label+' \u2014 '+v+' dialogs"></div>';
+  }
+  html += '</div></div>';
   el.innerHTML = html;
 }
 
@@ -326,7 +377,8 @@ Promise.allSettled([
   loadUnresolved(),
   loadSetupStatus()
 ]).then(function(){
-  document.getElementById('dashContent').style.opacity = '1';
+  document.getElementById('dashSkeleton').style.display = 'none';
+  document.getElementById('dashContent').style.display = '';
 });
 </script>
 {% endblock %}

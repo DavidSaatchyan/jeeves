@@ -21,80 +21,60 @@ def stats(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(ge
     start = datetime.combine(today, datetime.min.time())
     week_start = (datetime.utcnow() - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)
 
-    total_today = (
-        db.query(func.count(ChatLog.id))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= start))
-        .scalar()
-    )
-    resolved_today = (
-        db.query(func.count(ChatLog.id))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= start, ChatLog.resolution == "resolved"))
-        .scalar()
-    )
-    total_week = (
-        db.query(func.count(ChatLog.id))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= week_start))
-        .scalar()
-    )
-    resolved_week = (
-        db.query(func.count(ChatLog.id))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= week_start, ChatLog.resolution == "resolved"))
-        .scalar()
-    )
-    avg_latency = (
-        db.query(func.avg(ChatLog.latency_ms))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= week_start, ChatLog.latency_ms.isnot(None)))
-        .scalar()
-    )
-    escalated_week = (
-        db.query(func.count(ChatLog.id))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= week_start, ChatLog.resolution == "escalated"))
-        .scalar()
-    )
+    # Single query per window using conditional aggregation + distinct sessions
+    def _window(cutoff):
+        row = db.query(
+            func.count(func.distinct(ChatLog.session_id)).label("dialogs"),
+            func.count(func.distinct(func.case((ChatLog.resolution == "resolved", ChatLog.session_id)))).label("resolved"),
+            func.count(func.distinct(func.case((ChatLog.resolution == "escalated", ChatLog.session_id)))).label("escalated"),
+            func.avg(ChatLog.latency_ms).label("avg_latency"),
+        ).filter(
+            and_(
+                ChatLog.tenant_id == tenant.id,
+                ChatLog.created_at >= cutoff,
+                ChatLog.session_id.isnot(None),
+            )
+        ).first()
+        return row
+
+    w = _window(week_start)
+    t = _window(start)
+
+    dialogs_week = w.dialogs or 0
+    resolved_week = w.resolved or 0
+    escalated_week = w.escalated or 0
+
     return {
-        "dialogs_today": total_today or 0,
-        "resolved_today": resolved_today or 0,
-        "dialogs_week": total_week or 0,
-        "resolved_week": resolved_week or 0,
-        "resolution_rate_week": round((resolved_week or 0) / total_week, 3) if total_week else 0,
-        "avg_latency_ms": round(avg_latency) if avg_latency else 0,
-        "escalated_week": escalated_week or 0,
+        "dialogs_today": t.dialogs or 0,
+        "resolved_today": t.resolved or 0,
+        "dialogs_week": dialogs_week,
+        "resolved_week": resolved_week,
+        "resolution_rate_week": round(resolved_week / dialogs_week, 3) if dialogs_week else 0,
+        "avg_latency_ms": round(w.avg_latency) if w.avg_latency else 0,
+        "escalated_week": escalated_week,
     }
 
 
 @router.get("/trend")
 def trend(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(get_db), days: int = 7):
-    """Daily dialog counts for the last N days with resolution breakdown."""
+    """Daily distinct-session counts for the last N days with resolution breakdown."""
     cutoff = datetime.utcnow() - timedelta(days=days)
 
-    # Get total counts per day
-    totals = (
-        db.query(func.date(ChatLog.created_at).label("day"), func.count(ChatLog.id).label("total"))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff))
+    rows = (
+        db.query(
+            func.date(ChatLog.created_at).label("day"),
+            func.count(func.distinct(ChatLog.session_id)).label("total"),
+            func.count(func.distinct(func.case((ChatLog.resolution == "resolved", ChatLog.session_id)))).label("resolved"),
+            func.count(func.distinct(func.case((ChatLog.resolution == "escalated", ChatLog.session_id)))).label("escalated"),
+        )
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff, ChatLog.session_id.isnot(None)))
         .group_by(func.date(ChatLog.created_at))
         .all()
     )
 
-    # Get resolved per day
-    resolved = (
-        db.query(func.date(ChatLog.created_at).label("day"), func.count(ChatLog.id).label("resolved"))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff, ChatLog.resolution == "resolved"))
-        .group_by(func.date(ChatLog.created_at))
-        .all()
-    )
-
-    # Get escalated per day
-    escalated = (
-        db.query(func.date(ChatLog.created_at).label("day"), func.count(ChatLog.id).label("escalated"))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff, ChatLog.resolution == "escalated"))
-        .group_by(func.date(ChatLog.created_at))
-        .all()
-    )
-
-    # Build day-indexed maps
-    total_map = {str(r.day): r.total for r in totals}
-    resolved_map = {str(r.day): r.resolved for r in resolved}
-    escalated_map = {str(r.day): r.escalated for r in escalated}
+    total_map = {str(r.day): r.total for r in rows}
+    resolved_map = {str(r.day): r.resolved for r in rows}
+    escalated_map = {str(r.day): r.escalated for r in rows}
 
     result = []
     for i in range(days):
@@ -111,11 +91,11 @@ def trend(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(ge
 
 @router.get("/channels-breakdown")
 def channels_breakdown(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(get_db)):
-    """Dialog counts per channel for the last 7 days."""
+    """Distinct session counts per channel for the last 7 days."""
     cutoff = datetime.utcnow() - timedelta(days=7)
     rows = (
-        db.query(ChatLog.channel, func.count(ChatLog.id))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff))
+        db.query(ChatLog.channel, func.count(func.distinct(ChatLog.session_id)))
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff, ChatLog.session_id.isnot(None)))
         .group_by(ChatLog.channel)
         .all()
     )
@@ -124,11 +104,11 @@ def channels_breakdown(tenant: Tenant = Depends(get_current_tenant), db: Session
 
 @router.get("/hourly")
 def hourly(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(get_db)):
-    """Dialogs by hour of day (0-23) for the last 7 days."""
+    """Distinct sessions by hour of day (0-23) for the last 7 days."""
     cutoff = datetime.utcnow() - timedelta(days=7)
     rows = (
-        db.query(func.extract("hour", ChatLog.created_at).label("h"), func.count(ChatLog.id))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff))
+        db.query(func.extract("hour", ChatLog.created_at).label("h"), func.count(func.distinct(ChatLog.session_id)))
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff, ChatLog.session_id.isnot(None)))
         .group_by("h")
         .order_by("h")
         .all()
