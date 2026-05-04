@@ -62,6 +62,7 @@ app.conf.beat_schedule = {
 # --- shared clients -------------------------------------------------------
 _engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
 SessionLocal = sessionmaker(bind=_engine, future=True)
+_chroma_client = None
 
 
 def _openai() -> OpenAI:
@@ -69,8 +70,12 @@ def _openai() -> OpenAI:
 
 
 def _chroma():
+    global _chroma_client
+    if _chroma_client is not None:
+        return _chroma_client
     u = urlparse(CHROMA_URL)
-    return chromadb.HttpClient(host=u.hostname or "chroma", port=u.port or 8000)
+    _chroma_client = chromadb.HttpClient(host=u.hostname or "chroma", port=u.port or 8000)
+    return _chroma_client
 
 
 def _collection(tenant_id: str):
@@ -132,6 +137,9 @@ def index_file(self, tenant_id: str, file_id: str, path: str) -> dict:
                     documents=chunk_texts,
                     metadatas=[c.to_metadata(file_id) for c in chunks],
                 )
+                # Verify data was stored
+                verify_count = col.count()
+                print(f"[worker] index_file: {len(chunks)} chunks added, collection '{col.name}' now has {verify_count} total", flush=True)
             db.execute(
                 text(
                     """
