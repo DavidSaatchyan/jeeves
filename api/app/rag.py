@@ -165,6 +165,11 @@ def search(
         print(f"[rag] search raw results ({len(docs)}):\n" + "\n".join(raw_log), flush=True)
         out: list[dict[str, Any]] = []
         for i, (doc, meta, dist) in enumerate(zip(docs, metas, dists)):
+            if dist is None or dist > thr:
+                continue
+            # Hard filter: distances above 0.85 are essentially noise
+            if dist > 0.85:
+                continue
             meta = meta or {}
             out.append(
                 {
