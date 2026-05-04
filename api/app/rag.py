@@ -38,7 +38,6 @@ def _openai() -> OpenAI:
 
 
 _chroma_client = None
-_collection_cache = {}
 
 def _chroma():
     global _chroma_client
@@ -57,23 +56,16 @@ def _chroma():
 
 def _collection(tenant_id: UUID | str):
     name = f"tenant_{str(tenant_id).replace('-', '')}"
-    if name in _collection_cache:
-        return _collection_cache[name]
-    col = _chroma().get_or_create_collection(
+    return _chroma().get_or_create_collection(
         name=name,
         metadata={"hnsw:space": "cosine", "embedding_version": EMBEDDING_VERSION},
     )
-    _collection_cache[name] = col
-    return col
 
 
-def _clear_collection_cache(name: str | None = None):
-    """Force reload collection from disk after mutations."""
+def _reset_chroma():
+    """Force new client connection so Chroma reads fresh data from disk."""
     global _chroma_client
-    if name:
-        _collection_cache.pop(name, None)
-    else:
-        _collection_cache.clear()
+    _chroma_client = None
 
 
 def embed_batch(texts: list[str]) -> list[list[float]]:
@@ -87,7 +79,6 @@ def index_file(tenant_id: UUID | str, file_id: UUID | str, path: Path) -> int:
     chunks = chunking.build_chunks(path)
     if not chunks:
         return 0
-    col_name = f"tenant_{str(tenant_id).replace('-', '')}"
     col = _collection(tenant_id)
     ids = [f"{file_id}-{i}-{c.chunk_hash}" for i, c in enumerate(chunks)]
     texts = [c.text for c in chunks]
@@ -98,19 +89,18 @@ def index_file(tenant_id: UUID | str, file_id: UUID | str, path: Path) -> int:
         pass
     embeddings = embed_batch(texts)
     col.add(ids=ids, embeddings=embeddings, documents=texts, metadatas=metadatas)
-    _clear_collection_cache(col_name)
+    _reset_chroma()
     return len(chunks)
 
 
 def delete_file(tenant_id: UUID | str, file_id: UUID | str) -> None:
     try:
         col = _collection(tenant_id)
-        col_name = f"tenant_{str(tenant_id).replace('-', '')}"
         fid = str(file_id)
         existing = col.get(where={"file_id": fid}, include=[])
         if existing and existing.get("ids"):
             col.delete(ids=existing["ids"])
-        _clear_collection_cache(col_name)
+        _reset_chroma()
     except Exception as e:
         print(f"[rag] delete failed: {e}", flush=True)
 
