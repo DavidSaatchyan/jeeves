@@ -1,6 +1,7 @@
 """Knowledge Manager routes (FR-2)."""
 from __future__ import annotations
 
+import asyncio
 import os
 import uuid
 from pathlib import Path
@@ -134,7 +135,7 @@ def list_files(
 
 
 @router.delete("/files/{file_id}", status_code=204)
-def delete_file(
+async def delete_file(
     file_id: uuid.UUID,
     tenant: Tenant = Depends(get_current_tenant),
     db: Session = Depends(get_db),
@@ -148,14 +149,7 @@ def delete_file(
     # Delete from Chroma
     rag.delete_file(tenant.id, file_id)
 
-    # Verify deletion
-    remaining = rag._count_all_chunks(tenant.id)
-    print(f"[knowledge] after delete: {remaining} chunks remain in Chroma", flush=True)
-
-    # Clear conversation history to prevent hallucination from stale context
-    memory.clear_tenant(str(tenant.id))
-    print(f"[knowledge] cleared conversation history for tenant {tenant.id}", flush=True)
-
+    # Remove DB record and file
     try:
         if rec.s3_key and os.path.exists(rec.s3_key):
             os.remove(rec.s3_key)
@@ -163,4 +157,9 @@ def delete_file(
         pass
     db.delete(rec)
     db.commit()
+
+    # Clear conversation history in background (non-blocking)
+    asyncio.get_event_loop().run_in_executor(None, memory.clear_tenant, str(tenant.id))
+    print(f"[knowledge] queued memory clear for tenant {tenant.id}", flush=True)
+
     return
