@@ -3,38 +3,60 @@
 <h1>Integrations</h1>
 <p class="page-desc">Connect your external systems so Jeeves can answer with personalized, live data.</p>
 
-<div class="card">
-  <div class="section-toggle" onclick="toggleSection('crmSection')">
-    <div class="flex">
-      <span style="font-size:20px;color:var(--accent)">&#9670;</span>
-      <div>
-        <h2 style="margin:0">CRM</h2>
-        <span class="muted">Customer data — plan, status, history</span>
+<!-- Main tabs -->
+<div class="int-tabs">
+  <div class="int-tab active" data-tab="crm" onclick="selectIntTab('crm')">
+    <svg class="int-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <span>CRM</span>
+    <span class="int-tab-badge pill ok" id="crmTabBadge" style="display:none">●</span>
+  </div>
+  <div class="int-tab" data-tab="ecommerce" onclick="selectIntTab('ecommerce')">
+    <svg class="int-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+    <span>E-commerce</span>
+    <span class="int-tab-badge pill ok" id="ecomTabBadge" style="display:none">●</span>
+  </div>
+  <div class="int-tab" data-tab="identity" onclick="selectIntTab('identity')">
+    <svg class="int-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="8" x2="7" y2="8.01"/><line x1="11" y1="8" x2="11" y2="8.01"/><line x1="15" y1="8" x2="15" y2="8.01"/></svg>
+    <span>Identity</span>
+  </div>
+</div>
+
+<!-- CRM Panel -->
+<div class="int-panel active" id="panel-crm">
+  <div class="card">
+    <div class="card-header">
+      <h2>Customer Data</h2>
+      <span id="crmStatusBadge" class="pill muted">not connected</span>
+    </div>
+    <p class="muted" style="margin:0 0 20px">Choose how Jeeves accesses customer information. Either via OAuth integration or your own API.</p>
+
+    <!-- Sub-tabs -->
+    <div class="int-subtabs">
+      <div class="int-subtab active" data-crm="hubspot" onclick="selectCrmTab('hubspot')">
+        <svg class="int-subtab-icon" viewBox="0 0 24 24" fill="#ff7a59"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm0-8h-2V7h2v2zm4 8h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        <span>HubSpot</span>
+      </div>
+      <div class="int-subtab" data-crm="custom" onclick="selectCrmTab('custom')">
+        <svg class="int-subtab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+        <span>Custom REST API</span>
       </div>
     </div>
-    <div class="flex">
-      <span id="crmStatusBadge" class="pill muted">not connected</span>
-      <span id="crmArrow" class="section-arrow">▾</span>
-    </div>
-  </div>
 
-  <div id="crmSection" style="display:none;margin-top:20px">
-    <div class="flex gap-sm mb-16">
-      <button id="crmTabHubspot" class="ghost crm-tab" onclick="selectCrmTab('hubspot')">HubSpot</button>
-      <button id="crmTabCustom" class="ghost crm-tab" onclick="selectCrmTab('custom')">Custom REST API</button>
-    </div>
-
-    <div id="crmPanelHubspot" style="display:none">
-      <div style="padding:16px;background:var(--bg);border:1px solid var(--border);border-radius:12px">
-        <div class="flex" style="justify-content:space-between;margin-bottom:10px">
-          <div class="flex">
-            <span style="background:#ff7a59;color:#fff;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">H</span>
-            <div><strong style="font-size:14px">HubSpot</strong><span class="muted" style="display:block;font-size:11px">OAuth · contacts, companies, notes</span></div>
+    <!-- HubSpot Panel -->
+    <div id="crmPanelHubspot">
+      <div class="int-service-card">
+        <div class="int-service-header">
+          <div class="int-service-info">
+            <svg class="int-service-logo" viewBox="0 0 24 24" fill="#ff7a59"><circle cx="12" cy="12" r="10" opacity="0.15"/><circle cx="8" cy="12" r="2.5"/><circle cx="16" cy="12" r="2.5"/></svg>
+            <div>
+              <strong>HubSpot</strong>
+              <span class="muted">OAuth · contacts, companies, notes</span>
+            </div>
           </div>
           <span id="badge-hubspot" class="pill muted">—</span>
         </div>
-        <p class="muted" style="margin:8px 0 14px">Jeeves will find the contact by email and show data in conversation. With HubSpot configured, Custom REST API is not needed.</p>
-        <div class="flex flex-wrap gap-sm">
+        <p class="muted" style="margin:12px 0 16px">Jeeves will find the contact by email and show data in conversation.</p>
+        <div class="int-actions">
           <button onclick="connectHubSpot()" id="hubspotConnect">Connect HubSpot</button>
           <button class="ghost danger" onclick="disconnectHubSpot()" id="hubspotDisconnect" style="display:none">Disconnect</button>
           <span id="hubspotStatus" class="muted" style="font-size:12px"></span>
@@ -43,59 +65,46 @@
       </div>
     </div>
 
+    <!-- Custom REST Panel -->
     <div id="crmPanelCustom" style="display:none">
-      <div style="padding:16px;background:var(--bg);border:1px solid var(--border);border-radius:12px">
-        <div class="flex" style="justify-content:space-between;margin-bottom:10px">
-          <div class="flex">
-            <span style="background:#4a90d9;color:#fff;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">API</span>
-            <div><strong style="font-size:14px">Custom REST API</strong><span class="muted" style="display:block;font-size:11px">Any internal CRM or backend</span></div>
+      <div class="int-service-card">
+        <div class="int-service-header">
+          <div class="int-service-info">
+            <svg class="int-service-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+            <div><strong>Custom REST API</strong><span class="muted">Any internal CRM or backend</span></div>
           </div>
         </div>
 
-        <div id="crmHowItWorks" style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;font-size:13px">
-          <strong style="font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted)">How it works</strong>
-          <p style="margin:8px 0 0;color:var(--muted);line-height:1.5">
-            <strong style="color:var(--fg)">Read</strong> — Jeeves calls this endpoint to learn who the customer is (plan, status, orders, etc.).
-            Data is cached for 5 minutes to avoid repeated requests within the same conversation.
-            <br><strong style="color:var(--fg)">Write</strong> — (optional) Lets the AI change data in your CRM, e.g. update a plan or status.
-            Cache is invalidated on write.
-          </p>
-        </div>
-
-        <strong style="font-size:13px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted)">Read</strong>
-        <label style="margin-top:10px">API endpoint <span class="muted">— GET, returns customer data</span></label>
+        <label style="margin-top:16px">Read endpoint <span class="muted">— GET, returns customer data</span></label>
         <input id="read_url" type="url" placeholder="https://yourapp.com/api/customers/{user_id}"/>
 
         <label>API key <span class="muted">— sent as Authorization header</span></label>
         <div class="flex" style="gap:8px;align-items:center">
           <input id="api_key" type="password" placeholder="Enter key…" style="flex:1"/>
-          <span id="apiKeyStatus" class="pill muted" style="font-size:11px;display:none">configured</span>
+          <span id="apiKeyStatus" class="pill ok" style="font-size:11px;display:none">key configured</span>
         </div>
 
-        <label style="margin-top:12px">Fields for Jeeves <span class="muted">— what to extract from the response</span></label>
+        <label style="margin-top:12px">Fields for Jeeves <span class="muted">— what to extract from response</span></label>
         <div id="fieldsList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
         <button class="ghost sm" onclick="addField()">+ Add field</button>
-        <p class="muted">Fields that will be visible to Jeeves during conversation: <code>plan</code>, <code>status</code>, <code>orders_count</code>, etc.</p>
 
-        <div class="divider"></div>
+        <div class="divider" style="margin:16px 0"></div>
         <strong style="font-size:13px">Capabilities</strong>
         <label class="flex" style="margin-top:8px;cursor:pointer"><input id="capRead" type="checkbox" checked style="width:auto"/> Read customer profile <span class="muted" style="font-size:11px;margin-left:6px">(always on)</span></label>
-        <label class="flex" style="margin-top:4px;cursor:pointer"><input id="capUpdate" type="checkbox" style="width:auto" onchange="toggleWriteSection()"/> Update customer data (write) <span class="muted" style="font-size:11px;margin-left:6px">— lets AI change records</span></label>
-        <label class="flex" style="margin-top:4px;cursor:pointer"><input id="capConfirm" type="checkbox" checked style="width:auto"/> Ask confirmation before writing <span class="muted" style="font-size:11px;margin-left:6px">— AI asks "are you sure?" in chat</span></label>
+        <label class="flex" style="margin-top:4px;cursor:pointer"><input id="capUpdate" type="checkbox" style="width:auto" onchange="toggleWriteSection()"/> Update customer data (write)</label>
+        <label class="flex" style="margin-top:4px;cursor:pointer"><input id="capConfirm" type="checkbox" checked style="width:auto"/> Ask confirmation before writing</label>
 
         <div id="writeSection" style="display:none">
-          <div class="divider"></div>
-          <strong style="font-size:13px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted)">Write</strong>
-          <label style="margin-top:10px">Update URL <span class="muted">— PATCH, modifies customer data</span></label>
+          <div class="divider" style="margin:16px 0"></div>
+          <strong style="font-size:13px">Write endpoint</strong>
+          <label style="margin-top:8px">Update URL <span class="muted">— PATCH</span></label>
           <input id="write_url" type="url" placeholder="https://yourapp.com/api/customers/{user_id}"/>
-          <p class="muted">The AI will call this to change customer records (e.g. update plan, status). Requires the endpoint to accept PATCH with JSON body.</p>
         </div>
 
-        <div class="divider"></div>
-        <div class="flex mt-16 flex-wrap" style="gap:10px;align-items:center">
+        <div class="int-actions" style="margin-top:20px">
           <button onclick="saveCrm()">Save</button>
           <button class="ghost" onclick="testCrm()">Test Connection</button>
-          <input id="test_user" type="text" placeholder="e.g. cust_alice_001 or email" style="max-width:200px"/>
+          <input id="test_user" type="text" placeholder="e.g. cust_alice_001" style="max-width:200px"/>
           <span id="crmSaveStatus" class="muted"></span>
         </div>
         <div class="err-msg" id="crmErr"></div>
@@ -105,83 +114,48 @@
         </div>
       </div>
     </div>
-
-    <div class="divider"></div>
-    <div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:10px">
-      <div>
-        <strong style="font-size:14px">Customer lookup field</strong>
-        <span class="muted" style="display:block;font-size:11px">Which value Jeeves uses to find the customer in your system</span>
-      </div>
-      <span id="identBadge" class="pill muted">email</span>
-    </div>
-    <select id="primary-identifier" onchange="toggleIdentField()" style="max-width:400px">
-      <option value="email">Email (user_id treated as email)</option>
-      <option value="user_id">User ID (user_id treated as ID)</option>
-      <option value="custom">Custom field from widget.identify()</option>
-    </select>
-    <div id="ident-field-row" style="display:none;margin-top:10px">
-      <input id="identifier-field" type="text" placeholder="e.g. phone, customer_id, shopify_id" style="max-width:300px"/>
-      <p class="muted" style="margin:4px 0 0">This field is taken from extra_fields in <code>window.JeevesWidget.identify()</code>.</p>
-    </div>
-    <div class="flex mt-12">
-      <button onclick="savePrimaryIdentifier()">Save</button>
-    </div>
-    <div class="err-msg" id="msg-ident"></div>
   </div>
 </div>
 
-<div class="card">
-  <div class="section-toggle" onclick="toggleSection('ecomSection')">
-    <div class="flex">
-      <span style="font-size:20px;color:var(--accent3)">&#9654;</span>
-      <div>
-        <h2 style="margin:0">E-commerce & Billing</h2>
-        <span class="muted">Orders, shipping, subscriptions — optional</span>
-      </div>
+<!-- E-commerce Panel -->
+<div class="int-panel" id="panel-ecommerce" style="display:none">
+  <div class="card">
+    <div class="card-header">
+      <h2>E-commerce & Billing</h2>
     </div>
-    <div class="flex">
-      <span id="ecomStatusBadge" class="pill muted">not connected</span>
-      <span id="ecomArrow" class="section-arrow">▾</span>
-    </div>
-  </div>
+    <p class="muted" style="margin:0 0 20px">Connect the systems you need. Multiple can be active simultaneously.</p>
 
-  <div id="ecomSection" style="display:none;margin-top:20px">
-    <p class="muted" style="margin:0 0 16px">Connect the systems you need. Multiple can be active simultaneously.</p>
-
-    <div class="grid grid-3 mb-16">
-      <div id="ecomCardShopify" class="ecom-card" onclick="selectEcomTab('shopify')" style="padding:16px;background:var(--bg);border:2px solid var(--border);border-radius:12px;cursor:pointer;text-align:center;transition:all .2s">
-        <span style="background:#95bf47;color:#0b1020;width:40px;height:40px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;margin-bottom:8px">S</span>
-        <div style="font-weight:600;font-size:14px">Shopify</div>
-        <div class="muted" style="font-size:11px;margin-top:2px">Orders, shipping</div>
-        <span id="badge-shopify" class="pill muted" style="margin-top:8px;display:inline-block">—</span>
+    <!-- Sub-tabs -->
+    <div class="int-subtabs">
+      <div class="int-subtab active" data-ecom="shopify" onclick="selectEcomTab('shopify')">
+        <svg class="int-subtab-icon" viewBox="0 0 24 24" fill="#95bf47"><rect x="3" y="3" width="18" height="18" rx="4"/></svg>
+        <span>Shopify</span>
       </div>
-      <div id="ecomCardWoo" class="ecom-card" onclick="selectEcomTab('woocommerce')" style="padding:16px;background:var(--bg);border:2px solid var(--border);border-radius:12px;cursor:pointer;text-align:center;transition:all .2s">
-        <span style="background:#7f54b3;color:#fff;width:40px;height:40px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;margin-bottom:8px">W</span>
-        <div style="font-weight:600;font-size:14px">WooCommerce</div>
-        <div class="muted" style="font-size:11px;margin-top:2px">Orders, customers</div>
-        <span id="badge-woocommerce" class="pill muted" style="margin-top:8px;display:inline-block">—</span>
+      <div class="int-subtab" data-ecom="woocommerce" onclick="selectEcomTab('woocommerce')">
+        <svg class="int-subtab-icon" viewBox="0 0 24 24" fill="#7f54b3"><rect x="3" y="3" width="18" height="18" rx="4"/></svg>
+        <span>WooCommerce</span>
       </div>
-      <div id="ecomCardStripe" class="ecom-card" onclick="selectEcomTab('stripe')" style="padding:16px;background:var(--bg);border:2px solid var(--border);border-radius:12px;cursor:pointer;text-align:center;transition:all .2s">
-        <span style="background:#635bff;color:#fff;width:40px;height:40px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;margin-bottom:8px">P</span>
-        <div style="font-weight:600;font-size:14px">Stripe</div>
-        <div class="muted" style="font-size:11px;margin-top:2px">Subscriptions, billing</div>
-        <span id="badge-stripe" class="pill muted" style="margin-top:8px;display:inline-block">—</span>
+      <div class="int-subtab" data-ecom="stripe" onclick="selectEcomTab('stripe')">
+        <svg class="int-subtab-icon" viewBox="0 0 24 24" fill="#635bff"><rect x="3" y="3" width="18" height="18" rx="4"/></svg>
+        <span>Stripe</span>
       </div>
     </div>
 
-    <div id="ecomPanelShopify" style="display:none">
-      <div style="padding:16px;background:var(--bg);border:1px solid var(--border);border-radius:12px">
-        <div class="flex" style="justify-content:space-between;margin-bottom:10px">
-          <div class="flex">
-            <span style="background:#95bf47;color:#0b1020;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">S</span>
-            <div><strong style="font-size:14px">Shopify</strong></div>
+    <!-- Shopify -->
+    <div id="ecomPanelShopify">
+      <div class="int-service-card">
+        <div class="int-service-header">
+          <div class="int-service-info">
+            <svg class="int-service-logo" viewBox="0 0 24 24" fill="#95bf47"><rect x="2" y="2" width="20" height="20" rx="4" opacity="0.15"/><path d="M12 6l-2 12h4L12 6z"/></svg>
+            <div><strong>Shopify</strong><span class="muted">Orders, shipping, products</span></div>
           </div>
+          <span id="badge-shopify" class="pill muted">—</span>
         </div>
-        <div class="grid grid-2">
+        <div class="grid grid-2" style="margin-top:12px">
           <div><label>Shop domain</label><input id="sf-shop" type="text" placeholder="my-store.myshopify.com"/></div>
           <div><label>Admin API token</label><input id="sf-token" type="password" placeholder="shpat_…"/></div>
         </div>
-        <div class="flex mt-12 flex-wrap gap-sm">
+        <div class="int-actions" style="margin-top:16px">
           <button onclick="connectNative('shopify')">Connect</button>
           <button class="ghost" onclick="testNative('shopify')" id="test-sf" disabled>Test</button>
           <button class="ghost danger" onclick="disconnectNative('shopify')" id="disc-sf" style="display:none">Disconnect</button>
@@ -190,21 +164,23 @@
       </div>
     </div>
 
+    <!-- WooCommerce -->
     <div id="ecomPanelWoo" style="display:none">
-      <div style="padding:16px;background:var(--bg);border:1px solid var(--border);border-radius:12px">
-        <div class="flex" style="justify-content:space-between;margin-bottom:10px">
-          <div class="flex">
-            <span style="background:#7f54b3;color:#fff;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">W</span>
-            <div><strong style="font-size:14px">WooCommerce</strong></div>
+      <div class="int-service-card">
+        <div class="int-service-header">
+          <div class="int-service-info">
+            <svg class="int-service-logo" viewBox="0 0 24 24" fill="#7f54b3"><rect x="2" y="2" width="20" height="20" rx="4" opacity="0.15"/><path d="M7 17l3-10 3 6 2-4 2 8"/></svg>
+            <div><strong>WooCommerce</strong><span class="muted">Orders, customers, products</span></div>
           </div>
+          <span id="badge-woocommerce" class="pill muted">—</span>
         </div>
-        <label>Store URL</label>
+        <label style="margin-top:12px">Store URL</label>
         <input id="woo-url" type="url" placeholder="https://my-store.com"/>
-        <div class="grid grid-2 mt-12">
+        <div class="grid grid-2" style="margin-top:12px">
           <div><label>Consumer Key</label><input id="woo-key" type="password" placeholder="ck_…"/></div>
           <div><label>Consumer Secret</label><input id="woo-secret" type="password" placeholder="cs_…"/></div>
         </div>
-        <div class="flex mt-12 flex-wrap gap-sm">
+        <div class="int-actions" style="margin-top:16px">
           <button onclick="connectNative('woocommerce')">Connect</button>
           <button class="ghost" onclick="testNative('woocommerce')" id="test-woo" disabled>Test</button>
           <button class="ghost danger" onclick="disconnectNative('woocommerce')" id="disc-woo" style="display:none">Disconnect</button>
@@ -213,17 +189,19 @@
       </div>
     </div>
 
+    <!-- Stripe -->
     <div id="ecomPanelStripe" style="display:none">
-      <div style="padding:16px;background:var(--bg);border:1px solid var(--border);border-radius:12px">
-        <div class="flex" style="justify-content:space-between;margin-bottom:10px">
-          <div class="flex">
-            <span style="background:#635bff;color:#fff;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">P</span>
-            <div><strong style="font-size:14px">Stripe</strong></div>
+      <div class="int-service-card">
+        <div class="int-service-header">
+          <div class="int-service-info">
+            <svg class="int-service-logo" viewBox="0 0 24 24" fill="#635bff"><rect x="2" y="2" width="20" height="20" rx="4" opacity="0.15"/><path d="M13 7c-1.5 0-2.5.8-2.5 2.5s1 2.5 2.5 2.5c1.5 0 2.5-.8 2.5-2.5S14.5 7 13 7zm-3 7.5c0-1 2-1.5 2-1.5s2 .5 2 1.5c0 1.5-1.5 2-3 2h-1v2h1c2 0 3-1 3-2.5S14 12 12 12s-2 1-2 1z"/></svg>
+            <div><strong>Stripe</strong><span class="muted">Subscriptions, billing, payments</span></div>
           </div>
+          <span id="badge-stripe" class="pill muted">—</span>
         </div>
-        <label>Secret API key</label>
+        <label style="margin-top:12px">Secret API key</label>
         <input id="str-key" type="password" placeholder="sk_live_… or sk_test_…"/>
-        <div class="flex mt-12 flex-wrap gap-sm">
+        <div class="int-actions" style="margin-top:16px">
           <button onclick="connectNative('stripe')">Connect</button>
           <button class="ghost" onclick="testNative('stripe')" id="test-str" disabled>Test</button>
           <button class="ghost danger" onclick="disconnectNative('stripe')" id="disc-str" style="display:none">Disconnect</button>
@@ -234,73 +212,103 @@
   </div>
 </div>
 
-<div class="card" style="opacity:0.4;pointer-events:none;position:relative">
-  <div style="position:absolute;top:16px;right:16px"><span class="pill warn">coming soon</span></div>
-  <div class="flex">
-    <span style="font-size:20px;color:var(--muted2)">&#128276;</span>
-    <div>
-      <h2 style="margin:0">Webhooks & Writeback</h2>
-      <span class="muted">Real-time events and dialog summaries</span>
+<!-- Identity Panel -->
+<div class="int-panel" id="panel-identity" style="display:none">
+  <div class="card">
+    <div class="card-header">
+      <h2>Customer Lookup</h2>
+      <span id="identBadge" class="pill muted">email</span>
     </div>
+    <p class="muted" style="margin:0 0 20px">Which value Jeeves uses to find the customer in your system.</p>
+
+    <label>Primary identifier</label>
+    <select id="primary-identifier" onchange="toggleIdentField()" style="max-width:400px">
+      <option value="email">Email (user_id treated as email)</option>
+      <option value="user_id">User ID (user_id treated as ID)</option>
+      <option value="custom">Custom field from widget.identify()</option>
+    </select>
+    <div id="ident-field-row" style="display:none;margin-top:10px">
+      <input id="identifier-field" type="text" placeholder="e.g. phone, customer_id, shopify_id" style="max-width:300px"/>
+      <p class="muted" style="margin:4px 0 0">This field is taken from extra_fields in <code>window.JeevesWidget.identify()</code>.</p>
+    </div>
+    <div class="int-actions" style="margin-top:16px">
+      <button onclick="savePrimaryIdentifier()">Save</button>
+    </div>
+    <div class="err-msg" id="msg-ident"></div>
   </div>
-  <p class="muted" style="margin:12px 0 0">Incoming webhook for context enrichment, outgoing for events, writeback — AI summaries back to CRM.</p>
 </div>
 
 {% endblock %}
 {% block tail %}
+<style>
+.int-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content}
+.int-tab{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;color:var(--muted2);transition:all .15s;user-select:none;border:none;background:transparent}
+.int-tab:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+.int-tab.active{color:var(--text);background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.int-tab-icon{width:18px;height:18px;flex-shrink:0}
+.int-tab-badge{font-size:10px;line-height:1;margin-left:2px}
+
+.int-panel{display:none}
+.int-panel.active{display:block}
+
+.int-subtabs{display:flex;gap:4px;margin-bottom:20px;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:8px;width:fit-content}
+.int-subtab{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted2);transition:all .15s;border:none;background:transparent}
+.int-subtab:hover{color:var(--text)}
+.int-subtab.active{color:var(--text);background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,0.15)}
+.int-subtab-icon{width:14px;height:14px;flex-shrink:0}
+
+.int-service-card{padding:20px;background:var(--bg);border:1px solid var(--border);border-radius:12px;margin-top:16px}
+.int-service-header{display:flex;justify-content:space-between;align-items:center}
+.int-service-info{display:flex;gap:12px;align-items:center}
+.int-service-logo{width:36px;height:36px;flex-shrink:0}
+.int-service-info strong{font-size:15px;display:block}
+.int-service-info .muted{font-size:12px;display:block}
+
+.int-actions{display:flex;gap:12px;align-items:center;margin-top:16px;flex-wrap:wrap}
+</style>
 <script>
 function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function showMsg(id, text, type){
   var el = document.getElementById(id);
   if(!el) return;
   el.textContent = text;
-  if(type==='ok') { el.style.color='var(--green)'; setTimeout(function(){ el.textContent=''; el.style.color=''; }, 3000); }
+  if(type==='ok'){ el.style.color='var(--green)'; setTimeout(function(){ el.textContent=''; el.style.color=''; }, 3000); }
 }
 
-function toggleSection(id){
-  var el = document.getElementById(id);
-  var arrow = document.getElementById(id.replace('Section','Arrow'));
-  if(el.style.display==='none'){
-    el.style.display='';
-    if(arrow) arrow.classList.add('open');
-  } else {
-    el.style.display='none';
-    if(arrow) arrow.classList.remove('open');
-  }
+function selectIntTab(tab){
+  document.querySelectorAll('.int-panel').forEach(function(el){ el.classList.remove('active'); el.style.display='none'; });
+  document.querySelectorAll('.int-tab').forEach(function(el){ el.classList.remove('active'); });
+  var panel = document.getElementById('panel-'+tab);
+  var t = document.querySelector('.int-tab[data-tab="'+tab+'"]');
+  if(panel) panel.style.display='block';
+  if(t) t.classList.add('active');
 }
 
 function selectCrmTab(tab){
   document.getElementById('crmPanelHubspot').style.display = tab==='hubspot' ? '' : 'none';
-  document.getElementById('crmPanelCustom').style.display = tab==='custom' ? '' : 'none';
-  document.getElementById('crmTabHubspot').className = 'ghost crm-tab'+(tab==='hubspot'?' active':'');
-  document.getElementById('crmTabCustom').className = 'ghost crm-tab'+(tab==='custom'?' active':'');
+  document.getElementById('crmPanelCustom').style.display = tab==='custom' ? 'none' : 'none';
+  if(tab==='custom') document.getElementById('crmPanelCustom').style.display='';
+  document.querySelectorAll('.int-subtab[data-crm]').forEach(function(el){ el.classList.remove('active'); });
+  var t = document.querySelector('.int-subtab[data-crm="'+tab+'"]');
+  if(t) t.classList.add('active');
 }
 
 function selectEcomTab(tab){
   document.getElementById('ecomPanelShopify').style.display = tab==='shopify' ? '' : 'none';
   document.getElementById('ecomPanelWoo').style.display = tab==='woocommerce' ? '' : 'none';
   document.getElementById('ecomPanelStripe').style.display = tab==='stripe' ? '' : 'none';
-  ['Shopify','Woo','Stripe'].forEach(function(name){
-    var card = document.getElementById('ecomCard'+name);
-    if(card) card.classList.remove('active');
-  });
-  var activeName = tab==='shopify'?'Shopify':tab==='woocommerce'?'Woo':'Stripe';
-  var activeCard = document.getElementById('ecomCard'+activeName);
-  if(activeCard) activeCard.classList.add('active');
+  document.querySelectorAll('.int-subtab[data-ecom]').forEach(function(el){ el.classList.remove('active'); });
+  var t = document.querySelector('.int-subtab[data-ecom="'+tab+'"]');
+  if(t) t.classList.add('active');
 }
 
 function connectHubSpot(){
-  api('/crm/connect/hubspot').then(function(r){
-    location.href = r.auth_url;
-  }).catch(function(e){ showMsg('msg-hubspot', e.message, ''); });
+  api('/crm/connect/hubspot').then(function(r){ location.href = r.auth_url; }).catch(function(e){ showMsg('msg-hubspot', e.message, ''); });
 }
 
 function disconnectHubSpot(){
   if(!confirm('Disconnect HubSpot?')) return;
-  api('/crm/disconnect/hubspot', {method:'POST'}).then(function(){
-    showMsg('msg-hubspot','Disconnected','ok');
-    loadAll();
-  }).catch(function(e){ showMsg('msg-hubspot', e.message, ''); });
+  api('/crm/disconnect/hubspot', {method:'POST'}).then(function(){ showMsg('msg-hubspot','Disconnected','ok'); loadAll(); }).catch(function(e){ showMsg('msg-hubspot', e.message, ''); });
 }
 
 var crmFields = [];
@@ -308,10 +316,8 @@ var crmFields = [];
 function renderFields(){
   document.getElementById('fieldsList').innerHTML = crmFields.map(function(f,i){
     return '<div class="flex gap-sm">' +
-      '<input type="text" value="'+esc(f.name)+'" placeholder="field name" ' +
-        'oninput="crmFields['+i+'].name=this.value" style="max-width:150px"/>' +
-      '<input type="text" value="'+esc(f.label)+'" placeholder="description" ' +
-        'oninput="crmFields['+i+'].label=this.value" style="flex:1"/>' +
+      '<input type="text" value="'+esc(f.name)+'" placeholder="field name" oninput="crmFields['+i+'].name=this.value" style="max-width:150px"/>' +
+      '<input type="text" value="'+esc(f.label)+'" placeholder="description" oninput="crmFields['+i+'].label=this.value" style="flex:1"/>' +
       '<button class="ghost sm" onclick="removeField('+i+')" style="color:var(--red)">✕</button>' +
     '</div>';
   }).join('');
@@ -342,8 +348,7 @@ function setCapabilities(c){
 }
 
 function toggleWriteSection(){
-  var show = document.getElementById('capUpdate').checked;
-  document.getElementById('writeSection').style.display = show ? '' : 'none';
+  document.getElementById('writeSection').style.display = document.getElementById('capUpdate').checked ? '' : 'none';
 }
 
 async function loadCrm(){
@@ -354,17 +359,11 @@ async function loadCrm(){
     setCapabilities(c.capabilities);
     toggleWriteSection();
 
-    // Show API key status indicator if headers are configured
     var headers = c.headers || {};
     var hasKey = Object.keys(headers).some(function(k){ return headers[k] !== '********' && headers[k] !== ''; });
     var apiKeyStatus = document.getElementById('apiKeyStatus');
-    if(hasKey){
-      apiKeyStatus.style.display = '';
-      apiKeyStatus.textContent = 'key configured';
-      apiKeyStatus.className = 'pill ok';
-    } else {
-      apiKeyStatus.style.display = 'none';
-    }
+    if(hasKey){ apiKeyStatus.style.display=''; apiKeyStatus.textContent='key configured'; apiKeyStatus.className='pill ok'; }
+    else { apiKeyStatus.style.display='none'; }
 
     var mapping = c.read_mapping || {};
     crmFields = Object.entries(mapping).map(function(e){ return {name:e[0], label:e[0].replace(/_/g,' ')}; });
@@ -372,19 +371,17 @@ async function loadCrm(){
     renderFields();
 
     var provider = c.provider || 'custom_rest';
-    if(provider === 'hubspot'){
-      selectCrmTab('hubspot');
-    } else {
-      selectCrmTab(c.read_url ? 'custom' : 'hubspot');
-    }
+    selectCrmTab(provider === 'hubspot' ? 'hubspot' : (c.read_url ? 'custom' : 'hubspot'));
 
     var hasHubspot = provider === 'hubspot';
     var hasCustom = !!c.read_url;
     var badge = document.getElementById('crmStatusBadge');
+    var tabBadge = document.getElementById('crmTabBadge');
     if(hasHubspot || hasCustom){
       var label = hasHubspot ? 'HubSpot' : 'Custom REST';
       badge.textContent = label;
       badge.className = 'pill ok';
+      tabBadge.style.display = '';
     }
   } catch(e) {
     crmFields = [{name:'plan',label:'subscription plan'}];
@@ -402,11 +399,7 @@ async function saveCrm(){
     var headers = {};
     if(keyVal && keyVal !== '********'){
       headers = {'Authorization':'Bearer '+keyVal};
-      apiKeyStatus.style.display = '';
-      apiKeyStatus.textContent = 'key configured';
-      apiKeyStatus.className = 'pill ok';
-    } else if(keyVal === '********'){
-      // Keep existing key, don't send it
+      apiKeyStatus.style.display=''; apiKeyStatus.textContent='key configured'; apiKeyStatus.className='pill ok';
     }
     var body = {
       provider: 'custom_rest',
@@ -422,6 +415,7 @@ async function saveCrm(){
     if(document.getElementById('read_url').value.trim()){
       document.getElementById('crmStatusBadge').textContent='Custom REST';
       document.getElementById('crmStatusBadge').className='pill ok';
+      document.getElementById('crmTabBadge').style.display='';
     }
     setTimeout(function(){ document.getElementById('crmSaveStatus').textContent=''; },1800);
   } catch(e){
@@ -437,8 +431,7 @@ async function testCrm(){
   try{
     await saveCrm();
     var uid = document.getElementById('test_user').value.trim()||'test';
-    var qs = new URLSearchParams({sample_user_id:uid});
-    var r = await api('/crm/test?'+qs.toString(),{method:'POST'});
+    var r = await api('/crm/test?'+new URLSearchParams({sample_user_id:uid}).toString(),{method:'POST'});
     if(r.ok){
       document.getElementById('crmSaveStatus').textContent='✅ Connected';
       document.getElementById('crmStatusBadge').textContent='connected';
@@ -460,16 +453,13 @@ async function testCrm(){
 }
 
 function toggleIdentField(){
-  document.getElementById('ident-field-row').style.display =
-    document.getElementById('primary-identifier').value==='custom' ? '' : 'none';
+  document.getElementById('ident-field-row').style.display = document.getElementById('primary-identifier').value==='custom' ? '' : 'none';
 }
 
 function savePrimaryIdentifier(){
   var ident = document.getElementById('primary-identifier').value;
   var body = { provider:'custom_rest', primary_identifier: ident };
-  if(ident==='custom'){
-    body.capabilities = { identifier_field: document.getElementById('identifier-field').value.trim() };
-  }
+  if(ident==='custom'){ body.capabilities = { identifier_field: document.getElementById('identifier-field').value.trim() }; }
   api('/crm/config',{method:'POST',body:body})
     .then(function(){ showMsg('msg-ident','Saved ✓','ok'); document.getElementById('identBadge').textContent=ident; })
     .catch(function(e){ showMsg('msg-ident',e.message,''); });
@@ -480,25 +470,18 @@ function loadPrimaryIdentifier(){
     var ident = d.primary_identifier||'email';
     document.getElementById('primary-identifier').value = ident;
     document.getElementById('identBadge').textContent = ident;
-    if(d.capabilities && d.capabilities.identifier_field){
-      document.getElementById('identifier-field').value = d.capabilities.identifier_field;
-    }
+    if(d.capabilities && d.capabilities.identifier_field){ document.getElementById('identifier-field').value = d.capabilities.identifier_field; }
     toggleIdentField();
   }).catch(function(){});
 }
 
 function connectNative(provider){
   var creds = {}, meta = {};
-  if(provider==='shopify'){
-    creds = { shop_domain: document.getElementById('sf-shop').value.trim(), access_token: document.getElementById('sf-token').value.trim() };
-    meta = { domain: creds.shop_domain };
-  } else if(provider==='woocommerce'){
-    creds = { store_url: document.getElementById('woo-url').value.trim(), consumer_key: document.getElementById('woo-key').value.trim(), consumer_secret: document.getElementById('woo-secret').value.trim() };
-  } else if(provider==='stripe'){
-    creds = { secret_key: document.getElementById('str-key').value.trim() };
-  }
+  if(provider==='shopify'){ creds = { shop_domain: document.getElementById('sf-shop').value.trim(), access_token: document.getElementById('sf-token').value.trim() }; meta = { domain: creds.shop_domain }; }
+  else if(provider==='woocommerce'){ creds = { store_url: document.getElementById('woo-url').value.trim(), consumer_key: document.getElementById('woo-key').value.trim(), consumer_secret: document.getElementById('woo-secret').value.trim() }; }
+  else if(provider==='stripe'){ creds = { secret_key: document.getElementById('str-key').value.trim() }; }
   showMsg('msg-'+provider, 'Connecting…', '');
-  api('/integrations/native/'+provider, {method:'POST', body:{provider:provider, credentials:creds, meta:meta}})
+  api('/integrations/native', {method:'POST', body:{provider:provider, credentials:creds, meta:meta}})
     .then(function(){ showMsg('msg-'+provider, 'Connected ✓', 'ok'); loadAll(); })
     .catch(function(e){ showMsg('msg-'+provider, e.message, ''); });
 }
@@ -537,14 +520,6 @@ function loadConnectors(){
       if(testBtn) testBtn.disabled = !connected[p];
       if(discBtn) discBtn.style.display = connected[p] ? '' : 'none';
     });
-
-    var anyConnected = ['shopify','woocommerce','stripe'].some(function(p){ return connected[p]; });
-    var ecomBadge = document.getElementById('ecomStatusBadge');
-    if(anyConnected){
-      var names = ['shopify','woocommerce','stripe'].filter(function(p){ return connected[p]; });
-      ecomBadge.textContent = names.join(', ');
-      ecomBadge.className = 'pill ok';
-    }
   }).catch(function(){});
 
   api('/crm/providers/status').then(function(s){
@@ -574,6 +549,7 @@ function loadConnectors(){
   }).catch(function(){});
 }
 
+selectIntTab('crm');
 loadAll();
 
 var hsParams = new URLSearchParams(location.search);
