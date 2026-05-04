@@ -108,12 +108,11 @@
 /* Hero stats */
 .ds-hero { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:14px; }
 .ds-hero-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px 16px; display:flex; align-items:center; gap:14px; }
-.ds-hero-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ds-hero-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(255,255,255,0.04); color:#e2e8f0; }
 .ds-hero-icon svg { width:20px; height:20px; }
-.ds-hero-primary .ds-hero-icon { background:rgba(99,102,241,0.12); color:#818cf8; }
-.ds-hero-green .ds-hero-icon { background:rgba(16,185,129,0.12); color:#34d399; }
-.ds-hero-amber .ds-hero-icon { background:rgba(245,158,11,0.12); color:#fbbf24; }
-.ds-hero-cyan .ds-hero-icon { background:rgba(6,182,212,0.12); color:#22d3ee; }
+.ds-hero-green .ds-hero-icon { background:rgba(16,185,129,0.10); color:#34d399; }
+.ds-hero-amber .ds-hero-icon { background:rgba(245,158,11,0.10); color:#fbbf24; }
+.ds-hero-cyan .ds-hero-icon { background:rgba(6,182,212,0.10); color:#22d3ee; }
 .ds-hero-num { font-size:26px; font-weight:800; letter-spacing:-1px; line-height:1.1; }
 .ds-hero-label { font-size:11px; color:var(--muted); margin-top:2px; font-weight:500; }
 
@@ -302,18 +301,18 @@ function drawTrendChart(data){
   ctx.lineTo(pad.l+(data.length-1)*step,pad.t+cH);
   ctx.closePath();
   var grad = ctx.createLinearGradient(0,pad.t,0,H-pad.b);
-  grad.addColorStop(0,'rgba(129,140,248,0.18)');grad.addColorStop(1,'rgba(129,140,248,0)');
+  grad.addColorStop(0,'rgba(255,255,255,0.12)');grad.addColorStop(1,'rgba(255,255,255,0)');
   ctx.fillStyle=grad;ctx.fill();
 
-  // Line — total (bright indigo)
+  // Line — total (white)
   ctx.beginPath();
   data.forEach(function(d,i){var x=pad.l+i*step,y=pad.t+cH-(d.total/max)*cH;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
-  ctx.strokeStyle='#818cf8';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
+  ctx.strokeStyle='#e2e8f0';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
 
   // Dots on total
   data.forEach(function(d,i){
     var x=pad.l+i*step,y=pad.t+cH-(d.total/max)*cH;
-    ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fillStyle='#818cf8';ctx.fill();
+    ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fillStyle='#e2e8f0';ctx.fill();
   });
 
   // Line — resolved (green, thinner)
@@ -330,7 +329,7 @@ function drawTrendChart(data){
 
   // Legend
   var lx = pad.l;
-  ctx.fillStyle='#818cf8';ctx.fillRect(lx,4,14,3);ctx.fillStyle='#94a3b8';ctx.font='10px Inter,sans-serif';ctx.textAlign='left';ctx.fillText('Total',lx+18,9);
+  ctx.fillStyle='#e2e8f0';ctx.fillRect(lx,4,14,3);ctx.fillStyle='#94a3b8';ctx.font='10px Inter,sans-serif';ctx.textAlign='left';ctx.fillText('Total',lx+18,9);
   ctx.fillStyle='#34d399';ctx.fillRect(lx+60,4,14,3);ctx.fillStyle='#94a3b8';ctx.fillText('Resolved',lx+78,9);
 }
 
@@ -350,7 +349,7 @@ function drawHeatmap(data){
   for(var h=0;h<12;h++){
     var v = data[h]||0;
     var intensity = v/max;
-    var bg = intensity>0.7?'rgba(129,140,248,0.7)':intensity>0.4?'rgba(129,140,248,0.45)':intensity>0.1?'rgba(129,140,248,0.25)':intensity>0?'rgba(129,140,248,0.12)':'rgba(255,255,255,0.03)';
+    var bg = intensity>0.7?'rgba(255,255,255,0.35)':intensity>0.4?'rgba(255,255,255,0.2)':intensity>0.1?'rgba(255,255,255,0.1)':intensity>0?'rgba(255,255,255,0.05)':'rgba(255,255,255,0.02)';
     var label = h===0?'12 AM':h<12?h+' AM':'';
     html += '<div class="ds-hm-cell" style="background:'+bg+'" data-tooltip="'+label+' \u2014 '+v+' dialogs"></div>';
   }
@@ -360,7 +359,7 @@ function drawHeatmap(data){
   for(var h=12;h<24;h++){
     var v = data[h]||0;
     var intensity = v/max;
-    var bg = intensity>0.7?'rgba(129,140,248,0.7)':intensity>0.4?'rgba(129,140,248,0.45)':intensity>0.1?'rgba(129,140,248,0.25)':intensity>0?'rgba(129,140,248,0.12)':'rgba(255,255,255,0.03)';
+    var bg = intensity>0.7?'rgba(255,255,255,0.35)':intensity>0.4?'rgba(255,255,255,0.2)':intensity>0.1?'rgba(255,255,255,0.1)':intensity>0?'rgba(255,255,255,0.05)':'rgba(255,255,255,0.02)';
     var label = h===12?'12 PM':(h-12)+' PM';
     html += '<div class="ds-hm-cell" style="background:'+bg+'" data-tooltip="'+label+' \u2014 '+v+' dialogs"></div>';
   }
