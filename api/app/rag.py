@@ -119,11 +119,6 @@ def delete_file(tenant_id: UUID | str, file_id: UUID | str) -> None:
         else:
             print(f"[rag] delete_file: no chunks found for file_id={fid}", flush=True)
 
-        # Force persist to disk
-        print(f"[rag] delete_file: calling persist()", flush=True)
-        col.persist()
-        print(f"[rag] delete_file: persist() succeeded", flush=True)
-
         total_after = col.count()
         print(f"[rag] delete_file: collection now has {total_after} chunks (was {total_before})", flush=True)
 
