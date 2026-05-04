@@ -21,7 +21,7 @@ def stats(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(ge
     start = datetime.combine(today, datetime.min.time())
     total_today = (
         db.query(func.count(ChatLog.id))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= start, ChatLog.direction == "incoming"))
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= start))
         .scalar()
     )
     resolved_today = (
@@ -30,7 +30,6 @@ def stats(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(ge
             and_(
                 ChatLog.tenant_id == tenant.id,
                 ChatLog.created_at >= start,
-                ChatLog.direction == "incoming",
                 ChatLog.resolution == "resolved",
             )
         )
@@ -47,7 +46,6 @@ def stats(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(ge
             and_(
                 ChatLog.tenant_id == tenant.id,
                 ChatLog.created_at >= start,
-                ChatLog.direction == "incoming",
                 ChatLog.resolution == "escalated",
             )
         )
@@ -76,7 +74,7 @@ def trend(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(ge
             func.sum(func.case((ChatLog.resolution == "resolved", 1), else_=0)).label("resolved"),
             func.sum(func.case((ChatLog.resolution == "escalated", 1), else_=0)).label("escalated"),
         )
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.direction == "incoming", ChatLog.created_at >= cutoff))
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff))
         .group_by(func.date(ChatLog.created_at))
         .order_by(func.date(ChatLog.created_at))
         .all()
@@ -85,16 +83,16 @@ def trend(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(ge
     for i in range(days):
         d = (datetime.utcnow() - timedelta(days=days - 1 - i)).date()
         result.append({"date": str(d), "total": 0, "resolved": 0, "escalated": 0})
-    for r in rows:
-        idx = (r.day - result[0]["date"]).__days__ if hasattr(r.day, '__sub__') else 0
-        try:
-            idx = (datetime.strptime(str(r.day), "%Y-%m-%d").date() - datetime.strptime(result[0]["date"], "%Y-%m-%d").date()).days
-        except Exception:
-            idx = 0
-        if 0 <= idx < len(result):
-            result[idx]["total"] = r.total or 0
-            result[idx]["resolved"] = int(r.resolved or 0)
-            result[idx]["escalated"] = int(r.escalated or 0)
+    if rows:
+        for r in rows:
+            try:
+                idx = (datetime.strptime(str(r.day), "%Y-%m-%d").date() - datetime.strptime(result[0]["date"], "%Y-%m-%d").date()).days
+            except Exception:
+                idx = 0
+            if 0 <= idx < len(result):
+                result[idx]["total"] = r.total or 0
+                result[idx]["resolved"] = int(r.resolved or 0)
+                result[idx]["escalated"] = int(r.escalated or 0)
     return result
 
 
@@ -104,7 +102,7 @@ def channels_breakdown(tenant: Tenant = Depends(get_current_tenant), db: Session
     cutoff = datetime.utcnow() - timedelta(days=7)
     rows = (
         db.query(ChatLog.channel, func.count(ChatLog.id))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.direction == "incoming", ChatLog.created_at >= cutoff))
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff))
         .group_by(ChatLog.channel)
         .all()
     )
@@ -117,7 +115,7 @@ def hourly(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(g
     cutoff = datetime.utcnow() - timedelta(days=7)
     rows = (
         db.query(func.extract("hour", ChatLog.created_at).label("h"), func.count(ChatLog.id))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.direction == "incoming", ChatLog.created_at >= cutoff))
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff))
         .group_by("h")
         .order_by("h")
         .all()
@@ -162,7 +160,6 @@ def recent_unresolved(tenant: Tenant = Depends(get_current_tenant), db: Session 
         db.query(ChatLog)
         .filter(and_(
             ChatLog.tenant_id == tenant.id,
-            ChatLog.direction == "incoming",
             ChatLog.resolution == "escalated",
         ))
         .order_by(ChatLog.created_at.desc())
