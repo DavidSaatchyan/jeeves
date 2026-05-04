@@ -19,6 +19,8 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 def stats(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(get_db)):
     today = datetime.utcnow().date()
     start = datetime.combine(today, datetime.min.time())
+    week_start = (datetime.utcnow() - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)
+
     total_today = (
         db.query(func.count(ChatLog.id))
         .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= start))
@@ -26,40 +28,37 @@ def stats(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(ge
     )
     resolved_today = (
         db.query(func.count(ChatLog.id))
-        .filter(
-            and_(
-                ChatLog.tenant_id == tenant.id,
-                ChatLog.created_at >= start,
-                ChatLog.resolution == "resolved",
-            )
-        )
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= start, ChatLog.resolution == "resolved"))
+        .scalar()
+    )
+    total_week = (
+        db.query(func.count(ChatLog.id))
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= week_start))
+        .scalar()
+    )
+    resolved_week = (
+        db.query(func.count(ChatLog.id))
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= week_start, ChatLog.resolution == "resolved"))
         .scalar()
     )
     avg_latency = (
         db.query(func.avg(ChatLog.latency_ms))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= start, ChatLog.latency_ms.isnot(None)))
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= week_start, ChatLog.latency_ms.isnot(None)))
         .scalar()
     )
-    escalated_today = (
+    escalated_week = (
         db.query(func.count(ChatLog.id))
-        .filter(
-            and_(
-                ChatLog.tenant_id == tenant.id,
-                ChatLog.created_at >= start,
-                ChatLog.resolution == "escalated",
-            )
-        )
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= week_start, ChatLog.resolution == "escalated"))
         .scalar()
     )
     return {
         "dialogs_today": total_today or 0,
         "resolved_today": resolved_today or 0,
-        "resolution_rate_today": round((resolved_today or 0) / total_today, 3) if total_today else 0,
-        "total_dialogs": tenant.dialogs_used,
-        "total_resolved": tenant.resolved_count,
-        "overall_resolution_rate": round(tenant.resolved_count / tenant.dialogs_used, 3) if tenant.dialogs_used else 0,
+        "dialogs_week": total_week or 0,
+        "resolved_week": resolved_week or 0,
+        "resolution_rate_week": round((resolved_week or 0) / total_week, 3) if total_week else 0,
         "avg_latency_ms": round(avg_latency) if avg_latency else 0,
-        "escalated_today": escalated_today or 0,
+        "escalated_week": escalated_week or 0,
     }
 
 
@@ -67,32 +66,46 @@ def stats(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(ge
 def trend(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(get_db), days: int = 7):
     """Daily dialog counts for the last N days with resolution breakdown."""
     cutoff = datetime.utcnow() - timedelta(days=days)
-    rows = (
-        db.query(
-            func.date(ChatLog.created_at).label("day"),
-            func.count(ChatLog.id).label("total"),
-            func.sum(func.case((ChatLog.resolution == "resolved", 1), else_=0)).label("resolved"),
-            func.sum(func.case((ChatLog.resolution == "escalated", 1), else_=0)).label("escalated"),
-        )
+
+    # Get total counts per day
+    totals = (
+        db.query(func.date(ChatLog.created_at).label("day"), func.count(ChatLog.id).label("total"))
         .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff))
         .group_by(func.date(ChatLog.created_at))
-        .order_by(func.date(ChatLog.created_at))
         .all()
     )
+
+    # Get resolved per day
+    resolved = (
+        db.query(func.date(ChatLog.created_at).label("day"), func.count(ChatLog.id).label("resolved"))
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff, ChatLog.resolution == "resolved"))
+        .group_by(func.date(ChatLog.created_at))
+        .all()
+    )
+
+    # Get escalated per day
+    escalated = (
+        db.query(func.date(ChatLog.created_at).label("day"), func.count(ChatLog.id).label("escalated"))
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff, ChatLog.resolution == "escalated"))
+        .group_by(func.date(ChatLog.created_at))
+        .all()
+    )
+
+    # Build day-indexed maps
+    total_map = {str(r.day): r.total for r in totals}
+    resolved_map = {str(r.day): r.resolved for r in resolved}
+    escalated_map = {str(r.day): r.escalated for r in escalated}
+
     result = []
     for i in range(days):
         d = (datetime.utcnow() - timedelta(days=days - 1 - i)).date()
-        result.append({"date": str(d), "total": 0, "resolved": 0, "escalated": 0})
-    if rows:
-        for r in rows:
-            try:
-                idx = (datetime.strptime(str(r.day), "%Y-%m-%d").date() - datetime.strptime(result[0]["date"], "%Y-%m-%d").date()).days
-            except Exception:
-                idx = 0
-            if 0 <= idx < len(result):
-                result[idx]["total"] = r.total or 0
-                result[idx]["resolved"] = int(r.resolved or 0)
-                result[idx]["escalated"] = int(r.escalated or 0)
+        ds = str(d)
+        result.append({
+            "date": ds,
+            "total": total_map.get(ds, 0),
+            "resolved": resolved_map.get(ds, 0),
+            "escalated": escalated_map.get(ds, 0),
+        })
     return result
 
 

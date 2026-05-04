@@ -20,14 +20,14 @@
     <div class="ds-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
     <div>
       <div class="ds-hero-num" id="s1">–</div>
-      <div class="ds-hero-label">Dialogs today</div>
+      <div class="ds-hero-label">Dialogs (7d)</div>
     </div>
   </div>
   <div class="ds-hero-card ds-hero-green">
     <div class="ds-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
     <div>
       <div class="ds-hero-num" id="s2">–</div>
-      <div class="ds-hero-label">Resolved today</div>
+      <div class="ds-hero-label">Resolved (7d)</div>
     </div>
   </div>
   <div class="ds-hero-card ds-hero-amber">
@@ -49,15 +49,7 @@
 <!-- Sub stats -->
 <div class="ds-sub-stats" id="subStats">
   <div class="ds-sub-item">
-    <span class="ds-sub-label">Total dialogs</span>
-    <span class="ds-sub-val" id="s4">–</span>
-  </div>
-  <div class="ds-sub-item">
-    <span class="ds-sub-label">Overall resolution</span>
-    <span class="ds-sub-val" id="s5">–</span>
-  </div>
-  <div class="ds-sub-item">
-    <span class="ds-sub-label">Escalated today</span>
+    <span class="ds-sub-label">Escalations (7d)</span>
     <span class="ds-sub-val" id="s7" style="color:var(--red)">–</span>
   </div>
 </div>
@@ -125,13 +117,11 @@ function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
 async function loadStats(){
   try{
     const s = await api('/dashboard/stats');
-    s1.textContent = s.dialogs_today;
-    s2.textContent = s.resolved_today;
-    s3.textContent = (s.resolution_rate_today*100).toFixed(0)+'%';
+    s1.textContent = s.dialogs_week;
+    s2.textContent = s.resolved_week;
+    s3.textContent = (s.resolution_rate_week*100).toFixed(0)+'%';
     s6.textContent = s.avg_latency_ms ? s.avg_latency_ms+'ms' : '–';
-    s4.textContent = s.total_dialogs;
-    s5.textContent = (s.overall_resolution_rate*100).toFixed(0)+'%';
-    s7.textContent = s.escalated_today;
+    s7.textContent = s.escalated_week;
   }catch(e){ console.error(e); }
 }
 
