@@ -1,18 +1,43 @@
 {% extends "base.html" %}
 {% block body %}
-<style>aside{display:none}main{max-width:none;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}</style>
-<div class="card" style="max-width:440px;width:100%;padding:32px">
-  <div style="text-align:center;margin-bottom:28px">
-    <h1 style="font-size:22px;margin-bottom:4px">Jeeves<span style="color:var(--accent)">.</span></h1>
-    <div class="muted" style="font-size:13px">Sign in to your admin panel</div>
+<style>
+aside{display:none}
+main{max-width:none;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+
+.auth-card { max-width:440px; width:100%; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding:32px; transition: min-height 0.3s ease; }
+.auth-title { text-align:center; margin-bottom:28px; }
+.auth-title h1 { font-size:22px; margin-bottom:4px; }
+.auth-title h1 span { color:var(--accent); }
+.auth-title .sub { font-size:13px; color:var(--muted); }
+
+.auth-tabs { display:flex; gap:8px; justify-content:center; margin-bottom:20px; }
+.auth-tab { min-width:120px; padding:8px 20px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; background:transparent; color:var(--muted); border:1px solid var(--border); transition: all 0.2s ease; }
+.auth-tab:hover { background:rgba(255,255,255,0.04); border-color:var(--border-bright); color:var(--text); }
+.auth-tab.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+.reg-field { overflow:hidden; max-height:0; opacity:0; transition: max-height 0.35s ease, opacity 0.25s ease, margin 0.25s ease; margin:0; }
+.reg-field.open { max-height:60px; opacity:1; margin-top:14px; margin-bottom:6px; }
+
+.auth-submit { margin-top:24px; }
+.auth-submit button { width:100%; justify-content:center; padding:12px; }
+.auth-submit button:disabled { opacity:0.5; cursor:wait; }
+
+.spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.6s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+
+<div class="auth-card" id="authCard">
+  <div class="auth-title">
+    <h1>Jeeves<span>.</span></h1>
+    <div class="sub">Sign in to your admin panel</div>
   </div>
 
-  <div class="flex gap-sm mb-16" style="justify-content:center">
-    <button id="tabLogin" class="ghost" onclick="setMode('login')" style="min-width:120px">Login</button>
-    <button id="tabReg" class="ghost" onclick="setMode('register')" style="min-width:120px">Register</button>
+  <div class="auth-tabs">
+    <button class="auth-tab active" id="tabLogin" onclick="setMode('login')">Login</button>
+    <button class="auth-tab" id="tabReg" onclick="setMode('register')">Register</button>
   </div>
 
-  <div id="regFields" style="display:none">
+  <div class="reg-field" id="regFields">
     <label>Company / tenant name</label>
     <input id="tname" type="text" placeholder="Acme Inc."/>
   </div>
@@ -23,8 +48,8 @@
   <label>Password (min 8 chars)</label>
   <input id="password" type="password"/>
 
-  <div style="margin-top:24px">
-    <button id="submit" onclick="go()" style="width:100%;justify-content:center;padding:12px">Continue</button>
+  <div class="auth-submit">
+    <button id="submit" onclick="go()"><span id="btnText">Continue</span></button>
   </div>
   <div class="err-msg" id="err" style="text-align:center;margin-top:12px"></div>
 </div>
@@ -34,17 +59,20 @@
 let mode='login';
 function setMode(m){
   mode=m;
-  document.getElementById('regFields').style.display = m==='register'?'block':'none';
-  document.getElementById('tabLogin').className = m==='login'?'':'ghost';
-  document.getElementById('tabReg').className = m==='register'?'':'ghost';
-  if(m==='login'){ document.getElementById('tabLogin').classList.remove('ghost'); document.getElementById('tabReg').classList.add('ghost'); }
-  else { document.getElementById('tabReg').classList.remove('ghost'); document.getElementById('tabLogin').classList.add('ghost'); }
+  var rf=document.getElementById('regFields');
+  if(m==='register'){ rf.classList.add('open'); } else { rf.classList.remove('open'); }
+  document.getElementById('tabLogin').classList.toggle('active', m==='login');
+  document.getElementById('tabReg').classList.toggle('active', m==='register');
 }
 setMode('login');
 async function go(){
   const err=document.getElementById('err'); err.textContent='';
+  const btn=document.getElementById('submit');
+  const btnText=document.getElementById('btnText');
   const email=document.getElementById('email').value.trim();
   const password=document.getElementById('password').value;
+  btn.disabled=true;
+  btnText.innerHTML='<span class="spinner"></span>';
   try{
     if(mode==='register'){
       const tenant_name=document.getElementById('tname').value.trim()||email.split('@')[0];
@@ -59,7 +87,13 @@ async function go(){
       setToken(data.access_token, data.tenant_id);
     }
     location.href='/admin';
-  }catch(e){ err.textContent = e.message; }
+  }catch(e){
+    err.textContent = e.message;
+    btn.disabled=false;
+    btnText.textContent='Continue';
+  }
 }
+document.getElementById('password').addEventListener('keydown',function(e){if(e.key==='Enter')go()});
+document.getElementById('email').addEventListener('keydown',function(e){if(e.key==='Enter')go()});
 </script>
 {% endblock %}
