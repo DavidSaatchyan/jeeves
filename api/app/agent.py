@@ -108,7 +108,10 @@ async def run(
 
     # 2. Retrieve RAG context
     rag_docs = await asyncio.to_thread(rag.search, tenant_id, message)
-    rag_block = _format_source_block(rag_docs)
+    if rag_docs:
+        rag_block = _format_source_block(rag_docs)
+    else:
+        rag_block = "(No reference data available for this query)"
     sources = _source_log(rag_docs)
 
     # Debug: log what RAG actually returned before sending to LLM
