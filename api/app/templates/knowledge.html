@@ -201,8 +201,17 @@ async function refresh(){
   var lastRowDate = validRows.length ? new Date(validRows.reduce(function(a, b){ return a.created_at > b.created_at ? a.created_at : b.created_at; })) : null;
 
   var actualLast = lastActionTime && lastRowDate ? (lastActionTime > lastRowDate ? lastActionTime : lastRowDate) : (lastActionTime || lastRowDate);
-  var timeLabel = actualLast && !isNaN(actualLast.getTime()) ? relTime(actualLast.toISOString()) : 'Never';
-  var actionLabel = lastActionTime && (!lastRowDate || lastActionTime > lastRowDate) ? 'File deleted' : (rows.length ? 'File uploaded' : 'No activity');
+
+  if(actualLast && !isNaN(actualLast.getTime())){
+    document.getElementById('sumUpdated').textContent = relTime(actualLast.toISOString());
+    document.getElementById('sumAction').textContent = lastActionTime ? 'File deleted' : 'File uploaded';
+  } else if(validRows.length){
+    document.getElementById('sumUpdated').textContent = 'Unknown time';
+    document.getElementById('sumAction').textContent = 'Files in library';
+  } else {
+    document.getElementById('sumUpdated').textContent = '—';
+    document.getElementById('sumAction').textContent = 'No activity';
+  }
 
   document.getElementById('sumFiles').textContent = ready.length + ' file' + (ready.length !== 1 ? 's' : '');
   document.getElementById('sumTypes').textContent = typeLabels.length ? typeLabels.join(', ') : 'No files uploaded';
@@ -211,9 +220,6 @@ async function refresh(){
   document.getElementById('sumSize').textContent = fmtSize(totalSize);
   document.getElementById('sizeBar').style.width = pct + '%';
   document.getElementById('sumQuota').textContent = pct.toFixed(1) + '% of 50 MB limit';
-
-  document.getElementById('sumUpdated').textContent = timeLabel;
-  document.getElementById('sumAction').textContent = actionLabel;
 
   document.getElementById('kbSummary').style.display = '';
 
