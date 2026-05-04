@@ -72,8 +72,10 @@ def embed_batch(texts: list[str]) -> list[list[float]]:
 def index_file(tenant_id: UUID | str, file_id: UUID | str, path: Path) -> int:
     chunks = chunking.build_chunks(path)
     if not chunks:
+        print(f"[rag] index_file: 0 chunks extracted from {path.name}", flush=True)
         return 0
     col = _collection(tenant_id)
+    print(f"[rag] index_file: {len(chunks)} chunks from {path.name} (tenant={tenant_id}, file={file_id})", flush=True)
     # Deterministic IDs: re-indexing the same content is a no-op (upsert).
     ids = [f"{file_id}-{i}-{c.chunk_hash}" for i, c in enumerate(chunks)]
     texts = [c.text for c in chunks]
@@ -86,6 +88,9 @@ def index_file(tenant_id: UUID | str, file_id: UUID | str, path: Path) -> int:
         pass
     embeddings = embed_batch(texts)
     col.add(ids=ids, embeddings=embeddings, documents=texts, metadatas=metadatas)
+    # Verify chunks were stored
+    after = col.count()
+    print(f"[rag] index_file: collection '{col.name}' now has {after} total chunks", flush=True)
     return len(chunks)
 
 
@@ -134,7 +139,10 @@ def search(
     def _raw(q):
         try:
             col = _collection(tenant_id)
-            if col.count() == 0:
+            cnt = col.count()
+            print(f"[rag] search collection='{col.name}' count={cnt} query='{q[:80]}'", flush=True)
+            if cnt == 0:
+                print(f"[rag] search: collection empty, returning []", flush=True)
                 return []
             q_emb = embed_batch([q])[0]
             res = col.query(
@@ -146,6 +154,8 @@ def search(
             metas = (res.get("metadatas") or [[]])[0]
             dists = (res.get("distances") or [[]])[0]
             ids = (res.get("ids") or [[]])[0]
+            # Log all distances BEFORE threshold filtering
+            print(f"[rag] raw distances: {[round(float(d or 99), 3) for d in dists]}", flush=True)
             out: list[dict[str, Any]] = []
             for i, (doc, meta, dist) in enumerate(zip(docs, metas, dists)):
                 if dist is None or dist > thr:
@@ -166,6 +176,7 @@ def search(
                         "chunk_hash": meta.get("chunk_hash", ""),
                     }
                 )
+            print(f"[rag] search passed={len(out)} / threshold={thr}", flush=True)
             return out
         except Exception as e:
             print(f"[rag] search failed: {e}", flush=True)
@@ -193,5 +204,52 @@ def search(
         if out:
             print(f"[rag] found {len(out)} results with '{candidate}'", flush=True)
             return out
+
+    # Last resort: return top results even if above threshold — better than nothing
+    print(f"[rag] no results within threshold, trying relaxed search", flush=True)
+    def _relaxed(q):
+        try:
+            col = _collection(tenant_id)
+            if col.count() == 0:
+                return []
+            q_emb = embed_batch([q])[0]
+            res = col.query(
+                query_embeddings=[q_emb],
+                n_results=top_k,
+                include=["documents", "metadatas", "distances"],
+            )
+            docs = (res.get("documents") or [[]])[0]
+            metas = (res.get("metadatas") or [[]])[0]
+            dists = (res.get("distances") or [[]])[0]
+            ids = (res.get("ids") or [[]])[0]
+            out: list[dict[str, Any]] = []
+            for i, (doc, meta, dist) in enumerate(zip(docs, metas, dists)):
+                if dist is None:
+                    continue
+                meta = meta or {}
+                out.append(
+                    {
+                        "id": ids[i] if i < len(ids) else f"unknown-{i}",
+                        "text": doc,
+                        "distance": float(dist),
+                        "score": round(1.0 - float(dist), 4),
+                        "file_id": meta.get("file_id"),
+                        "filename": meta.get("filename", ""),
+                        "section": meta.get("section", ""),
+                        "page": meta.get("page"),
+                        "char_start": meta.get("char_start"),
+                        "char_end": meta.get("char_end"),
+                        "chunk_hash": meta.get("chunk_hash", ""),
+                    }
+                )
+            return out
+        except Exception as e:
+            print(f"[rag] relaxed search failed: {e}", flush=True)
+            return []
+
+    out = _relaxed(query)
+    if out:
+        print(f"[rag] relaxed search returned {len(out)} results (closest dist={out[0]['distance']:.3f})", flush=True)
+        return out[:1]  # Only return the single closest match
 
     return []

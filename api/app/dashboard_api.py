@@ -32,6 +32,7 @@ def stats(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(ge
             and_(
                 ChatLog.tenant_id == tenant.id,
                 ChatLog.created_at >= cutoff,
+                ChatLog.channel != "test_widget",
             )
         ).first()
         return row
@@ -66,7 +67,7 @@ def trend(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(ge
             func.sum(func.cast(ChatLog.resolution == "resolved", Integer)).label("resolved"),
             func.sum(func.cast(ChatLog.resolution == "escalated", Integer)).label("escalated"),
         )
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff))
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff, ChatLog.channel != "test_widget"))
         .group_by(func.date(ChatLog.created_at))
         .all()
     )
@@ -94,7 +95,7 @@ def channels_breakdown(tenant: Tenant = Depends(get_current_tenant), db: Session
     cutoff = datetime.utcnow() - timedelta(days=7)
     rows = (
         db.query(ChatLog.channel, func.count(ChatLog.id))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff))
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff, ChatLog.channel != "test_widget"))
         .group_by(ChatLog.channel)
         .all()
     )
@@ -107,7 +108,7 @@ def hourly(tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(g
     cutoff = datetime.utcnow() - timedelta(days=7)
     rows = (
         db.query(func.extract("hour", ChatLog.created_at).label("h"), func.count(ChatLog.id))
-        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff))
+        .filter(and_(ChatLog.tenant_id == tenant.id, ChatLog.created_at >= cutoff, ChatLog.channel != "test_widget"))
         .group_by("h")
         .order_by("h")
         .all()
@@ -153,6 +154,7 @@ def recent_unresolved(tenant: Tenant = Depends(get_current_tenant), db: Session 
         .filter(and_(
             ChatLog.tenant_id == tenant.id,
             ChatLog.resolution == "escalated",
+            ChatLog.channel != "test_widget",
         ))
         .order_by(ChatLog.created_at.desc())
         .limit(limit)

@@ -54,6 +54,7 @@
     zIndex: parseInt(attr("data-z-index", "2147483600"), 10) || 2147483600,
     emailRequired: attr("data-email-required", "true") !== "false",
     initialUserId: attr("data-user-id", ""),
+    channel: attr("data-channel", "web_widget"),
   };
 
   var keys = {
@@ -363,7 +364,7 @@
       tenant_id: TENANT,
       user_id: userId || "anonymous",
       message: text,
-      channel: "web_widget",
+      channel: cfg.channel,
     };
     // Include extra_fields if any are set
     var hasExtra = false;
