@@ -111,6 +111,13 @@ async def run(
     rag_block = _format_source_block(rag_docs)
     sources = _source_log(rag_docs)
 
+    # Debug: log what RAG actually returned before sending to LLM
+    if rag_docs:
+        for i, d in enumerate(rag_docs):
+            print(f"[agent] rag_doc[{i}] file={d.get('filename')} dist={d.get('distance')} text={d.get('text', '')[:120]}", flush=True)
+    else:
+        print(f"[agent] rag_docs is EMPTY — no relevant context found", flush=True)
+
     # 3. Pull CRM context (best-effort)
     crm_ctx: dict = {}
     try:
@@ -130,7 +137,11 @@ async def run(
         "2. Be concise and direct. If you have the answer, give it immediately.\n"
         "3. If asked for a list (e.g. 'what plans do you have'), list ALL available options "
         "found in your context. Do not ask clarifying questions if the answer is available.\n"
-        "4. If you don't have the specific info, apologize and offer to connect them to a human.\n\n"
+        "4. CRITICAL: ONLY use information from the Internal Reference Data section above. "
+        "If the answer to a question is NOT found in the reference data, reply: \"I don't have "
+        "that information right now, but I can connect you to someone who can help.\" "
+        "NEVER use your own training knowledge for product facts, pricing, or policies.\n"
+        "5. If you don't have the specific info, apologize and offer to connect them to a human.\n\n"
         "CRM tools may read customer data or perform account changes. Before "
         "calling a write tool such as update_tariff, summarize the exact change "
         "and get explicit user confirmation in the current conversation. Set "

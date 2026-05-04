@@ -108,30 +108,8 @@ def delete_file(tenant_id: UUID | str, file_id: UUID | str) -> None:
         total_before = col.count()
         print(f"[rag] delete_file: collection '{col.name}' has {total_before} chunks before delete", flush=True)
 
-        # Try to find chunks by file_id in metadata
-        result = col.get(where={"file_id": fid}, include=[])
-        found_ids = result.get("ids", []) if result else []
-        print(f"[rag] delete_file: found {len(found_ids)} chunks with file_id={fid}", flush=True)
-
-        # Also log all unique file_ids in the collection for debugging
-        try:
-            all_meta = col.get(include=[], limit=100)
-            if all_meta:
-                file_ids_in_collection = set()
-                for idx in range(len(all_meta.get("ids", []))):
-                    # We can't easily get metadata without include, so just log count
-                    pass
-                print(f"[rag] delete_file: total items in collection: {len(all_meta.get('ids', []))}", flush=True)
-        except Exception:
-            pass
-
-        if found_ids:
-            col.delete(ids=found_ids)
-            print(f"[rag] delete_file: deleted {len(found_ids)} chunks by ID", flush=True)
-        else:
-            # Fallback: try where-based delete
-            col.delete(where={"file_id": fid})
-            print(f"[rag] delete_file: attempted delete by where", flush=True)
+        # Use where-based delete — more reliable than ID matching
+        col.delete(where={"file_id": fid})
 
         total_after = col.count()
         print(f"[rag] delete_file: collection now has {total_after} chunks (was {total_before})", flush=True)
@@ -171,6 +149,12 @@ def search(
         metas = (res.get("metadatas") or [[]])[0]
         dists = (res.get("distances") or [[]])[0]
         ids = (res.get("ids") or [[]])[0]
+        # Log all raw results before threshold filtering
+        raw_log = []
+        for i, (doc, meta, dist) in enumerate(zip(docs, metas, dists)):
+            fname = (meta or {}).get("filename", "?")
+            raw_log.append(f"  [{i}] dist={dist:.4f} file={fname} text={doc[:80]}")
+        print(f"[rag] search raw results ({len(docs)}):\n" + "\n".join(raw_log), flush=True)
         out: list[dict[str, Any]] = []
         for i, (doc, meta, dist) in enumerate(zip(docs, metas, dists)):
             if dist is None or dist > thr:
@@ -191,6 +175,7 @@ def search(
                     "chunk_hash": meta.get("chunk_hash", ""),
                 }
             )
+        print(f"[rag] search passed threshold({thr}): {len(out)}/{len(docs)} results", flush=True)
         return out
     except Exception as e:
         print(f"[rag] search failed: {e}", flush=True)
