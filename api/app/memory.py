@@ -50,3 +50,20 @@ def history(tenant_id: str, user_id: str) -> List[dict]:
     else:
         k = _fallback_key(tenant_id, user_id)
         return list(_mem[k])
+
+
+def clear_tenant(tenant_id: str) -> None:
+    """Clear all conversation histories for a tenant."""
+    if _use_redis:
+        pattern = f"memory:{tenant_id}:*"
+        cursor = 0
+        while True:
+            cursor, keys = _r.scan(cursor, match=pattern, count=100)
+            if keys:
+                _r.delete(*keys)
+            if cursor == 0:
+                break
+    else:
+        keys_to_remove = [k for k in _mem if k.startswith(f"{tenant_id}:")]
+        for k in keys_to_remove:
+            del _mem[k]

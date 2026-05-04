@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 
 from . import rag
+from . import memory
 from .chunking import file_sha256, sanitize_filename
 from .auth import get_current_tenant
 from .config import get_settings
@@ -150,6 +151,10 @@ def delete_file(
     # Verify deletion
     remaining = rag._count_all_chunks(tenant.id)
     print(f"[knowledge] after delete: {remaining} chunks remain in Chroma", flush=True)
+
+    # Clear conversation history to prevent hallucination from stale context
+    memory.clear_tenant(str(tenant.id))
+    print(f"[knowledge] cleared conversation history for tenant {tenant.id}", flush=True)
 
     try:
         if rec.s3_key and os.path.exists(rec.s3_key):
