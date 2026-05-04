@@ -66,7 +66,7 @@
 <div class="grid grid-2">
   <div class="card ds-chart-card">
     <h2>Dialogs — last 7 days</h2>
-    <canvas id="trendChart" height="220"></canvas>
+    <canvas id="trendChart" height="220" style="width:100%"></canvas>
   </div>
   <div class="card ds-chart-card">
     <h2>Peak hours</h2>
@@ -138,8 +138,9 @@ async function loadStats(){
 async function loadTrend(){
   try{
     const data = await api('/dashboard/trend');
+    console.log('Trend data:', data);
     drawTrendChart(data);
-  }catch(e){}
+  }catch(e){ console.error('Trend error:', e); }
 }
 
 async function loadHourly(){
@@ -224,18 +225,33 @@ function dismissGettingStarted(){
 
 function drawTrendChart(data){
   var canvas = document.getElementById('trendChart');
-  if(!canvas || !data.length) return;
+  if(!canvas || !data || !data.length) return;
+  var totalSum = data.reduce(function(a,d){return a+d.total;},0);
   var ctx = canvas.getContext('2d');
   var dpr = window.devicePixelRatio || 1;
   var rect = canvas.getBoundingClientRect();
+  if(rect.width < 10){ setTimeout(function(){drawTrendChart(data)},200); return; }
   canvas.width = rect.width * dpr;
   canvas.height = 220 * dpr;
   ctx.scale(dpr, dpr);
   var W = rect.width, H = 220;
   var pad = {t:16,r:16,b:32,l:40};
   var cW = W-pad.l-pad.r, cH = H-pad.t-pad.b;
+
+  // Show "No data" when all zeros
+  if(totalSum === 0){
+    ctx.fillStyle='#4b5563';ctx.font='13px Inter,sans-serif';ctx.textAlign='center';
+    ctx.fillText('No dialogs in the last 7 days',W/2,H/2);
+    // Still draw the axes for structure
+    ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+    for(var i=0;i<=4;i++){var y=pad.t+cH*(i/4);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();}
+    var step = cW/(data.length-1||1);
+    ctx.fillStyle='#4b5563';ctx.font='10px Inter,sans-serif';ctx.textAlign='center';
+    data.forEach(function(d,i){var label=d.date.slice(5);ctx.fillText(label,pad.l+i*step,H-8);});
+    return;
+  }
+
   var max = Math.max.apply(null, data.map(function(d){return d.total}));
-  if(max===0) max=1;
   max = Math.ceil(max * 1.2);
 
   // Grid
