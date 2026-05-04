@@ -44,7 +44,7 @@ def _total_size(tenant_id: uuid.UUID) -> int:
     return total
 
 
-@router.post("/files", status_code=202)
+@router.post("/files", status_code=201)
 async def upload_file(
     file: UploadFile = File(...),
     tenant: Tenant = Depends(get_current_tenant),
@@ -98,21 +98,18 @@ async def upload_file(
     db.add(rec)
     db.commit()
 
-    if _celery:
-        _celery.send_task("tasks.index_file", args=[str(tenant.id), str(file_id), str(dest)])
-        return {"id": str(file_id), "status": "processing"}
-    else:
-        try:
-            n = rag.index_file(tenant.id, file_id, dest)
-            rec.status = "ready"
-            rec.chunks_total = n
-            db.commit()
-            return {"id": str(file_id), "status": "ready", "chunks": n}
-        except Exception as e:
-            rec.status = "failed"
-            rec.error = str(e)
-            db.commit()
-            raise HTTPException(500, f"Indexing failed: {e}")
+    # Always index synchronously — no Celery dependency
+    try:
+        n = rag.index_file(tenant.id, file_id, dest)
+        rec.status = "ready"
+        rec.chunks_total = n
+        db.commit()
+        return {"id": str(file_id), "status": "ready", "chunks": n}
+    except Exception as e:
+        rec.status = "failed"
+        rec.error = str(e)
+        db.commit()
+        raise HTTPException(500, f"Indexing failed: {e}")
 
 
 @router.get("/files")
