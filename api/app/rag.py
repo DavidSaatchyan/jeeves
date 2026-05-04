@@ -26,8 +26,8 @@ _rag_cfg = get_yaml_config().get("rag", {})
 EMBED_MODEL = _rag_cfg.get("embedding_model", "text-embedding-3-small")
 TOP_K = int(_rag_cfg.get("top_k", 5))
 # cosine distance (1 - cos_sim). Empirically for text-embedding-3-small,
-# distances below ~0.45 are usefully relevant; above ~0.55 it's noise.
-DISTANCE_THRESHOLD = float(_rag_cfg.get("distance_threshold", 0.55))
+# distances below ~0.45 are usefully relevant; above ~0.60 is noise.
+DISTANCE_THRESHOLD = float(_rag_cfg.get("distance_threshold", 0.60))
 
 # Schema version — bump on any breaking change to collection layout.
 EMBEDDING_VERSION = f"{EMBED_MODEL}:v1"
@@ -97,6 +97,24 @@ def delete_file(tenant_id: UUID | str, file_id: UUID | str) -> None:
         print(f"[rag] delete failed: {e}", flush=True)
 
 
+_QUERY_SYNONYMS = {
+    "price": ["pricing", "plans", "cost", "subscription", "plans and pricing", "how much"],
+    "return": ["refund", "returns", "exchange", "money back", "return policy"],
+    "shipping": ["delivery", "ship", "dispatch", "tracking", "shipping policy"],
+    "cancel": ["cancellation", "cancel subscription", "stop", "unsubscribe"],
+    "contact": ["support", "help", "email", "phone", "reach out", "talk to"],
+    "discount": ["coupon", "promo", "sale", "offer", "deal", "promotion"],
+    "account": ["login", "sign in", "register", "profile", "settings"],
+    "payment": ["pay", "billing", "invoice", "card", "credit"],
+}
+
+_SEARCH_SYNONYMS = {
+    "what is the price": "pricing plans cost subscription",
+    "how to make a return": "return refund exchange policy",
+    "how much": "pricing plans cost",
+    "return policy": "return refund exchange money back",
+}
+
 def search(
     tenant_id: UUID | str,
     query: str,
@@ -107,43 +125,73 @@ def search(
         {id, text, score, distance, file_id, filename, section, page,
          char_start, char_end, chunk_hash}
     Chunks farther than `threshold` cosine distance are dropped.
+    Uses query expansion as fallback when initial results are empty or all
+    above threshold — short user queries like "what is the price" may not
+    embed closely to document text.
     """
     thr = DISTANCE_THRESHOLD if threshold is None else threshold
-    try:
-        col = _collection(tenant_id)
-        if col.count() == 0:
-            return []
-        q_emb = embed_batch([query])[0]
-        res = col.query(
-            query_embeddings=[q_emb],
-            n_results=top_k,
-            include=["documents", "metadatas", "distances"],
-        )
-        docs = (res.get("documents") or [[]])[0]
-        metas = (res.get("metadatas") or [[]])[0]
-        dists = (res.get("distances") or [[]])[0]
-        ids = (res.get("ids") or [[]])[0]
-        out: list[dict[str, Any]] = []
-        for i, (doc, meta, dist) in enumerate(zip(docs, metas, dists)):
-            if dist is None or dist > thr:
-                continue
-            meta = meta or {}
-            out.append(
-                {
-                    "id": ids[i] if i < len(ids) else f"unknown-{i}",
-                    "text": doc,
-                    "distance": float(dist),
-                    "score": round(1.0 - float(dist), 4),
-                    "file_id": meta.get("file_id"),
-                    "filename": meta.get("filename", ""),
-                    "section": meta.get("section", ""),
-                    "page": meta.get("page"),
-                    "char_start": meta.get("char_start"),
-                    "char_end": meta.get("char_end"),
-                    "chunk_hash": meta.get("chunk_hash", ""),
-                }
+
+    def _raw(q):
+        try:
+            col = _collection(tenant_id)
+            if col.count() == 0:
+                return []
+            q_emb = embed_batch([q])[0]
+            res = col.query(
+                query_embeddings=[q_emb],
+                n_results=top_k,
+                include=["documents", "metadatas", "distances"],
             )
+            docs = (res.get("documents") or [[]])[0]
+            metas = (res.get("metadatas") or [[]])[0]
+            dists = (res.get("distances") or [[]])[0]
+            ids = (res.get("ids") or [[]])[0]
+            out: list[dict[str, Any]] = []
+            for i, (doc, meta, dist) in enumerate(zip(docs, metas, dists)):
+                if dist is None or dist > thr:
+                    continue
+                meta = meta or {}
+                out.append(
+                    {
+                        "id": ids[i] if i < len(ids) else f"unknown-{i}",
+                        "text": doc,
+                        "distance": float(dist),
+                        "score": round(1.0 - float(dist), 4),
+                        "file_id": meta.get("file_id"),
+                        "filename": meta.get("filename", ""),
+                        "section": meta.get("section", ""),
+                        "page": meta.get("page"),
+                        "char_start": meta.get("char_start"),
+                        "char_end": meta.get("char_end"),
+                        "chunk_hash": meta.get("chunk_hash", ""),
+                    }
+                )
+            return out
+        except Exception as e:
+            print(f"[rag] search failed: {e}", flush=True)
+            return []
+
+    # Try exact query first
+    out = _raw(query)
+    if out:
         return out
-    except Exception as e:
-        print(f"[rag] search failed: {e}", flush=True)
-        return []
+
+    # Try synonym expansions
+    q_lower = query.lower().strip()
+    candidates = []
+    # 1. Check full-query synonyms
+    if q_lower in _SEARCH_SYNONYMS:
+        candidates.append(_SEARCH_SYNONYMS[q_lower])
+    # 2. Check keyword-based synonyms
+    for keyword, synonyms in _QUERY_SYNONYMS.items():
+        if keyword in q_lower:
+            candidates.extend(synonyms)
+    # 3. Try each candidate
+    for candidate in candidates:
+        print(f"[rag] expanding query '{query}' -> '{candidate}'", flush=True)
+        out = _raw(candidate)
+        if out:
+            print(f"[rag] found {len(out)} results with '{candidate}'", flush=True)
+            return out
+
+    return []
