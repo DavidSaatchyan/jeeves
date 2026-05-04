@@ -157,7 +157,9 @@ def search(
     try:
         col = _collection(tenant_id)
         cnt = col.count()
+        print(f"[rag] search: tenant={tenant_id} collection_count={cnt} query='{query[:80]}'", flush=True)
         if cnt == 0:
+            print(f"[rag] search: collection is empty, returning []", flush=True)
             return []
         q_emb = embed_batch([query])[0]
         res = col.query(
