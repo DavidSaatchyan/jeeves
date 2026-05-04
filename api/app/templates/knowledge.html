@@ -12,6 +12,8 @@
   </div>
   <div class="sk-table ds-skeleton"></div>
 </div>
+  <div class="sk-table ds-skeleton"></div>
+</div>
 
 <!-- Real content -->
 <div id="kbContent" style="display:none">
@@ -23,8 +25,8 @@
       <span class="kb-stat-label">Knowledge Base</span>
       <span class="kb-stat-value" id="sumFiles">0 files</span>
     </div>
-    <div class="kb-bar-track"><div class="kb-bar-fill" id="sumBar"></div></div>
     <div class="kb-stat-sub" id="sumTypes">No files uploaded</div>
+    <div class="kb-stat-sub2" id="sumChunks"></div>
   </div>
   <div class="kb-stat">
     <div class="kb-stat-header">
@@ -33,6 +35,13 @@
     </div>
     <div class="kb-bar-track"><div class="kb-bar-fill" id="sizeBar"></div></div>
     <div class="kb-stat-sub" id="sumQuota">0% of 50 MB limit</div>
+  </div>
+  <div class="kb-stat">
+    <div class="kb-stat-header">
+      <span class="kb-stat-label">Last Activity</span>
+      <span class="kb-stat-value" id="sumUpdated">—</span>
+    </div>
+    <div class="kb-stat-sub" id="sumAction">No activity yet</div>
   </div>
 </div>
 
@@ -73,19 +82,20 @@
 {% endblock %}
 {% block tail %}
 <style>
-.sk-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+.sk-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
 .sk-stat-card{height:80px;border-radius:12px}
 .sk-table{height:180px;border-radius:12px}
 .ds-skeleton{animation:ds-pulse 1.5s ease-in-out infinite;background:rgba(255,255,255,0.04);border-radius:8px}
 @keyframes ds-pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.kb-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:20px;padding:0}
+.kb-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:20px;padding:0}
 .kb-stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px}
 .kb-stat-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
 .kb-stat-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2)}
 .kb-stat-value{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.5px}
 .kb-bar-track{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:10px}
 .kb-bar-fill{height:100%;border-radius:3px;transition:width .6s ease;background:linear-gradient(90deg,var(--accent),#818cf8)}
-.kb-stat-sub{font-size:12px;color:var(--muted);font-weight:500}
+.kb-stat-sub{font-size:12px;color:var(--muted);font-weight:500;margin-top:6px}
+.kb-stat-sub2{font-size:12px;color:var(--accent);font-weight:500;margin-top:2px}
 #tbl td,#tbl th{text-align:left}
 .del-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:6px;padding:5px 6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
 .del-btn:hover{color:var(--red);background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.2)}
@@ -183,14 +193,18 @@ async function refresh(){
   var lastRowDate = rows.length ? new Date(rows.reduce(function(a, b){ return a.created_at > b.created_at ? a.created_at : b.created_at; })) : null;
   var actualLast = lastActionTime && lastRowDate ? (lastActionTime > lastRowDate ? lastActionTime : lastRowDate) : (lastActionTime || lastRowDate);
   var timeLabel = actualLast ? relTime(actualLast.toISOString()) : 'Never';
+  var actionLabel = lastActionTime && (!lastRowDate || lastActionTime > lastRowDate) ? 'File deleted' : (rows.length ? 'File uploaded' : 'No activity');
 
   document.getElementById('sumFiles').textContent = ready.length + ' file' + (ready.length !== 1 ? 's' : '');
-  document.getElementById('sumBar').style.width = (ready.length ? Math.max(8, (ready.length / 20) * 100) : 0) + '%';
   document.getElementById('sumTypes').textContent = typeLabels.length ? typeLabels.join(', ') : 'No files uploaded';
+  document.getElementById('sumChunks').textContent = totalChunks ? totalChunks + ' chunks indexed · ' + (ready.length ? Math.round(totalChunks / ready.length) : 0) + ' avg/file' : '';
 
   document.getElementById('sumSize').textContent = fmtSize(totalSize);
   document.getElementById('sizeBar').style.width = pct + '%';
-  document.getElementById('sumQuota').textContent = pct.toFixed(1) + '% of 50 MB limit · Last: ' + timeLabel;
+  document.getElementById('sumQuota').textContent = pct.toFixed(1) + '% of 50 MB limit';
+
+  document.getElementById('sumUpdated').textContent = timeLabel;
+  document.getElementById('sumAction').textContent = actionLabel;
 
   document.getElementById('kbSummary').style.display = '';
 
@@ -289,17 +303,14 @@ async function uploadMany(files){
 
 async function del(id){
   if(!confirm('Delete this file?')) return;
-  // Optimistic: remove row immediately
-  var tr = document.querySelector('#tbl tr[data-id="' + id + '"]');
-  if(tr) tr.style.opacity = '0.3';
-  // Mark last activity time
+  var btn = document.querySelector('#tbl tr[data-id="' + id + '"] .del-btn');
+  if(btn) btn.disabled = true;
   localStorage.setItem('kb_last_action', new Date().toISOString());
-  // Fire and forget
-  fetch('/knowledge/files/' + id, {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}})
-    .then(function(){ refresh(); })
-    .catch(function(){ refresh(); });
-  // Refresh after short delay anyway
-  setTimeout(refresh, 300);
+  try{
+    await fetch('/knowledge/files/' + id, {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}});
+  } finally {
+    refresh();
+  }
 }
 
 const drop = document.getElementById('drop');

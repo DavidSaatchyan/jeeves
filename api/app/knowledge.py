@@ -1,7 +1,6 @@
 """Knowledge Manager routes (FR-2)."""
 from __future__ import annotations
 
-import asyncio
 import os
 import uuid
 from pathlib import Path
@@ -135,7 +134,7 @@ def list_files(
 
 
 @router.delete("/files/{file_id}", status_code=204)
-async def delete_file(
+def delete_file(
     file_id: uuid.UUID,
     tenant: Tenant = Depends(get_current_tenant),
     db: Session = Depends(get_db),
@@ -143,8 +142,6 @@ async def delete_file(
     rec = db.query(FileRecord).filter(FileRecord.id == file_id, FileRecord.tenant_id == tenant.id).first()
     if not rec:
         raise HTTPException(404, "file not found")
-
-    print(f"[knowledge] deleting file {file_id} ({rec.filename}) for tenant {tenant.id}", flush=True)
 
     # Delete from Chroma
     rag.delete_file(tenant.id, file_id)
@@ -158,8 +155,6 @@ async def delete_file(
     db.delete(rec)
     db.commit()
 
-    # Clear conversation history in background (non-blocking)
-    asyncio.get_event_loop().run_in_executor(None, memory.clear_tenant, str(tenant.id))
-    print(f"[knowledge] queued memory clear for tenant {tenant.id}", flush=True)
-
+    # Clear conversation history (fast for in-memory, async for Redis)
+    memory.clear_tenant(str(tenant.id))
     return
