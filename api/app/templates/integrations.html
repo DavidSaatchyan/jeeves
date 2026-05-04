@@ -53,38 +53,18 @@
 
     <!-- Provider sub-tabs -->
     <div class="int-subtabs">
-      <div class="int-subtab active" data-crm="hubspot" onclick="selectCrmTab('hubspot')">
-        <svg class="int-subtab-icon" viewBox="0 0 24 24" fill="#ff7a59"><circle cx="12" cy="12" r="10" opacity="0.2"/><circle cx="8" cy="12" r="2.5"/><circle cx="16" cy="12" r="2.5"/></svg>
-        <span>HubSpot</span>
-      </div>
-      <div class="int-subtab" data-crm="custom" onclick="selectCrmTab('custom')">
+      <div class="int-subtab active" data-crm="custom" onclick="selectCrmTab('custom')">
         <svg class="int-subtab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
         <span>Custom API</span>
       </div>
-    </div>
-
-    <!-- HubSpot -->
-    <div id="crmPanelHubspot">
-      <div class="int-service-card">
-        <div class="int-service-header">
-          <div class="int-service-info">
-            <svg class="int-service-logo" viewBox="0 0 24 24" fill="#ff7a59"><circle cx="12" cy="12" r="10" opacity="0.15"/><circle cx="8" cy="12" r="2.5"/><circle cx="16" cy="12" r="2.5"/></svg>
-            <div><strong>HubSpot</strong><span class="muted">Contacts, companies, notes via OAuth</span></div>
-          </div>
-          <span id="badge-hubspot" class="pill muted">—</span>
-        </div>
-        <p class="muted" style="margin:12px 0 16px">Jeeves finds the contact by email and shows data in conversation.</p>
-        <div class="int-actions">
-          <button onclick="connectHubSpot()" id="hubspotConnect">Connect</button>
-          <button class="ghost danger" onclick="disconnectHubSpot()" id="hubspotDisconnect" style="display:none">Disconnect</button>
-          <span id="hubspotStatus" class="muted" style="font-size:12px"></span>
-        </div>
-        <div class="err-msg" id="msg-hubspot"></div>
+      <div class="int-subtab" data-crm="hubspot" onclick="selectCrmTab('hubspot')">
+        <svg class="int-subtab-icon" viewBox="0 0 24 24" fill="#ff7a59"><circle cx="12" cy="12" r="10" opacity="0.2"/><circle cx="8" cy="12" r="2.5"/><circle cx="16" cy="12" r="2.5"/></svg>
+        <span>HubSpot</span>
       </div>
     </div>
 
     <!-- Custom API -->
-    <div id="crmPanelCustom" style="display:none">
+    <div id="crmPanelCustom">
       <div class="int-service-card">
         <div class="int-service-header">
           <div class="int-service-info">
@@ -130,6 +110,26 @@
           <div class="muted" style="font-size:12px;margin-bottom:6px">What Jeeves will see:</div>
           <pre id="crmPreview" style="margin:0;font-size:12px;border:none;background:transparent"></pre>
         </div>
+      </div>
+    </div>
+
+    <!-- HubSpot -->
+    <div id="crmPanelHubspot" style="display:none">
+      <div class="int-service-card">
+        <div class="int-service-header">
+          <div class="int-service-info">
+            <svg class="int-service-logo" viewBox="0 0 24 24" fill="#ff7a59"><circle cx="12" cy="12" r="10" opacity="0.15"/><circle cx="8" cy="12" r="2.5"/><circle cx="16" cy="12" r="2.5"/></svg>
+            <div><strong>HubSpot</strong><span class="muted">Contacts, companies, notes via OAuth</span></div>
+          </div>
+          <span id="badge-hubspot" class="pill muted">—</span>
+        </div>
+        <p class="muted" style="margin:12px 0 16px">Jeeves finds the contact by email and shows data in conversation.</p>
+        <div class="int-actions">
+          <button onclick="connectHubSpot()" id="hubspotConnect">Connect</button>
+          <button class="ghost danger" onclick="disconnectHubSpot()" id="hubspotDisconnect" style="display:none">Disconnect</button>
+          <span id="hubspotStatus" class="muted" style="font-size:12px"></span>
+        </div>
+        <div class="err-msg" id="msg-hubspot"></div>
       </div>
     </div>
   </div>
@@ -290,8 +290,8 @@ function selectIntTab(tab){
 }
 
 function selectCrmTab(tab){
-  document.getElementById('crmPanelHubspot').style.display = tab==='hubspot' ? '' : 'none';
   document.getElementById('crmPanelCustom').style.display = tab==='custom' ? '' : 'none';
+  document.getElementById('crmPanelHubspot').style.display = tab==='hubspot' ? '' : 'none';
   document.querySelectorAll('.int-subtab[data-crm]').forEach(function(el){ el.classList.remove('active'); });
   var t = document.querySelector('.int-subtab[data-crm="'+tab+'"]');
   if(t) t.classList.add('active');
@@ -381,14 +381,14 @@ async function loadCrm(){
     if(!crmFields.length) crmFields = [{name:'plan',label:'subscription plan'}];
     renderFields();
 
-    var provider = c.provider || 'hubspot';
+    var provider = c.provider || 'custom_rest';
     selectCrmTab(provider === 'hubspot' ? 'hubspot' : 'custom');
     _crmHasCustom = provider === 'custom_rest' && !!c.read_url;
     updateCrmBadge();
   } catch(e) {
     crmFields = [{name:'plan',label:'subscription plan'}];
     renderFields();
-    selectCrmTab('hubspot');
+    selectCrmTab('custom');
   }
 }
 

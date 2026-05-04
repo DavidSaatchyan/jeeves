@@ -1,54 +1,135 @@
 {% extends "base.html" %}
 {% block body %}
-<h1>API integration</h1>
-<p class="page-desc">Build your own chat interface using Jeeves REST API. Same AI brain, your UI.</p>
+<h1>API</h1>
+<p class="page-desc">Generate keys, read endpoints, and test the API right here. Same AI brain, your UI.</p>
 
-<div class="card">
-  <h2>Authentication</h2>
-  <p class="muted" style="margin:0 0 16px">All API requests require an API key in the Authorization header:</p>
-  <pre style="margin:0"><span class="muted">Authorization:</span> Bearer <span style="color:var(--green)">sk_your_api_key_here</span>
-
-<span class="muted">Content-Type:</span> application/json</pre>
-</div>
-
-<div class="card">
-  <div class="card-header">
-    <h2>API keys</h2>
-    <button onclick="createKey()">+ Generate key</button>
+<!-- Tabs -->
+<div class="api-tabs">
+  <div class="api-tab active" data-tab="keys" onclick="selectApiTab('keys')">
+    <svg class="api-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+    <span>Keys</span>
+    <span class="api-tab-count" id="keyCount" style="display:none">0</span>
   </div>
-  <div id="keysEmpty" class="empty-state">No API keys yet. Generate one to start integrating.</div>
-  <table id="keysTable" style="display:none">
-    <thead><tr><th>Name</th><th>Prefix</th><th>Created</th><th>Last used</th><th></th></tr></thead>
-    <tbody id="keysBody"></tbody>
-  </table>
+  <div class="api-tab" data-tab="endpoints" onclick="selectApiTab('endpoints')">
+    <svg class="api-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    <span>Endpoints</span>
+  </div>
+  <div class="api-tab" data-tab="examples" onclick="selectApiTab('examples')">
+    <svg class="api-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+    <span>Examples</span>
+  </div>
+  <div class="api-tab" data-tab="test" onclick="selectApiTab('test')">
+    <svg class="api-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <span>Test</span>
+  </div>
 </div>
 
-<div class="card">
-  <h2>Send a message</h2>
-  <p class="muted" style="margin:0 0 16px">POST to <code>/chat</code> with the following body:</p>
-  <pre>{
+<!-- Keys Panel -->
+<div class="api-panel active" id="panel-keys">
+  <div class="card">
+    <div class="card-header">
+      <h2>API Keys</h2>
+      <button onclick="createKey()">+ New key</button>
+    </div>
+    <div id="keysEmpty" class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;opacity:0.2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+      <p>No API keys yet</p>
+      <p class="muted" style="margin-top:4px">Generate one to start integrating Jeeves into your own app.</p>
+    </div>
+    <table id="keysTable" style="display:none">
+      <thead><tr><th>Name</th><th>Key</th><th>Created</th><th>Last used</th><th></th></tr></thead>
+      <tbody id="keysBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Endpoints Panel -->
+<div class="api-panel" id="panel-endpoints" style="display:none">
+  <div class="card">
+    <div class="card-header">
+      <h2>Chat</h2>
+      <span class="method-badge post">POST</span>
+    </div>
+    <div class="endpoint-path">/chat</div>
+    <p class="muted" style="margin:12px 0 16px">Send a message and get a response from the AI.</p>
+
+    <strong style="font-size:13px">Request body</strong>
+    <pre class="code-block" style="margin-top:8px">{
   "user_id": "customer_123",
   "message": "What is my order status?"
 }</pre>
-  <p class="muted mt-12">Response:</p>
-  <pre>{
+
+    <strong style="font-size:13px;margin-top:16px">Response</strong>
+    <pre class="code-block" style="margin-top:8px">{
   "response": "Your order #4567 is being prepared...",
   "action_called": null,
   "latency_ms": 1240
 }</pre>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Customer</h2>
+      <span class="method-badge get">GET</span>
+    </div>
+    <div class="endpoint-path">/customer/{user_id}</div>
+    <p class="muted" style="margin:12px 0 16px">Get customer data from connected CRM systems.</p>
+
+    <strong style="font-size:13px">Response</strong>
+    <pre class="code-block" style="margin-top:8px">{
+  "tariff": "Pro",
+  "accounts_count": 3,
+  "views_trend": [12, 18, 24],
+  "raw": { ... }
+}</pre>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Update Customer</h2>
+      <span class="method-badge patch">PATCH</span>
+    </div>
+    <div class="endpoint-path">/customer/{user_id}</div>
+    <p class="muted" style="margin:12px 0 16px">Update customer data via connected CRM.</p>
+
+    <strong style="font-size:13px">Request body</strong>
+    <pre class="code-block" style="margin-top:8px">{
+  "action": "update_plan",
+  "params": { "plan": "Enterprise" }
+}</pre>
+  </div>
 </div>
 
-<div class="card">
-  <h2>Example: cURL</h2>
-  <pre id="curlExample">curl -X POST https://your-domain.com/chat \
+<!-- Examples Panel -->
+<div class="api-panel" id="panel-examples" style="display:none">
+  <div class="card">
+    <div class="card-header">
+      <h2>Code examples</h2>
+    </div>
+
+    <div class="lang-tabs">
+      <div class="lang-tab active" data-lang="curl" onclick="selectLang('curl')">cURL</div>
+      <div class="lang-tab" data-lang="js" onclick="selectLang('js')">JavaScript</div>
+      <div class="lang-tab" data-lang="python" onclick="selectLang('python')">Python</div>
+    </div>
+
+    <div id="langPanelCurl">
+      <div class="code-header">
+        <span>cURL</span>
+        <button class="ghost sm copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre class="code-block" id="codeCurl">curl -X POST https://your-domain.com/chat \
   -H "Authorization: Bearer sk_your_key" \
   -H "Content-Type: application/json" \
   -d '{"user_id":"customer_123","message":"Hello!"}'</pre>
-</div>
+    </div>
 
-<div class="card">
-  <h2>Example: JavaScript</h2>
-  <pre>const res = await fetch("https://your-domain.com/chat", {
+    <div id="langPanelJs" style="display:none">
+      <div class="code-header">
+        <span>JavaScript</span>
+        <button class="ghost sm copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre class="code-block" id="codeJs">const res = await fetch("https://your-domain.com/chat", {
   method: "POST",
   headers: {
     "Authorization": "Bearer sk_your_key",
@@ -61,11 +142,14 @@
 });
 const data = await res.json();
 console.log(data.response);</pre>
-</div>
+    </div>
 
-<div class="card">
-  <h2>Example: Python</h2>
-  <pre>import requests
+    <div id="langPanelPython" style="display:none">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="ghost sm copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <pre class="code-block" id="codePython">import requests
 
 resp = requests.post(
     "https://your-domain.com/chat",
@@ -73,41 +157,180 @@ resp = requests.post(
     json={"user_id": "customer_123", "message": "What is my order status?"},
 )
 print(resp.json()["response"])</pre>
+    </div>
+  </div>
 </div>
+
+<!-- Test Panel -->
+<div class="api-panel" id="panel-test" style="display:none">
+  <div class="card">
+    <div class="card-header">
+      <h2>Test your API</h2>
+    </div>
+    <p class="muted" style="margin:0 0 20px">Select a key, send a message, and see the response live.</p>
+
+    <label>API key</label>
+    <select id="testKeySelect" style="max-width:400px">
+      <option value="">-- select a key --</option>
+    </select>
+
+    <label>User ID</label>
+    <input id="testUserId" type="text" placeholder="customer_123" style="max-width:300px"/>
+
+    <label>Message</label>
+    <textarea id="testMessage" placeholder="Hello, what can you help me with?" rows="3"></textarea>
+
+    <div class="int-actions" style="margin-top:16px">
+      <button onclick="testApi()" id="testApiBtn">Send</button>
+      <span id="testApiStatus" class="muted"></span>
+    </div>
+
+    <div id="testApiResult" style="display:none;margin-top:16px">
+      <div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong style="font-size:13px">Response</strong>
+        <span id="testApiLatency" class="pill muted"></span>
+      </div>
+      <pre id="testApiResponse" class="code-block"></pre>
+    </div>
+    <div class="err-msg" id="testApiErr"></div>
+  </div>
+</div>
+
+<!-- Key modal -->
+<div id="keyModal" class="modal-overlay" onclick="closeKeyModal(event)">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h2>New API key</h2>
+      <button class="ghost sm" onclick="document.getElementById('keyModal').classList.remove('show')">Close</button>
+    </div>
+    <p class="muted" style="margin:0 0 16px">Copy this key now. It will not be shown again.</p>
+    <div class="new-key-box">
+      <code id="newKeyValue"></code>
+      <button class="ghost sm" onclick="copyNewKey()">Copy</button>
+    </div>
+    <div id="newKeyMsg" class="muted" style="margin-top:8px;font-size:12px"></div>
+  </div>
+</div>
+
 {% endblock %}
 {% block tail %}
+<style>
+.api-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content}
+.api-tab{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted2);transition:all .15s;user-select:none;border:none;background:transparent}
+.api-tab:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+.api-tab.active{color:var(--text);background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.api-tab-icon{width:16px;height:16px;flex-shrink:0}
+.api-tab-count{font-size:10px;background:var(--green);color:#000;padding:1px 5px;border-radius:99px;font-weight:700}
+
+.api-panel{display:none}
+.api-panel.active{display:block}
+
+.endpoint-path{font-family:'SF Mono',ui-monospace,Consolas,monospace;font-size:13px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;display:inline-block}
+
+.method-badge{font-size:10px;font-weight:800;padding:3px 8px;border-radius:5px;letter-spacing:.5px}
+.method-badge.post{color:#10b981;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25)}
+.method-badge.get{color:#60a5fa;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.25)}
+.method-badge.patch{color:#f59e0b;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25)}
+
+.code-block{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-family:'SF Mono',ui-monospace,Consolas,monospace;font-size:12px;line-height:1.6;color:#cbd5e1;overflow-x:auto;margin-top:8px}
+
+.code-header{display:flex;justify-content:space-between;align-items:center;margin-top:16px;margin-bottom:0}
+.code-header span{font-size:12px;font-weight:700;color:var(--muted)}
+
+.lang-tabs{display:flex;gap:2px;margin-bottom:12px}
+.lang-tab{padding:6px 14px;font-size:12px;font-weight:600;color:var(--muted2);cursor:pointer;border-radius:6px 6px 0 0;transition:all .15s}
+.lang-tab:hover{color:var(--text)}
+.lang-tab.active{color:var(--text);background:var(--surface);border:1px solid var(--border);border-bottom-color:var(--surface)}
+
+.new-key-box{display:flex;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.new-key-box code{flex:1;font-family:'SF Mono',ui-monospace,Consolas,monospace;font-size:13px;color:var(--green);word-break:break-all}
+</style>
 <script>
 function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+function selectApiTab(tab){
+  document.querySelectorAll('.api-panel').forEach(function(el){ el.classList.remove('active'); el.style.display='none'; });
+  document.querySelectorAll('.api-tab').forEach(function(el){ el.classList.remove('active'); });
+  var panel = document.getElementById('panel-'+tab);
+  var t = document.querySelector('.api-tab[data-tab="'+tab+'"]');
+  if(panel) panel.style.display='block';
+  if(t) t.classList.add('active');
+}
+
+function selectLang(lang){
+  ['curl','js','python'].forEach(function(l){
+    var el = document.getElementById('langPanel'+l.charAt(0).toUpperCase()+l.slice(1));
+    if(el) el.style.display = l===lang ? '' : 'none';
+  });
+  document.querySelectorAll('.lang-tab').forEach(function(el){ el.classList.remove('active'); });
+  var t = document.querySelector('.lang-tab[data-lang="'+lang+'"]');
+  if(t) t.classList.add('active');
+}
+
+function copyCode(btn){
+  var pre = btn.closest('.code-header').nextElementSibling;
+  navigator.clipboard.writeText(pre.textContent).then(function(){
+    var orig = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(function(){ btn.textContent = orig; }, 1500);
+  });
+}
+
+function copyNewKey(){
+  var el = document.getElementById('newKeyValue');
+  navigator.clipboard.writeText(el.textContent).then(function(){
+    document.getElementById('newKeyMsg').textContent = 'Copied to clipboard';
+  });
+}
+
+function closeKeyModal(e){
+  if(e.target.classList.contains('modal-overlay')) e.target.classList.remove('show');
+}
+
 async function loadKeys(){
   try{
-    const keys = await api('/api-keys');
+    var keys = await api('/api-keys');
     if(!keys.length){
       document.getElementById('keysEmpty').style.display='';
       document.getElementById('keysTable').style.display='none';
-      return;
+      document.getElementById('keyCount').style.display='none';
+    } else {
+      document.getElementById('keysEmpty').style.display='none';
+      document.getElementById('keysTable').style.display='';
+      document.getElementById('keyCount').style.display='';
+      document.getElementById('keyCount').textContent = keys.length;
+      document.getElementById('keysBody').innerHTML = keys.map(function(k){
+        var used = k.last_used_at ? esc(k.last_used_at.replace('T',' ').slice(0,19)) : 'Never';
+        return '<tr>' +
+          '<td><strong>'+esc(k.name)+'</strong></td>' +
+          '<td><code>'+esc(k.prefix)+'········</code></td>' +
+          '<td class="muted">'+esc(k.created_at.slice(0,10))+'</td>' +
+          '<td class="muted">'+used+'</td>' +
+          '<td><button class="ghost sm danger" onclick="revokeKey(\''+k.id+'\',\''+esc(k.name)+'\')">Revoke</button></td>' +
+        '</tr>';
+      }).join('');
     }
-    document.getElementById('keysEmpty').style.display='none';
-    document.getElementById('keysTable').style.display='';
-    document.getElementById('keysBody').innerHTML = keys.map(k => {
-      const used = k.last_used_at ? esc(k.last_used_at.replace('T',' ').slice(0,19)) : 'Never';
-      return `<tr>
-        <td><strong>${esc(k.name)}</strong></td>
-        <td><code>${esc(k.prefix)}••••••••</code></td>
-        <td class="muted">${esc(k.created_at.slice(0,10))}</td>
-        <td class="muted">${used}</td>
-        <td><button class="ghost sm danger" onclick="revokeKey('${k.id}','${esc(k.name)}')">Revoke</button></td>
-      </tr>`;
-    }).join('');
+    updateTestKeySelect(keys);
   }catch(e){}
 }
 
+function updateTestKeySelect(keys){
+  var sel = document.getElementById('testKeySelect');
+  var val = sel.value;
+  sel.innerHTML = '<option value="">-- select a key --</option>' + keys.map(function(k){
+    return '<option value="'+esc(k.key)+'">'+esc(k.name)+' ('+esc(k.prefix)+'···)</option>';
+  }).join('');
+  if(val) sel.value = val;
+}
+
 async function createKey(){
-  const name = prompt('Name for this API key (e.g. "Production", "Staging"):');
-  if(!name) return;
+  var name = prompt('Name for this API key (e.g. "Production", "Staging"):');
+  if(!name || !name.trim()) return;
   try{
-    const result = await api('/api-keys',{method:'POST',body:{name:name.trim()}});
-    alert('API key created!\n\n'+result.key+'\n\nIMPORTANT: Copy this key now. It will not be shown again.');
+    var result = await api('/api-keys',{method:'POST',body:{name:name.trim()}});
+    document.getElementById('newKeyValue').textContent = result.key;
+    document.getElementById('newKeyMsg').textContent = '';
+    document.getElementById('keyModal').classList.add('show');
     loadKeys();
   }catch(e){ alert('Error: '+e.message); }
 }
@@ -120,6 +343,43 @@ async function revokeKey(id, name){
   }catch(e){ alert('Error: '+e.message); }
 }
 
+async function testApi(){
+  var key = document.getElementById('testKeySelect').value;
+  var uid = document.getElementById('testUserId').value.trim();
+  var msg = document.getElementById('testMessage').value.trim();
+  if(!key){ document.getElementById('testApiErr').textContent='Select an API key'; return; }
+  if(!uid){ document.getElementById('testApiErr').textContent='Enter a user_id'; return; }
+  if(!msg){ document.getElementById('testApiErr').textContent='Enter a message'; return; }
+
+  document.getElementById('testApiErr').textContent='';
+  document.getElementById('testApiResult').style.display='none';
+  document.getElementById('testApiStatus').textContent='Sending...';
+  document.getElementById('testApiBtn').disabled=true;
+
+  var start = Date.now();
+  try{
+    var r = await fetch('/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({user_id:uid,message:msg})
+    });
+    var ms = Date.now()-start;
+    var data = await r.json();
+    if(!r.ok) throw new Error(data.detail || JSON.stringify(data));
+
+    document.getElementById('testApiBtn').disabled=false;
+    document.getElementById('testApiStatus').textContent='Done in '+ms+'ms';
+    document.getElementById('testApiLatency').textContent = ms+'ms';
+    document.getElementById('testApiResponse').textContent = JSON.stringify(data,null,2);
+    document.getElementById('testApiResult').style.display='';
+  }catch(e){
+    document.getElementById('testApiBtn').disabled=false;
+    document.getElementById('testApiStatus').textContent='';
+    document.getElementById('testApiErr').textContent = e.message;
+  }
+}
+
+selectApiTab('keys');
 loadKeys();
 </script>
 {% endblock %}
