@@ -38,6 +38,7 @@ def _openai() -> OpenAI:
 
 
 _chroma_client = None
+_collection_cache = {}
 
 def _chroma():
     global _chroma_client
@@ -56,10 +57,23 @@ def _chroma():
 
 def _collection(tenant_id: UUID | str):
     name = f"tenant_{str(tenant_id).replace('-', '')}"
-    return _chroma().get_or_create_collection(
+    if name in _collection_cache:
+        return _collection_cache[name]
+    col = _chroma().get_or_create_collection(
         name=name,
         metadata={"hnsw:space": "cosine", "embedding_version": EMBEDDING_VERSION},
     )
+    _collection_cache[name] = col
+    return col
+
+
+def _clear_collection_cache(name: str | None = None):
+    """Force reload collection from disk after mutations."""
+    global _chroma_client
+    if name:
+        _collection_cache.pop(name, None)
+    else:
+        _collection_cache.clear()
 
 
 def embed_batch(texts: list[str]) -> list[list[float]]:
@@ -74,48 +88,52 @@ def index_file(tenant_id: UUID | str, file_id: UUID | str, path: Path) -> int:
     if not chunks:
         print(f"[rag] index_file: 0 chunks extracted from {path.name}", flush=True)
         return 0
+    col_name = f"tenant_{str(tenant_id).replace('-', '')}"
     col = _collection(tenant_id)
     print(f"[rag] index_file: {len(chunks)} chunks from {path.name} (tenant={tenant_id}, file={file_id})", flush=True)
     # Deterministic IDs: re-indexing the same content is a no-op (upsert).
     ids = [f"{file_id}-{i}-{c.chunk_hash}" for i, c in enumerate(chunks)]
     texts = [c.text for c in chunks]
     metadatas = [c.to_metadata(str(file_id)) for c in chunks]
-    # Drop anything already stored for this file_id before re-adding, so
-    # chunks that disappeared after re-upload don't linger.
+    # Drop anything already stored for this file_id before re-adding
     try:
         col.delete(where={"file_id": str(file_id)})
     except Exception:
         pass
     embeddings = embed_batch(texts)
     col.add(ids=ids, embeddings=embeddings, documents=texts, metadatas=metadatas)
-    # Verify chunks were stored
-    after = col.count()
-    print(f"[rag] index_file: collection '{col.name}' now has {after} total chunks", flush=True)
+    # Force reload on next access
+    _clear_collection_cache(col_name)
+    # Verify
+    new_col = _collection(tenant_id)
+    after = new_col.count()
+    print(f"[rag] index_file: collection '{new_col.name}' now has {after} total chunks", flush=True)
     return len(chunks)
 
 
 def delete_file(tenant_id: UUID | str, file_id: UUID | str) -> None:
     try:
         col = _collection(tenant_id)
+        col_name = f"tenant_{str(tenant_id).replace('-', '')}"
         fid = str(file_id)
         print(f"[rag] delete_file: tenant={tenant_id} file_id={fid}", flush=True)
-        # Get count before
-        before = col.count()
-        # First try: get all IDs for this file_id and delete by ID (more reliable than where)
-        try:
-            existing = col.get(where={"file_id": fid}, include=[])
-            if existing and existing.get("ids"):
-                col.delete(ids=existing["ids"])
-                print(f"[rag] delete_file: removed {len(existing['ids'])} chunks by ID", flush=True)
-        except Exception as e:
-            print(f"[rag] delete_file: get+delete by ID failed: {e}", flush=True)
-        # Fallback: where-based delete
-        try:
-            col.delete(where={"file_id": fid})
-        except Exception:
-            pass
-        after = col.count()
-        print(f"[rag] delete_file: collection count {before} -> {after}", flush=True)
+
+        # Get all IDs for this file and delete them directly
+        existing = col.get(where={"file_id": fid}, include=[])
+        if existing and existing.get("ids"):
+            col.delete(ids=existing["ids"])
+            print(f"[rag] delete_file: removed {len(existing['ids'])} chunks", flush=True)
+        else:
+            print(f"[rag] delete_file: no chunks found for file_id={fid}", flush=True)
+
+        # Force reload collection from disk on next access
+        _clear_collection_cache(col_name)
+        print(f"[rag] delete_file: collection cache cleared", flush=True)
+
+        # Verify
+        new_col = _collection(tenant_id)
+        after = new_col.count()
+        print(f"[rag] delete_file: collection now has {after} chunks", flush=True)
     except Exception as e:
         print(f"[rag] delete failed: {e}", flush=True)
 
