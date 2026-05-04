@@ -65,6 +65,8 @@
 .kb-stat-n{font-size:24px;font-weight:800;letter-spacing:-1px;color:var(--text)}
 .kb-stat-l{font-size:11px;color:var(--muted2);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 #tbl td,#tbl th{text-align:left}
+.del-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:6px;padding:5px 6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
+.del-btn:hover{color:var(--red);background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.2)}
 </style>
 <script>
 var widgetLoaded = false;
@@ -119,6 +121,7 @@ function loadWidget(){
   s.async = true;
   s.setAttribute('data-tenant-id', tid);
   s.setAttribute('data-greeting', 'Test your knowledge base — ask me anything!');
+  s.setAttribute('data-email-required', 'false');
   document.body.appendChild(s);
 }
 
@@ -143,7 +146,7 @@ async function refresh(){
       + '<td style="text-align:right;color:var(--muted)">' + fmtSize(r.size_bytes || 0) + '</td>'
       + '<td style="text-align:right;color:var(--muted)">' + (r.chunks_total || '—') + '</td>'
       + '<td style="color:var(--muted)">' + relTime(r.created_at) + '</td>'
-      + '<td><button class="ghost sm danger" onclick="del(\'' + r.id + '\')">Delete</button></td></tr>';
+      + '<td><button class="del-btn" onclick="del(\'' + r.id + '\')" title="Delete file"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td></tr>';
   }).join('') || '<tr><td colspan="6" class="muted">No files yet.</td></tr>';
 
   const hasReady = rows.some(r => r.status === 'ready');

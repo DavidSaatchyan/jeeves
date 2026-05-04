@@ -128,7 +128,7 @@ def list_files(
             "status": r.status,
             "size_bytes": r.size_bytes or 0,
             "chunks_total": r.chunks_total or 0,
-            "created_at": r.created_at.isoformat() if r.created_at else None,
+            "created_at": (r.created_at.isoformat() + 'Z') if r.created_at else None,
             "error": r.error,
         }
         for r in rows
