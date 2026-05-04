@@ -1,58 +1,435 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>Chat logs</h1>
-<p class="page-desc">Search and review all conversations handled by your agent.</p>
+<p class="page-desc">Review conversations, analyze performance, and understand how your agent handles real users.</p>
 
-<div class="card">
-  <div class="flex flex-wrap">
-    <input id="uid" type="text" placeholder="Filter by user_id" style="max-width:260px"/>
-    <input id="days" type="number" value="30" style="max-width:100px"/>
-    <button onclick="load()">Search</button>
+<!-- Summary stats -->
+<div class="log-stats" id="logStats" style="display:none">
+  <div class="log-stat">
+    <div class="log-stat-n" id="statTotal">0</div>
+    <div class="log-stat-l">Total turns</div>
+  </div>
+  <div class="log-stat">
+    <div class="log-stat-n" id="statSessions">0</div>
+    <div class="log-stat-l">Sessions</div>
+  </div>
+  <div class="log-stat">
+    <div class="log-stat-n" id="statResolved">0%</div>
+    <div class="log-stat-l">Resolved</div>
+  </div>
+  <div class="log-stat">
+    <div class="log-stat-n" id="statAvgLatency">0ms</div>
+    <div class="log-stat-l">Avg latency</div>
+  </div>
+  <div class="log-stat">
+    <div class="log-stat-n" id="statChannels">—</div>
+    <div class="log-stat-l">Channels</div>
   </div>
 </div>
 
-<div class="card" style="padding:0;overflow:hidden">
-  <table>
-    <thead><tr><th>Time</th><th>User</th><th>Dir</th><th>Message</th><th>Response</th><th>Sources</th><th>Action</th><th>Res.</th><th>ms</th></tr></thead>
-    <tbody id="tbl"></tbody>
-  </table>
+<!-- Main tabs -->
+<div class="log-tabs">
+  <div class="log-tab active" data-tab="conversations" onclick="selectLogTab('conversations')">
+    <svg class="log-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span>Conversations</span>
+  </div>
+  <div class="log-tab" data-tab="sessions" onclick="selectLogTab('sessions')">
+    <svg class="log-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    <span>Sessions</span>
+  </div>
+  <div class="log-tab" data-tab="users" onclick="selectLogTab('users')">
+    <svg class="log-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <span>Users</span>
+  </div>
 </div>
+
+<!-- Filters bar -->
+<div class="log-filters">
+  <input id="fUserId" type="text" placeholder="User ID" style="max-width:160px"/>
+  <select id="fChannel" style="max-width:130px">
+    <option value="">All channels</option>
+    <option value="web_widget">Web widget</option>
+    <option value="telegram">Telegram</option>
+    <option value="whatsapp">WhatsApp</option>
+    <option value="test_widget">Test widget</option>
+  </select>
+  <select id="fResolution" style="max-width:140px">
+    <option value="">All resolutions</option>
+    <option value="resolved">Resolved</option>
+    <option value="escalated">Escalated</option>
+  </select>
+  <select id="fDays" style="max-width:110px">
+    <option value="1">Today</option>
+    <option value="7">7 days</option>
+    <option value="30" selected>30 days</option>
+    <option value="90">90 days</option>
+  </select>
+  <button onclick="loadLogs()">Search</button>
+  <button class="ghost" onclick="clearFilters()">Clear</button>
+</div>
+
+<!-- Conversations Panel -->
+<div class="log-panel active" id="panel-conversations">
+  <div class="card" style="padding:0;overflow:hidden">
+    <table id="convTable">
+      <thead>
+        <tr>
+          <th style="width:150px">Time</th>
+          <th style="width:120px">User</th>
+          <th style="width:70px">Channel</th>
+          <th>Message</th>
+          <th>Response</th>
+          <th style="width:70px">Sources</th>
+          <th style="width:80px">Action</th>
+          <th style="width:80px">Status</th>
+          <th style="width:60px">ms</th>
+        </tr>
+      </thead>
+      <tbody id="convBody"></tbody>
+    </table>
+    <div id="convEmpty" class="empty-state" style="display:none">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;opacity:0.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <p>No conversations found</p>
+      <p class="muted" style="margin-top:4px">Try adjusting your filters or time range.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Sessions Panel -->
+<div class="log-panel" id="panel-sessions" style="display:none">
+  <div class="card" style="padding:0;overflow:hidden">
+    <table id="sessionTable">
+      <thead>
+        <tr>
+          <th>Session</th>
+          <th style="width:120px">User</th>
+          <th style="width:70px">Turns</th>
+          <th style="width:120px">Started</th>
+          <th style="width:120px">Last activity</th>
+          <th style="width:80px">Status</th>
+          <th style="width:80px"></th>
+        </tr>
+      </thead>
+      <tbody id="sessionBody"></tbody>
+    </table>
+    <div id="sessionEmpty" class="empty-state" style="display:none">
+      <p class="muted">No session data available. Sessions are created when users chat via the widget.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Users Panel -->
+<div class="log-panel" id="panel-users" style="display:none">
+  <div class="card" style="padding:0;overflow:hidden">
+    <table id="userTable">
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th style="width:80px">Turns</th>
+          <th style="width:80px">Sessions</th>
+          <th style="width:120px">First seen</th>
+          <th style="width:120px">Last seen</th>
+          <th style="width:80px">Resolved</th>
+          <th style="width:80px"></th>
+        </tr>
+      </thead>
+      <tbody id="userBody"></tbody>
+    </table>
+    <div id="userEmpty" class="empty-state" style="display:none">
+      <p class="muted">No user data available yet.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Detail modal -->
+<div id="detailModal" class="modal-overlay" onclick="closeDetailModal(event)">
+  <div class="modal" style="max-width:720px">
+    <div class="modal-header">
+      <h2 id="detailTitle">Conversation detail</h2>
+      <button class="ghost sm" onclick="document.getElementById('detailModal').classList.remove('show')">Close</button>
+    </div>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
 {% endblock %}
 {% block tail %}
+<style>
+.log-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.log-stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.log-stat-n{font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--text)}
+.log-stat-l{color:var(--muted2);font-size:11px;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+
+.log-tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content}
+.log-tab{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted2);transition:all .15s;border:none;background:transparent}
+.log-tab:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+.log-tab.active{color:var(--text);background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.log-tab-icon{width:16px;height:16px;flex-shrink:0}
+
+.log-panel{display:none}
+.log-panel.active{display:block}
+
+.log-filters{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.log-filters input,.log-filters select{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;font-size:13px;outline:none;font-family:inherit}
+.log-filters input:focus,.log-filters select:focus{border-color:var(--border-bright)}
+.log-filters input::placeholder{color:var(--muted2)}
+
+.channel-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600}
+.channel-badge.web_widget{color:#60a5fa;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2)}
+.channel-badge.telegram{color:#26a5e4;background:rgba(38,165,228,0.1);border:1px solid rgba(38,165,228,0.2)}
+.channel-badge.whatsapp{color:#25d366;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.2)}
+.channel-badge.test_widget{color:var(--muted2);background:rgba(255,255,255,0.04);border:1px solid var(--border)}
+
+.msg-cell{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;color:var(--text)}
+.msg-cell:hover{color:#fff}
+
+.detail-section{margin-bottom:16px}
+.detail-label{font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.detail-value{font-size:13px;color:var(--text);line-height:1.5}
+.detail-value pre{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+
+.source-item{padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:6px}
+.source-item .src-id{font-weight:700;font-size:12px;color:var(--green)}
+.source-item .src-loc{font-size:12px;color:var(--muted)}
+.source-item .src-snippet{font-size:12px;color:var(--muted2);margin-top:4px;font-style:italic}
+</style>
 <script>
-function esc(v){
-  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+var ALL_LOGS = [];
+var SESSION_MAP = {};
+var USER_MAP = {};
+
+function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function selectLogTab(tab){
+  document.querySelectorAll('.log-panel').forEach(function(el){ el.classList.remove('active'); el.style.display='none'; });
+  document.querySelectorAll('.log-tab').forEach(function(el){ el.classList.remove('active'); });
+  var panel = document.getElementById('panel-'+tab);
+  var t = document.querySelector('.log-tab[data-tab="'+tab+'"]');
+  if(panel) panel.style.display='block';
+  if(t) t.classList.add('active');
 }
-function sourceDetails(sources){
-  if(!sources || !sources.length) return '<span class="muted">-</span>';
-  const body = sources.map(s => {
-    const loc = [s.filename, s.section, s.page ? `p. ${s.page}` : ''].filter(Boolean).join(' / ');
-    const score = s.score == null ? '' : ` - score ${s.score}`;
-    return `<div style="margin:8px 0"><strong>[${esc(s.source_id)}]</strong> ${esc(loc)}${esc(score)}<br><span class="muted">${esc(s.snippet || '').slice(0,500)}</span></div>`;
+
+function channelBadge(ch){
+  if(!ch) ch='web_widget';
+  var label = ch==='test_widget'?'test':(ch==='web_widget'?'web':ch);
+  return '<span class="channel-badge '+esc(ch)+'">'+esc(label)+'</span>';
+}
+
+function closeDetailModal(e){
+  if(e.target.classList.contains('modal-overlay')) e.target.classList.remove('show');
+}
+
+function showDetail(log){
+  var title = 'Turn — '+esc(log.created_at.replace('T',' ').slice(0,19));
+  document.getElementById('detailTitle').textContent = title;
+  var srcs = (log.sources||[]).map(function(s){
+    var loc = [s.filename, s.section, s.page?'p.'+s.page:''].filter(Boolean).join(' / ');
+    return '<div class="source-item"><span class="src-id">'+esc(s.source_id)+'</span> <span class="src-loc">'+esc(loc)+'</span>'+
+      (s.snippet?'<div class="src-snippet">'+esc(s.snippet.slice(0,300))+'</div>':'')+'</div>';
   }).join('');
-  return `<details><summary>${sources.length} source${sources.length===1?'':'s'}</summary>${body}</details>`;
+
+  var extraHtml = '';
+  if(log.extra_fields && Object.keys(log.extra_fields).length){
+    extraHtml = '<div class="detail-section"><div class="detail-label">Extra fields</div><pre>'+esc(JSON.stringify(log.extra_fields,null,2))+'</pre></div>';
+  }
+
+  document.getElementById('detailContent').innerHTML =
+    '<div class="detail-section"><div class="detail-label">User</div><div class="detail-value">'+esc(log.user_id)+' '+channelBadge(log.channel)+'</div></div>'+
+    '<div class="detail-section"><div class="detail-label">Message ('+esc(log.direction)+')</div><div class="detail-value"><pre>'+esc(log.message||'')+'</pre></div></div>'+
+    '<div class="detail-section"><div class="detail-label">Response</div><div class="detail-value"><pre>'+esc(log.response||'(no response)')+'</pre></div></div>'+
+    (log.action_called?'<div class="detail-section"><div class="detail-label">Action called</div><div class="detail-value"><code>'+esc(log.action_called)+'</code></div></div>':'')+
+    (srcs?'<div class="detail-section"><div class="detail-label">RAG sources ('+log.sources.length+')</div>'+srcs+'</div>':'')+
+    extraHtml+
+    '<div class="detail-section"><div class="detail-label">Meta</div><div class="detail-value" style="color:var(--muted)">ID: '+esc(log.id)+(log.session_id?' · Session: '+esc(log.session_id):'')+' · Latency: '+log.latency_ms+'ms · Resolution: '+esc(log.resolution||'—')+'</div></div>';
+  document.getElementById('detailModal').classList.add('show');
 }
-async function load(){
-  const u = document.getElementById('uid').value.trim();
-  const d = document.getElementById('days').value||30;
-  const qs = new URLSearchParams(); if(u) qs.set('user_id',u); qs.set('days',d);
-  const rows = await api('/dashboard/logs?'+qs.toString());
-  tbl.innerHTML = rows.map(r=>{
-    const pill = r.resolution==='resolved'?'<span class="pill ok">resolved</span>'
+
+function updateStats(){
+  var rows = ALL_LOGS;
+  if(!rows.length){ document.getElementById('logStats').style.display='none'; return; }
+  document.getElementById('logStats').style.display='';
+
+  document.getElementById('statTotal').textContent = rows.length;
+
+  var sessions = {};
+  rows.forEach(function(r){ if(r.session_id) sessions[r.session_id]=true; });
+  document.getElementById('statSessions').textContent = Object.keys(sessions).length;
+
+  var resolved = rows.filter(function(r){ return r.resolution==='resolved'; }).length;
+  var pct = rows.length?Math.round(resolved/rows.length*100):0;
+  document.getElementById('statResolved').textContent = pct+'%';
+
+  var latencies = rows.filter(function(r){ return r.latency_ms; }).map(function(r){ return r.latency_ms; });
+  var avg = latencies.length?Math.round(latencies.reduce(function(a,b){return a+b;},0)/latencies.length):0;
+  document.getElementById('statAvgLatency').textContent = avg+'ms';
+
+  var channels = {};
+  rows.forEach(function(r){ channels[r.channel]=true; });
+  var chNames = Object.keys(channels).map(function(c){ return c==='web_widget'?'web':c; }).join(', ');
+  document.getElementById('statChannels').textContent = chNames;
+}
+
+function renderConversations(){
+  var rows = ALL_LOGS;
+  var tbody = document.getElementById('convBody');
+  var empty = document.getElementById('convEmpty');
+  var table = document.getElementById('convTable');
+  if(!rows.length){ table.style.display='none'; empty.style.display=''; return; }
+  table.style.display=''; empty.style.display='none';
+
+  tbody.innerHTML = rows.map(function(r){
+    var pill = r.resolution==='resolved'?'<span class="pill ok">resolved</span>'
       :(r.resolution==='escalated'?'<span class="pill err">escalated</span>':'<span class="pill muted">—</span>');
-    return `<tr>
-      <td style="white-space:nowrap">${esc(r.created_at.replace('T',' ').slice(0,19))}</td>
-      <td>${esc(r.user_id)}</td>
-      <td><span class="muted">${esc(r.direction)}</span></td>
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.message||'')}">${esc((r.message||'').slice(0,200))}</td>
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.response||'')}">${esc((r.response||'').slice(0,200))}</td>
-      <td>${sourceDetails(r.sources)}</td>
-      <td class="muted">${esc(r.action_called||'')}</td>
-      <td>${pill}</td>
-      <td class="muted">${r.latency_ms||''}</td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="9" class="muted">No logs yet.</td></tr>';
+    var srcCount = (r.sources||[]).length;
+    var srcHtml = srcCount?'<span class="pill muted" style="cursor:pointer" onclick="event.stopPropagation();showDetail(ALL_LOGS.find(function(l){return l.id===\''+r.id+'\'}))">'+srcCount+'</span>':'<span class="muted">—</span>';
+    return '<tr onclick="showDetail(ALL_LOGS.find(function(l){return l.id===\''+r.id+'\'}))" style="cursor:pointer">' +
+      '<td style="white-space:nowrap;font-size:12px;color:var(--muted)">'+esc(r.created_at.replace('T',' ').slice(0,16))+'</td>' +
+      '<td style="font-size:12px">'+esc(r.user_id.slice(0,24))+(r.user_id.length>24?'…':'')+'</td>' +
+      '<td>'+channelBadge(r.channel)+'</td>' +
+      '<td class="msg-cell" title="'+esc(r.message||'')+'">'+esc((r.message||'').slice(0,150))+'</td>' +
+      '<td class="msg-cell" title="'+esc(r.response||'')+'">'+esc((r.response||'').slice(0,150))+'</td>' +
+      '<td>'+srcHtml+'</td>' +
+      '<td style="font-size:12px;color:var(--muted)">'+esc(r.action_called||'—')+'</td>' +
+      '<td>'+pill+'</td>' +
+      '<td style="font-size:12px;color:var(--muted)">'+(r.latency_ms||'—')+'</td>' +
+    '</tr>';
+  }).join('');
 }
-load();
+
+function renderSessions(){
+  var sessions = {};
+  ALL_LOGS.forEach(function(r){
+    if(!r.session_id) return;
+    var sid = r.session_id;
+    if(!sessions[sid]){
+      sessions[sid] = { id:sid, userId:r.user_id, channel:r.channel, turns:0, resolutions:[], lastAt:null, firstAt:null };
+    }
+    sessions[sid].turns++;
+    if(r.resolution) sessions[sid].resolutions.push(r.resolution);
+    var ts = r.created_at;
+    if(!sessions[sid].firstAt || ts < sessions[sid].firstAt) sessions[sid].firstAt = ts;
+    if(!sessions[sid].lastAt || ts > sessions[sid].lastAt) sessions[sid].lastAt = ts;
+  });
+
+  var list = Object.values(sessions).sort(function(a,b){ return b.lastAt < a.lastAt ? -1 : 1; });
+  var tbody = document.getElementById('sessionBody');
+  var empty = document.getElementById('sessionEmpty');
+  var table = document.getElementById('sessionTable');
+  if(!list.length){ table.style.display='none'; empty.style.display=''; return; }
+  table.style.display=''; empty.style.display='none';
+
+  tbody.innerHTML = list.map(function(s){
+    var isResolved = s.resolutions.indexOf('resolved')!==-1;
+    var isEscalated = s.resolutions.indexOf('escalated')!==-1;
+    var pill = isResolved?'<span class="pill ok">resolved</span>':(isEscalated?'<span class="pill err">escalated</span>':'<span class="pill muted">—</span>');
+    return '<tr>' +
+      '<td style="font-size:12px;font-family:monospace;color:var(--muted)">'+s.id.slice(0,8)+'···</td>' +
+      '<td style="font-size:12px">'+esc(s.userId.slice(0,20))+'</td>' +
+      '<td>'+s.turns+'</td>' +
+      '<td style="font-size:12px;color:var(--muted)">'+esc(s.firstAt.replace('T',' ').slice(0,16))+'</td>' +
+      '<td style="font-size:12px;color:var(--muted)">'+esc(s.lastAt.replace('T',' ').slice(0,16))+'</td>' +
+      '<td>'+pill+'</td>' +
+      '<td><button class="ghost sm" onclick="filterBySession(\''+s.id+'\')">View turns</button></td>' +
+    '</tr>';
+  }).join('');
+}
+
+function renderUsers(){
+  var users = {};
+  ALL_LOGS.forEach(function(r){
+    var uid = r.user_id;
+    if(!users[uid]){
+      users[uid] = { userId:uid, turns:0, sessions:{}, firstAt:null, lastAt:null, resolved:0, total:0 };
+    }
+    users[uid].turns++;
+    if(r.session_id) users[uid].sessions[r.session_id]=true;
+    if(r.resolution) { users[uid].total++; if(r.resolution==='resolved') users[uid].resolved++; }
+    var ts = r.created_at;
+    if(!users[uid].firstAt || ts < users[uid].firstAt) users[uid].firstAt = ts;
+    if(!users[uid].lastAt || ts > users[uid].lastAt) users[uid].lastAt = ts;
+  });
+
+  var list = Object.values(users).sort(function(a,b){ return b.lastAt < a.lastAt ? -1 : 1; });
+  var tbody = document.getElementById('userBody');
+  var empty = document.getElementById('userEmpty');
+  var table = document.getElementById('userTable');
+  if(!list.length){ table.style.display='none'; empty.style.display=''; return; }
+  table.style.display=''; empty.style.display='none';
+
+  tbody.innerHTML = list.map(function(u){
+    var pct = u.total?Math.round(u.resolved/u.total*100):0;
+    return '<tr>' +
+      '<td style="font-size:12px">'+esc(u.userId)+'</td>' +
+      '<td>'+u.turns+'</td>' +
+      '<td>'+Object.keys(u.sessions).length+'</td>' +
+      '<td style="font-size:12px;color:var(--muted)">'+esc(u.firstAt.replace('T',' ').slice(0,16))+'</td>' +
+      '<td style="font-size:12px;color:var(--muted)">'+esc(u.lastAt.replace('T',' ').slice(0,16))+'</td>' +
+      '<td><span class="pill '+ (pct>=50?'ok':'muted') +'">'+pct+'%</span></td>' +
+      '<td><button class="ghost sm" onclick="filterByUser(\''+esc(u.userId)+'\')">View logs</button></td>' +
+    '</tr>';
+  }).join('');
+}
+
+function filterBySession(sid){
+  document.getElementById('fUserId').value = '';
+  document.getElementById('fChannel').value = '';
+  document.getElementById('fResolution').value = '';
+  selectLogTab('conversations');
+  var qs = new URLSearchParams();
+  qs.set('session_id', sid);
+  qs.set('days', document.getElementById('fDays').value||30);
+  api('/dashboard/logs?'+qs.toString()).then(function(rows){
+    ALL_LOGS = rows;
+    updateStats();
+    renderConversations();
+  });
+}
+
+function filterByUser(uid){
+  document.getElementById('fUserId').value = uid;
+  document.getElementById('fChannel').value = '';
+  document.getElementById('fResolution').value = '';
+  document.getElementById('fDays').value = '90';
+  selectLogTab('conversations');
+  loadLogs();
+}
+
+function clearFilters(){
+  document.getElementById('fUserId').value='';
+  document.getElementById('fChannel').value='';
+  document.getElementById('fResolution').value='';
+  document.getElementById('fDays').value='30';
+  loadLogs();
+}
+
+async function loadLogs(){
+  var uid = document.getElementById('fUserId').value.trim();
+  var ch = document.getElementById('fChannel').value;
+  var res = document.getElementById('fResolution').value;
+  var days = document.getElementById('fDays').value||30;
+  var qs = new URLSearchParams();
+  if(uid) qs.set('user_id', uid);
+  if(ch) qs.set('channel', ch);
+  if(res) qs.set('resolution', res);
+  qs.set('days', days);
+
+  try {
+    var rows = await api('/dashboard/logs?'+qs.toString());
+    ALL_LOGS = rows;
+    updateStats();
+    renderConversations();
+    renderSessions();
+    renderUsers();
+  } catch(e) {
+    ALL_LOGS = [];
+    updateStats();
+    renderConversations();
+    renderSessions();
+    renderUsers();
+  }
+}
+
+selectLogTab('conversations');
+loadLogs();
 </script>
 {% endblock %}

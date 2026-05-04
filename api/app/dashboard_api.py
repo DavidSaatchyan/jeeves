@@ -179,17 +179,51 @@ def logs(
     tenant: Tenant = Depends(get_current_tenant),
     db: Session = Depends(get_db),
     user_id: str | None = None,
+    session_id: str | None = None,
+    channel: str | None = None,
+    resolution: str | None = None,
     days: int = 30,
-    limit: int = 200,
+    limit: int = 500,
 ):
     q = db.query(ChatLog).filter(ChatLog.tenant_id == tenant.id)
     if user_id:
         q = q.filter(ChatLog.user_id == user_id)
+    if session_id:
+        q = q.filter(ChatLog.session_id == session_id)
+    if channel:
+        q = q.filter(ChatLog.channel == channel)
+    if resolution:
+        q = q.filter(ChatLog.resolution == resolution)
     q = q.filter(ChatLog.created_at >= datetime.utcnow() - timedelta(days=days))
     rows = q.order_by(ChatLog.created_at.desc()).limit(limit).all()
+
+    # Aggregate session info
+    session_ids = set(r.session_id for r in rows if r.session_id)
+    sessions = {}
+    if session_ids:
+        from sqlalchemy import func
+        session_rows = (
+            db.query(
+                ChatLog.session_id,
+                func.count(ChatLog.id).label("turns"),
+                func.min(ChatLog.created_at).label("started_at"),
+                func.max(ChatLog.created_at).label("last_at"),
+            )
+            .filter(ChatLog.session_id.in_(session_ids))
+            .group_by(ChatLog.session_id)
+            .all()
+        )
+        for sr in session_rows:
+            sessions[str(sr.session_id)] = {
+                "turns": sr.turns,
+                "started_at": sr.started_at.isoformat() if sr.started_at else None,
+                "last_at": sr.last_at.isoformat() if sr.last_at else None,
+            }
+
     return [
         {
             "id": str(r.id),
+            "session_id": str(r.session_id) if r.session_id else None,
             "created_at": r.created_at.isoformat(),
             "user_id": r.user_id,
             "direction": r.direction,
@@ -198,7 +232,11 @@ def logs(
             "resolution": r.resolution,
             "action_called": r.action_called,
             "latency_ms": r.latency_ms,
+            "delivered": r.delivered,
             "sources": r.sources or [],
+            "channel": r.channel,
+            "extra_fields": r.extra_fields or {},
+            "session_info": sessions.get(str(r.session_id)) if r.session_id else None,
         }
         for r in rows
     ]
