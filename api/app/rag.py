@@ -106,27 +106,16 @@ def delete_file(tenant_id: UUID | str, file_id: UUID | str) -> None:
         col = _collection(tenant_id)
         fid = str(file_id)
         total_before = col.count()
-        print(f"[rag] delete_file: collection '{col.name}' has {total_before} chunks before delete", flush=True)
 
-        # Get IDs by metadata filter
-        result = col.get(where={"file_id": fid}, include=[])
-        found_ids = result.get("ids", []) if result else []
-        print(f"[rag] delete_file: found {len(found_ids)} chunks to delete", flush=True)
-
-        if found_ids:
-            col.delete(ids=found_ids)
-            print(f"[rag] delete_file: deleted {len(found_ids)} chunks by ID", flush=True)
-        else:
-            print(f"[rag] delete_file: no chunks found for file_id={fid}", flush=True)
+        # Direct where-based delete — simpler and more reliable
+        col.delete(where={"file_id": fid})
 
         total_after = col.count()
-        print(f"[rag] delete_file: collection now has {total_after} chunks (was {total_before})", flush=True)
+        print(f"[rag] delete: {col.name} {total_before} -> {total_after} chunks", flush=True)
 
         _reset_chroma()
     except Exception as e:
-        import traceback
         print(f"[rag] delete failed: {e}", flush=True)
-        traceback.print_exc()
 
 
 def search(

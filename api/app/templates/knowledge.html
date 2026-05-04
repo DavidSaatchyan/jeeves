@@ -12,8 +12,6 @@
   </div>
   <div class="sk-table ds-skeleton"></div>
 </div>
-  <div class="sk-table ds-skeleton"></div>
-</div>
 
 <!-- Real content -->
 <div id="kbContent" style="display:none">
@@ -123,6 +121,7 @@ function fmtSize(b){
 function relTime(iso){
   if(!iso) return '—';
   var d = new Date(iso);
+  if(isNaN(d.getTime())) return '—';
   var diff = (Date.now() - d.getTime()) / 1000;
   if(diff < 60) return 'just now';
   if(diff < 3600) return Math.floor(diff/60) + 'm ago';
@@ -169,8 +168,14 @@ function loadWidget(){
   document.body.appendChild(s);
 }
 
+var _refreshing = false;
+var _pollTimer = null;
+
 async function refresh(){
-  const rows = await api('/knowledge/files');
+  if(_refreshing) return;
+  _refreshing = true;
+  try{
+    const rows = await api('/knowledge/files');
 
   // Summary
   const ready = rows.filter(r => r.status === 'ready');
@@ -190,9 +195,13 @@ async function refresh(){
   // Last activity (upload or delete)
   var lastAction = localStorage.getItem('kb_last_action');
   var lastActionTime = lastAction ? new Date(lastAction) : null;
-  var lastRowDate = rows.length ? new Date(rows.reduce(function(a, b){ return a.created_at > b.created_at ? a.created_at : b.created_at; })) : null;
+  if(lastActionTime && isNaN(lastActionTime.getTime())) lastActionTime = null;
+
+  var validRows = rows.filter(function(r){ return r.created_at && new Date(r.created_at).toString() !== 'Invalid Date'; });
+  var lastRowDate = validRows.length ? new Date(validRows.reduce(function(a, b){ return a.created_at > b.created_at ? a.created_at : b.created_at; })) : null;
+
   var actualLast = lastActionTime && lastRowDate ? (lastActionTime > lastRowDate ? lastActionTime : lastRowDate) : (lastActionTime || lastRowDate);
-  var timeLabel = actualLast ? relTime(actualLast.toISOString()) : 'Never';
+  var timeLabel = actualLast && !isNaN(actualLast.getTime()) ? relTime(actualLast.toISOString()) : 'Never';
   var actionLabel = lastActionTime && (!lastRowDate || lastActionTime > lastRowDate) ? 'File deleted' : (rows.length ? 'File uploaded' : 'No activity');
 
   document.getElementById('sumFiles').textContent = ready.length + ' file' + (ready.length !== 1 ? 's' : '');
@@ -228,6 +237,9 @@ async function refresh(){
   } else {
     setWidgetVisible(false);
     showWidgetPlaceholder();
+  }
+  } finally {
+    _refreshing = false;
   }
 }
 
@@ -272,6 +284,7 @@ async function uploadOne(f){
 }
 
 async function uploadMany(files){
+  pausePoll();
   uerr.textContent = '';
   const arr = Array.from(files);
   let done = 0, failed = 0;
@@ -279,7 +292,6 @@ async function uploadMany(files){
     showProgress(f.name);
     setStep('upload', 'active');
     try{
-      // Simulate step transitions (upload is fast, chunking/embedding take time)
       var t1 = setTimeout(function(){ setStep('chunking', 'active'); }, 300);
       var t2 = setTimeout(function(){ setStep('embedding', 'active'); }, 800);
       var t3 = setTimeout(function(){ setStep('indexing', 'active'); }, 1500);
@@ -299,6 +311,7 @@ async function uploadMany(files){
     hideProgress();
   }
   document.getElementById('uprog').textContent = 'Uploaded ' + done + '/' + arr.length + (failed ? ' (' + failed + ' failed)' : '');
+  resumePoll();
 }
 
 async function del(id){
@@ -306,10 +319,12 @@ async function del(id){
   var btn = document.querySelector('#tbl tr[data-id="' + id + '"] .del-btn');
   if(btn) btn.disabled = true;
   localStorage.setItem('kb_last_action', new Date().toISOString());
+  pausePoll();
   try{
     await fetch('/knowledge/files/' + id, {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}});
   } finally {
-    refresh();
+    await refresh();
+    resumePoll();
   }
 }
 
@@ -328,6 +343,14 @@ refresh().then(() => {
   document.getElementById('kbContent').style.display = '';
 });
 
-setInterval(refresh, 5000);
+_pollTimer = setInterval(refresh, 5000);
+
+function pausePoll(){
+  if(_pollTimer){ clearInterval(_pollTimer); _pollTimer = null; }
+}
+function resumePoll(){
+  pausePoll();
+  _pollTimer = setInterval(refresh, 5000);
+}
 </script>
 {% endblock %}

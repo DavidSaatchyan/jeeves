@@ -143,6 +143,8 @@ def delete_file(
     if not rec:
         raise HTTPException(404, "file not found")
 
+    print(f"[knowledge] delete: file_id={file_id} filename={rec.filename} tenant={tenant.id}", flush=True)
+
     # Delete from Chroma
     rag.delete_file(tenant.id, file_id)
 
@@ -155,6 +157,6 @@ def delete_file(
     db.delete(rec)
     db.commit()
 
-    # Clear conversation history (fast for in-memory, async for Redis)
+    # Clear conversation history
     memory.clear_tenant(str(tenant.id))
     return
