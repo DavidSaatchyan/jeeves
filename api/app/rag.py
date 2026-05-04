@@ -27,7 +27,7 @@ EMBED_MODEL = _rag_cfg.get("embedding_model", "text-embedding-3-small")
 TOP_K = int(_rag_cfg.get("top_k", 5))
 # cosine distance (1 - cos_sim). Empirically for text-embedding-3-small,
 # distances below ~0.45 are usefully relevant; above ~0.60 is noise.
-DISTANCE_THRESHOLD = float(_rag_cfg.get("distance_threshold", 0.60))
+DISTANCE_THRESHOLD = float(_rag_cfg.get("distance_threshold", 0.85))
 
 # Schema version — bump on any breaking change to collection layout.
 EMBEDDING_VERSION = f"{EMBED_MODEL}:v1"
@@ -108,8 +108,22 @@ def delete_file(tenant_id: UUID | str, file_id: UUID | str) -> None:
         total_before = col.count()
         print(f"[rag] delete_file: collection '{col.name}' has {total_before} chunks before delete", flush=True)
 
-        # Use where-based delete — more reliable than ID matching
-        col.delete(where={"file_id": fid})
+        # Get IDs by metadata filter
+        result = col.get(where={"file_id": fid}, include=[])
+        found_ids = result.get("ids", []) if result else []
+        print(f"[rag] delete_file: found {len(found_ids)} chunks to delete", flush=True)
+
+        if found_ids:
+            col.delete(ids=found_ids)
+            print(f"[rag] delete_file: deleted {len(found_ids)} chunks by ID", flush=True)
+        else:
+            print(f"[rag] delete_file: no chunks found for file_id={fid}", flush=True)
+
+        # Force persist to disk
+        try:
+            col.persist()
+        except Exception:
+            pass
 
         total_after = col.count()
         print(f"[rag] delete_file: collection now has {total_after} chunks (was {total_before})", flush=True)
