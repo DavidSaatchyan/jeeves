@@ -40,6 +40,20 @@
     <div class="muted" style="font-size:12px">.pdf, .txt, .md · Max 50 MB total</div>
     <input id="file" type="file" accept=".pdf,.txt,.md" multiple style="display:none"/>
   </div>
+  <div id="uploadModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:10000;align-items:center;justify-content:center;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:420px;width:90%;">
+      <h3 style="margin:0 0 8px;font-size:16px;color:var(--text)" id="uploadFileName">Processing...</h3>
+      <p class="muted" style="margin:0 0 24px;font-size:13px" id="uploadFileStatus">Starting</p>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
+        <div class="step" id="step-upload"><div class="step-icon" id="step-upload-icon"><div class="spinner"></div></div><span>Uploading file</span></div>
+        <div class="step" id="step-chunking"><div class="step-icon" id="step-chunking-icon"><div class="spinner"></div></div><span>Splitting into chunks</span></div>
+        <div class="step" id="step-embedding"><div class="step-icon" id="step-embedding-icon"><div class="spinner"></div></div><span>Generating embeddings</span></div>
+        <div class="step" id="step-indexing"><div class="step-icon" id="step-indexing-icon"><div class="spinner"></div></div><span>Indexing to knowledge base</span></div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+  </div>
+
   <div id="uprog" class="muted mt-12"></div>
   <div class="err-msg" id="uerr"></div>
 </div>
@@ -67,6 +81,17 @@
 #tbl td,#tbl th{text-align:left}
 .del-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:6px;padding:5px 6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
 .del-btn:hover{color:var(--red);background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.2)}
+.progress-bar{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;width:0%;background:var(--accent);border-radius:3px;transition:width .4s ease}
+.step{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--muted2);transition:color .3s}
+.step.active{color:var(--text)}
+.step.done{color:#34d399}
+.step-icon{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s}
+.step.active .step-icon{border-color:var(--accent);background:rgba(99,102,241,0.15)}
+.step.done .step-icon{border-color:#34d399;background:rgba(52,211,153,0.15)}
+.spinner{width:16px;height:16px;border:2px solid transparent;border-top:2px solid var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+.step.done .step-icon svg{width:16px;height:16px;stroke:#34d399}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 <script>
 var widgetLoaded = false;
@@ -163,6 +188,39 @@ async function refresh(){
 
 function esc(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+const STEPS = ['upload','chunking','embedding','indexing'];
+
+function showProgress(filename){
+  document.getElementById('uploadModal').style.display = 'flex';
+  document.getElementById('uploadFileName').textContent = filename;
+  STEPS.forEach(function(s){
+    var el = document.getElementById('step-' + s);
+    el.className = 'step';
+    document.getElementById('step-' + s + '-icon').innerHTML = '<div class="spinner"></div>';
+  });
+  document.getElementById('progressFill').style.width = '0%';
+}
+
+function setStep(stepName, state){
+  var el = document.getElementById('step-' + stepName);
+  var icon = document.getElementById('step-' + stepName + '-icon');
+  if(state === 'active'){
+    el.className = 'step active';
+    document.getElementById('uploadFileStatus').textContent = 'Processing...';
+    icon.innerHTML = '<div class="spinner"></div>';
+  } else if(state === 'done'){
+    el.className = 'step done';
+    icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  }
+  var idx = STEPS.indexOf(stepName);
+  var pct = ((idx + 1) / STEPS.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function hideProgress(){
+  document.getElementById('uploadModal').style.display = 'none';
+}
+
 async function uploadOne(f){
   const fd = new FormData(); fd.append('file', f);
   return api('/knowledge/files', {method:'POST', body:fd});
@@ -173,10 +231,27 @@ async function uploadMany(files){
   const arr = Array.from(files);
   let done = 0, failed = 0;
   for(const f of arr){
-    document.getElementById('uprog').textContent = 'Uploading ' + (done + failed + 1) + '/' + arr.length + ': ' + f.name + '…';
-    try{ await uploadOne(f); done++; }
-    catch(e){ failed++; uerr.textContent = (uerr.textContent ? uerr.textContent + '; ' : '') + f.name + ': ' + e.message; }
+    showProgress(f.name);
+    setStep('upload', 'active');
+    try{
+      // Simulate step transitions (upload is fast, chunking/embedding take time)
+      var t1 = setTimeout(function(){ setStep('chunking', 'active'); }, 300);
+      var t2 = setTimeout(function(){ setStep('embedding', 'active'); }, 800);
+      var t3 = setTimeout(function(){ setStep('indexing', 'active'); }, 1500);
+      var result = await uploadOne(f);
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+      STEPS.forEach(function(s){ setStep(s, 'done'); });
+      document.getElementById('uploadFileStatus').textContent = 'Done — ' + (result.chunks || 0) + ' chunks indexed';
+      done++;
+    } catch(e){
+      failed++;
+      uerr.textContent = (uerr.textContent ? uerr.textContent + '; ' : '') + f.name + ': ' + e.message;
+      STEPS.forEach(function(s){ setStep(s, 'done'); });
+      document.getElementById('uploadFileStatus').textContent = 'Failed';
+    }
     await refresh();
+    await new Promise(function(r){ setTimeout(r, 600); });
+    hideProgress();
   }
   document.getElementById('uprog').textContent = 'Uploaded ' + done + '/' + arr.length + (failed ? ' (' + failed + ' failed)' : '');
 }
