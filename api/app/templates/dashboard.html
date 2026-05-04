@@ -3,6 +3,9 @@
 <h1>Dashboard</h1>
 <p class="page-desc">Performance overview for the last 7 days.</p>
 
+<!-- Content wrapper: hidden until data loads -->
+<div id="dashContent" style="opacity:0;transition:opacity 0.4s ease">
+
 <div id="gettingStarted" class="card" style="display:none;border-top:2px solid var(--accent)">
   <div class="flex" style="justify-content:space-between;align-items:start">
     <div>
@@ -20,14 +23,14 @@
     <div class="ds-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
     <div>
       <div class="ds-hero-num" id="s1">–</div>
-      <div class="ds-hero-label">Dialogs (7d)</div>
+      <div class="ds-hero-label">Dialogs</div>
     </div>
   </div>
   <div class="ds-hero-card ds-hero-green">
     <div class="ds-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
     <div>
       <div class="ds-hero-num" id="s2">–</div>
-      <div class="ds-hero-label">Resolved (7d)</div>
+      <div class="ds-hero-label">Resolved</div>
     </div>
   </div>
   <div class="ds-hero-card ds-hero-amber">
@@ -49,7 +52,7 @@
 <!-- Sub stats -->
 <div class="ds-sub-stats" id="subStats">
   <div class="ds-sub-item">
-    <span class="ds-sub-label">Escalations (7d)</span>
+    <span class="ds-sub-label">Escalated</span>
     <span class="ds-sub-val" id="s7" style="color:var(--red)">–</span>
   </div>
 </div>
@@ -76,6 +79,8 @@
     <h2>Recent escalations</h2>
     <div id="unresolvedList"></div>
   </div>
+</div>
+
 </div>
 {% endblock %}
 {% block tail %}
@@ -312,11 +317,16 @@ function drawHeatmap(data){
   el.innerHTML = html;
 }
 
-loadStats();
-loadTrend();
-loadHourly();
-loadChannelsBreakdown();
-loadUnresolved();
-loadSetupStatus();
+// Load all data in parallel, reveal when ready
+Promise.allSettled([
+  loadStats(),
+  loadTrend(),
+  loadHourly(),
+  loadChannelsBreakdown(),
+  loadUnresolved(),
+  loadSetupStatus()
+]).then(function(){
+  document.getElementById('dashContent').style.opacity = '1';
+});
 </script>
 {% endblock %}
