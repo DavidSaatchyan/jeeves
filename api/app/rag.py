@@ -97,7 +97,25 @@ def index_file(tenant_id: UUID | str, file_id: UUID | str, path: Path) -> int:
 def delete_file(tenant_id: UUID | str, file_id: UUID | str) -> None:
     try:
         col = _collection(tenant_id)
-        col.delete(where={"file_id": str(file_id)})
+        fid = str(file_id)
+        print(f"[rag] delete_file: tenant={tenant_id} file_id={fid}", flush=True)
+        # Get count before
+        before = col.count()
+        # First try: get all IDs for this file_id and delete by ID (more reliable than where)
+        try:
+            existing = col.get(where={"file_id": fid}, include=[])
+            if existing and existing.get("ids"):
+                col.delete(ids=existing["ids"])
+                print(f"[rag] delete_file: removed {len(existing['ids'])} chunks by ID", flush=True)
+        except Exception as e:
+            print(f"[rag] delete_file: get+delete by ID failed: {e}", flush=True)
+        # Fallback: where-based delete
+        try:
+            col.delete(where={"file_id": fid})
+        except Exception:
+            pass
+        after = col.count()
+        print(f"[rag] delete_file: collection count {before} -> {after}", flush=True)
     except Exception as e:
         print(f"[rag] delete failed: {e}", flush=True)
 

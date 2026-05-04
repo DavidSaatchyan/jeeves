@@ -161,9 +161,12 @@ async def widget_chat(body: WidgetChatIn):
         log.latency_ms = result["latency_ms"]
         log.sources = result.get("sources") or []
         log.session_id = result.get("session_id")
-        tenant.dialogs_used += 1
-        if not result["escalated"]:
-            tenant.resolved_count += 1
+        log.channel = body.channel or "web_widget"
+        # Test widget: don't count toward billing/stats
+        if log.channel != "test_widget":
+            tenant.dialogs_used += 1
+            if not result["escalated"]:
+                tenant.resolved_count += 1
         db.commit()
 
         # Enqueue outgoing webhooks for configured events
