@@ -144,7 +144,16 @@ def delete_file(
     rec = db.query(FileRecord).filter(FileRecord.id == file_id, FileRecord.tenant_id == tenant.id).first()
     if not rec:
         raise HTTPException(404, "file not found")
+
+    print(f"[knowledge] deleting file {file_id} ({rec.filename}) for tenant {tenant.id}", flush=True)
+
+    # Delete from Chroma
     rag.delete_file(tenant.id, file_id)
+
+    # Verify deletion
+    remaining = rag._count_all_chunks(tenant.id)
+    print(f"[knowledge] after delete: {remaining} chunks remain in Chroma", flush=True)
+
     try:
         if rec.s3_key and os.path.exists(rec.s3_key):
             os.remove(rec.s3_key)

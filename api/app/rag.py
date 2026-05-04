@@ -63,9 +63,17 @@ def _collection(tenant_id: UUID | str):
 
 
 def _reset_chroma():
-    """Force new client connection so Chroma reads fresh data from disk."""
     global _chroma_client
     _chroma_client = None
+
+
+def _count_all_chunks(tenant_id: UUID | str) -> int:
+    """Count total chunks in collection for debugging."""
+    try:
+        col = _collection(tenant_id)
+        return col.count()
+    except Exception:
+        return 0
 
 
 def embed_batch(texts: list[str]) -> list[list[float]]:
@@ -97,12 +105,42 @@ def delete_file(tenant_id: UUID | str, file_id: UUID | str) -> None:
     try:
         col = _collection(tenant_id)
         fid = str(file_id)
-        existing = col.get(where={"file_id": fid}, include=[])
-        if existing and existing.get("ids"):
-            col.delete(ids=existing["ids"])
+        total_before = col.count()
+        print(f"[rag] delete_file: collection '{col.name}' has {total_before} chunks before delete", flush=True)
+
+        # Try to find chunks by file_id in metadata
+        result = col.get(where={"file_id": fid}, include=[])
+        found_ids = result.get("ids", []) if result else []
+        print(f"[rag] delete_file: found {len(found_ids)} chunks with file_id={fid}", flush=True)
+
+        # Also log all unique file_ids in the collection for debugging
+        try:
+            all_meta = col.get(include=[], limit=100)
+            if all_meta:
+                file_ids_in_collection = set()
+                for idx in range(len(all_meta.get("ids", []))):
+                    # We can't easily get metadata without include, so just log count
+                    pass
+                print(f"[rag] delete_file: total items in collection: {len(all_meta.get('ids', []))}", flush=True)
+        except Exception:
+            pass
+
+        if found_ids:
+            col.delete(ids=found_ids)
+            print(f"[rag] delete_file: deleted {len(found_ids)} chunks by ID", flush=True)
+        else:
+            # Fallback: try where-based delete
+            col.delete(where={"file_id": fid})
+            print(f"[rag] delete_file: attempted delete by where", flush=True)
+
+        total_after = col.count()
+        print(f"[rag] delete_file: collection now has {total_after} chunks (was {total_before})", flush=True)
+
         _reset_chroma()
     except Exception as e:
+        import traceback
         print(f"[rag] delete failed: {e}", flush=True)
+        traceback.print_exc()
 
 
 def search(
