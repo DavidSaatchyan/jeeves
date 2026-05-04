@@ -129,7 +129,7 @@ async def run(
     except Exception as e:
         print(f"[agent] crm read failed: {e}", flush=True)
 
-    # 4. Build messages: system + context + history + user
+    # 4. Build messages: system + history + context injection + user
     sys = (
         f"{SYSTEM_PROMPT}\n\n"
         "ROLE: You are a human customer success manager, not an AI bot. "
@@ -145,14 +145,20 @@ async def run(
         "calling a write tool such as update_tariff, summarize the exact change "
         "and get explicit user confirmation in the current conversation. Set "
         "confirmed_by_user=true only after that confirmation.\n\n"
-        f"Internal Reference Data:\n{rag_block}\n\n"
         f"Webhook context: {json.dumps(webhook_ctx, ensure_ascii=False, default=str)}\n\n"
-        f"CRM context for user {user_id}: {json.dumps(crm_ctx, ensure_ascii=False, default=str)}\n\n"
-        "IMPORTANT: Answer ONLY using information found in the Internal Reference Data above. "
-        "If the data does not contain the answer, say you don't know and offer to connect to a human."
+        f"CRM context for user {user_id}: {json.dumps(crm_ctx, ensure_ascii=False, default=str)}"
     )
+
+    context_injection = (
+        f"Reference Data: {rag_block if rag_block else '(No relevant data — if the user asks about '
+        'pricing, plans, or features not listed here, say you don\\'t know and offer to connect to a human)'}\n\n"
+        "Answer ONLY using the Reference Data above. Ignore previous answers in the conversation "
+        "history if they conflict with this data."
+    )
+
     msgs: list[dict] = [{"role": "system", "content": sys}]
     msgs.extend(memory.history(str(tenant_id), user_id))
+    msgs.append({"role": "system", "content": context_injection})
     msgs.append({"role": "user", "content": message})
     memory.append(str(tenant_id), user_id, "user", message)
 
