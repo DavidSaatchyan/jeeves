@@ -165,8 +165,6 @@ def search(
         print(f"[rag] search raw results ({len(docs)}):\n" + "\n".join(raw_log), flush=True)
         out: list[dict[str, Any]] = []
         for i, (doc, meta, dist) in enumerate(zip(docs, metas, dists)):
-            if dist is None or dist > 0.75:
-                continue
             meta = meta or {}
             out.append(
                 {
@@ -183,6 +181,10 @@ def search(
                     "chunk_hash": meta.get("chunk_hash", ""),
                 }
             )
+        # If the best result is weakly relevant (dist > 0.75), treat as empty
+        if out and out[0]["distance"] > 0.75:
+            print(f"[rag] search: best dist={out[0]['distance']:.4f} > 0.75, treating as empty", flush=True)
+            return []
         print(f"[rag] search passed threshold({thr}): {len(out)}/{len(docs)} results", flush=True)
         return out
     except Exception as e:
