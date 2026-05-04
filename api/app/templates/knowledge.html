@@ -1,7 +1,36 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>Knowledge base</h1>
-<p class="page-desc">The knowledge base is what your agent knows about your product. Upload FAQ, product docs, policies, pricing pages — anything in .pdf, .txt, or .md.</p>
+<p class="page-desc">Upload FAQ, product docs, policies, pricing pages — anything in .pdf, .txt, or .md. This is what your agent knows about your product.</p>
+
+<!-- Skeleton loader -->
+<div id="kbSkeleton">
+  <div class="sk-stats">
+    <div class="sk-stat-card ds-skeleton"></div>
+    <div class="sk-stat-card ds-skeleton"></div>
+    <div class="sk-stat-card ds-skeleton"></div>
+  </div>
+  <div class="sk-table ds-skeleton"></div>
+</div>
+
+<!-- Real content -->
+<div id="kbContent" style="display:none">
+
+<!-- Summary -->
+<div class="kb-summary" id="kbSummary" style="display:none">
+  <div class="kb-stat">
+    <div class="kb-stat-n" id="sumFiles">0</div>
+    <div class="kb-stat-l">Files</div>
+  </div>
+  <div class="kb-stat">
+    <div class="kb-stat-n" id="sumChunks">0</div>
+    <div class="kb-stat-l">Chunks</div>
+  </div>
+  <div class="kb-stat">
+    <div class="kb-stat-n" id="sumSize">0 KB</div>
+    <div class="kb-stat-l">Total size</div>
+  </div>
+</div>
 
 <div class="card">
   <h2>Upload files</h2>
@@ -18,14 +47,44 @@
 <div class="card">
   <div class="card-header">
     <h2>Files</h2>
-    <span class="muted" id="fileCount"></span>
   </div>
-  <table><thead><tr><th>Filename</th><th>Status</th><th style="width:80px"></th></tr></thead><tbody id="tbl"></tbody></table>
+  <table><thead><tr><th>Filename</th><th>Status</th><th style="width:90px;text-align:right">Size</th><th style="width:90px;text-align:right">Chunks</th><th style="width:130px">Uploaded</th><th style="width:80px"></th></tr></thead><tbody id="tbl"></tbody></table>
+</div>
+
 </div>
 {% endblock %}
 {% block tail %}
+<style>
+.sk-stats{display:grid;grid-template-columns:repeat(3,120px);gap:12px;margin-bottom:20px}
+.sk-stat-card{height:60px;border-radius:12px}
+.sk-table{height:180px;border-radius:12px}
+.ds-skeleton{animation:ds-pulse 1.5s ease-in-out infinite;background:rgba(255,255,255,0.04);border-radius:8px}
+@keyframes ds-pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.kb-summary{display:flex;gap:16px;margin-bottom:20px;padding:0}
+.kb-stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;min-width:120px}
+.kb-stat-n{font-size:24px;font-weight:800;letter-spacing:-1px;color:var(--text)}
+.kb-stat-l{font-size:11px;color:var(--muted2);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+#tbl td,#tbl th{text-align:left}
+</style>
 <script>
 var widgetLoaded = false;
+
+function fmtSize(b){
+  if(b < 1024) return b + ' B';
+  if(b < 1048576) return (b/1024).toFixed(0) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+
+function relTime(iso){
+  if(!iso) return '—';
+  var d = new Date(iso);
+  var diff = (Date.now() - d.getTime()) / 1000;
+  if(diff < 60) return 'just now';
+  if(diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if(diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  if(diff < 604800) return Math.floor(diff/86400) + 'd ago';
+  return d.toLocaleDateString();
+}
 
 function showWidgetPlaceholder(){
   if(document.getElementById('widget-placeholder')) return;
@@ -65,12 +124,27 @@ function loadWidget(){
 
 async function refresh(){
   const rows = await api('/knowledge/files');
-  tbl.innerHTML = rows.map(r=>{
-    const cls = r.status==='ready'?'ok':(r.status==='failed'?'err':'warn');
-    return `<tr><td><strong>${r.filename}</strong></td><td><span class="pill ${cls}">${r.status}</span></td>
-      <td><button class="ghost sm danger" onclick="del('${r.id}')">Delete</button></td></tr>`;
-  }).join('') || '<tr><td colspan="3" class="muted">No files yet.</td></tr>';
-  document.getElementById('fileCount').textContent = rows.length ? rows.length + ' file' + (rows.length>1?'s':'') : '';
+
+  // Summary
+  const ready = rows.filter(r => r.status === 'ready');
+  const totalChunks = ready.reduce((a, r) => a + (r.chunks_total || 0), 0);
+  const totalSize = rows.reduce((a, r) => a + (r.size_bytes || 0), 0);
+  document.getElementById('sumFiles').textContent = ready.length;
+  document.getElementById('sumChunks').textContent = totalChunks.toLocaleString();
+  document.getElementById('sumSize').textContent = fmtSize(totalSize);
+  document.getElementById('kbSummary').style.display = '';
+
+  // Table
+  tbl.innerHTML = rows.map(r => {
+    const cls = r.status === 'ready' ? 'ok' : (r.status === 'failed' ? 'err' : 'warn');
+    const errTip = r.status === 'failed' && r.error ? ' title="' + r.error.replace(/"/g, '&quot;') + '"' : '';
+    return '<tr' + errTip + '><td><strong>' + esc(r.filename) + '</strong></td>'
+      + '<td><span class="pill ' + cls + '">' + r.status + '</span></td>'
+      + '<td style="text-align:right;color:var(--muted)">' + fmtSize(r.size_bytes || 0) + '</td>'
+      + '<td style="text-align:right;color:var(--muted)">' + (r.chunks_total || '—') + '</td>'
+      + '<td style="color:var(--muted)">' + relTime(r.created_at) + '</td>'
+      + '<td><button class="ghost sm danger" onclick="del(\'' + r.id + '\')">Delete</button></td></tr>';
+  }).join('') || '<tr><td colspan="6" class="muted">No files yet.</td></tr>';
 
   const hasReady = rows.some(r => r.status === 'ready');
   if(hasReady){
@@ -83,34 +157,47 @@ async function refresh(){
   }
 }
 
+function esc(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
 async function uploadOne(f){
   const fd = new FormData(); fd.append('file', f);
-  return api('/knowledge/files',{method:'POST',body:fd});
+  return api('/knowledge/files', {method:'POST', body:fd});
 }
+
 async function uploadMany(files){
-  uerr.textContent='';
+  uerr.textContent = '';
   const arr = Array.from(files);
-  let done=0, failed=0;
+  let done = 0, failed = 0;
   for(const f of arr){
-    document.getElementById('uprog').textContent = `Uploading ${done+failed+1}/${arr.length}: ${f.name}…`;
+    document.getElementById('uprog').textContent = 'Uploading ' + (done + failed + 1) + '/' + arr.length + ': ' + f.name + '…';
     try{ await uploadOne(f); done++; }
-    catch(e){ failed++; uerr.textContent = (uerr.textContent?uerr.textContent+'; ':'') + f.name+': '+e.message; }
+    catch(e){ failed++; uerr.textContent = (uerr.textContent ? uerr.textContent + '; ' : '') + f.name + ': ' + e.message; }
     await refresh();
   }
-  document.getElementById('uprog').textContent = `Uploaded ${done}/${arr.length}` + (failed?` (${failed} failed)`:'');
+  document.getElementById('uprog').textContent = 'Uploaded ' + done + '/' + arr.length + (failed ? ' (' + failed + ' failed)' : '');
 }
+
 async function del(id){
   if(!confirm('Delete this file?')) return;
-  await fetch('/knowledge/files/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+token()}});
+  await fetch('/knowledge/files/' + id, {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}});
   refresh();
 }
-const drop=document.getElementById('drop');
+
+const drop = document.getElementById('drop');
 drop.addEventListener('click', () => document.getElementById('file').click());
-drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('hot')});
-drop.addEventListener('dragleave',()=>drop.classList.remove('hot'));
-drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('hot');if(e.dataTransfer.files.length)uploadMany(e.dataTransfer.files)});
-document.getElementById('file').addEventListener('change',e=>{if(e.target.files.length)uploadMany(e.target.files)});
-refresh();
+drop.addEventListener('dragover', e => {e.preventDefault(); drop.classList.add('hot')});
+drop.addEventListener('dragleave', () => drop.classList.remove('hot'));
+drop.addEventListener('drop', e => {e.preventDefault(); drop.classList.remove('hot'); if(e.dataTransfer.files.length) uploadMany(e.dataTransfer.files)});
+document.getElementById('file').addEventListener('change', e => {if(e.target.files.length) uploadMany(e.target.files)});
+
+refresh().then(() => {
+  document.getElementById('kbSkeleton').style.display = 'none';
+  document.getElementById('kbContent').style.display = '';
+}).catch(() => {
+  document.getElementById('kbSkeleton').style.display = 'none';
+  document.getElementById('kbContent').style.display = '';
+});
+
 setInterval(refresh, 5000);
 </script>
 {% endblock %}

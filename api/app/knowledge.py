@@ -121,7 +121,18 @@ def list_files(
     db: Session = Depends(get_db),
 ):
     rows = db.query(FileRecord).filter(FileRecord.tenant_id == tenant.id).order_by(FileRecord.created_at.desc()).all()
-    return [{"id": str(r.id), "filename": r.filename, "status": r.status} for r in rows]
+    return [
+        {
+            "id": str(r.id),
+            "filename": r.filename,
+            "status": r.status,
+            "size_bytes": r.size_bytes or 0,
+            "chunks_total": r.chunks_total or 0,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+            "error": r.error,
+        }
+        for r in rows
+    ]
 
 
 @router.delete("/files/{file_id}", status_code=204)
