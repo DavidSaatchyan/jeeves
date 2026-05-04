@@ -166,115 +166,114 @@
     .rag-stage { display: flex; flex-direction: column; align-items: center; gap: 20px; flex-shrink: 0; position: relative; z-index: 2; padding-bottom: 12px; }
     .rag-stage-label { font-size: 10px; color: #f1f5f9; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; white-space: nowrap; order: -1; }
 
-    /* Stage 1: Document Ingestion — stacked file cards */
-    .rag-ingest { width: 100px; }
-    .rag-ingest-stack { position: relative; width: 100px; height: 100px; }
-    .rag-ingest-doc { position: absolute; width: 62px; height: 76px; background: #1e293b; border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; display: flex; flex-direction: column; padding: 8px 7px 0; gap: 6px; box-shadow: 0 4px 14px rgba(0,0,0,0.4); }
-    .rag-ingest-doc:nth-child(1) { left: 6px; top: 18px; z-index: 3; transform: rotate(-3deg); }
-    .rag-ingest-doc:nth-child(2) { left: 20px; top: 10px; z-index: 2; transform: rotate(2deg); }
-    .rag-ingest-doc:nth-child(3) { left: 34px; top: 2px; z-index: 1; transform: rotate(-4deg); }
-    .rag-ingest-doc .doc-type { height: 9px; width: 22px; border-radius: 3px; }
-    .rag-ingest-doc:nth-child(1) .doc-type { background: rgba(99,102,241,0.7); }
-    .rag-ingest-doc:nth-child(2) .doc-type { background: rgba(168,85,247,0.7); }
-    .rag-ingest-doc:nth-child(3) .doc-type { background: rgba(236,72,153,0.7); }
-    .rag-ingest-doc .doc-fold { position: absolute; top: 0; right: 0; width: 11px; height: 11px; border-bottom-left-radius: 5px; background: rgba(255,255,255,0.04); border-left: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); }
-    .rag-ingest-doc .doc-lines { display: flex; flex-direction: column; gap: 4px; width: 40px; }
-    .rag-ingest-doc .doc-lines span { height: 2px; border-radius: 1px; }
-    .rag-ingest-doc .doc-lines span:nth-child(1) { width: 100%; background: rgba(255,255,255,0.5); }
-    .rag-ingest-doc .doc-lines span:nth-child(2) { width: 75%; background: rgba(255,255,255,0.3); }
-    .rag-ingest-doc .doc-lines span:nth-child(3) { width: 55%; background: rgba(255,255,255,0.2); }
-    .rag-ingest-doc .doc-lines span:nth-child(4) { width: 85%; background: rgba(255,255,255,0.15); }
-    .rag-ingest-doc .doc-badge { display: inline-block; padding: 2px 5px; border-radius: 2px; font-size: 7px; font-family: 'SF Mono', monospace; font-weight: 700; }
-    .rag-ingest-doc:nth-child(1) .doc-badge { background: rgba(99,102,241,0.15); color: #a5b4fc; }
-    .rag-ingest-doc:nth-child(2) .doc-badge { background: rgba(168,85,247,0.15); color: #c4b5fd; }
-    .rag-ingest-doc:nth-child(3) .doc-badge { background: rgba(236,72,153,0.15); color: #f9a8d4; }
+    /* Stage 1: Document Ingestion — fanned file cards with colored top bars */
+    .rag-ingest { width: 110px; }
+    .rag-ingest-stack { position: relative; width: 110px; height: 110px; }
+    .rag-ingest-doc { position: absolute; width: 68px; height: 82px; background: #1e293b; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+    .rag-ingest-doc:nth-child(1) { left: 8px; top: 22px; z-index: 3; transform: rotate(-5deg); }
+    .rag-ingest-doc:nth-child(2) { left: 24px; top: 12px; z-index: 2; transform: rotate(1deg); }
+    .rag-ingest-doc:nth-child(3) { left: 38px; top: 2px; z-index: 1; transform: rotate(6deg); }
+    .rag-ingest-doc .doc-topbar { height: 10px; }
+    .rag-ingest-doc:nth-child(1) .doc-topbar { background: linear-gradient(90deg, #6366f1, #818cf8); }
+    .rag-ingest-doc:nth-child(2) .doc-topbar { background: linear-gradient(90deg, #a855f7, #c084fc); }
+    .rag-ingest-doc:nth-child(3) .doc-topbar { background: linear-gradient(90deg, #ec4899, #f472b6); }
+    .rag-ingest-doc .doc-body { padding: 6px 7px; display: flex; flex-direction: column; gap: 4px; }
+    .rag-ingest-doc .doc-line { height: 2px; border-radius: 1px; }
+    .rag-ingest-doc .doc-line:nth-child(1) { width: 100%; background: rgba(255,255,255,0.5); }
+    .rag-ingest-doc .doc-line:nth-child(2) { width: 75%; background: rgba(255,255,255,0.3); }
+    .rag-ingest-doc .doc-line:nth-child(3) { width: 60%; background: rgba(255,255,255,0.2); }
+    .rag-ingest-doc .doc-line:nth-child(4) { width: 90%; background: rgba(255,255,255,0.12); }
+    .rag-ingest-doc .doc-line:nth-child(5) { width: 45%; background: rgba(255,255,255,0.08); }
+    .rag-ingest-doc .doc-badge { position: absolute; bottom: 5px; right: 5px; padding: 1px 5px; border-radius: 3px; font-size: 7px; font-family: 'SF Mono', monospace; font-weight: 700; }
+    .rag-ingest-doc:nth-child(1) .doc-badge { background: rgba(99,102,241,0.2); color: #a5b4fc; }
+    .rag-ingest-doc:nth-child(2) .doc-badge { background: rgba(168,85,247,0.2); color: #c4b5fd; }
+    .rag-ingest-doc:nth-child(3) .doc-badge { background: rgba(236,72,153,0.2); color: #f9a8d4; }
 
-    /* Stage 2: Chunking — document being sliced with measured segments */
-    .rag-chunk { width: 120px; }
-    .rag-chunk-visual { position: relative; width: 120px; height: 100px; }
-    .rag-chunk-source { position: absolute; left: 50%; transform: translateX(-50%); top: 4px; width: 96px; height: 28px; background: #1e293b; border: 1px solid rgba(255,255,255,0.12); border-radius: 5px; display: flex; flex-direction: column; justify-content: center; padding: 0 10px; gap: 4px; box-shadow: 0 3px 12px rgba(0,0,0,0.4); }
+    /* Stage 2: Chunking — source doc with scissors cut line, data blocks below */
+    .rag-chunk { width: 128px; }
+    .rag-chunk-visual { position: relative; width: 128px; height: 110px; }
+    .rag-chunk-source { position: absolute; left: 50%; transform: translateX(-50%); top: 2px; width: 100px; height: 32px; background: #1e293b; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; display: flex; flex-direction: column; justify-content: center; padding: 0 10px; gap: 4px; box-shadow: 0 3px 12px rgba(0,0,0,0.4); }
     .rag-chunk-source .cs-line { height: 2px; border-radius: 1px; }
     .rag-chunk-source .cs-line:nth-child(1) { width: 90%; background: rgba(255,255,255,0.55); }
     .rag-chunk-source .cs-line:nth-child(2) { width: 65%; background: rgba(255,255,255,0.3); }
-    .rag-chunk-blade { position: absolute; top: 34px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; }
-    .rag-chunk-blade .blade-line { width: 1px; height: 16px; background: linear-gradient(180deg, transparent, rgba(99,102,241,0.7), transparent); }
-    .rag-chunk-blade .blade-icon { width: 7px; height: 11px; }
-    .rag-chunk-blade .blade-icon svg { width: 100%; height: 100%; stroke: #818cf8; fill: none; stroke-width: 1.5; }
-    .rag-chunk-pieces { position: absolute; bottom: 2px; left: 0; right: 0; display: flex; gap: 4px; justify-content: center; }
-    .rag-chunk-piece { flex: 1; max-width: 24px; height: 34px; background: #1e293b; border: 1px solid rgba(99,102,241,0.2); border-radius: 3px; display: flex; flex-direction: column; padding: 5px 4px; gap: 3px; box-shadow: 0 2px 7px rgba(0,0,0,0.35); position: relative; }
-    .rag-chunk-piece::before { content: attr(data-idx); position: absolute; top: -7px; right: -2px; font-size: 7px; color: #818cf8; font-family: 'SF Mono', monospace; font-weight: 700; }
-    .rag-chunk-piece .cp-line { height: 2px; border-radius: 1px; }
-    .rag-chunk-piece:nth-child(1) .cp-line { background: rgba(99,102,241,0.8); }
-    .rag-chunk-piece:nth-child(1) .cp-line:nth-child(1) { width: 90%; }
-    .rag-chunk-piece:nth-child(1) .cp-line:nth-child(2) { width: 65%; }
-    .rag-chunk-piece:nth-child(1) .cp-line:nth-child(3) { width: 78%; }
-    .rag-chunk-piece:nth-child(1) .cp-line:nth-child(4) { width: 45%; }
-    .rag-chunk-piece:nth-child(2) .cp-line { background: rgba(168,85,247,0.7); }
-    .rag-chunk-piece:nth-child(2) .cp-line:nth-child(1) { width: 82%; }
-    .rag-chunk-piece:nth-child(2) .cp-line:nth-child(2) { width: 55%; }
-    .rag-chunk-piece:nth-child(2) .cp-line:nth-child(3) { width: 70%; }
-    .rag-chunk-piece:nth-child(2) .cp-line:nth-child(4) { width: 50%; }
-    .rag-chunk-piece:nth-child(3) .cp-line { background: rgba(236,72,153,0.7); }
-    .rag-chunk-piece:nth-child(3) .cp-line:nth-child(1) { width: 88%; }
-    .rag-chunk-piece:nth-child(3) .cp-line:nth-child(2) { width: 52%; }
-    .rag-chunk-piece:nth-child(3) .cp-line:nth-child(3) { width: 68%; }
-    .rag-chunk-piece:nth-child(3) .cp-line:nth-child(4) { width: 42%; }
-    .rag-chunk-piece:nth-child(4) .cp-line { background: rgba(59,130,246,0.7); }
-    .rag-chunk-piece:nth-child(4) .cp-line:nth-child(1) { width: 75%; }
-    .rag-chunk-piece:nth-child(4) .cp-line:nth-child(2) { width: 60%; }
-    .rag-chunk-piece:nth-child(4) .cp-line:nth-child(3) { width: 55%; }
-    .rag-chunk-piece:nth-child(4) .cp-line:nth-child(4) { width: 70%; }
+    .rag-chunk-cut { position: absolute; top: 36px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; }
+    .rag-chunk-cut .cut-dash { width: 3px; height: 2px; border-radius: 1px; background: rgba(99,102,241,0.5); }
+    .rag-chunk-cut .cut-icon { display: flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 3px; background: rgba(99,102,241,0.15); }
+    .rag-chunk-cut .cut-icon svg { width: 9px; height: 9px; stroke: #818cf8; fill: none; stroke-width: 2; }
+    .rag-chunk-pieces { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
+    .rag-chunk-piece { width: 24px; height: 38px; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .rag-chunk-piece:nth-child(1) { background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.3); }
+    .rag-chunk-piece:nth-child(2) { background: rgba(168,85,247,0.2); border: 1px solid rgba(168,85,247,0.3); }
+    .rag-chunk-piece:nth-child(3) { background: rgba(236,72,153,0.2); border: 1px solid rgba(236,72,153,0.3); }
+    .rag-chunk-piece:nth-child(4) { background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.3); }
+    .rag-chunk-piece .cp-dots { display: flex; flex-direction: column; gap: 2px; align-items: center; }
+    .rag-chunk-piece .cp-dot { width: 8px; height: 2px; border-radius: 1px; opacity: 0.6; }
+    .rag-chunk-piece:nth-child(1) .cp-dot { background: #818cf8; }
+    .rag-chunk-piece:nth-child(2) .cp-dot { background: #c084fc; }
+    .rag-chunk-piece:nth-child(3) .cp-dot { background: #f472b6; }
+    .rag-chunk-piece:nth-child(4) .cp-dot { background: #60a5fa; }
+    .rag-chunk-piece::after { content: attr(data-idx); position: absolute; bottom: -1px; right: 2px; font-size: 6px; color: rgba(255,255,255,0.3); font-family: 'SF Mono', monospace; font-weight: 700; }
 
-    /* Stage 3: Vector Embedding — vector dimension table */
+    /* Stage 3: Vector Embedding — code panel with float values */
     .rag-embed { width: 124px; }
     .rag-embed-visual { width: 124px; height: 100px; display: flex; align-items: center; justify-content: center; }
-    .rag-embed-output { width: 124px; height: 100px; background: #1e293b; border: 1px solid rgba(99,102,241,0.2); border-radius: 7px; display: flex; flex-direction: column; padding: 6px 7px; gap: 0; box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 14px rgba(99,102,241,0.08); overflow: hidden; }
-    .rag-embed-output .eo-label { font-size: 8px; color: #818cf8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; font-weight: 700; }
-    .rag-embed-output .eo-row { display: flex; align-items: baseline; gap: 4px; }
-    .rag-embed-output .eo-idx { font-size: 8px; color: #64748b; font-family: 'SF Mono', monospace; width: 16px; flex-shrink: 0; font-weight: 700; }
-    .rag-embed-output .eo-val { font-size: 9px; color: #c7d2fe; font-family: 'SF Mono', monospace; font-weight: 700; min-width: 30px; }
-    .rag-embed-output .eo-bar { flex: 1; height: 5px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
-    .rag-embed-output .eo-bar-fill { height: 100%; border-radius: 2px; background: #818cf8; }
+    .rag-embed-output { width: 124px; height: 100px; background: #0f172a; border: 1px solid rgba(99,102,241,0.15); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 20px rgba(99,102,241,0.06); }
+    .rag-embed-header { display: flex; align-items: center; gap: 4px; padding: 4px 7px; background: rgba(99,102,241,0.06); border-bottom: 1px solid rgba(99,102,241,0.1); }
+    .rag-embed-header .eh-dot { width: 5px; height: 5px; border-radius: 50%; }
+    .rag-embed-header .eh-dot:nth-child(1) { background: #ef4444; }
+    .rag-embed-header .eh-dot:nth-child(2) { background: #eab308; }
+    .rag-embed-header .eh-dot:nth-child(3) { background: #22c55e; }
+    .rag-embed-header .eh-label { margin-left: auto; font-size: 6px; color: #818cf8; font-family: 'SF Mono', monospace; font-weight: 600; }
+    .rag-embed-body { padding: 5px 7px; display: flex; flex-direction: column; gap: 0; }
+    .rag-embed-body .eo-row { display: flex; align-items: baseline; gap: 3px; }
+    .rag-embed-body .eo-idx { font-size: 7px; color: #4b5563; font-family: 'SF Mono', monospace; width: 14px; flex-shrink: 0; font-weight: 600; }
+    .rag-embed-body .eo-val { font-size: 8px; color: #c7d2fe; font-family: 'SF Mono', monospace; font-weight: 700; min-width: 28px; }
+    .rag-embed-body .eo-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; }
+    .rag-embed-body .eo-bar-fill { height: 100%; border-radius: 2px; }
+    .rag-embed-body .eo-row:nth-child(odd) .eo-bar-fill { background: #818cf8; }
+    .rag-embed-body .eo-row:nth-child(even) .eo-bar-fill { background: #a78bfa; }
 
-    /* Stage 4: Retrieval — funnel filtering results */
+    /* Stage 4: Retrieval — funnel with ranking scoreboard */
     .rag-retrieve { width: 120px; }
     .rag-retrieve-visual { position: relative; width: 120px; height: 110px; }
     .rag-funnel { position: absolute; left: 50%; transform: translateX(-50%); top: 0; width: 88px; height: 48px; }
     .rag-funnel-top { width: 88px; height: 11px; background: #1e293b; border: 1px solid rgba(255,255,255,0.12); border-radius: 4px 4px 0 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
     .rag-funnel-top .ft-label { font-size: 7px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
-    .rag-funnel-body { position: relative; width: 88px; height: 24px; background: linear-gradient(180deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05)); clip-path: polygon(0 0, 100% 0, 68% 100%, 32% 100%); }
+    .rag-funnel-body { position: relative; width: 88px; height: 24px; background: linear-gradient(180deg, rgba(99,102,241,0.18), rgba(99,102,241,0.06)); clip-path: polygon(0 0, 100% 0, 68% 100%, 32% 100%); }
     .rag-funnel-bottom { width: 32px; height: 9px; background: rgba(45,154,110,0.2); border: 1px solid rgba(45,154,110,0.3); border-radius: 0 0 4px 4px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
     .rag-funnel-bottom .fb-label { font-size: 7px; color: #34d399; font-weight: 700; }
     .rag-funnel-results { position: absolute; top: 52px; left: 50%; transform: translateX(-50%); width: 108px; display: flex; flex-direction: column; gap: 2px; }
-    .rag-funnel-rrow { display: flex; align-items: center; gap: 4px; padding: 3px 5px; background: rgba(15,23,42,0.6); border-radius: 3px; border: 1px solid rgba(255,255,255,0.06); }
-    .rag-funnel-rrow.fr-pass { background: rgba(45,154,110,0.12); border: 1px solid rgba(45,154,110,0.2); }
-    .rag-funnel-rrow.fr-fail { opacity: 0.45; }
-    .rag-funnel-rrow .fr-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
-    .rag-funnel-rrow.fr-pass .fr-dot { background: #34d399; box-shadow: 0 0 4px rgba(45,154,110,0.5); }
-    .rag-funnel-rrow.fr-fail .fr-dot { background: #64748b; }
-    .rag-funnel-rrow .fr-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+    .rag-funnel-rrow { display: flex; align-items: center; gap: 4px; padding: 3px 5px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.06); }
+    .rag-funnel-rrow.fr-pass { background: rgba(45,154,110,0.08); border-color: rgba(45,154,110,0.15); }
+    .rag-funnel-rrow.fr-fail { opacity: 0.35; background: rgba(30,41,59,0.3); }
+    .rag-funnel-rrow .fr-rank { font-size: 6px; color: #64748b; font-family: 'SF Mono', monospace; font-weight: 700; width: 10px; text-align: center; flex-shrink: 0; }
+    .rag-funnel-rrow.fr-pass .fr-rank { color: #34d399; }
+    .rag-funnel-rrow .fr-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
     .rag-funnel-rrow .fr-bar-fill { height: 100%; border-radius: 2px; }
     .rag-funnel-rrow.fr-pass .fr-bar-fill { background: #34d399; }
     .rag-funnel-rrow.fr-fail .fr-bar-fill { background: #475569; }
     .rag-funnel-rrow .fr-pct { font-size: 7px; font-family: 'SF Mono', monospace; font-weight: 700; color: #94a3b8; min-width: 18px; text-align: right; }
     .rag-funnel-rrow.fr-pass .fr-pct { color: #34d399; }
 
-    /* Stage 5: Generation — clean response card with quote-style layout */
+    /* Stage 5: Generation — chat response card with streaming text */
     .rag-generate { width: 130px; }
     .rag-answer-box { width: 130px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 9px; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.4); }
-    .rag-answer-body { padding: 12px 12px 9px; display: flex; flex-direction: column; gap: 8px; }
+    .rag-answer-header { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.15); }
+    .rag-answer-header .ah-dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; box-shadow: 0 0 6px rgba(45,154,110,0.5); }
+    .rag-answer-header .ah-label { font-size: 7px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+    .rag-answer-body { padding: 10px 10px 8px; display: flex; flex-direction: column; gap: 8px; }
     .rag-answer-quote { position: relative; padding-left: 11px; }
     .rag-answer-quote::before { content: ''; position: absolute; left: 0; top: 2px; bottom: 2px; width: 2px; border-radius: 1px; background: linear-gradient(180deg, #6366f1, #2d9a6e); }
     .rag-answer-text { font-size: 11px; color: #f1f5f9; line-height: 1.4; }
     .rag-answer-text .rag-cursor { display: inline-block; width: 1px; height: 11px; background: #34d399; animation: abCursorBlink 1s step-end infinite; vertical-align: text-bottom; }
-    .rag-answer-cite { display: inline-flex; align-items: center; gap: 5px; padding: 4px 7px; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.15); border-radius: 4px; width: fit-content; }
-    .rag-answer-cite .ac-icon { width: 9px; height: 9px; border-radius: 2px; background: rgba(99,102,241,0.3); display: flex; align-items: center; justify-content: center; }
-    .rag-answer-cite .ac-icon svg { width: 6px; height: 6px; stroke: #a5b4fc; fill: none; stroke-width: 2; }
-    .rag-answer-cite .ac-text { font-size: 8px; color: #a5b4fc; font-family: 'SF Mono', monospace; font-weight: 600; }
-    .rag-answer-footer { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; border-top: 1px solid rgba(255,255,255,0.06); }
-    .rag-grounded-tag { font-size: 8px; color: #34d399; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; display: flex; align-items: center; gap: 5px; }
-    .rag-grounded-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #34d399; box-shadow: 0 0 6px rgba(45,154,110,0.5); }
-    .rag-answer-time { font-size: 8px; color: #64748b; font-family: 'SF Mono', monospace; font-weight: 600; }
+    .rag-answer-cite { display: inline-flex; align-items: center; gap: 5px; padding: 3px 6px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.12); border-radius: 4px; width: fit-content; }
+    .rag-answer-cite .ac-icon { width: 8px; height: 8px; border-radius: 2px; background: rgba(99,102,241,0.25); display: flex; align-items: center; justify-content: center; }
+    .rag-answer-cite .ac-icon svg { width: 5px; height: 5px; stroke: #a5b4fc; fill: none; stroke-width: 2; }
+    .rag-answer-cite .ac-text { font-size: 7px; color: #a5b4fc; font-family: 'SF Mono', monospace; font-weight: 600; }
+    .rag-answer-footer { display: flex; align-items: center; justify-content: space-between; padding: 5px 10px; border-top: 1px solid rgba(255,255,255,0.06); }
+    .rag-grounded-tag { font-size: 7px; color: #34d399; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+    .rag-grounded-tag::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #34d399; box-shadow: 0 0 6px rgba(45,154,110,0.5); }
+    .rag-answer-time { font-size: 7px; color: #64748b; font-family: 'SF Mono', monospace; font-weight: 600; }
 
     /* Flow connectors */
     .rag-flow-line { display: flex; align-items: center; justify-content: center; height: 100px; width: 32px; flex-shrink: 0; position: relative; opacity: 0; transition: opacity 0.5s ease; margin-top: 28px; }
@@ -761,9 +760,9 @@
         <!-- Stage 1: Document Ingestion -->
         <div class="rag-stage rag-ingest">
           <div class="rag-ingest-stack">
-            <div class="rag-ingest-doc"><div class="doc-type"></div><div class="doc-fold"></div><div class="doc-lines"><span></span><span></span><span></span><span></span></div><span class="doc-badge">PDF</span></div>
-            <div class="rag-ingest-doc"><div class="doc-type"></div><div class="doc-fold"></div><div class="doc-lines"><span></span><span></span><span></span><span></span></div><span class="doc-badge">DOCX</span></div>
-            <div class="rag-ingest-doc"><div class="doc-type"></div><div class="doc-fold"></div><div class="doc-lines"><span></span><span></span><span></span><span></span></div><span class="doc-badge">TXT</span></div>
+            <div class="rag-ingest-doc"><div class="doc-topbar"></div><div class="doc-body"><div class="doc-line"></div><div class="doc-line"></div><div class="doc-line"></div><div class="doc-line"></div><div class="doc-line"></div></div><span class="doc-badge">PDF</span></div>
+            <div class="rag-ingest-doc"><div class="doc-topbar"></div><div class="doc-body"><div class="doc-line"></div><div class="doc-line"></div><div class="doc-line"></div><div class="doc-line"></div><div class="doc-line"></div></div><span class="doc-badge">DOCX</span></div>
+            <div class="rag-ingest-doc"><div class="doc-topbar"></div><div class="doc-body"><div class="doc-line"></div><div class="doc-line"></div><div class="doc-line"></div><div class="doc-line"></div><div class="doc-line"></div></div><span class="doc-badge">TXT</span></div>
           </div>
           <span class="rag-stage-label">Ingest</span>
         </div>
@@ -783,16 +782,16 @@
               <div class="cs-line"></div>
               <div class="cs-line"></div>
             </div>
-            <div class="rag-chunk-blade">
-              <div class="blade-line"></div>
-              <div class="blade-icon"><svg viewBox="0 0 6 10" fill="none" stroke-linecap="round"><path d="M3 1v8M1 5h4"/></svg></div>
-              <div class="blade-line"></div>
+            <div class="rag-chunk-cut">
+              <div class="cut-dash"></div><div class="cut-dash"></div><div class="cut-dash"></div>
+              <div class="cut-icon"><svg viewBox="0 0 10 10" fill="none" stroke-linecap="round"><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><path d="M3 5.5L6 1M7 5.5L4 1"/></svg></div>
+              <div class="cut-dash"></div><div class="cut-dash"></div><div class="cut-dash"></div>
             </div>
             <div class="rag-chunk-pieces">
-              <div class="rag-chunk-piece" data-idx="1"><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div></div>
-              <div class="rag-chunk-piece" data-idx="2"><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div></div>
-              <div class="rag-chunk-piece" data-idx="3"><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div></div>
-              <div class="rag-chunk-piece" data-idx="4"><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div><div class="cp-line"></div></div>
+              <div class="rag-chunk-piece" data-idx="1"><div class="cp-dots"><div class="cp-dot"></div><div class="cp-dot"></div><div class="cp-dot"></div></div></div>
+              <div class="rag-chunk-piece" data-idx="2"><div class="cp-dots"><div class="cp-dot"></div><div class="cp-dot"></div><div class="cp-dot"></div></div></div>
+              <div class="rag-chunk-piece" data-idx="3"><div class="cp-dots"><div class="cp-dot"></div><div class="cp-dot"></div><div class="cp-dot"></div></div></div>
+              <div class="rag-chunk-piece" data-idx="4"><div class="cp-dots"><div class="cp-dot"></div><div class="cp-dot"></div><div class="cp-dot"></div></div></div>
             </div>
           </div>
           <span class="rag-stage-label">Chunk</span>
@@ -810,15 +809,20 @@
         <div class="rag-stage rag-embed">
           <div class="rag-embed-visual">
             <div class="rag-embed-output">
-              <div class="eo-label">vector[384]</div>
-              <div class="eo-row"><span class="eo-idx">d0</span><span class="eo-val">0.82</span><div class="eo-bar"><div class="eo-bar-fill" style="width:82%"></div></div></div>
-              <div class="eo-row"><span class="eo-idx">d1</span><span class="eo-val">-0.34</span><div class="eo-bar"><div class="eo-bar-fill" style="width:34%"></div></div></div>
-              <div class="eo-row"><span class="eo-idx">d2</span><span class="eo-val">0.56</span><div class="eo-bar"><div class="eo-bar-fill" style="width:56%"></div></div></div>
-              <div class="eo-row"><span class="eo-idx">d3</span><span class="eo-val">0.91</span><div class="eo-bar"><div class="eo-bar-fill" style="width:91%"></div></div></div>
-              <div class="eo-row"><span class="eo-idx">d4</span><span class="eo-val">-0.17</span><div class="eo-bar"><div class="eo-bar-fill" style="width:17%"></div></div></div>
-              <div class="eo-row"><span class="eo-idx">d5</span><span class="eo-val">0.63</span><div class="eo-bar"><div class="eo-bar-fill" style="width:63%"></div></div></div>
-              <div class="eo-row"><span class="eo-idx">d6</span><span class="eo-val">0.44</span><div class="eo-bar"><div class="eo-bar-fill" style="width:44%"></div></div></div>
-              <div class="eo-row"><span class="eo-idx">d7</span><span class="eo-val">-0.72</span><div class="eo-bar"><div class="eo-bar-fill" style="width:72%"></div></div></div>
+              <div class="rag-embed-header">
+                <div class="eh-dot"></div><div class="eh-dot"></div><div class="eh-dot"></div>
+                <span class="eh-label">f(x) → vector[384]</span>
+              </div>
+              <div class="rag-embed-body">
+                <div class="eo-row"><span class="eo-idx">d0</span><span class="eo-val">0.82</span><div class="eo-bar"><div class="eo-bar-fill" style="width:82%"></div></div></div>
+                <div class="eo-row"><span class="eo-idx">d1</span><span class="eo-val">-0.34</span><div class="eo-bar"><div class="eo-bar-fill" style="width:34%"></div></div></div>
+                <div class="eo-row"><span class="eo-idx">d2</span><span class="eo-val">0.56</span><div class="eo-bar"><div class="eo-bar-fill" style="width:56%"></div></div></div>
+                <div class="eo-row"><span class="eo-idx">d3</span><span class="eo-val">0.91</span><div class="eo-bar"><div class="eo-bar-fill" style="width:91%"></div></div></div>
+                <div class="eo-row"><span class="eo-idx">d4</span><span class="eo-val">-0.17</span><div class="eo-bar"><div class="eo-bar-fill" style="width:17%"></div></div></div>
+                <div class="eo-row"><span class="eo-idx">d5</span><span class="eo-val">0.63</span><div class="eo-bar"><div class="eo-bar-fill" style="width:63%"></div></div></div>
+                <div class="eo-row"><span class="eo-idx">d6</span><span class="eo-val">0.44</span><div class="eo-bar"><div class="eo-bar-fill" style="width:44%"></div></div></div>
+                <div class="eo-row"><span class="eo-idx">d7</span><span class="eo-val">-0.72</span><div class="eo-bar"><div class="eo-bar-fill" style="width:72%"></div></div></div>
+              </div>
             </div>
           </div>
           <span class="rag-stage-label">Embed</span>
@@ -841,11 +845,11 @@
               <div class="rag-funnel-bottom"><span class="fb-label">top-k</span></div>
             </div>
             <div class="rag-funnel-results">
-              <div class="rag-funnel-rrow fr-pass"><div class="fr-dot"></div><div class="fr-bar"><div class="fr-bar-fill" style="width:94%"></div></div><span class="fr-pct">0.94</span></div>
-              <div class="rag-funnel-rrow fr-pass"><div class="fr-dot"></div><div class="fr-bar"><div class="fr-bar-fill" style="width:78%"></div></div><span class="fr-pct">0.78</span></div>
-              <div class="rag-funnel-rrow fr-pass"><div class="fr-dot"></div><div class="fr-bar"><div class="fr-bar-fill" style="width:65%"></div></div><span class="fr-pct">0.65</span></div>
-              <div class="rag-funnel-rrow fr-fail"><div class="fr-dot"></div><div class="fr-bar"><div class="fr-bar-fill" style="width:31%"></div></div><span class="fr-pct">0.31</span></div>
-              <div class="rag-funnel-rrow fr-fail"><div class="fr-dot"></div><div class="fr-bar"><div class="fr-bar-fill" style="width:18%"></div></div><span class="fr-pct">0.18</span></div>
+              <div class="rag-funnel-rrow fr-pass"><span class="fr-rank">#1</span><div class="fr-bar"><div class="fr-bar-fill" style="width:94%"></div></div><span class="fr-pct">0.94</span></div>
+              <div class="rag-funnel-rrow fr-pass"><span class="fr-rank">#2</span><div class="fr-bar"><div class="fr-bar-fill" style="width:78%"></div></div><span class="fr-pct">0.78</span></div>
+              <div class="rag-funnel-rrow fr-pass"><span class="fr-rank">#3</span><div class="fr-bar"><div class="fr-bar-fill" style="width:65%"></div></div><span class="fr-pct">0.65</span></div>
+              <div class="rag-funnel-rrow fr-fail"><span class="fr-rank">#4</span><div class="fr-bar"><div class="fr-bar-fill" style="width:31%"></div></div><span class="fr-pct">0.31</span></div>
+              <div class="rag-funnel-rrow fr-fail"><span class="fr-rank">#5</span><div class="fr-bar"><div class="fr-bar-fill" style="width:18%"></div></div><span class="fr-pct">0.18</span></div>
             </div>
           </div>
           <span class="rag-stage-label">Retrieve</span>
@@ -862,6 +866,10 @@
         <!-- Stage 5: Generation -->
         <div class="rag-stage rag-generate">
           <div class="rag-answer-box">
+            <div class="rag-answer-header">
+              <div class="ah-dot"></div>
+              <span class="ah-label">Answer</span>
+            </div>
             <div class="rag-answer-body">
               <div class="rag-answer-quote">
                 <div class="rag-answer-text">Refunds processed within 30 days of purchase<span class="rag-cursor"></span></div>
