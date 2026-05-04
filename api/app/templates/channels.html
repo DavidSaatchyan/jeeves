@@ -3,22 +3,6 @@
 <h1>Channels</h1>
 <p class="page-desc">Connect your customers where they are. All channels share the same knowledge base and AI brain.</p>
 
-<!-- Summary cards -->
-<div class="ch-summary" id="chSummary">
-  <div class="ch-stat">
-    <div class="ch-stat-label">Active Channels</div>
-    <div class="ch-stat-value" id="chActive">0</div>
-  </div>
-  <div class="ch-stat">
-    <div class="ch-stat-label">Available</div>
-    <div class="ch-stat-value" id="chTotal">3</div>
-  </div>
-  <div class="ch-stat">
-    <div class="ch-stat-label">Last Updated</div>
-    <div class="ch-stat-value" id="chUpdated">—</div>
-  </div>
-</div>
-
 <!-- Channel tabs -->
 <div class="ch-tabs">
   <div class="ch-tab active" data-channel="web_widget" onclick="selectChannel('web_widget')">
@@ -159,11 +143,6 @@
 {% endblock %}
 {% block tail %}
 <style>
-.ch-summary{display:flex;gap:12px;margin-bottom:20px}
-.ch-stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;min-width:140px}
-.ch-stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2)}
-.ch-stat-value{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.5px;margin-top:2px}
-
 .ch-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content}
 .ch-tab{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;color:var(--muted2);transition:all .15s;user-select:none;border:none;background:transparent}
 .ch-tab:hover{color:var(--text);background:rgba(255,255,255,0.04)}
@@ -192,11 +171,11 @@ var BASE = location.origin;
 var webhookBase = BASE;
 
 function selectChannel(ch){
-  document.querySelectorAll('.ch-panel').forEach(function(el){ el.style.display='none'; });
+  document.querySelectorAll('.ch-panel').forEach(function(el){ el.classList.remove('active'); el.style.display='none'; });
   document.querySelectorAll('.ch-tab').forEach(function(el){ el.classList.remove('active'); });
   var panel = document.getElementById('panel-'+ch);
   var tab = document.querySelector('.ch-tab[data-channel="'+ch+'"]');
-  if(panel) panel.style.display='';
+  if(panel) panel.style.display='block';
   if(tab) tab.classList.add('active');
 
   if(ch==='web_widget') buildSnippet();
@@ -244,19 +223,16 @@ async function copySnip(){
 async function loadChannels(){
   try {
     var channels = await api('/channels');
-    var active = 0;
     channels.forEach(function(ch){
       var badge = document.getElementById('badge-'+ch.channel_type);
       if(!badge) return;
       var status = ch.status;
       if(status==='active'){
         badge.style.display='';
-        active++;
       } else {
         badge.style.display='none';
       }
     });
-    document.getElementById('chActive').textContent = active;
 
     var tg = channels.find(function(c){ return c.channel_type==='telegram'; });
     if(tg && tg.status==='active'){
@@ -276,7 +252,6 @@ async function loadChannels(){
       document.getElementById('waPhone').value = wa.config_mask.business_phone || '';
       document.getElementById('waVerifyToken').value='••••••••';
     }
-    document.getElementById('chUpdated').textContent = 'just now';
   } catch(e) {}
 }
 
