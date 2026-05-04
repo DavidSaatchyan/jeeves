@@ -147,7 +147,9 @@ async def run(
         "confirmed_by_user=true only after that confirmation.\n\n"
         f"Internal Reference Data:\n{rag_block}\n\n"
         f"Webhook context: {json.dumps(webhook_ctx, ensure_ascii=False, default=str)}\n\n"
-        f"CRM context for user {user_id}: {json.dumps(crm_ctx, ensure_ascii=False, default=str)}"
+        f"CRM context for user {user_id}: {json.dumps(crm_ctx, ensure_ascii=False, default=str)}\n\n"
+        "IMPORTANT: Answer ONLY using information found in the Internal Reference Data above. "
+        "If the data does not contain the answer, say you don't know and offer to connect to a human."
     )
     msgs: list[dict] = [{"role": "system", "content": sys}]
     msgs.extend(memory.history(str(tenant_id), user_id))
