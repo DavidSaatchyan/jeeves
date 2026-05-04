@@ -114,13 +114,6 @@ async def run(
         rag_block = "(No reference data available for this query)"
     sources = _source_log(rag_docs)
 
-    # Debug: log what RAG actually returned before sending to LLM
-    if rag_docs:
-        for i, d in enumerate(rag_docs):
-            print(f"[agent] rag_doc[{i}] file={d.get('filename')} dist={d.get('distance')} text={d.get('text', '')[:120]}", flush=True)
-    else:
-        print(f"[agent] rag_docs is EMPTY — no relevant context found", flush=True)
-
     # 3. Pull CRM context (best-effort)
     crm_ctx: dict = {}
     try:
@@ -149,9 +142,17 @@ async def run(
         f"CRM context for user {user_id}: {json.dumps(crm_ctx, ensure_ascii=False, default=str)}"
     )
 
+    if rag_block:
+        context_text = f"Reference Data:\n{rag_block}"
+    else:
+        context_text = (
+            "Reference Data: (No relevant data available. "
+            "If the user asks about pricing, plans, or features, say you don't know "
+            "and offer to connect to a human.)"
+        )
+
     context_injection = (
-        f"Reference Data: {rag_block if rag_block else '(No relevant data — if the user asks about '
-        'pricing, plans, or features not listed here, say you don\\'t know and offer to connect to a human)'}\n\n"
+        f"{context_text}\n\n"
         "Answer ONLY using the Reference Data above. Ignore previous answers in the conversation "
         "history if they conflict with this data."
     )
