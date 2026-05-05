@@ -111,6 +111,10 @@
   var unread = 0;
   var sending = false;
   var open = false;
+  var resolvedPending = false;
+  var ratingState = storageGet("jeeves:rating:" + TENANT, null);
+  var followUpTimeout = null;
+  var lastBotMessageAt = null;
 
   var host = document.createElement("div");
   host.id = "jeeves-widget-root";
@@ -161,6 +165,23 @@
     ".jw-send:disabled{opacity:.55;cursor:default}",
     ".jw-footer{padding:0 12px 10px;background:#fff;color:#94a3b8;font-size:11px;text-align:center}",
     ".jw-footer a{color:#64748b;text-decoration:none}",
+    ".jw-followup{align-self:flex-start;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;margin-top:4px}",
+    ".jw-followup-text{font-size:13px;color:#172033;margin-bottom:8px;line-height:1.3}",
+    ".jw-followup-btns{display:flex;gap:6px}",
+    ".jw-followup-btn{padding:6px 12px;border-radius:6px;border:1px solid #cbd5e1;background:#f8fafc;color:#172033;font-size:12px;font-weight:600;cursor:pointer;line-height:1}",
+    ".jw-followup-btn:hover{background:#e2e8f0}",
+    ".jw-rating{align-self:flex-start;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:14px;margin-top:4px;max-width:260px}",
+    ".jw-rating-title{font-size:13px;font-weight:600;color:#172033;margin-bottom:10px;text-align:center}",
+    ".jw-rating-btns{display:flex;gap:10px;justify-content:center;margin-bottom:10px}",
+    ".jw-rating-btn{width:44px;height:44px;border-radius:50%;border:2px solid #cbd5e1;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;transition:all .15s ease}",
+    ".jw-rating-btn:hover{transform:scale(1.1)}",
+    ".jw-rating-btn.selected-up{border-color:#22c55e;background:#f0fdf4}",
+    ".jw-rating-btn.selected-down{border-color:#ef4444;background:#fef2f2}",
+    ".jw-rating-feedback{margin-top:8px}",
+    ".jw-rating-textarea{width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:8px;font-size:12px;resize:none;font-family:inherit;box-sizing:border-box;min-height:60px}",
+    ".jw-rating-submit{margin-top:6px;width:100%;padding:7px;border-radius:6px;border:0;background:#172033;color:#fff;font-size:12px;font-weight:600;cursor:pointer}",
+    ".jw-rating-submit:disabled{opacity:.5;cursor:default}",
+    ".jw-rating-thanks{text-align:center;font-size:13px;color:#16a34a;font-weight:500;padding:8px 0}",
     "@media (max-width:520px){.jw-wrap{left:12px;right:12px;bottom:12px}.jw-panel{position:fixed;left:10px;right:10px;bottom:78px;width:auto;height:calc(100vh - 104px);max-height:none}.jw-launcher{margin-" + side + ":auto}}",
     "@media (prefers-reduced-motion:reduce){.jw-launcher,.jw-msgs{transition:none;scroll-behavior:auto}}"
   ].join("");
@@ -295,10 +316,14 @@
     extraFields = {};
     messages = [];
     unread = 0;
+    resolvedPending = false;
+    ratingState = null;
+    if (followUpTimeout) clearTimeout(followUpTimeout);
     storageRemove(keys.user);
     storageRemove(keys.messages);
     storageRemove(keys.seenInbox);
     storageRemove(keys.extraFields);
+    storageRemove("jeeves:rating:" + TENANT);
     renderIdentity();
     renderMessages();
     updateBadge();
@@ -314,9 +339,13 @@
   }
 
   function addMessage(text, role, persist) {
-    var clean = asText(text, "").slice(0, 4000);
+    var clean = (typeof text === "object") ? text : asText(text, "").slice(0, 4000);
     if (!clean) return;
-    messages.push({ role: role === "user" ? "user" : "bot", text: clean, at: nowIso() });
+    if (typeof clean === "object") {
+      messages.push(clean);
+    } else {
+      messages.push({ role: role === "user" ? "user" : "bot", text: clean, at: nowIso() });
+    }
     if (messages.length > 80) messages = messages.slice(messages.length - 80);
     if (persist !== false) storageSet(keys.messages, messages);
     renderMessages();
@@ -328,13 +357,57 @@
 
   function renderMessages() {
     if (!msgsEl) return;
-    msgsEl.innerHTML = messages.map(function (m) {
+    var html = messages.map(function (m, idx) {
+      if (m.type === "followup") {
+        return renderFollowupCard(m, idx);
+      }
+      if (m.type === "rating") {
+        return renderRatingCard(m, idx);
+      }
       var time = "";
       try { time = new Date(m.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); } catch (e) {}
       return '<div class="jw-msg ' + (m.role === "user" ? "user" : "bot") + '">' +
         esc(m.text) + '<span class="jw-time">' + esc(time) + '</span></div>';
     }).join("");
+    msgsEl.innerHTML = html;
     msgsEl.scrollTop = msgsEl.scrollHeight;
+  }
+
+  function renderFollowupCard(m, idx) {
+    var dismissed = m.dismissed;
+    if (dismissed) return "";
+    var btns = '<div class="jw-followup-btns">' +
+      '<button class="jw-followup-btn" onclick="window.JeevesWidget.__handleFollowup(' + idx + ', true)">Да, есть</button>' +
+      '<button class="jw-followup-btn" onclick="window.JeevesWidget.__handleFollowup(' + idx + ', false)">Нет, всё ясно</button>' +
+    '</div>';
+    return '<div class="jw-followup">' +
+      '<div class="jw-followup-text">' + esc(m.text || "Остались вопросы?") + '</div>' +
+      btns +
+    '</div>';
+  }
+
+  function renderRatingCard(m, idx) {
+    if (m.submitted) {
+      return '<div class="jw-rating"><div class="jw-rating-thanks">Спасибо за вашу оценку!</div></div>';
+    }
+    var upClass = m.rating === "thumbs_up" ? "selected-up" : "";
+    var downClass = m.rating === "thumbs_down" ? "selected-down" : "";
+    var html = '<div class="jw-rating">' +
+      '<div class="jw-rating-title">Оцените ответ</div>' +
+      '<div class="jw-rating-btns">' +
+        '<button class="jw-rating-btn ' + upClass + '" onclick="window.JeevesWidget.__rate(' + idx + ', \'thumbs_up\')" aria-label="Good response">👍</button>' +
+        '<button class="jw-rating-btn ' + downClass + '" onclick="window.JeevesWidget.__rate(' + idx + ', \'thumbs_down\')" aria-label="Bad response">👎</button>' +
+      '</div>';
+    if (m.rating) {
+      html += '<div class="jw-rating-feedback">' +
+        '<textarea class="jw-rating-textarea" placeholder="Комментарий (необязательно)" maxlength="500">' + esc(m.feedback || "") + '</textarea>' +
+        '<button class="jw-rating-submit" onclick="window.JeevesWidget.__submitRating(' + idx + ')"' + (m.feedbackSubmitted ? ' disabled' : '') + '>' +
+          (m.feedbackSubmitted ? "Отправлено" : "Отправить") +
+        '</button>' +
+      '</div>';
+    }
+    html += '</div>';
+    return html;
   }
 
   function setTyping(value) {
@@ -356,6 +429,8 @@
       return;
     }
     input.value = "";
+    resolvedPending = false;
+    if (followUpTimeout) clearTimeout(followUpTimeout);
     addMessage(text, "user", true);
     setSending(true);
     setTyping(true);
@@ -374,7 +449,11 @@
     if (hasExtra) body.extra_fields = extraFields;
 
     postJson(BASE + "/widget/chat", body, 30000).then(function (data) {
-      addMessage(asText(data.response, "I could not produce a response."), "bot", true);
+      var response = asText(data.response, "I could not produce a response.");
+      addMessage(response, "bot", true);
+      if (data.resolution === "resolved") {
+        scheduleFollowUp();
+      }
     }).catch(function (err) {
       addMessage(err && err.message ? err.message : "Network error. Please try again.", "bot", true);
     }).then(function () {
@@ -383,6 +462,70 @@
       focusInput();
     });
   }
+
+  function scheduleFollowUp() {
+    if (followUpTimeout) clearTimeout(followUpTimeout);
+    followUpTimeout = setTimeout(function () {
+      if (resolvedPending) return;
+      resolvedPending = true;
+      addMessage({ type: "followup", text: "Остались вопросы?", dismissed: false }, "bot", true);
+    }, 2000);
+  }
+
+  function handleFollowup(idx, hasMore) {
+    messages[idx].dismissed = true;
+    storageSet(keys.messages, messages);
+    renderMessages();
+    if (!hasMore) {
+      setTimeout(function () {
+        if (ratingState && ratingState.submitted) return;
+        addMessage({ type: "rating", rating: null, feedback: "", submitted: false }, "bot", true);
+      }, 600);
+    } else {
+      resolvedPending = false;
+      input.focus();
+    }
+  }
+
+  function handleRate(idx, value) {
+    messages[idx].rating = value;
+    messages[idx].submitted = true;
+    storageSet(keys.messages, messages);
+    renderMessages();
+    ratingState = { index: idx, value: value, submitted: false };
+    storageSet("jeeves:rating:" + TENANT, ratingState);
+    postJson(BASE + "/widget/rating", {
+      tenant_id: TENANT,
+      user_id: userId || "anonymous",
+      rating: value,
+    }).catch(function () {});
+  }
+
+  function handleSubmitRating(idx) {
+    var m = messages[idx];
+    if (!m || !m.rating) return;
+    var ta = root.querySelector(".jw-rating-textarea");
+    var feedback = ta ? (ta.value || "").slice(0, 500) : "";
+    m.feedback = feedback;
+    m.feedbackSubmitted = true;
+    storageSet(keys.messages, messages);
+    renderMessages();
+    if (ratingState && ratingState.index === idx) {
+      ratingState.feedback = feedback;
+      ratingState.submitted = true;
+      storageSet("jeeves:rating:" + TENANT, ratingState);
+    }
+    postJson(BASE + "/widget/rating", {
+      tenant_id: TENANT,
+      user_id: userId || "anonymous",
+      rating: m.rating,
+      feedback: feedback,
+    }).catch(function () {});
+  }
+
+  window.JeevesWidget.__handleFollowup = handleFollowup;
+  window.JeevesWidget.__rate = handleRate;
+  window.JeevesWidget.__submitRating = handleSubmitRating;
 
   function postJson(url, body, timeoutMs) {
     var controller = window.AbortController ? new AbortController() : null;

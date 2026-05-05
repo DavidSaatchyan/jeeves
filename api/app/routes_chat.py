@@ -112,4 +112,6 @@ async def chat(body: ChatIn, tenant: Tenant = Depends(get_current_tenant), db: S
         response=result["response"],
         action_called=result["action_called"],
         latency_ms=result["latency_ms"],
+        escalated=result.get("escalated", False),
+        resolution="escalated" if result.get("escalated") else "resolved",
     )

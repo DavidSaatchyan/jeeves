@@ -183,6 +183,8 @@ async def widget_chat(body: WidgetChatIn):
             response=result["response"],
             action_called=result["action_called"],
             latency_ms=result["latency_ms"],
+            escalated=result.get("escalated", False),
+            resolution="escalated" if result.get("escalated") else "resolved",
         )
     finally:
         db.close()
@@ -231,10 +233,21 @@ def widget_rating(body: dict):
         if not tenant:
             raise HTTPException(404, "tenant not found")
 
+        mid = message_id
+        if not mid:
+            last = db.query(ChatLog).filter(
+                ChatLog.tenant_id == tenant.id,
+                ChatLog.user_id == user_id,
+                ChatLog.channel == body.get("channel", "web_widget"),
+                ChatLog.is_user == False,
+            ).order_by(ChatLog.created_at.desc()).first()
+            if last:
+                mid = last.session_id
+
         r = ConversationRating(
             tenant_id=tenant.id,
             user_id=user_id,
-            message_id=message_id,
+            message_id=mid,
             rating=rating,
             feedback=feedback,
         )

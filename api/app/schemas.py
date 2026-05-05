@@ -41,6 +41,8 @@ class ChatOut(BaseModel):
     response: str
     action_called: str | None = None
     latency_ms: int
+    escalated: bool = False
+    resolution: str | None = None
 
 
 class WidgetChatIn(BaseModel):
