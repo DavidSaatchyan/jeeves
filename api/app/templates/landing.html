@@ -397,10 +397,8 @@
 
     /* Wire trace layer */
     .cb-traces { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-    .cb-traces .wire { fill: none; stroke: rgba(99,102,241,0.08); stroke-width: 0.6; transition: stroke 0.3s ease, filter 0.3s ease; }
-    .cb-traces .wire.live { stroke: rgba(99,102,241,0.6); filter: drop-shadow(0 0 4px rgba(99,102,241,0.5)); }
-    .cb-traces .spark { fill: #818cf8; opacity: 0; filter: drop-shadow(0 0 8px rgba(99,102,241,0.9)); }
-    .cb-traces .spark.active { opacity: 1; }
+    .cb-traces .wire { fill: none; stroke: rgba(99,102,241,0.06); stroke-width: 0.6; transition: stroke 0.4s ease, filter 0.4s ease; }
+    .cb-traces .wire.live { stroke: rgba(99,102,241,0.55); filter: drop-shadow(0 0 4px rgba(99,102,241,0.45)); }
 
     /* Cyber tiles */
     .cb-tile {
@@ -1034,33 +1032,19 @@
 
     <div class="channel-board reveal" id="channelBoard">
       <div class="cb-pcb">
-        <!-- Wire trace layer — straight connections from Jeeves to modules -->
+        <!-- Wire trace layer — angular connections from Jeeves to modules -->
         <svg class="cb-traces" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <!-- Wires to each module -->
-          <path class="wire" d="M 40 44 L 22 10" id="wire-0"/>
-          <path class="wire" d="M 48 44 L 56 10" id="wire-1"/>
-          <path class="wire" d="M 54 44 L 80 10" id="wire-2"/>
-          <path class="wire" d="M 40 44 L 14 38" id="wire-3"/>
-          <path class="wire" d="M 54 44 L 88 28" id="wire-4"/>
-          <path class="wire" d="M 54 48 L 88 52" id="wire-5"/>
-          <path class="wire" d="M 42 48 L 22 80" id="wire-6"/>
-          <path class="wire" d="M 48 48 L 56 80" id="wire-7"/>
-          <path class="wire" d="M 52 48 L 80 80" id="wire-8"/>
-          <path class="wire" d="M 42 48 L 22 90" id="wire-9"/>
-          <path class="wire" d="M 48 48 L 68 90" id="wire-10"/>
-
-          <!-- Spark particles (positioned via JS) -->
-          <circle class="spark" r="1.4" id="spark-0"/>
-          <circle class="spark" r="1.4" id="spark-1"/>
-          <circle class="spark" r="1.4" id="spark-2"/>
-          <circle class="spark" r="1.4" id="spark-3"/>
-          <circle class="spark" r="1.4" id="spark-4"/>
-          <circle class="spark" r="1.4" id="spark-5"/>
-          <circle class="spark" r="1.4" id="spark-6"/>
-          <circle class="spark" r="1.4" id="spark-7"/>
-          <circle class="spark" r="1.4" id="spark-8"/>
-          <circle class="spark" r="1.4" id="spark-9"/>
-          <circle class="spark" r="1.4" id="spark-10"/>
+          <path class="wire" d="M 50 40 L 30 30 L 25 10" id="wire-0"/>
+          <path class="wire" d="M 50 40 L 62 28 L 62 10" id="wire-1"/>
+          <path class="wire" d="M 50 40 L 68 24 L 87 10" id="wire-2"/>
+          <path class="wire" d="M 50 40 L 30 40 L 12 40" id="wire-3"/>
+          <path class="wire" d="M 50 40 L 68 36 L 87 30" id="wire-4"/>
+          <path class="wire" d="M 50 40 L 68 44 L 87 50" id="wire-5"/>
+          <path class="wire" d="M 50 40 L 30 52 L 25 70" id="wire-6"/>
+          <path class="wire" d="M 50 40 L 62 54 L 62 70" id="wire-7"/>
+          <path class="wire" d="M 50 40 L 68 56 L 87 70" id="wire-8"/>
+          <path class="wire" d="M 50 40 L 28 62 L 25 90" id="wire-9"/>
+          <path class="wire" d="M 50 40 L 75 58 L 75 90" id="wire-10"/>
         </svg>
 
         <!-- ROW 1: Input Channels -->
@@ -1389,7 +1373,7 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
   obs.observe(terminal);
 })();
 
-// Cyber trace animation — bidirectional spark flow
+// Cyber trace animation — wire glow, no sparks
 (function() {
   const board = document.getElementById('channelBoard');
   const tracesSvg = board ? board.querySelector('.cb-traces') : null;
@@ -1398,81 +1382,60 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
   if (!board || !tracesSvg || !jeevesTile || !tiles.length) return;
 
   const wires = tracesSvg.querySelectorAll('.wire');
-  const sparks = tracesSvg.querySelectorAll('.spark');
+  const total = tiles.length;
 
-  function animateSpark(sparkEl, wireEl, direction, duration, cb) {
-    const length = wireEl.getTotalLength();
-    const start = performance.now();
-
-    function step(now) {
-      const elapsed = now - start;
-      const rawProgress = Math.min(elapsed / duration, 1);
-      // direction: 1 = module→Jeeves (end to start), -1 = Jeeves→module (start to end)
-      const progress = direction === 1 ? (1 - rawProgress) : rawProgress;
-      const point = wireEl.getPointAtLength(progress * length);
-      sparkEl.setAttribute('cx', point.x);
-      sparkEl.setAttribute('cy', point.y);
-      if (rawProgress < 1) {
-        requestAnimationFrame(step);
-      } else if (cb) {
-        cb();
+  // Build a shuffled queue, reshuffle when exhausted
+  let queue = [];
+  let qi = 0;
+  function nextModule() {
+    if (qi >= queue.length) {
+      queue = [];
+      for (var i = 0; i < total; i++) queue.push(i);
+      // Fisher-Yates shuffle
+      for (var i = queue.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = queue[i]; queue[i] = queue[j]; queue[j] = tmp;
       }
+      qi = 0;
     }
-    sparkEl.classList.add('active');
-    requestAnimationFrame(step);
+    return queue[qi++];
   }
 
-  let activeIdx = -1;
   function cycle() {
-    let nextIdx;
-    do {
-      nextIdx = Math.floor(Math.random() * tiles.length);
-    } while (nextIdx === activeIdx && tiles.length > 1);
-    activeIdx = nextIdx;
+    var idx = nextModule();
+    var wireEl = wires[idx];
 
     // Randomly choose direction: module→Jeeves or Jeeves→module
-    const direction = Math.random() > 0.5 ? 1 : -1;
-    const wireEl = wires[activeIdx] || wires[0];
-    const sparkEl = sparks[activeIdx] || sparks[0];
-
-    // Clear previous
-    sparks.forEach(function(s) { s.classList.remove('active'); });
-    wires.forEach(function(w) { w.classList.remove('live'); });
+    var direction = Math.random() > 0.5 ? 1 : -1;
 
     if (direction === 1) {
-      // Module fires up first, spark travels to Jeeves, then both glow
-      tiles[activeIdx].classList.add('active');
+      // Module fires up first, wire glows, then Jeeves joins
+      tiles[idx].classList.add('active');
       wireEl.classList.add('live');
 
-      animateSpark(sparkEl, wireEl, 1, 900, function() {
-        // Spark reached Jeeves — light it up
+      setTimeout(function() {
         jeevesTile.classList.add('lit');
-        // Both stay lit together
         setTimeout(function() {
           jeevesTile.classList.remove('lit');
-          tiles[activeIdx].classList.remove('active');
+          tiles[idx].classList.remove('active');
           wireEl.classList.remove('live');
-          sparkEl.classList.remove('active');
-          setTimeout(cycle, 2200);
-        }, 1500);
-      });
+          setTimeout(cycle, 2000);
+        }, 1400);
+      }, 600);
     } else {
-      // Jeeves fires up first, spark travels to module, then both glow
+      // Jeeves fires up first, wire glows toward module, then module joins
       jeevesTile.classList.add('lit');
       wireEl.classList.add('live');
 
-      animateSpark(sparkEl, wireEl, -1, 900, function() {
-        // Spark reached module — light it up
-        tiles[activeIdx].classList.add('active');
-        // Both stay lit together
+      setTimeout(function() {
+        tiles[idx].classList.add('active');
         setTimeout(function() {
           jeevesTile.classList.remove('lit');
-          tiles[activeIdx].classList.remove('active');
+          tiles[idx].classList.remove('active');
           wireEl.classList.remove('live');
-          sparkEl.classList.remove('active');
-          setTimeout(cycle, 2200);
-        }, 1500);
-      });
+          setTimeout(cycle, 2000);
+        }, 1400);
+      }, 600);
     }
   }
 
