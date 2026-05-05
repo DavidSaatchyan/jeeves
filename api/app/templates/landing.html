@@ -443,13 +443,6 @@
       border-radius: 12px;
       transition: all 0.5s ease;
     }
-    /* IC pin legs on Jeeves */
-    .cb-tile.cb-jeeves::after {
-      content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: 12px; z-index: 1;
-      background:
-        repeating-linear-gradient(0deg, transparent, transparent 18px, rgba(99,102,241,0.08) 18px, rgba(99,102,241,0.08) 20px) 0 0 / 4px 100% no-repeat,
-        repeating-linear-gradient(0deg, transparent, transparent 18px, rgba(99,102,241,0.08) 18px, rgba(99,102,241,0.08) 20px) 100% 0 / 4px 100% no-repeat;
-    }
     .cb-tile.cb-jeeves .cb-tile-core {
       font-size: 38px; font-weight: 900; color: rgba(99,102,241,0.2);
       display: flex; align-items: center; justify-content: center;
@@ -458,11 +451,6 @@
       margin: 0 auto 6px;
       transition: all 0.5s ease;
       position: relative;
-    }
-    /* Pin 1 orientation dot */
-    .cb-tile.cb-jeeves .cb-tile-core::before {
-      content: ''; position: absolute; top: 5px; left: 5px; width: 6px; height: 6px; border-radius: 50%;
-      background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.1);
     }
     .cb-tile.cb-jeeves .cb-tile-core::after {
       content: ''; position: absolute; inset: -4px; border-radius: 18px;
@@ -488,7 +476,6 @@
       border-color: rgba(99,102,241,0.3);
       box-shadow: 0 0 20px rgba(99,102,241,0.15);
     }
-    .cb-tile.cb-jeeves.lit .cb-tile-core::before { background: rgba(99,102,241,0.5); border-color: rgba(99,102,241,0.3); }
     .cb-tile.cb-jeeves.lit .cb-tile-label { color: #e2e8f0; }
     .cb-tile.cb-jeeves.lit .cb-tile-sub { color: #a5b4fc; }
 
@@ -507,51 +494,66 @@
 
     /* Static trace lines */
     .cb-traces { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-    .cb-traces line, .cb-traces path { stroke: rgba(255,255,255,0.02); stroke-width: 0.8; fill: none; }
+    .cb-traces line, .cb-traces path { stroke: rgba(255,255,255,0.025); stroke-width: 0.6; fill: none; }
 
-    /* SMD passive components — 0402/0603 resistors & capacitors */
-    .cb-smd { position: absolute; z-index: 3; pointer-events: none; }
-    .cb-smd::before {
-      content: ''; position: absolute; background: #1a1f2e; border: 1px solid rgba(255,255,255,0.04); border-radius: 1px;
-    }
-    .cb-smd::after {
-      content: ''; position: absolute; background: rgba(180,180,200,0.08); border-radius: 0 1px 1px 0;
-    }
-    /* Horizontal SMD */
-    .cb-smd.h::before { width: 8px; height: 4px; }
-    .cb-smd.h::after { width: 2px; height: 4px; right: 0; top: 0; box-shadow: -10px 0 0 rgba(180,180,200,0.08); }
-    /* Vertical SMD */
-    .cb-smd.v::before { width: 4px; height: 8px; }
-    .cb-smd.v::after { width: 4px; height: 2px; bottom: 0; left: 0; box-shadow: 0 -10px 0 rgba(180,180,200,0.08); }
-    /* SMD color variants */
-    .cb-smd.c-ceramic::before { background: #c4a86e; border-color: rgba(200,180,130,0.15); }
-    .cb-smd.c-resistor::before { background: #1e2330; border-color: rgba(100,100,140,0.1); }
+    /* ===== SMD RESISTORS — 0402 package ===== */
+    .cb-smd-r { position: absolute; z-index: 3; pointer-events: none; }
+    .cb-smd-r .r-body { position: absolute; background: #1a1e2a; border: 0.5px solid rgba(255,255,255,0.06); }
+    .cb-smd-r .r-pad-l, .cb-smd-r .r-pad-r { position: absolute; background: #8a8a9a; border-radius: 0.3px; }
+    /* Horizontal resistor */
+    .cb-smd-r.h .r-body { width: 10px; height: 5px; }
+    .cb-smd-r.h .r-pad-l { width: 2.5px; height: 5px; left: 0; }
+    .cb-smd-r.h .r-pad-r { width: 2.5px; height: 5px; right: 0; }
+    /* Vertical resistor */
+    .cb-smd-r.v .r-body { width: 5px; height: 10px; }
+    .cb-smd-r.v .r-pad-l { width: 5px; height: 2.5px; top: 0; }
+    .cb-smd-r.v .r-pad-r { width: 5px; height: 2.5px; bottom: 0; }
 
-    /* Via holes — plated through-holes */
-    .cb-via { position: absolute; width: 4px; height: 4px; border-radius: 50%; z-index: 4; pointer-events: none;
-      background: #0a0e18; border: 1px solid rgba(180,180,200,0.1);
-      box-shadow: inset 0 0 1px rgba(180,180,200,0.05);
-    }
-    .cb-via::after { content: ''; position: absolute; inset: -2px; border-radius: 50%; border: 0.5px solid rgba(180,180,200,0.04); }
+    /* ===== SMD CAPACITORS — 0402 MLCC ===== */
+    .cb-smd-c { position: absolute; z-index: 3; pointer-events: none; }
+    .cb-smd-c .c-body { position: absolute; background: #b8956a; border: 0.5px solid rgba(200,170,120,0.15); }
+    .cb-smd-c .c-pad-l, .cb-smd-c .c-pad-r { position: absolute; background: #8a8a9a; border-radius: 0.3px; }
+    /* Horizontal capacitor */
+    .cb-smd-c.h .c-body { width: 10px; height: 5px; }
+    .cb-smd-c.h .c-pad-l { width: 2.5px; height: 5px; left: 0; }
+    .cb-smd-c.h .c-pad-r { width: 2.5px; height: 5px; right: 0; }
+    /* Vertical capacitor */
+    .cb-smd-c.v .c-body { width: 5px; height: 10px; }
+    .cb-smd-c.v .c-pad-l { width: 5px; height: 2.5px; top: 0; }
+    .cb-smd-c.v .c-pad-r { width: 5px; height: 2.5px; bottom: 0; }
 
-    /* Crystal oscillator */
-    .cb-xtal { position: absolute; z-index: 3; pointer-events: none; width: 14px; height: 6px;
-      background: #1a1f2e; border: 1px solid rgba(180,180,200,0.06); border-radius: 1px;
+    /* ===== Via holes — plated through-holes ===== */
+    .cb-via { position: absolute; width: 6px; height: 6px; z-index: 4; pointer-events: none; border-radius: 50%;
+      background: radial-gradient(circle, #0a0e18 2px, #2a2e3a 2.5px, transparent 3px);
+      box-shadow: 0 0 0 0.5px rgba(180,160,100,0.15);
     }
-    .cb-xtal::before { content: ''; position: absolute; inset: 2px 4px; background: rgba(180,180,200,0.06); border-radius: 1px; }
-    .cb-xtal::after { content: attr(data-label); position: absolute; bottom: -9px; left: 50%; transform: translateX(-50%);
-      font-size: 4px; font-family: 'SF Mono', monospace; color: rgba(255,255,255,0.04); white-space: nowrap; }
 
-    /* Fiducial marks — PCB alignment circles */
-    .cb-fiducial { position: absolute; width: 6px; height: 6px; border-radius: 50%; z-index: 4; pointer-events: none;
-      background: rgba(200,200,220,0.06); border: 1px solid rgba(200,200,220,0.08);
-    }
-    .cb-fiducial::after { content: ''; position: absolute; inset: 1px; border-radius: 50%; background: rgba(10,14,24,0.8); }
+    /* ===== IC pins on Jeeves chip ===== */
+    .cb-ic-pins { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+    .cb-ic-pins .pin { position: absolute; background: #7a7a8a; }
+    /* Top pins (horizontal) */
+    .cb-ic-pins .pin.top { width: 1.5px; height: 6px; top: -6px; }
+    /* Bottom pins */
+    .cb-ic-pins .pin.bottom { width: 1.5px; height: 6px; bottom: -6px; }
+    /* Left pins (vertical) */
+    .cb-ic-pins .pin.left { width: 6px; height: 1.5px; left: -6px; }
+    /* Right pins */
+    .cb-ic-pins .pin.right { width: 6px; height: 1.5px; right: -6px; }
 
-    /* Silkscreen text */
+    /* ===== Crystal oscillator — HC-49/S ===== */
+    .cb-xtal { position: absolute; z-index: 3; pointer-events: none; }
+    .cb-xtal .xtal-body { width: 16px; height: 7px; background: #c0c0c8; border: 0.5px solid rgba(255,255,255,0.1); border-radius: 1px; position: relative; }
+    .cb-xtal .xtal-body::before { content: ''; position: absolute; inset: 1px 2px; background: rgba(100,100,120,0.3); border-radius: 0.5px; }
+    .cb-xtal .xtal-pad-l, .cb-xtal .xtal-pad-r { position: absolute; width: 3px; height: 7px; background: #8a8a9a; }
+    .cb-xtal .xtal-pad-l { left: -3px; }
+    .cb-xtal .xtal-pad-r { right: -3px; }
+    .cb-xtal .xtal-label { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+      font-size: 4px; font-family: 'SF Mono', monospace; color: rgba(255,255,255,0.06); white-space: nowrap; }
+
+    /* ===== Silkscreen text ===== */
     .cb-silk { position: absolute; z-index: 3; pointer-events: none;
-      font-size: 5px; font-family: 'SF Mono', ui-monospace, monospace; color: rgba(255,255,255,0.04); font-weight: 500; letter-spacing: 0.3px; }
-    .cb-silk.cb-silk-label { color: rgba(255,255,255,0.06); }
+      font-size: 5px; font-family: 'SF Mono', ui-monospace, monospace; color: rgba(255,255,255,0.05); font-weight: 500; letter-spacing: 0.3px; }
+    .cb-silk.cb-silk-label { color: rgba(255,255,255,0.08); }
 
     /* ===== TIMELINE ===== */
     /* ===== HOW IT WORKS — Terminal ===== */
@@ -1133,28 +1135,29 @@
           <line x1="68" y1="90" x2="68" y2="82"/><line x1="68" y1="82" x2="62" y2="82"/><line x1="62" y1="82" x2="62" y2="70"/><line x1="62" y1="70" x2="50" y2="70"/>
         </svg>
 
-        <!-- Fiducial marks -->
-        <div class="cb-fiducial" style="top:28px;left:28px"></div>
-        <div class="cb-fiducial" style="top:28px;right:28px"></div>
-        <div class="cb-fiducial" style="bottom:28px;left:28px"></div>
-        <div class="cb-fiducial" style="bottom:28px;right:28px"></div>
-
         <!-- Crystal oscillator near Jeeves -->
-        <div class="cb-xtal" data-label="16MHz" style="top:32%;right:12%"></div>
+        <div class="cb-xtal" style="top:32%;right:10%">
+          <div class="xtal-pad-l"></div>
+          <div class="xtal-body"></div>
+          <div class="xtal-pad-r"></div>
+          <div class="xtal-label">16MHz</div>
+        </div>
 
-        <!-- SMD passives — decoupling caps near Jeeves -->
-        <div class="cb-smd h c-ceramic" style="top:34%;left:42%"></div>
-        <div class="cb-smd h c-ceramic" style="top:42%;left:42%"></div>
-        <div class="cb-smd h c-resistor" style="top:38%;right:18%"></div>
-        <div class="cb-smd v c-ceramic" style="top:56%;left:44%"></div>
-        <div class="cb-smd v c-resistor" style="top:56%;left:56%"></div>
-        <div class="cb-smd h c-ceramic" style="top:62%;right:22%"></div>
-        <div class="cb-smd h c-resistor" style="top:18%;left:52%"></div>
-        <div class="cb-smd v c-ceramic" style="top:22%;left:30%"></div>
-        <div class="cb-smd h c-resistor" style="top:70%;left:20%"></div>
-        <div class="cb-smd v c-ceramic" style="top:76%;right:24%"></div>
+        <!-- SMD resistors -->
+        <div class="cb-smd-r h" style="top:34%;left:40%"><div class="r-pad-l"></div><div class="r-body"></div><div class="r-pad-r"></div></div>
+        <div class="cb-smd-r h" style="top:50%;left:40%"><div class="r-pad-l"></div><div class="r-body"></div><div class="r-pad-r"></div></div>
+        <div class="cb-smd-r v" style="top:55%;left:55%"><div class="r-pad-l"></div><div class="r-body"></div><div class="r-pad-r"></div></div>
+        <div class="cb-smd-r h" style="top:72%;left:18%"><div class="r-pad-l"></div><div class="r-body"></div><div class="r-pad-r"></div></div>
 
-        <!-- Via holes along trace paths -->
+        <!-- SMD capacitors (MLCC) -->
+        <div class="cb-smd-c h" style="top:42%;left:40%"><div class="c-pad-l"></div><div class="c-body"></div><div class="c-pad-r"></div></div>
+        <div class="cb-smd-c v" style="top:55%;left:43%"><div class="c-pad-l"></div><div class="c-body"></div><div class="c-pad-r"></div></div>
+        <div class="cb-smd-c h" style="top:62%;right:20%"><div class="c-pad-l"></div><div class="c-body"></div><div class="c-pad-r"></div></div>
+        <div class="cb-smd-c h" style="top:18%;left:50%"><div class="c-pad-l"></div><div class="c-body"></div><div class="c-pad-r"></div></div>
+        <div class="cb-smd-c v" style="top:22%;left:28%"><div class="c-pad-l"></div><div class="c-body"></div><div class="c-pad-r"></div></div>
+        <div class="cb-smd-c v" style="top:76%;right:22%"><div class="c-pad-l"></div><div class="c-body"></div><div class="c-pad-r"></div></div>
+
+        <!-- Via holes -->
         <div class="cb-via" style="top:28%;left:46%"></div>
         <div class="cb-via" style="top:36%;left:54%"></div>
         <div class="cb-via" style="top:48%;left:38%"></div>
@@ -1200,6 +1203,32 @@
         <div class="cb-tile-type">Incoming</div>
       </div>
       <div class="cb-tile cb-jeeves" id="jeevesTile" style="grid-column:2/4;grid-row:2/4;">
+        <div class="cb-ic-pins">
+          <!-- Top pins -->
+          <div class="pin top" style="left:15%"></div>
+          <div class="pin top" style="left:30%"></div>
+          <div class="pin top" style="left:45%"></div>
+          <div class="pin top" style="left:60%"></div>
+          <div class="pin top" style="left:75%"></div>
+          <!-- Bottom pins -->
+          <div class="pin bottom" style="left:15%"></div>
+          <div class="pin bottom" style="left:30%"></div>
+          <div class="pin bottom" style="left:45%"></div>
+          <div class="pin bottom" style="left:60%"></div>
+          <div class="pin bottom" style="left:75%"></div>
+          <!-- Left pins -->
+          <div class="pin left" style="top:20%"></div>
+          <div class="pin left" style="top:35%"></div>
+          <div class="pin left" style="top:50%"></div>
+          <div class="pin left" style="top:65%"></div>
+          <div class="pin left" style="top:80%"></div>
+          <!-- Right pins -->
+          <div class="pin right" style="top:20%"></div>
+          <div class="pin right" style="top:35%"></div>
+          <div class="pin right" style="top:50%"></div>
+          <div class="pin right" style="top:65%"></div>
+          <div class="pin right" style="top:80%"></div>
+        </div>
         <div class="cb-tile-core">J</div>
         <div class="cb-tile-label">Jeeves</div>
         <div class="cb-tile-sub">AI Agent</div>
