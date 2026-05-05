@@ -479,81 +479,9 @@
     .cb-tile.cb-jeeves.lit .cb-tile-label { color: #e2e8f0; }
     .cb-tile.cb-jeeves.lit .cb-tile-sub { color: #a5b4fc; }
 
-    /* PCB mounting holes */
-    .pcb-mount { position: absolute; width: 14px; height: 14px; z-index: 4; pointer-events: none; }
-    .pcb-mount::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: #080c14; border: 2px solid rgba(255,255,255,0.1); }
-    .pcb-mount::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
-    .pcb-mount.tl { top: 14px; left: 14px; }
-    .pcb-mount.tr { top: 14px; right: 14px; }
-    .pcb-mount.bl { bottom: 14px; left: 14px; }
-    .pcb-mount.br { bottom: 14px; right: 14px; }
-
-    /* Test points — small solder pads */
-    .pcb-tp { position: absolute; width: 5px; height: 5px; border-radius: 50%; z-index: 4; pointer-events: none; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
-    .pcb-tp::after { content: attr(data-label); position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 4px; font-family: 'SF Mono', monospace; color: rgba(255,255,255,0.05); white-space: nowrap; }
-
-    /* Static trace lines */
+    /* PCB trace layer — static copper traces */
     .cb-traces { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-    .cb-traces line, .cb-traces path { stroke: rgba(255,255,255,0.025); stroke-width: 0.6; fill: none; }
-
-    /* ===== SMD RESISTORS — 0402 package ===== */
-    .cb-smd-r { position: absolute; z-index: 3; pointer-events: none; }
-    .cb-smd-r .r-body { position: absolute; background: #1a1e2a; border: 0.5px solid rgba(255,255,255,0.06); }
-    .cb-smd-r .r-pad-l, .cb-smd-r .r-pad-r { position: absolute; background: #8a8a9a; border-radius: 0.3px; }
-    /* Horizontal resistor */
-    .cb-smd-r.h .r-body { width: 10px; height: 5px; }
-    .cb-smd-r.h .r-pad-l { width: 2.5px; height: 5px; left: 0; }
-    .cb-smd-r.h .r-pad-r { width: 2.5px; height: 5px; right: 0; }
-    /* Vertical resistor */
-    .cb-smd-r.v .r-body { width: 5px; height: 10px; }
-    .cb-smd-r.v .r-pad-l { width: 5px; height: 2.5px; top: 0; }
-    .cb-smd-r.v .r-pad-r { width: 5px; height: 2.5px; bottom: 0; }
-
-    /* ===== SMD CAPACITORS — 0402 MLCC ===== */
-    .cb-smd-c { position: absolute; z-index: 3; pointer-events: none; }
-    .cb-smd-c .c-body { position: absolute; background: #b8956a; border: 0.5px solid rgba(200,170,120,0.15); }
-    .cb-smd-c .c-pad-l, .cb-smd-c .c-pad-r { position: absolute; background: #8a8a9a; border-radius: 0.3px; }
-    /* Horizontal capacitor */
-    .cb-smd-c.h .c-body { width: 10px; height: 5px; }
-    .cb-smd-c.h .c-pad-l { width: 2.5px; height: 5px; left: 0; }
-    .cb-smd-c.h .c-pad-r { width: 2.5px; height: 5px; right: 0; }
-    /* Vertical capacitor */
-    .cb-smd-c.v .c-body { width: 5px; height: 10px; }
-    .cb-smd-c.v .c-pad-l { width: 5px; height: 2.5px; top: 0; }
-    .cb-smd-c.v .c-pad-r { width: 5px; height: 2.5px; bottom: 0; }
-
-    /* ===== Via holes — plated through-holes ===== */
-    .cb-via { position: absolute; width: 6px; height: 6px; z-index: 4; pointer-events: none; border-radius: 50%;
-      background: radial-gradient(circle, #0a0e18 2px, #2a2e3a 2.5px, transparent 3px);
-      box-shadow: 0 0 0 0.5px rgba(180,160,100,0.15);
-    }
-
-    /* ===== IC pins on Jeeves chip ===== */
-    .cb-ic-pins { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
-    .cb-ic-pins .pin { position: absolute; background: #7a7a8a; }
-    /* Top pins (horizontal) */
-    .cb-ic-pins .pin.top { width: 1.5px; height: 6px; top: -6px; }
-    /* Bottom pins */
-    .cb-ic-pins .pin.bottom { width: 1.5px; height: 6px; bottom: -6px; }
-    /* Left pins (vertical) */
-    .cb-ic-pins .pin.left { width: 6px; height: 1.5px; left: -6px; }
-    /* Right pins */
-    .cb-ic-pins .pin.right { width: 6px; height: 1.5px; right: -6px; }
-
-    /* ===== Crystal oscillator — HC-49/S ===== */
-    .cb-xtal { position: absolute; z-index: 3; pointer-events: none; }
-    .cb-xtal .xtal-body { width: 16px; height: 7px; background: #c0c0c8; border: 0.5px solid rgba(255,255,255,0.1); border-radius: 1px; position: relative; }
-    .cb-xtal .xtal-body::before { content: ''; position: absolute; inset: 1px 2px; background: rgba(100,100,120,0.3); border-radius: 0.5px; }
-    .cb-xtal .xtal-pad-l, .cb-xtal .xtal-pad-r { position: absolute; width: 3px; height: 7px; background: #8a8a9a; }
-    .cb-xtal .xtal-pad-l { left: -3px; }
-    .cb-xtal .xtal-pad-r { right: -3px; }
-    .cb-xtal .xtal-label { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
-      font-size: 4px; font-family: 'SF Mono', monospace; color: rgba(255,255,255,0.06); white-space: nowrap; }
-
-    /* ===== Silkscreen text ===== */
-    .cb-silk { position: absolute; z-index: 3; pointer-events: none;
-      font-size: 5px; font-family: 'SF Mono', ui-monospace, monospace; color: rgba(255,255,255,0.05); font-weight: 500; letter-spacing: 0.3px; }
-    .cb-silk.cb-silk-label { color: rgba(255,255,255,0.08); }
+    .cb-traces line, .cb-traces path { stroke: rgba(160,150,130,0.07); stroke-width: 0.8; fill: none; stroke-linecap: square; stroke-linejoin: miter; }
 
     /* ===== TIMELINE ===== */
     /* ===== HOW IT WORKS — Terminal ===== */
@@ -1103,77 +1031,68 @@
       <div class="cb-pcb">
         <svg class="cb-svg" id="cbSvg"></svg>
 
-        <!-- Mounting holes -->
-        <div class="pcb-mount tl"></div>
-        <div class="pcb-mount tr"></div>
-        <div class="pcb-mount bl"></div>
-        <div class="pcb-mount br"></div>
-
-        <!-- Test points -->
-        <div class="pcb-tp" data-label="TP1" style="top:18px;left:35%"></div>
-        <div class="pcb-tp" data-label="TP2" style="top:45%;right:18px"></div>
-        <div class="pcb-tp" data-label="TP3" style="bottom:18px;left:30%"></div>
-        <div class="pcb-tp" data-label="GND" style="bottom:18px;right:28%"></div>
-
-        <!-- Static trace lines -->
+        <!-- PCB traces — static copper layer -->
         <svg class="cb-traces" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <!-- Traces from row 1 to Jeeves area -->
-          <line x1="37" y1="12" x2="37" y2="30"/><line x1="37" y1="30" x2="50" y2="30"/>
-          <line x1="62" y1="12" x2="62" y2="24"/><line x1="62" y1="24" x2="50" y2="24"/>
-          <line x1="78" y1="12" x2="78" y2="20"/><line x1="78" y1="20" x2="62" y2="20"/><line x1="62" y1="20" x2="62" y2="24"/><line x1="62" y1="24" x2="50" y2="24"/>
-          <!-- Traces from row 2 -->
-          <line x1="18" y1="38" x2="18" y2="42"/><line x1="18" y1="42" x2="35" y2="42"/>
-          <line x1="78" y1="32" x2="78" y2="40"/><line x1="78" y1="40" x2="62" y2="40"/><line x1="62" y1="40" x2="62" y2="42"/><line x1="62" y1="42" x2="50" y2="42"/>
-          <!-- Traces from row 3 -->
-          <line x1="78" y1="58" x2="78" y2="62"/><line x1="78" y1="62" x2="62" y2="62"/><line x1="62" y1="62" x2="62" y2="55"/><line x1="62" y1="55" x2="50" y2="55"/>
-          <!-- Traces from row 4 -->
-          <line x1="30" y1="78" x2="30" y2="70"/><line x1="30" y1="70" x2="40" y2="70"/><line x1="40" y1="70" x2="40" y2="55"/><line x1="40" y1="55" x2="50" y2="55"/>
-          <line x1="55" y1="78" x2="55" y2="70"/><line x1="55" y1="70" x2="62" y2="70"/><line x1="62" y1="70" x2="62" y2="55"/>
-          <line x1="78" y1="78" x2="78" y2="68"/><line x1="78" y1="68" x2="62" y2="68"/><line x1="62" y1="68" x2="62" y2="55"/>
-          <!-- Traces from row 5 -->
-          <line x1="30" y1="90" x2="30" y2="82"/><line x1="30" y1="82" x2="40" y2="82"/><line x1="40" y1="82" x2="40" y2="70"/><line x1="40" y1="70" x2="50" y2="70"/>
-          <line x1="68" y1="90" x2="68" y2="82"/><line x1="68" y1="82" x2="62" y2="82"/><line x1="62" y1="82" x2="62" y2="70"/><line x1="62" y1="70" x2="50" y2="70"/>
+          <!-- Horizontal main buses -->
+          <line x1="5" y1="12" x2="95" y2="12"/>
+          <line x1="5" y1="22" x2="95" y2="22"/>
+          <line x1="5" y1="32" x2="95" y2="32"/>
+          <line x1="5" y1="42" x2="95" y2="42"/>
+          <line x1="5" y1="52" x2="95" y2="52"/>
+          <line x1="5" y1="62" x2="95" y2="62"/>
+          <line x1="5" y1="72" x2="95" y2="72"/>
+          <line x1="5" y1="82" x2="95" y2="82"/>
+          <line x1="5" y1="92" x2="95" y2="92"/>
+          <!-- Vertical main buses -->
+          <line x1="12" y1="5" x2="12" y2="95"/>
+          <line x1="22" y1="5" x2="22" y2="95"/>
+          <line x1="32" y1="5" x2="32" y2="95"/>
+          <line x1="42" y1="5" x2="42" y2="95"/>
+          <line x1="52" y1="5" x2="52" y2="95"/>
+          <line x1="62" y1="5" x2="62" y2="95"/>
+          <line x1="72" y1="5" x2="72" y2="95"/>
+          <line x1="82" y1="5" x2="82" y2="95"/>
+          <line x1="92" y1="5" x2="92" y2="95"/>
+          <!-- 45-degree diagonal traces -->
+          <path d="M 8 8 L 18 18"/>
+          <path d="M 88 8 L 78 18"/>
+          <path d="M 8 92 L 18 82"/>
+          <path d="M 88 92 L 78 82"/>
+          <path d="M 28 8 L 38 18"/>
+          <path d="M 58 8 L 68 18"/>
+          <path d="M 28 92 L 38 82"/>
+          <path d="M 58 92 L 68 82"/>
+          <!-- Cross-connects around Jeeves area (center) -->
+          <path d="M 32 32 L 32 38 L 38 38"/>
+          <path d="M 68 32 L 68 38 L 62 38"/>
+          <path d="M 32 68 L 32 62 L 38 62"/>
+          <path d="M 68 68 L 68 62 L 62 62"/>
+          <!-- Fan-out traces from center -->
+          <path d="M 42 42 L 42 22"/>
+          <path d="M 58 42 L 58 22"/>
+          <path d="M 42 58 L 42 78"/>
+          <path d="M 58 58 L 58 78"/>
+          <path d="M 42 42 L 22 42"/>
+          <path d="M 42 58 L 22 58"/>
+          <path d="M 58 42 L 78 42"/>
+          <path d="M 58 58 L 78 58"/>
+          <!-- Secondary diagonal runs -->
+          <path d="M 12 28 L 22 38"/>
+          <path d="M 88 28 L 78 38"/>
+          <path d="M 12 72 L 22 62"/>
+          <path d="M 88 72 L 78 62"/>
+          <path d="M 32 12 L 42 22"/>
+          <path d="M 68 12 L 58 22"/>
+          <path d="M 32 88 L 42 78"/>
+          <path d="M 68 88 L 58 78"/>
+          <!-- Edge traces -->
+          <path d="M 5 18 L 12 18"/>
+          <path d="M 88 18 L 95 18"/>
+          <path d="M 5 48 L 12 48"/>
+          <path d="M 88 48 L 95 48"/>
+          <path d="M 5 78 L 12 78"/>
+          <path d="M 88 78 L 95 78"/>
         </svg>
-
-        <!-- Crystal oscillator near Jeeves -->
-        <div class="cb-xtal" style="top:32%;right:10%">
-          <div class="xtal-pad-l"></div>
-          <div class="xtal-body"></div>
-          <div class="xtal-pad-r"></div>
-          <div class="xtal-label">16MHz</div>
-        </div>
-
-        <!-- SMD resistors -->
-        <div class="cb-smd-r h" style="top:34%;left:40%"><div class="r-pad-l"></div><div class="r-body"></div><div class="r-pad-r"></div></div>
-        <div class="cb-smd-r h" style="top:50%;left:40%"><div class="r-pad-l"></div><div class="r-body"></div><div class="r-pad-r"></div></div>
-        <div class="cb-smd-r v" style="top:55%;left:55%"><div class="r-pad-l"></div><div class="r-body"></div><div class="r-pad-r"></div></div>
-        <div class="cb-smd-r h" style="top:72%;left:18%"><div class="r-pad-l"></div><div class="r-body"></div><div class="r-pad-r"></div></div>
-
-        <!-- SMD capacitors (MLCC) -->
-        <div class="cb-smd-c h" style="top:42%;left:40%"><div class="c-pad-l"></div><div class="c-body"></div><div class="c-pad-r"></div></div>
-        <div class="cb-smd-c v" style="top:55%;left:43%"><div class="c-pad-l"></div><div class="c-body"></div><div class="c-pad-r"></div></div>
-        <div class="cb-smd-c h" style="top:62%;right:20%"><div class="c-pad-l"></div><div class="c-body"></div><div class="c-pad-r"></div></div>
-        <div class="cb-smd-c h" style="top:18%;left:50%"><div class="c-pad-l"></div><div class="c-body"></div><div class="c-pad-r"></div></div>
-        <div class="cb-smd-c v" style="top:22%;left:28%"><div class="c-pad-l"></div><div class="c-body"></div><div class="c-pad-r"></div></div>
-        <div class="cb-smd-c v" style="top:76%;right:22%"><div class="c-pad-l"></div><div class="c-body"></div><div class="c-pad-r"></div></div>
-
-        <!-- Via holes -->
-        <div class="cb-via" style="top:28%;left:46%"></div>
-        <div class="cb-via" style="top:36%;left:54%"></div>
-        <div class="cb-via" style="top:48%;left:38%"></div>
-        <div class="cb-via" style="top:52%;right:30%"></div>
-        <div class="cb-via" style="top:66%;left:44%"></div>
-        <div class="cb-via" style="top:72%;right:38%"></div>
-        <div class="cb-via" style="top:84%;left:40%"></div>
-        <div class="cb-via" style="top:16%;right:26%"></div>
-        <div class="cb-via" style="top:44%;left:24%"></div>
-        <div class="cb-via" style="top:60%;right:16%"></div>
-
-        <!-- Silkscreen text -->
-        <div class="cb-silk" style="top:10px;left:40px">JEEVES PCB v2.1</div>
-        <div class="cb-silk" style="top:10px;right:40px">2025</div>
-        <div class="cb-silk cb-silk-label" style="bottom:10px;left:40px">AI AGENT ROUTER</div>
-        <div class="cb-silk" style="bottom:10px;right:40px">REV C</div>
 
         <!-- ROW 1 -->
         <div class="cb-tile" data-idx="0" style="grid-column:1/3;grid-row:1;">
@@ -1203,32 +1122,6 @@
         <div class="cb-tile-type">Incoming</div>
       </div>
       <div class="cb-tile cb-jeeves" id="jeevesTile" style="grid-column:2/4;grid-row:2/4;">
-        <div class="cb-ic-pins">
-          <!-- Top pins -->
-          <div class="pin top" style="left:15%"></div>
-          <div class="pin top" style="left:30%"></div>
-          <div class="pin top" style="left:45%"></div>
-          <div class="pin top" style="left:60%"></div>
-          <div class="pin top" style="left:75%"></div>
-          <!-- Bottom pins -->
-          <div class="pin bottom" style="left:15%"></div>
-          <div class="pin bottom" style="left:30%"></div>
-          <div class="pin bottom" style="left:45%"></div>
-          <div class="pin bottom" style="left:60%"></div>
-          <div class="pin bottom" style="left:75%"></div>
-          <!-- Left pins -->
-          <div class="pin left" style="top:20%"></div>
-          <div class="pin left" style="top:35%"></div>
-          <div class="pin left" style="top:50%"></div>
-          <div class="pin left" style="top:65%"></div>
-          <div class="pin left" style="top:80%"></div>
-          <!-- Right pins -->
-          <div class="pin right" style="top:20%"></div>
-          <div class="pin right" style="top:35%"></div>
-          <div class="pin right" style="top:50%"></div>
-          <div class="pin right" style="top:65%"></div>
-          <div class="pin right" style="top:80%"></div>
-        </div>
         <div class="cb-tile-core">J</div>
         <div class="cb-tile-label">Jeeves</div>
         <div class="cb-tile-sub">AI Agent</div>
