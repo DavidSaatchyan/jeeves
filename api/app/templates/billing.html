@@ -1,31 +1,110 @@
 {% extends "base.html" %}
 {% block body %}
-<h1>Billing & usage</h1>
-<p class="page-desc">Track your trial status and estimated charges.</p>
+<div class="billing-page">
 
-<div class="stats">
-  <div class="stat"><div class="n" id="u">–</div><div class="l">Dialogs used</div></div>
-  <div class="stat"><div class="n" id="l">–</div><div class="l">Trial limit</div></div>
-  <div class="stat"><div class="n" id="rr">–</div><div class="l">Resolution rate</div></div>
-  <div class="stat"><div class="n" id="e">–</div><div class="l">Trial ends</div></div>
-  <div class="stat"><div class="n" id="c">–</div><div class="l">Estimated charge</div></div>
-</div>
+  <!-- Plan Status Bar -->
+  <div class="plan-bar" id="planBar">
+    <div class="plan-main">
+      <div class="plan-label">Current plan</div>
+      <div class="plan-name" id="planName">–</div>
+    </div>
+    <div class="plan-meta" id="planMeta"></div>
+  </div>
 
-<div class="card">
-  <p class="muted" style="margin:0 0 20px">Pricing: $0.10 per resolved dialog. Trial: 14 days or 100 dialogs.</p>
-  <button disabled>Add payment method</button>
-  <span class="muted" style="margin-left:8px">Stripe integration is out of scope for MVP.</span>
+  <!-- Usage Stats -->
+  <div class="stats">
+    <div class="stat"><div class="n" id="resolved">–</div><div class="l">Resolved this period</div></div>
+    <div class="stat"><div class="n" id="limit">–</div><div class="l">Plan limit</div></div>
+    <div class="stat"><div class="n" id="rate">–</div><div class="l">Resolution rate</div></div>
+    <div class="stat"><div class="n" id="overage">–</div><div class="l">Overage charge</div></div>
+  </div>
+
+  <!-- Usage Progress -->
+  <div class="card">
+    <div class="card-header"><h2>Usage</h2></div>
+    <div class="usage-bar-wrap">
+      <div class="usage-track"><div class="usage-fill" id="usageFill"></div></div>
+      <div class="usage-labels"><span id="usageUsed">0</span> / <span id="usageLimit">0</span> resolved</div>
+    </div>
+    <p class="muted mt-12" id="usageNote"></p>
+  </div>
+
+  <!-- Pricing Tiers -->
+  <div class="card">
+    <div class="card-header"><h2>Pricing</h2></div>
+    <table class="price-table">
+      <thead><tr><th>Plan</th><th>Price</th><th>Resolved / mo</th><th>Overage</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Free</strong></td><td>$0</td><td>10</td><td>$0.10 each</td></tr>
+        <tr><td><strong>Starter</strong></td><td>$19</td><td>500</td><td>$0.10 each</td></tr>
+        <tr><td><strong>Pro</strong></td><td>$49</td><td>2,000</td><td>$0.10 each</td></tr>
+        <tr><td><strong>Enterprise</strong></td><td>$149</td><td>25,000</td><td>Custom</td></tr>
+      </tbody>
+    </table>
+    <p class="muted mt-12">Test widget conversations are excluded from all billing counters.</p>
+  </div>
+
+  <!-- Payment -->
+  <div class="card">
+    <div class="card-header"><h2>Payment</h2></div>
+    <p class="muted" style="margin:0 0 16px">No payment method on file.</p>
+    <button disabled>Connect Stripe</button>
+    <span class="muted" style="margin-left:8px">Available after trial.</span>
+  </div>
+
 </div>
 {% endblock %}
 {% block tail %}
+<style>
+  .billing-page { max-width: 860px; }
+  .plan-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px 28px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .plan-label { font-size: 11px; font-weight: 600; color: var(--muted2); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 4px; }
+  .plan-name { font-size: 22px; font-weight: 800; letter-spacing: -.5px; color: var(--text); text-transform: capitalize; }
+  .plan-meta { text-align: right; }
+  .plan-meta .meta-line { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .plan-meta .meta-line strong { color: var(--text); font-weight: 600; }
+
+  .usage-bar-wrap { padding: 4px 0; }
+  .usage-track { height: 12px; background: var(--bg); border-radius: 99px; overflow: hidden; border: 1px solid var(--border); }
+  .usage-fill { height: 100%; background: #fff; border-radius: 99px; transition: width .4s ease; min-width: 2px; }
+  .usage-fill.warn { background: var(--amber); }
+  .usage-fill.danger { background: var(--red); }
+  .usage-labels { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .usage-labels span { color: var(--text); font-weight: 700; }
+
+  .price-table th { padding: 10px 16px; }
+  .price-table td { padding: 14px 16px; }
+  .price-table tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
+</style>
 <script>
-(async ()=>{
-  const b = await api('/dashboard/billing');
-  u.textContent = b.dialogs_used;
-  l.textContent = b.dialogs_limit;
-  rr.textContent = (b.resolution_rate*100).toFixed(0)+'%';
-  e.textContent = b.trial_ends? b.trial_ends.slice(0,10):'—';
-  c.textContent = '$'+b.estimated_charge_usd.toFixed(2);
+(async function(){
+  var b = await api('/dashboard/billing');
+  var plan = (b.plan || 'trial').replace(/_/g,' ');
+  document.getElementById('planName').textContent = plan;
+  var meta = document.getElementById('planMeta');
+  var metaHtml = '';
+  if (b.trial_ends) metaHtml += '<div class="meta-line">Trial ends <strong>'+b.trial_ends.slice(0,10)+'</strong></div>';
+  metaHtml += '<div class="meta-line">Resolved <strong>'+b.resolved+'</strong> this period</div>';
+  meta.innerHTML = metaHtml;
+
+  document.getElementById('resolved').textContent = b.resolved;
+  document.getElementById('limit').textContent = b.dialogs_limit.toLocaleString();
+  document.getElementById('rate').textContent = (b.resolution_rate*100).toFixed(0)+'%';
+  var ov = b.overage_charge_usd || 0;
+  document.getElementById('overage').textContent = ov > 0 ? '$'+ov.toFixed(2) : '$0';
+
+  var pct = Math.min(b.resolved / b.dialogs_limit * 100, 100);
+  var fill = document.getElementById('usageFill');
+  fill.style.width = pct.toFixed(1)+'%';
+  if (pct >= 90) fill.classList.add('danger');
+  else if (pct >= 70) fill.classList.add('warn');
+  document.getElementById('usageUsed').textContent = b.resolved;
+  document.getElementById('usageLimit').textContent = b.dialogs_limit.toLocaleString();
+
+  var note = document.getElementById('usageNote');
+  if (ov > 0) note.textContent = 'You have exceeded your plan limit. Overage: $0.10 per additional resolved dialog.';
+  else if (pct >= 90) note.textContent = 'Approaching plan limit. Consider upgrading.';
+  else note.textContent = 'Test widget conversations are excluded from billing counters.';
 })();
 </script>
 {% endblock %}

@@ -1,19 +1,32 @@
 """Billing (FR-8) — simplified. No Stripe in MVP.
 
-Trial = 14 days OR 100 dialogs, whichever comes first. Past that: API blocked.
+Plans (from landing page):
+  Free: $0/mo, 10 resolved included
+  Starter: $19/mo, 500 resolved included
+  Pro: $49/mo, 2,000 resolved included
+  Enterprise: $149/mo, 25,000 resolved included
+
+Overage: $0.10 per resolved dialog beyond plan limit.
+Trial: 14 days or 100 dialogs.
+Test widget channel is excluded from all counters at the channel level.
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import HTTPException, status
 
-from .config import get_yaml_config
 from .models import Tenant
 
-_cfg = get_yaml_config().get("billing", {})
-TRIAL_DIALOGS = int(_cfg.get("trial_dialogs", 100))
-PRICE = float(_cfg.get("price_per_resolution_usd", 0.10))
+PLANS = {
+    "free":       {"price_usd": 0,   "resolved_limit": 10},
+    "starter":    {"price_usd": 19,  "resolved_limit": 500},
+    "pro":        {"price_usd": 49,  "resolved_limit": 2000},
+    "enterprise": {"price_usd": 149, "resolved_limit": 25000},
+}
+TRIAL_DAYS = 14
+TRIAL_DIALOGS = 100
+OVERAGE_PER_RESOLVED = 0.10
 
 
 def enforce(tenant: Tenant) -> None:
@@ -28,17 +41,39 @@ def enforce(tenant: Tenant) -> None:
 
 
 def _has_payment(tenant: Tenant) -> bool:
-    # DEFAULT: no real payment integration; only operator-flip of is_active extends usage.
-    # tenant.is_active means "paid plan enabled" once trial ended.
-    return False  # MVP: always requires card after trial
+    return False
 
 
 def usage(tenant: Tenant) -> dict:
+    plan = (tenant.plan or "trial").lower()
+    plan_info = PLANS.get(plan, None)
+
+    resolved = tenant.resolved_count
+    limit = TRIAL_DIALOGS
+    overage_charge = 0.0
+
+    if plan_info:
+        limit = plan_info["resolved_limit"]
+        if resolved > limit:
+            overage_charge = (resolved - limit) * OVERAGE_PER_RESOLVED
+
+    trial_ends = None
+    trial_days_left = 0
+    if tenant.trial_ends:
+        trial_ends = tenant.trial_ends.isoformat()
+        now = datetime.utcnow()
+        trial_days_left = max(0, (tenant.trial_ends - now).days)
+
+    base_charge = plan_info["price_usd"] if plan_info else 0.0
+
     return {
-        "dialogs_used": tenant.dialogs_used,
-        "dialogs_limit": TRIAL_DIALOGS,
-        "resolved": tenant.resolved_count,
-        "resolution_rate": round(tenant.resolved_count / tenant.dialogs_used, 3) if tenant.dialogs_used else 0,
-        "trial_ends": tenant.trial_ends.isoformat() if tenant.trial_ends else None,
-        "estimated_charge_usd": round(tenant.resolved_count * PRICE, 2),
+        "plan": plan,
+        "billing_enabled": tenant.is_active,
+        "resolved": resolved,
+        "dialogs_limit": limit,
+        "resolution_rate": round(resolved / tenant.dialogs_used, 3) if tenant.dialogs_used else 0,
+        "trial_ends": trial_ends,
+        "trial_days_left": trial_days_left,
+        "overage_charge_usd": round(overage_charge, 2),
+        "estimated_charge_usd": round(base_charge + overage_charge, 2),
     }
