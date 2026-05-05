@@ -375,27 +375,22 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       grid-template-rows: repeat(5, 1fr);
-      gap: 6px;
+      gap: 8px;
       width: 100%;
       position: relative;
-      min-height: 400px;
+      min-height: 420px;
       border-radius: 20px;
       overflow: hidden;
-      background: #080c14;
-      border: 2px solid rgba(255,255,255,0.12);
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 12px 48px rgba(0,0,0,0.5), 0 0 1px rgba(255,255,255,0.08) inset, 0 1px 0 rgba(255,255,255,0.06) inset;
-      padding: 8px;
+      background: linear-gradient(160deg, #080c14 0%, #0c1220 50%, #0a0f1a 100%);
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02) inset;
+      padding: 10px;
     }
-    /* Grid dot pattern — PCB substrate */
+    /* Dot grid substrate */
     .cb-pcb::before {
       content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-      background-image: radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px);
-      background-size: 16px 16px;
-    }
-    /* Subtle glow accents */
-    .cb-pcb::after {
-      content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-      background: radial-gradient(ellipse 50% 40% at 50% 50%, rgba(99,102,241,0.04) 0%, transparent 70%);
+      background-image: radial-gradient(circle, rgba(255,255,255,0.03) 0.5px, transparent 0.5px);
+      background-size: 20px 20px;
     }
 
     .cb-svg { position: absolute; inset: 0; pointer-events: none; z-index: 5; visibility: hidden; }
@@ -404,92 +399,87 @@
     .cb-svg .cb-particle { fill: rgba(129,140,248,0.9); opacity: 0; filter: drop-shadow(0 0 6px rgba(99,102,241,0.6)); }
     .cb-svg .cb-particle.active { opacity: 1; }
 
+    /* Connection flow layer */
+    .cb-flow { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+    .cb-flow .flow-line { fill: none; stroke-linecap: round; }
+    .cb-flow .flow-in { stroke: rgba(34,211,238,0.12); stroke-width: 1; }
+    .cb-flow .flow-out { stroke: rgba(168,85,247,0.1); stroke-width: 1; }
+    .cb-flow .flow-dot-in { fill: rgba(34,211,238,0.6); opacity: 0; }
+    .cb-flow .flow-dot-out { fill: rgba(168,85,247,0.5); opacity: 0; }
+    .cb-flow .flow-dot-in.active { opacity: 1; }
+    .cb-flow .flow-dot-out.active { opacity: 1; }
+
+    /* Glass panel tiles */
     .cb-tile {
-      background: rgba(15,20,35,0.8);
-      border: 1px solid rgba(255,255,255,0.04);
-      border-radius: 8px;
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       position: relative;
       overflow: hidden;
-      transition: all 0.5s ease;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       z-index: 3;
     }
-    .cb-tile::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(99,102,241,0.15), transparent); opacity: 0; transition: opacity 0.4s ease; }
-    .cb-tile:hover { border-color: rgba(99,102,241,0.2); background: rgba(15,20,35,0.95); }
-    .cb-tile:hover::before { opacity: 1; }
-    .cb-tile svg { width: 24px; height: 24px; margin-bottom: 4px; flex-shrink: 0; }
-    .cb-tile .cb-tile-name { font-size: 11px; font-weight: 600; color: #4a5568; white-space: nowrap; transition: color 0.4s ease; }
-    .cb-tile .cb-tile-type { font-size: 9px; color: #2d3748; margin-top: 2px; transition: color 0.4s ease; }
+    .cb-tile::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent); }
+    .cb-tile:hover { border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+    .cb-tile svg { width: 22px; height: 22px; margin-bottom: 4px; flex-shrink: 0; }
+    .cb-tile .cb-tile-name { font-size: 10px; font-weight: 600; color: #6b7a8d; white-space: nowrap; transition: color 0.4s ease; }
+    .cb-tile .cb-tile-type { font-size: 8px; color: #3d4a5c; margin-top: 2px; transition: color 0.4s ease; }
 
-    .cb-tile.active {
-      border-color: rgba(99,102,241,0.35);
-      background: rgba(99,102,241,0.05);
-    }
-    .cb-tile.active::before { opacity: 1; }
+    .cb-tile.active { border-color: rgba(34,211,238,0.25); background: rgba(34,211,238,0.04); }
     .cb-tile.active .cb-tile-name { color: #cbd5e1; }
     .cb-tile.active .cb-tile-type { color: #64748b; }
-    .cb-tile.active svg { filter: drop-shadow(0 0 6px rgba(99,102,241,0.4)); }
+    .cb-tile.active svg { filter: drop-shadow(0 0 4px rgba(34,211,238,0.3)); }
 
     /* Silkscreen reference designators */
-    .cb-tile .cb-ref { position: absolute; top: 4px; right: 5px; font-size: 6px; font-family: 'SF Mono', ui-monospace, monospace; color: rgba(255,255,255,0.06); font-weight: 600; letter-spacing: 0.5px; pointer-events: none; }
+    .cb-tile .cb-ref { position: absolute; top: 4px; right: 5px; font-size: 6px; font-family: 'SF Mono', ui-monospace, monospace; color: rgba(255,255,255,0.04); font-weight: 600; letter-spacing: 0.5px; pointer-events: none; }
 
-    /* Jeeves — central processor chip */
+    /* ===== Central Jeeves — Orchestration Brain ===== */
     .cb-tile.cb-jeeves {
-      background: rgba(10,14,26,0.9);
-      border: 2px solid rgba(99,102,241,0.15);
-      border-radius: 12px;
-      transition: all 0.5s ease;
+      background: rgba(99,102,241,0.06);
+      border: 1px solid rgba(99,102,241,0.15);
+      border-radius: 14px;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .cb-tile.cb-jeeves .cb-tile-core {
-      font-size: 38px; font-weight: 900; color: rgba(99,102,241,0.2);
+      font-size: 36px; font-weight: 900; color: rgba(99,102,241,0.25);
       display: flex; align-items: center; justify-content: center;
-      width: 52px; height: 52px; border-radius: 14px;
-      background: rgba(99,102,241,0.04); border: 1px solid rgba(99,102,241,0.08);
-      margin: 0 auto 6px;
-      transition: all 0.5s ease;
+      width: 50px; height: 50px; border-radius: 12px;
+      background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.1);
+      margin: 0 auto 5px;
+      transition: all 0.4s ease;
       position: relative;
     }
     .cb-tile.cb-jeeves .cb-tile-core::after {
-      content: ''; position: absolute; inset: -4px; border-radius: 18px;
+      content: ''; position: absolute; inset: -6px; border-radius: 16px;
       border: 1px solid rgba(99,102,241,0.06);
-      animation: cb-corePulse 3s ease-in-out infinite;
+      animation: cb-corePulse 4s ease-in-out infinite;
     }
     @keyframes cb-corePulse {
       0%, 100% { transform: scale(1); opacity: 0; }
-      50% { transform: scale(1.08); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 1; }
     }
-    .cb-tile.cb-jeeves .cb-tile-label { font-size: 14px; font-weight: 700; color: #4a5568; transition: color 0.4s ease; }
-    .cb-tile.cb-jeeves .cb-tile-sub { font-size: 10px; color: #2d3748; margin-top: 2px; transition: color 0.4s ease; }
+    .cb-tile.cb-jeeves .cb-tile-label { font-size: 13px; font-weight: 700; color: #4a5568; transition: color 0.4s ease; }
+    .cb-tile.cb-jeeves .cb-tile-sub { font-size: 9px; color: #2d3748; margin-top: 2px; transition: color 0.4s ease; }
 
     .cb-tile.cb-jeeves.lit {
-      border-color: rgba(99,102,241,0.45);
-      background: rgba(99,102,241,0.06);
-      box-shadow: 0 0 30px rgba(99,102,241,0.1), inset 0 0 24px rgba(99,102,241,0.04);
+      border-color: rgba(99,102,241,0.3);
+      background: rgba(99,102,241,0.08);
+      box-shadow: 0 0 32px rgba(99,102,241,0.06), 0 4px 24px rgba(0,0,0,0.3);
     }
     .cb-tile.cb-jeeves.lit::before { opacity: 1; }
     .cb-tile.cb-jeeves.lit .cb-tile-core {
       color: #a5b4fc;
       background: rgba(99,102,241,0.12);
-      border-color: rgba(99,102,241,0.3);
-      box-shadow: 0 0 20px rgba(99,102,241,0.15);
+      border-color: rgba(99,102,241,0.2);
     }
     .cb-tile.cb-jeeves.lit .cb-tile-label { color: #e2e8f0; }
     .cb-tile.cb-jeeves.lit .cb-tile-sub { color: #a5b4fc; }
-
-    /* PCB trace layer — static copper traces */
-    .cb-traces { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-    .cb-traces .tr-power { stroke: rgba(180,160,100,0.12); stroke-width: 1.6; fill: none; stroke-linecap: square; stroke-linejoin: miter; }
-    .cb-traces .tr-signal { stroke: rgba(160,150,130,0.08); stroke-width: 0.7; fill: none; stroke-linecap: square; stroke-linejoin: miter; }
-    .cb-traces .tr-diff { stroke: rgba(160,150,130,0.06); stroke-width: 0.5; fill: none; stroke-linecap: square; stroke-linejoin: miter; }
-    .cb-traces .tr-gnd { stroke: rgba(140,140,120,0.03); stroke-width: 0.4; fill: none; stroke-linecap: square; stroke-linejoin: miter; }
-
-    /* Silkscreen text on PCB */
-    .cb-silk { position: absolute; z-index: 3; pointer-events: none;
-      font-size: 5px; font-family: 'SF Mono', ui-monospace, monospace; color: rgba(255,255,255,0.06); font-weight: 500; letter-spacing: 0.3px; }
-    .cb-silk.cb-silk-label { color: rgba(255,255,255,0.09); }
 
     /* ===== TIMELINE ===== */
     /* ===== HOW IT WORKS — Terminal ===== */
@@ -1039,104 +1029,42 @@
       <div class="cb-pcb">
         <svg class="cb-svg" id="cbSvg"></svg>
 
-        <!-- PCB traces — copper layer -->
-        <svg class="cb-traces" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <!-- Flow connections layer — incoming (cyan) and outgoing (purple) -->
+        <svg class="cb-flow" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <!-- Incoming: Channels → Jeeves (cyan) -->
+          <path class="flow-line flow-in" d="M 26 13 L 26 22 Q 26 28 33 33 L 42 38"/>
+          <path class="flow-line flow-in" d="M 56 13 L 56 20 Q 56 28 52 32 L 48 36"/>
+          <path class="flow-line flow-in" d="M 80 13 L 80 22 Q 80 32 70 36 L 58 40"/>
+          <path class="flow-line flow-in" d="M 14 38 L 20 38 Q 28 38 34 42 L 40 44"/>
+          <path class="flow-line flow-in" d="M 14 48 L 22 48 Q 30 48 36 46 L 40 46"/>
 
-          <!-- Power buses (wide) -->
-          <line class="tr-power" x1="4" y1="3" x2="96" y2="3"/>
-          <line class="tr-power" x1="4" y1="97" x2="96" y2="97"/>
-          <line class="tr-power" x1="3" y1="4" x2="3" y2="96"/>
-          <line class="tr-power" x1="97" y1="4" x2="97" y2="96"/>
-          <!-- Power tap-offs -->
-          <path class="tr-power" d="M 3 3 L 8 3 L 8 8"/>
-          <path class="tr-power" d="M 97 3 L 92 3 L 92 8"/>
-          <path class="tr-power" d="M 3 97 L 8 97 L 8 92"/>
-          <path class="tr-power" d="M 97 97 L 92 97 L 92 92"/>
+          <!-- Outgoing: Jeeves → Systems (purple) -->
+          <path class="flow-line flow-out" d="M 60 42 L 70 38 Q 78 34 80 32 L 82 28"/>
+          <path class="flow-line flow-out" d="M 58 50 L 70 52 Q 78 54 80 56 L 82 58"/>
+          <path class="flow-line flow-out" d="M 42 54 L 34 58 Q 26 62 28 68 L 28 72"/>
+          <path class="flow-line flow-out" d="M 52 56 L 52 62 Q 52 68 56 72 L 58 76"/>
+          <path class="flow-line flow-out" d="M 60 52 L 68 56 Q 74 62 76 68 L 80 72"/>
+          <path class="flow-line flow-out" d="M 38 58 L 28 64 Q 20 70 22 78 L 24 84"/>
+          <path class="flow-line flow-out" d="M 54 58 L 62 64 Q 68 70 66 78 L 68 84"/>
 
-          <!-- Signal traces: Row 1 tiles → Jeeves -->
-          <!-- Widget (top-left) → Jeeves top -->
-          <path class="tr-signal" d="M 28 14 L 28 24 L 42 38"/>
-          <path class="tr-signal" d="M 34 14 L 34 20 L 46 32"/>
-          <!-- Telegram (top-center) → Jeeves top -->
-          <path class="tr-signal" d="M 58 14 L 58 22 L 52 28"/>
-          <!-- WhatsApp (top-right) → Jeeves right -->
-          <path class="tr-signal" d="M 80 14 L 80 28 L 68 40 L 56 40"/>
-          <path class="tr-signal" d="M 84 14 L 84 32 L 72 44 L 56 44"/>
-
-          <!-- Signal traces: Row 2-3 tiles → Jeeves -->
-          <!-- Email (left) → Jeeves left -->
-          <path class="tr-signal" d="M 16 34 L 22 34 L 34 40"/>
-          <path class="tr-signal" d="M 16 42 L 22 42 L 30 40"/>
-          <path class="tr-signal" d="M 16 48 L 22 48 L 30 44"/>
-          <!-- HubSpot (right) → Jeeves right -->
-          <path class="tr-signal" d="M 80 30 L 74 30 L 64 38"/>
-          <!-- API (right, lower) → Jeeves right -->
-          <path class="tr-signal" d="M 80 52 L 74 52 L 64 46"/>
-          <path class="tr-signal" d="M 80 56 L 74 56 L 60 48"/>
-
-          <!-- Signal traces: Row 4 tiles → Jeeves -->
-          <!-- Shopify (bottom-left) → Jeeves bottom -->
-          <path class="tr-signal" d="M 28 76 L 28 64 L 42 50"/>
-          <path class="tr-signal" d="M 34 76 L 34 60 L 46 48"/>
-          <!-- WooCommerce (bottom-center) → Jeeves bottom -->
-          <path class="tr-signal" d="M 58 76 L 58 64 L 52 54"/>
-          <!-- Stripe (bottom-right) → Jeeves bottom-right -->
-          <path class="tr-signal" d="M 80 76 L 80 64 L 68 52 L 58 50"/>
-
-          <!-- Signal traces: Row 5 tiles → Jeeves -->
-          <!-- Analytics (bottom-left) → Jeeves bottom -->
-          <path class="tr-signal" d="M 28 88 L 28 72 L 40 56"/>
-          <path class="tr-signal" d="M 34 88 L 34 68 L 44 54"/>
-          <!-- CRM (bottom-right) → Jeeves bottom-right -->
-          <path class="tr-signal" d="M 68 88 L 68 72 L 56 58"/>
-          <path class="tr-signal" d="M 74 88 L 74 68 L 60 54"/>
-
-          <!-- Differential pairs (parallel traces, tight coupling) -->
-          <!-- Widget diff pair -->
-          <path class="tr-diff" d="M 26 14 L 26 26 L 40 40"/>
-          <path class="tr-diff" d="M 24 14 L 24 28 L 38 42"/>
-          <!-- WhatsApp diff pair -->
-          <path class="tr-diff" d="M 78 14 L 78 26 L 66 38 L 56 38"/>
-          <path class="tr-diff" d="M 76 14 L 76 28 L 64 40 L 56 40"/>
-          <!-- Email diff pair -->
-          <path class="tr-diff" d="M 14 34 L 20 34 L 32 40"/>
-          <path class="tr-diff" d="M 14 32 L 20 32 L 32 38"/>
-          <!-- CRM diff pair -->
-          <path class="tr-diff" d="M 66 88 L 66 70 L 54 56"/>
-          <path class="tr-diff" d="M 64 88 L 64 72 L 52 58"/>
-
-          <!-- Ground return traces (thin, underneath signal paths) -->
-          <path class="tr-gnd" d="M 10 50 L 22 50 L 22 42"/>
-          <path class="tr-gnd" d="M 90 50 L 78 50 L 78 42"/>
-          <path class="tr-gnd" d="M 50 5 L 50 16 L 48 18"/>
-          <path class="tr-gnd" d="M 50 95 L 50 84 L 48 82"/>
-          <path class="tr-gnd" d="M 50 8 L 50 14 L 52 16"/>
-          <path class="tr-gnd" d="M 50 92 L 50 86 L 52 84"/>
-
-          <!-- Cross-connect traces between adjacent tiles -->
-          <path class="tr-signal" d="M 44 14 L 44 20 L 50 26"/>
-          <path class="tr-signal" d="M 70 14 L 70 20 L 66 24"/>
-          <path class="tr-signal" d="M 44 76 L 44 70 L 50 64"/>
-          <path class="tr-signal" d="M 70 76 L 70 70 L 64 64"/>
-          <path class="tr-signal" d="M 16 76 L 16 70 L 22 64"/>
-
-          <!-- Edge terminations -->
-          <path class="tr-signal" d="M 3 12 L 10 12"/>
-          <path class="tr-signal" d="M 3 22 L 10 22"/>
-          <path class="tr-signal" d="M 3 82 L 10 82"/>
-          <path class="tr-signal" d="M 90 82 L 97 82"/>
-          <path class="tr-signal" d="M 90 22 L 97 22"/>
-          <path class="tr-signal" d="M 10 97 L 10 90"/>
-          <path class="tr-signal" d="M 90 97 L 90 90"/>
+          <!-- Animated flow dots (positioned via JS) -->
+          <!-- Incoming dots (cyan) -->
+          <circle class="flow-dot-in" r="1.3" cx="0" cy="0"/>
+          <circle class="flow-dot-in" r="1.3" cx="0" cy="0"/>
+          <circle class="flow-dot-in" r="1.3" cx="0" cy="0"/>
+          <circle class="flow-dot-in" r="1.3" cx="0" cy="0"/>
+          <circle class="flow-dot-in" r="1.3" cx="0" cy="0"/>
+          <!-- Outgoing dots (purple) -->
+          <circle class="flow-dot-out" r="1.3" cx="0" cy="0"/>
+          <circle class="flow-dot-out" r="1.3" cx="0" cy="0"/>
+          <circle class="flow-dot-out" r="1.3" cx="0" cy="0"/>
+          <circle class="flow-dot-out" r="1.3" cx="0" cy="0"/>
+          <circle class="flow-dot-out" r="1.3" cx="0" cy="0"/>
+          <circle class="flow-dot-out" r="1.3" cx="0" cy="0"/>
+          <circle class="flow-dot-out" r="1.3" cx="0" cy="0"/>
         </svg>
 
-        <!-- Silkscreen text -->
-        <div class="cb-silk" style="top:6px;left:14px">JEEVES</div>
-        <div class="cb-silk" style="top:6px;right:14px">v2.1</div>
-        <div class="cb-silk cb-silk-label" style="bottom:6px;left:14px">AI AGENT ROUTER</div>
-        <div class="cb-silk" style="bottom:6px;right:14px">REV C</div>
-
-        <!-- ROW 1 -->
+        <!-- ROW 1: Input Channels -->
         <div class="cb-tile" data-idx="0" style="grid-column:1/3;grid-row:1;">
         <span class="cb-ref">U1</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
@@ -1156,7 +1084,7 @@
         <div class="cb-tile-type">Messenger</div>
       </div>
 
-      <!-- ROW 2: Email tall | Jeeves 2×2 | HubSpot -->
+      <!-- ROW 2-3: Jeeves center | Email input | Systems output -->
       <div class="cb-tile" data-idx="3" style="grid-column:1;grid-row:2/4;">
         <span class="cb-ref">U4</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
@@ -1177,7 +1105,7 @@
         <div class="cb-tile-type">CRM</div>
       </div>
 
-      <!-- ROW 3 -->
+      <!-- ROW 3 continued -->
       <div class="cb-tile" data-idx="5" style="grid-column:4;grid-row:3;">
         <span class="cb-ref">U6</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
@@ -1185,11 +1113,10 @@
         <div class="cb-tile-type">Custom</div>
       </div>
 
-      <!-- ROW 4 -->
+      <!-- ROW 4: Action Systems -->
       <div class="cb-tile" data-idx="6" style="grid-column:1/3;grid-row:4;">
         <span class="cb-ref">U7</span>
         <svg viewBox="0 0 48 48" width="32" height="32">
-          <!-- Shopify bag icon -->
           <path d="M13 10.5C13 8 15 6 17.5 6h13C33 6 35 8 35 10.5V12c4.5 1.5 7.5 5.5 7.5 10.5v20c0 4-3.5 7.5-7.5 7.5h-17c-4 0-7.5-3.5-7.5-7.5v-20c0-5 3-9 7.5-10.5V10.5z" fill="#95bf47"/>
           <path d="M24 26c1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3 1.3 3 3 3z" fill="#fff"/>
           <path d="M17.5 6C16 6 15 7 15 8.5V12h18V8.5C33 7 32 6 30.5 6h-13z" fill="#5e8e3e"/>
@@ -1214,7 +1141,7 @@
         <div class="cb-tile-type">Billing</div>
       </div>
 
-      <!-- ROW 5 -->
+      <!-- ROW 5: Analytics + CRM -->
       <div class="cb-tile" data-idx="9" style="grid-column:1/3;grid-row:5;">
         <span class="cb-ref">U10</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
@@ -1462,52 +1389,35 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
   obs.observe(terminal);
 })();
 
-// Circuit board animation
+// Orchestration flow animation
 (function() {
   const board = document.getElementById('channelBoard');
-  const svg = document.getElementById('cbSvg');
+  const flowSvg = board ? board.querySelector('.cb-flow') : null;
   const jeevesTile = document.getElementById('jeevesTile');
   const tiles = document.querySelectorAll('.cb-tile[data-idx]');
-  if (!board || !svg || !jeevesTile || !tiles.length) return;
+  if (!board || !flowSvg || !jeevesTile || !tiles.length) return;
 
-  let paths = [];
-  let particles = [];
+  const flowLines = flowSvg.querySelectorAll('.flow-line');
+  const flowDotsIn = flowSvg.querySelectorAll('.flow-dot-in');
+  const flowDotsOut = flowSvg.querySelectorAll('.flow-dot-out');
+  const allDots = flowSvg.querySelectorAll('.flow-dot-in, .flow-dot-out');
 
-  function buildCircuit() {
-    svg.innerHTML = '';
-    paths = [];
-    particles = [];
+  // Incoming tiles (0-3): Widget, Telegram, WhatsApp, Email
+  const incomingIdx = [0, 1, 2, 3];
+  // Outgoing tiles (4-10): HubSpot, API, Shopify, Woo, Stripe, Analytics, CRM
+  const outgoingIdx = [4, 5, 6, 7, 8, 9, 10];
 
-    const boardRect = board.getBoundingClientRect();
-    const jRect = jeevesTile.getBoundingClientRect();
-    const jx = jRect.left + jRect.width / 2 - boardRect.left;
-    const jy = jRect.top + jRect.height / 2 - boardRect.top;
-
-    tiles.forEach(function(tile) {
-      const tRect = tile.getBoundingClientRect();
-      const tx = tRect.left + tRect.width / 2 - boardRect.left;
-      const ty = tRect.top + tRect.height / 2 - boardRect.top;
-
-      const midX = jx + (tx - jx) * 0.5;
-      const pathD = 'M ' + jx + ' ' + jy + ' L ' + midX + ' ' + jy + ' L ' + midX + ' ' + ty + ' L ' + tx + ' ' + ty;
-
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', pathD);
-      path.classList.add('cb-path');
-      path.dataset.idx = tile.dataset.idx;
-      svg.appendChild(path);
-      paths.push(path);
-
-      const particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      particle.setAttribute('r', '2');
-      particle.classList.add('cb-particle');
-      particle.dataset.idx = tile.dataset.idx;
-      svg.appendChild(particle);
-      particles.push(particle);
-    });
+  function getLineIndex(tileIdx) {
+    if (incomingIdx.includes(tileIdx)) return tileIdx;
+    if (outgoingIdx.includes(tileIdx)) return 5 + (tileIdx - 4);
+    return 0;
   }
 
-  function animateParticle(pathEl, particle, duration, cb) {
+  function getDotEl(lineIdx) {
+    return lineIdx < 5 ? flowDotsIn[lineIdx] : flowDotsOut[lineIdx - 5];
+  }
+
+  function animateDot(dotEl, pathEl, duration, cb) {
     const length = pathEl.getTotalLength();
     const start = performance.now();
 
@@ -1520,50 +1430,51 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
       const rawProgress = Math.min(elapsed / duration, 1);
       const progress = easeInOut(rawProgress);
       const point = pathEl.getPointAtLength(progress * length);
-      particle.setAttribute('cx', point.x);
-      particle.setAttribute('cy', point.y);
+      dotEl.setAttribute('cx', point.x);
+      dotEl.setAttribute('cy', point.y);
       if (rawProgress < 1) {
         requestAnimationFrame(step);
       } else if (cb) {
         cb();
       }
     }
+    dotEl.classList.add('active');
     requestAnimationFrame(step);
   }
 
   let activeIdx = -1;
   function cycle() {
-    // Pick random index (not the same as previous)
     let nextIdx;
     do {
       nextIdx = Math.floor(Math.random() * tiles.length);
     } while (nextIdx === activeIdx && tiles.length > 1);
     activeIdx = nextIdx;
 
-    // ALL class additions happen synchronously in the same tick
+    const lineIdx = getLineIndex(activeIdx);
+    const lineEl = flowLines[lineIdx] || flowLines[0];
+    const dotEl = getDotEl(lineIdx) || allDots[0];
+
+    // Hide all dots
+    allDots.forEach(function(d) { d.classList.remove('active'); });
+
+    // Highlight active tile and flow
     jeevesTile.classList.add('lit');
     tiles[activeIdx].classList.add('active');
-    paths[activeIdx].classList.add('active');
-    particles[activeIdx].classList.add('active');
+    lineEl.style.opacity = '1';
 
-    // Particle travels along path
-    animateParticle(paths[activeIdx], particles[activeIdx], 800, function() {
-      // After particle arrived, hold then clear everything together
+    // Animate dot along path
+    animateDot(dotEl, lineEl, 1000, function() {
       setTimeout(function() {
         jeevesTile.classList.remove('lit');
         tiles[activeIdx].classList.remove('active');
-        paths[activeIdx].classList.remove('active');
-        particles[activeIdx].classList.remove('active');
-
-        // Pause before next cycle
-        setTimeout(cycle, 3200);
-      }, 1400);
+        lineEl.style.opacity = '';
+        dotEl.classList.remove('active');
+        setTimeout(cycle, 2800);
+      }, 1200);
     });
   }
 
-  buildCircuit();
-  window.addEventListener('resize', buildCircuit);
-  setTimeout(cycle, 800);
+  setTimeout(cycle, 600);
 })();
 
 // Chat animation
