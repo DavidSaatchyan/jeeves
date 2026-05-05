@@ -381,105 +381,112 @@
       min-height: 420px;
       border-radius: 20px;
       overflow: hidden;
-      background: linear-gradient(160deg, #080c14 0%, #0c1220 50%, #0a0f1a 100%);
-      border: 1px solid rgba(255,255,255,0.06);
-      box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02) inset;
+      background: linear-gradient(160deg, #050a14 0%, #0a0f1e 50%, #060d18 100%);
+      border: 1px solid rgba(99,102,241,0.12);
+      box-shadow: 0 4px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.04) inset;
       padding: 10px;
     }
-    /* Dot grid substrate */
+    /* Grid overlay */
     .cb-pcb::before {
       content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-      background-image: radial-gradient(circle, rgba(255,255,255,0.03) 0.5px, transparent 0.5px);
-      background-size: 20px 20px;
+      background-image:
+        linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
     }
 
-    .cb-svg { position: absolute; inset: 0; pointer-events: none; z-index: 5; visibility: hidden; }
-    .cb-svg .cb-path { fill: none; stroke: transparent; stroke-width: 1.2; stroke-linecap: round; }
-    .cb-svg .cb-path.active { stroke: rgba(99,102,241,0.4); stroke-width: 1.5; filter: drop-shadow(0 0 4px rgba(99,102,241,0.3)); }
-    .cb-svg .cb-particle { fill: rgba(129,140,248,0.9); opacity: 0; filter: drop-shadow(0 0 6px rgba(99,102,241,0.6)); }
-    .cb-svg .cb-particle.active { opacity: 1; }
+    /* Wire trace layer */
+    .cb-traces { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+    .cb-traces .wire { fill: none; stroke: rgba(99,102,241,0.08); stroke-width: 0.6; transition: stroke 0.3s ease, filter 0.3s ease; }
+    .cb-traces .wire.live { stroke: rgba(99,102,241,0.6); filter: drop-shadow(0 0 4px rgba(99,102,241,0.5)); }
+    .cb-traces .spark { fill: #818cf8; opacity: 0; filter: drop-shadow(0 0 8px rgba(99,102,241,0.9)); }
+    .cb-traces .spark.active { opacity: 1; }
 
-    /* Connection flow layer */
-    .cb-flow { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-    .cb-flow .flow-line { fill: none; stroke-linecap: round; }
-    .cb-flow .flow-in { stroke: rgba(34,211,238,0.12); stroke-width: 1; }
-    .cb-flow .flow-out { stroke: rgba(168,85,247,0.1); stroke-width: 1; }
-    .cb-flow .flow-dot-in { fill: rgba(34,211,238,0.6); opacity: 0; }
-    .cb-flow .flow-dot-out { fill: rgba(168,85,247,0.5); opacity: 0; }
-    .cb-flow .flow-dot-in.active { opacity: 1; }
-    .cb-flow .flow-dot-out.active { opacity: 1; }
-
-    /* Glass panel tiles */
+    /* Cyber tiles */
     .cb-tile {
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 10px;
+      background: rgba(8,12,24,0.85);
+      border: 1px solid rgba(99,102,241,0.08);
+      border-radius: 6px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       position: relative;
       overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.4s ease;
       z-index: 3;
     }
-    .cb-tile::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent); }
-    .cb-tile:hover { border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
-    .cb-tile svg { width: 22px; height: 22px; margin-bottom: 4px; flex-shrink: 0; }
-    .cb-tile .cb-tile-name { font-size: 10px; font-weight: 600; color: #6b7a8d; white-space: nowrap; transition: color 0.4s ease; }
-    .cb-tile .cb-tile-type { font-size: 8px; color: #3d4a5c; margin-top: 2px; transition: color 0.4s ease; }
+    .cb-tile::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(99,102,241,0.15), transparent); opacity: 0; transition: opacity 0.4s ease; }
+    .cb-tile:hover { border-color: rgba(99,102,241,0.15); background: rgba(15,20,35,0.9); }
+    .cb-tile svg { width: 20px; height: 20px; margin-bottom: 3px; flex-shrink: 0; transition: filter 0.4s ease; }
+    .cb-tile .cb-tile-name { font-size: 10px; font-weight: 600; color: #475569; white-space: nowrap; transition: color 0.4s ease; }
+    .cb-tile .cb-tile-type { font-size: 8px; color: #334155; margin-top: 2px; transition: color 0.4s ease; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    .cb-tile.active { border-color: rgba(34,211,238,0.25); background: rgba(34,211,238,0.04); }
-    .cb-tile.active .cb-tile-name { color: #cbd5e1; }
-    .cb-tile.active .cb-tile-type { color: #64748b; }
-    .cb-tile.active svg { filter: drop-shadow(0 0 4px rgba(34,211,238,0.3)); }
-
-    /* Silkscreen reference designators */
-    .cb-tile .cb-ref { position: absolute; top: 4px; right: 5px; font-size: 6px; font-family: 'SF Mono', ui-monospace, monospace; color: rgba(255,255,255,0.04); font-weight: 600; letter-spacing: 0.5px; pointer-events: none; }
-
-    /* ===== Central Jeeves — Orchestration Brain ===== */
-    .cb-tile.cb-jeeves {
+    /* Active module */
+    .cb-tile.active {
+      border-color: rgba(99,102,241,0.35);
       background: rgba(99,102,241,0.06);
+      box-shadow: 0 0 16px rgba(99,102,241,0.1), inset 0 0 8px rgba(99,102,241,0.03);
+    }
+    .cb-tile.active::before { opacity: 1; }
+    .cb-tile.active .cb-tile-name { color: #c7d2fe; }
+    .cb-tile.active .cb-tile-type { color: #818cf8; }
+    .cb-tile.active svg { filter: drop-shadow(0 0 5px rgba(99,102,241,0.5)); }
+
+    /* Reference designators */
+    .cb-tile .cb-ref { position: absolute; top: 3px; right: 4px; font-size: 5px; font-family: 'SF Mono', ui-monospace, monospace; color: rgba(99,102,241,0.08); font-weight: 600; letter-spacing: 0.3px; pointer-events: none; }
+
+    /* ===== Central Jeeves — IC Chip ===== */
+    .cb-tile.cb-jeeves {
+      background: linear-gradient(145deg, #080c16 0%, #0f1628 50%, #080c16 100%);
       border: 1px solid rgba(99,102,241,0.15);
-      border-radius: 14px;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 4px;
+      transition: all 0.4s ease;
+      box-shadow: 0 0 20px rgba(99,102,241,0.04), inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    /* IC pins top */
+    .cb-tile.cb-jeeves::before {
+      content: ''; position: absolute; top: -1px; left: 22%; right: 22%; height: 2px;
+      background: repeating-linear-gradient(90deg, rgba(100,120,160,0.3) 0px, rgba(100,120,160,0.3) 2px, transparent 2px, transparent 6px);
+      z-index: 4; opacity: 1 !important;
+    }
+    /* IC pins bottom */
+    .cb-jeeves-pins {
+      position: absolute; bottom: -1px; left: 22%; right: 22%; height: 2px; z-index: 4; pointer-events: none;
+      background: repeating-linear-gradient(90deg, rgba(100,120,160,0.3) 0px, rgba(100,120,160,0.3) 2px, transparent 2px, transparent 6px);
     }
     .cb-tile.cb-jeeves .cb-tile-core {
-      font-size: 36px; font-weight: 900; color: rgba(99,102,241,0.25);
+      font-size: 24px; font-weight: 900; color: rgba(99,102,241,0.25);
       display: flex; align-items: center; justify-content: center;
-      width: 50px; height: 50px; border-radius: 12px;
-      background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.1);
-      margin: 0 auto 5px;
+      width: 36px; height: 36px; border-radius: 3px;
+      background: linear-gradient(145deg, #060a14, #0e1424);
+      border: 1px solid rgba(99,102,241,0.1);
+      margin: 0 auto 3px;
       transition: all 0.4s ease;
       position: relative;
+      font-family: 'SF Mono', ui-monospace, monospace;
     }
     .cb-tile.cb-jeeves .cb-tile-core::after {
-      content: ''; position: absolute; inset: -6px; border-radius: 16px;
-      border: 1px solid rgba(99,102,241,0.06);
-      animation: cb-corePulse 4s ease-in-out infinite;
+      content: ''; position: absolute; inset: 2px; border-radius: 2px;
+      background: radial-gradient(circle at center, rgba(99,102,241,0.06) 0%, transparent 60%);
     }
-    @keyframes cb-corePulse {
-      0%, 100% { transform: scale(1); opacity: 0; }
-      50% { transform: scale(1.1); opacity: 1; }
-    }
-    .cb-tile.cb-jeeves .cb-tile-label { font-size: 13px; font-weight: 700; color: #4a5568; transition: color 0.4s ease; }
-    .cb-tile.cb-jeeves .cb-tile-sub { font-size: 9px; color: #2d3748; margin-top: 2px; transition: color 0.4s ease; }
+    .cb-tile.cb-jeeves .cb-tile-label { font-size: 11px; font-weight: 700; color: #3d4a5c; transition: color 0.4s ease; letter-spacing: 1px; text-transform: uppercase; }
+    .cb-tile.cb-jeeves .cb-tile-sub { font-size: 8px; color: #2d3748; margin-top: 1px; transition: color 0.4s ease; text-transform: uppercase; letter-spacing: 0.5px; }
 
+    /* Jeeves powered on */
     .cb-tile.cb-jeeves.lit {
-      border-color: rgba(99,102,241,0.3);
-      background: rgba(99,102,241,0.08);
-      box-shadow: 0 0 32px rgba(99,102,241,0.06), 0 4px 24px rgba(0,0,0,0.3);
+      border-color: rgba(99,102,241,0.4);
+      background: linear-gradient(145deg, #0d1224, #162033, #0d1224);
+      box-shadow: 0 0 28px rgba(99,102,241,0.1), 0 0 56px rgba(99,102,241,0.04), inset 0 0 16px rgba(99,102,241,0.04);
     }
-    .cb-tile.cb-jeeves.lit::before { opacity: 1; }
     .cb-tile.cb-jeeves.lit .cb-tile-core {
       color: #a5b4fc;
-      background: rgba(99,102,241,0.12);
-      border-color: rgba(99,102,241,0.2);
+      background: linear-gradient(145deg, #0f1528, #1a2340);
+      border-color: rgba(99,102,241,0.3);
+      box-shadow: 0 0 10px rgba(99,102,241,0.2);
     }
     .cb-tile.cb-jeeves.lit .cb-tile-label { color: #e2e8f0; }
-    .cb-tile.cb-jeeves.lit .cb-tile-sub { color: #a5b4fc; }
+    .cb-tile.cb-jeeves.lit .cb-tile-sub { color: #818cf8; }
 
     /* ===== TIMELINE ===== */
     /* ===== HOW IT WORKS — Terminal ===== */
@@ -1027,41 +1034,33 @@
 
     <div class="channel-board reveal" id="channelBoard">
       <div class="cb-pcb">
-        <svg class="cb-svg" id="cbSvg"></svg>
+        <!-- Wire trace layer — straight connections from Jeeves to modules -->
+        <svg class="cb-traces" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <!-- Wires to each module -->
+          <path class="wire" d="M 40 44 L 22 10" id="wire-0"/>
+          <path class="wire" d="M 48 44 L 56 10" id="wire-1"/>
+          <path class="wire" d="M 54 44 L 80 10" id="wire-2"/>
+          <path class="wire" d="M 40 44 L 14 38" id="wire-3"/>
+          <path class="wire" d="M 54 44 L 88 28" id="wire-4"/>
+          <path class="wire" d="M 54 48 L 88 52" id="wire-5"/>
+          <path class="wire" d="M 42 48 L 22 80" id="wire-6"/>
+          <path class="wire" d="M 48 48 L 56 80" id="wire-7"/>
+          <path class="wire" d="M 52 48 L 80 80" id="wire-8"/>
+          <path class="wire" d="M 42 48 L 22 90" id="wire-9"/>
+          <path class="wire" d="M 48 48 L 68 90" id="wire-10"/>
 
-        <!-- Flow connections layer — incoming (cyan) and outgoing (purple) -->
-        <svg class="cb-flow" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <!-- Incoming: Channels → Jeeves (cyan) -->
-          <path class="flow-line flow-in" d="M 26 13 L 26 22 Q 26 28 33 33 L 42 38"/>
-          <path class="flow-line flow-in" d="M 56 13 L 56 20 Q 56 28 52 32 L 48 36"/>
-          <path class="flow-line flow-in" d="M 80 13 L 80 22 Q 80 32 70 36 L 58 40"/>
-          <path class="flow-line flow-in" d="M 14 38 L 20 38 Q 28 38 34 42 L 40 44"/>
-          <path class="flow-line flow-in" d="M 14 48 L 22 48 Q 30 48 36 46 L 40 46"/>
-
-          <!-- Outgoing: Jeeves → Systems (purple) -->
-          <path class="flow-line flow-out" d="M 60 42 L 70 38 Q 78 34 80 32 L 82 28"/>
-          <path class="flow-line flow-out" d="M 58 50 L 70 52 Q 78 54 80 56 L 82 58"/>
-          <path class="flow-line flow-out" d="M 42 54 L 34 58 Q 26 62 28 68 L 28 72"/>
-          <path class="flow-line flow-out" d="M 52 56 L 52 62 Q 52 68 56 72 L 58 76"/>
-          <path class="flow-line flow-out" d="M 60 52 L 68 56 Q 74 62 76 68 L 80 72"/>
-          <path class="flow-line flow-out" d="M 38 58 L 28 64 Q 20 70 22 78 L 24 84"/>
-          <path class="flow-line flow-out" d="M 54 58 L 62 64 Q 68 70 66 78 L 68 84"/>
-
-          <!-- Animated flow dots (positioned via JS) -->
-          <!-- Incoming dots (cyan) -->
-          <circle class="flow-dot-in" r="1.3" cx="0" cy="0"/>
-          <circle class="flow-dot-in" r="1.3" cx="0" cy="0"/>
-          <circle class="flow-dot-in" r="1.3" cx="0" cy="0"/>
-          <circle class="flow-dot-in" r="1.3" cx="0" cy="0"/>
-          <circle class="flow-dot-in" r="1.3" cx="0" cy="0"/>
-          <!-- Outgoing dots (purple) -->
-          <circle class="flow-dot-out" r="1.3" cx="0" cy="0"/>
-          <circle class="flow-dot-out" r="1.3" cx="0" cy="0"/>
-          <circle class="flow-dot-out" r="1.3" cx="0" cy="0"/>
-          <circle class="flow-dot-out" r="1.3" cx="0" cy="0"/>
-          <circle class="flow-dot-out" r="1.3" cx="0" cy="0"/>
-          <circle class="flow-dot-out" r="1.3" cx="0" cy="0"/>
-          <circle class="flow-dot-out" r="1.3" cx="0" cy="0"/>
+          <!-- Spark particles (positioned via JS) -->
+          <circle class="spark" r="1.4" id="spark-0"/>
+          <circle class="spark" r="1.4" id="spark-1"/>
+          <circle class="spark" r="1.4" id="spark-2"/>
+          <circle class="spark" r="1.4" id="spark-3"/>
+          <circle class="spark" r="1.4" id="spark-4"/>
+          <circle class="spark" r="1.4" id="spark-5"/>
+          <circle class="spark" r="1.4" id="spark-6"/>
+          <circle class="spark" r="1.4" id="spark-7"/>
+          <circle class="spark" r="1.4" id="spark-8"/>
+          <circle class="spark" r="1.4" id="spark-9"/>
+          <circle class="spark" r="1.4" id="spark-10"/>
         </svg>
 
         <!-- ROW 1: Input Channels -->
@@ -1092,6 +1091,7 @@
         <div class="cb-tile-type">Incoming</div>
       </div>
       <div class="cb-tile cb-jeeves" id="jeevesTile" style="grid-column:2/4;grid-row:2/4;">
+        <div class="cb-jeeves-pins"></div>
         <div class="cb-tile-core">J</div>
         <div class="cb-tile-label">Jeeves</div>
         <div class="cb-tile-sub">AI Agent</div>
@@ -1389,56 +1389,36 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
   obs.observe(terminal);
 })();
 
-// Orchestration flow animation
+// Cyber trace animation — bidirectional spark flow
 (function() {
   const board = document.getElementById('channelBoard');
-  const flowSvg = board ? board.querySelector('.cb-flow') : null;
+  const tracesSvg = board ? board.querySelector('.cb-traces') : null;
   const jeevesTile = document.getElementById('jeevesTile');
   const tiles = document.querySelectorAll('.cb-tile[data-idx]');
-  if (!board || !flowSvg || !jeevesTile || !tiles.length) return;
+  if (!board || !tracesSvg || !jeevesTile || !tiles.length) return;
 
-  const flowLines = flowSvg.querySelectorAll('.flow-line');
-  const flowDotsIn = flowSvg.querySelectorAll('.flow-dot-in');
-  const flowDotsOut = flowSvg.querySelectorAll('.flow-dot-out');
-  const allDots = flowSvg.querySelectorAll('.flow-dot-in, .flow-dot-out');
+  const wires = tracesSvg.querySelectorAll('.wire');
+  const sparks = tracesSvg.querySelectorAll('.spark');
 
-  // Incoming tiles (0-3): Widget, Telegram, WhatsApp, Email
-  const incomingIdx = [0, 1, 2, 3];
-  // Outgoing tiles (4-10): HubSpot, API, Shopify, Woo, Stripe, Analytics, CRM
-  const outgoingIdx = [4, 5, 6, 7, 8, 9, 10];
-
-  function getLineIndex(tileIdx) {
-    if (incomingIdx.includes(tileIdx)) return tileIdx;
-    if (outgoingIdx.includes(tileIdx)) return 5 + (tileIdx - 4);
-    return 0;
-  }
-
-  function getDotEl(lineIdx) {
-    return lineIdx < 5 ? flowDotsIn[lineIdx] : flowDotsOut[lineIdx - 5];
-  }
-
-  function animateDot(dotEl, pathEl, duration, cb) {
-    const length = pathEl.getTotalLength();
+  function animateSpark(sparkEl, wireEl, direction, duration, cb) {
+    const length = wireEl.getTotalLength();
     const start = performance.now();
-
-    function easeInOut(t) {
-      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-    }
 
     function step(now) {
       const elapsed = now - start;
       const rawProgress = Math.min(elapsed / duration, 1);
-      const progress = easeInOut(rawProgress);
-      const point = pathEl.getPointAtLength(progress * length);
-      dotEl.setAttribute('cx', point.x);
-      dotEl.setAttribute('cy', point.y);
+      // direction: 1 = module→Jeeves (end to start), -1 = Jeeves→module (start to end)
+      const progress = direction === 1 ? (1 - rawProgress) : rawProgress;
+      const point = wireEl.getPointAtLength(progress * length);
+      sparkEl.setAttribute('cx', point.x);
+      sparkEl.setAttribute('cy', point.y);
       if (rawProgress < 1) {
         requestAnimationFrame(step);
       } else if (cb) {
         cb();
       }
     }
-    dotEl.classList.add('active');
+    sparkEl.classList.add('active');
     requestAnimationFrame(step);
   }
 
@@ -1450,31 +1430,53 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
     } while (nextIdx === activeIdx && tiles.length > 1);
     activeIdx = nextIdx;
 
-    const lineIdx = getLineIndex(activeIdx);
-    const lineEl = flowLines[lineIdx] || flowLines[0];
-    const dotEl = getDotEl(lineIdx) || allDots[0];
+    // Randomly choose direction: module→Jeeves or Jeeves→module
+    const direction = Math.random() > 0.5 ? 1 : -1;
+    const wireEl = wires[activeIdx] || wires[0];
+    const sparkEl = sparks[activeIdx] || sparks[0];
 
-    // Hide all dots
-    allDots.forEach(function(d) { d.classList.remove('active'); });
+    // Clear previous
+    sparks.forEach(function(s) { s.classList.remove('active'); });
+    wires.forEach(function(w) { w.classList.remove('live'); });
 
-    // Highlight active tile and flow
-    jeevesTile.classList.add('lit');
-    tiles[activeIdx].classList.add('active');
-    lineEl.style.opacity = '1';
+    if (direction === 1) {
+      // Module fires up first, spark travels to Jeeves, then both glow
+      tiles[activeIdx].classList.add('active');
+      wireEl.classList.add('live');
 
-    // Animate dot along path
-    animateDot(dotEl, lineEl, 1000, function() {
-      setTimeout(function() {
-        jeevesTile.classList.remove('lit');
-        tiles[activeIdx].classList.remove('active');
-        lineEl.style.opacity = '';
-        dotEl.classList.remove('active');
-        setTimeout(cycle, 2800);
-      }, 1200);
-    });
+      animateSpark(sparkEl, wireEl, 1, 900, function() {
+        // Spark reached Jeeves — light it up
+        jeevesTile.classList.add('lit');
+        // Both stay lit together
+        setTimeout(function() {
+          jeevesTile.classList.remove('lit');
+          tiles[activeIdx].classList.remove('active');
+          wireEl.classList.remove('live');
+          sparkEl.classList.remove('active');
+          setTimeout(cycle, 2200);
+        }, 1500);
+      });
+    } else {
+      // Jeeves fires up first, spark travels to module, then both glow
+      jeevesTile.classList.add('lit');
+      wireEl.classList.add('live');
+
+      animateSpark(sparkEl, wireEl, -1, 900, function() {
+        // Spark reached module — light it up
+        tiles[activeIdx].classList.add('active');
+        // Both stay lit together
+        setTimeout(function() {
+          jeevesTile.classList.remove('lit');
+          tiles[activeIdx].classList.remove('active');
+          wireEl.classList.remove('live');
+          sparkEl.classList.remove('active');
+          setTimeout(cycle, 2200);
+        }, 1500);
+      });
+    }
   }
 
-  setTimeout(cycle, 600);
+  setTimeout(cycle, 800);
 })();
 
 // Chat animation
