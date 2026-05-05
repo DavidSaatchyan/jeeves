@@ -433,12 +433,22 @@
     .cb-tile.active .cb-tile-type { color: #64748b; }
     .cb-tile.active svg { filter: drop-shadow(0 0 6px rgba(99,102,241,0.4)); }
 
+    /* Silkscreen reference designators */
+    .cb-tile .cb-ref { position: absolute; top: 4px; right: 5px; font-size: 6px; font-family: 'SF Mono', ui-monospace, monospace; color: rgba(255,255,255,0.06); font-weight: 600; letter-spacing: 0.5px; pointer-events: none; }
+
     /* Jeeves — central processor chip */
     .cb-tile.cb-jeeves {
       background: rgba(10,14,26,0.9);
       border: 2px solid rgba(99,102,241,0.15);
       border-radius: 12px;
       transition: all 0.5s ease;
+    }
+    /* IC pin legs on Jeeves */
+    .cb-tile.cb-jeeves::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: 12px; z-index: 1;
+      background:
+        repeating-linear-gradient(0deg, transparent, transparent 18px, rgba(99,102,241,0.08) 18px, rgba(99,102,241,0.08) 20px) 0 0 / 4px 100% no-repeat,
+        repeating-linear-gradient(0deg, transparent, transparent 18px, rgba(99,102,241,0.08) 18px, rgba(99,102,241,0.08) 20px) 100% 0 / 4px 100% no-repeat;
     }
     .cb-tile.cb-jeeves .cb-tile-core {
       font-size: 38px; font-weight: 900; color: rgba(99,102,241,0.2);
@@ -448,6 +458,11 @@
       margin: 0 auto 6px;
       transition: all 0.5s ease;
       position: relative;
+    }
+    /* Pin 1 orientation dot */
+    .cb-tile.cb-jeeves .cb-tile-core::before {
+      content: ''; position: absolute; top: 5px; left: 5px; width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.1);
     }
     .cb-tile.cb-jeeves .cb-tile-core::after {
       content: ''; position: absolute; inset: -4px; border-radius: 18px;
@@ -473,8 +488,70 @@
       border-color: rgba(99,102,241,0.3);
       box-shadow: 0 0 20px rgba(99,102,241,0.15);
     }
+    .cb-tile.cb-jeeves.lit .cb-tile-core::before { background: rgba(99,102,241,0.5); border-color: rgba(99,102,241,0.3); }
     .cb-tile.cb-jeeves.lit .cb-tile-label { color: #e2e8f0; }
     .cb-tile.cb-jeeves.lit .cb-tile-sub { color: #a5b4fc; }
+
+    /* PCB mounting holes */
+    .pcb-mount { position: absolute; width: 14px; height: 14px; z-index: 4; pointer-events: none; }
+    .pcb-mount::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: #080c14; border: 2px solid rgba(255,255,255,0.1); }
+    .pcb-mount::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
+    .pcb-mount.tl { top: 14px; left: 14px; }
+    .pcb-mount.tr { top: 14px; right: 14px; }
+    .pcb-mount.bl { bottom: 14px; left: 14px; }
+    .pcb-mount.br { bottom: 14px; right: 14px; }
+
+    /* Test points — small solder pads */
+    .pcb-tp { position: absolute; width: 5px; height: 5px; border-radius: 50%; z-index: 4; pointer-events: none; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+    .pcb-tp::after { content: attr(data-label); position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 4px; font-family: 'SF Mono', monospace; color: rgba(255,255,255,0.05); white-space: nowrap; }
+
+    /* Static trace lines */
+    .cb-traces { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+    .cb-traces line, .cb-traces path { stroke: rgba(255,255,255,0.02); stroke-width: 0.8; fill: none; }
+
+    /* SMD passive components — 0402/0603 resistors & capacitors */
+    .cb-smd { position: absolute; z-index: 3; pointer-events: none; }
+    .cb-smd::before {
+      content: ''; position: absolute; background: #1a1f2e; border: 1px solid rgba(255,255,255,0.04); border-radius: 1px;
+    }
+    .cb-smd::after {
+      content: ''; position: absolute; background: rgba(180,180,200,0.08); border-radius: 0 1px 1px 0;
+    }
+    /* Horizontal SMD */
+    .cb-smd.h::before { width: 8px; height: 4px; }
+    .cb-smd.h::after { width: 2px; height: 4px; right: 0; top: 0; box-shadow: -10px 0 0 rgba(180,180,200,0.08); }
+    /* Vertical SMD */
+    .cb-smd.v::before { width: 4px; height: 8px; }
+    .cb-smd.v::after { width: 4px; height: 2px; bottom: 0; left: 0; box-shadow: 0 -10px 0 rgba(180,180,200,0.08); }
+    /* SMD color variants */
+    .cb-smd.c-ceramic::before { background: #c4a86e; border-color: rgba(200,180,130,0.15); }
+    .cb-smd.c-resistor::before { background: #1e2330; border-color: rgba(100,100,140,0.1); }
+
+    /* Via holes — plated through-holes */
+    .cb-via { position: absolute; width: 4px; height: 4px; border-radius: 50%; z-index: 4; pointer-events: none;
+      background: #0a0e18; border: 1px solid rgba(180,180,200,0.1);
+      box-shadow: inset 0 0 1px rgba(180,180,200,0.05);
+    }
+    .cb-via::after { content: ''; position: absolute; inset: -2px; border-radius: 50%; border: 0.5px solid rgba(180,180,200,0.04); }
+
+    /* Crystal oscillator */
+    .cb-xtal { position: absolute; z-index: 3; pointer-events: none; width: 14px; height: 6px;
+      background: #1a1f2e; border: 1px solid rgba(180,180,200,0.06); border-radius: 1px;
+    }
+    .cb-xtal::before { content: ''; position: absolute; inset: 2px 4px; background: rgba(180,180,200,0.06); border-radius: 1px; }
+    .cb-xtal::after { content: attr(data-label); position: absolute; bottom: -9px; left: 50%; transform: translateX(-50%);
+      font-size: 4px; font-family: 'SF Mono', monospace; color: rgba(255,255,255,0.04); white-space: nowrap; }
+
+    /* Fiducial marks — PCB alignment circles */
+    .cb-fiducial { position: absolute; width: 6px; height: 6px; border-radius: 50%; z-index: 4; pointer-events: none;
+      background: rgba(200,200,220,0.06); border: 1px solid rgba(200,200,220,0.08);
+    }
+    .cb-fiducial::after { content: ''; position: absolute; inset: 1px; border-radius: 50%; background: rgba(10,14,24,0.8); }
+
+    /* Silkscreen text */
+    .cb-silk { position: absolute; z-index: 3; pointer-events: none;
+      font-size: 5px; font-family: 'SF Mono', ui-monospace, monospace; color: rgba(255,255,255,0.04); font-weight: 500; letter-spacing: 0.3px; }
+    .cb-silk.cb-silk-label { color: rgba(255,255,255,0.06); }
 
     /* ===== TIMELINE ===== */
     /* ===== HOW IT WORKS — Terminal ===== */
@@ -1024,18 +1101,92 @@
       <div class="cb-pcb">
         <svg class="cb-svg" id="cbSvg"></svg>
 
+        <!-- Mounting holes -->
+        <div class="pcb-mount tl"></div>
+        <div class="pcb-mount tr"></div>
+        <div class="pcb-mount bl"></div>
+        <div class="pcb-mount br"></div>
+
+        <!-- Test points -->
+        <div class="pcb-tp" data-label="TP1" style="top:18px;left:35%"></div>
+        <div class="pcb-tp" data-label="TP2" style="top:45%;right:18px"></div>
+        <div class="pcb-tp" data-label="TP3" style="bottom:18px;left:30%"></div>
+        <div class="pcb-tp" data-label="GND" style="bottom:18px;right:28%"></div>
+
+        <!-- Static trace lines -->
+        <svg class="cb-traces" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <!-- Traces from row 1 to Jeeves area -->
+          <line x1="37" y1="12" x2="37" y2="30"/><line x1="37" y1="30" x2="50" y2="30"/>
+          <line x1="62" y1="12" x2="62" y2="24"/><line x1="62" y1="24" x2="50" y2="24"/>
+          <line x1="78" y1="12" x2="78" y2="20"/><line x1="78" y1="20" x2="62" y2="20"/><line x1="62" y1="20" x2="62" y2="24"/><line x1="62" y1="24" x2="50" y2="24"/>
+          <!-- Traces from row 2 -->
+          <line x1="18" y1="38" x2="18" y2="42"/><line x1="18" y1="42" x2="35" y2="42"/>
+          <line x1="78" y1="32" x2="78" y2="40"/><line x1="78" y1="40" x2="62" y2="40"/><line x1="62" y1="40" x2="62" y2="42"/><line x1="62" y1="42" x2="50" y2="42"/>
+          <!-- Traces from row 3 -->
+          <line x1="78" y1="58" x2="78" y2="62"/><line x1="78" y1="62" x2="62" y2="62"/><line x1="62" y1="62" x2="62" y2="55"/><line x1="62" y1="55" x2="50" y2="55"/>
+          <!-- Traces from row 4 -->
+          <line x1="30" y1="78" x2="30" y2="70"/><line x1="30" y1="70" x2="40" y2="70"/><line x1="40" y1="70" x2="40" y2="55"/><line x1="40" y1="55" x2="50" y2="55"/>
+          <line x1="55" y1="78" x2="55" y2="70"/><line x1="55" y1="70" x2="62" y2="70"/><line x1="62" y1="70" x2="62" y2="55"/>
+          <line x1="78" y1="78" x2="78" y2="68"/><line x1="78" y1="68" x2="62" y2="68"/><line x1="62" y1="68" x2="62" y2="55"/>
+          <!-- Traces from row 5 -->
+          <line x1="30" y1="90" x2="30" y2="82"/><line x1="30" y1="82" x2="40" y2="82"/><line x1="40" y1="82" x2="40" y2="70"/><line x1="40" y1="70" x2="50" y2="70"/>
+          <line x1="68" y1="90" x2="68" y2="82"/><line x1="68" y1="82" x2="62" y2="82"/><line x1="62" y1="82" x2="62" y2="70"/><line x1="62" y1="70" x2="50" y2="70"/>
+        </svg>
+
+        <!-- Fiducial marks -->
+        <div class="cb-fiducial" style="top:28px;left:28px"></div>
+        <div class="cb-fiducial" style="top:28px;right:28px"></div>
+        <div class="cb-fiducial" style="bottom:28px;left:28px"></div>
+        <div class="cb-fiducial" style="bottom:28px;right:28px"></div>
+
+        <!-- Crystal oscillator near Jeeves -->
+        <div class="cb-xtal" data-label="16MHz" style="top:32%;right:12%"></div>
+
+        <!-- SMD passives — decoupling caps near Jeeves -->
+        <div class="cb-smd h c-ceramic" style="top:34%;left:42%"></div>
+        <div class="cb-smd h c-ceramic" style="top:42%;left:42%"></div>
+        <div class="cb-smd h c-resistor" style="top:38%;right:18%"></div>
+        <div class="cb-smd v c-ceramic" style="top:56%;left:44%"></div>
+        <div class="cb-smd v c-resistor" style="top:56%;left:56%"></div>
+        <div class="cb-smd h c-ceramic" style="top:62%;right:22%"></div>
+        <div class="cb-smd h c-resistor" style="top:18%;left:52%"></div>
+        <div class="cb-smd v c-ceramic" style="top:22%;left:30%"></div>
+        <div class="cb-smd h c-resistor" style="top:70%;left:20%"></div>
+        <div class="cb-smd v c-ceramic" style="top:76%;right:24%"></div>
+
+        <!-- Via holes along trace paths -->
+        <div class="cb-via" style="top:28%;left:46%"></div>
+        <div class="cb-via" style="top:36%;left:54%"></div>
+        <div class="cb-via" style="top:48%;left:38%"></div>
+        <div class="cb-via" style="top:52%;right:30%"></div>
+        <div class="cb-via" style="top:66%;left:44%"></div>
+        <div class="cb-via" style="top:72%;right:38%"></div>
+        <div class="cb-via" style="top:84%;left:40%"></div>
+        <div class="cb-via" style="top:16%;right:26%"></div>
+        <div class="cb-via" style="top:44%;left:24%"></div>
+        <div class="cb-via" style="top:60%;right:16%"></div>
+
+        <!-- Silkscreen text -->
+        <div class="cb-silk" style="top:10px;left:40px">JEEVES PCB v2.1</div>
+        <div class="cb-silk" style="top:10px;right:40px">2025</div>
+        <div class="cb-silk cb-silk-label" style="bottom:10px;left:40px">AI AGENT ROUTER</div>
+        <div class="cb-silk" style="bottom:10px;right:40px">REV C</div>
+
         <!-- ROW 1 -->
         <div class="cb-tile" data-idx="0" style="grid-column:1/3;grid-row:1;">
+        <span class="cb-ref">U1</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
         <div class="cb-tile-name">Widget</div>
         <div class="cb-tile-type">Web Chat</div>
       </div>
       <div class="cb-tile" data-idx="1" style="grid-column:3;grid-row:1;">
+        <span class="cb-ref">U2</span>
         <svg viewBox="0 0 24 24" fill="#26A5E4"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
         <div class="cb-tile-name">Telegram</div>
         <div class="cb-tile-type">Messenger</div>
       </div>
       <div class="cb-tile" data-idx="2" style="grid-column:4;grid-row:1;">
+        <span class="cb-ref">U3</span>
         <svg viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
         <div class="cb-tile-name">WhatsApp</div>
         <div class="cb-tile-type">Messenger</div>
@@ -1043,6 +1194,7 @@
 
       <!-- ROW 2: Email tall | Jeeves 2×2 | HubSpot -->
       <div class="cb-tile" data-idx="3" style="grid-column:1;grid-row:2/4;">
+        <span class="cb-ref">U4</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
         <div class="cb-tile-name">Email</div>
         <div class="cb-tile-type">Incoming</div>
@@ -1053,6 +1205,7 @@
         <div class="cb-tile-sub">AI Agent</div>
       </div>
       <div class="cb-tile" data-idx="4" style="grid-column:4;grid-row:2;">
+        <span class="cb-ref">U5</span>
         <div style="display:flex;align-items:center;gap:1px;height:20px;margin-bottom:4px;">
           <span style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-weight:800;font-size:13px;color:#ff7a59;line-height:1;">Hub</span><span style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-weight:800;font-size:13px;color:#cbd5e1;line-height:1;">Spot</span>
         </div>
@@ -1062,6 +1215,7 @@
 
       <!-- ROW 3 -->
       <div class="cb-tile" data-idx="5" style="grid-column:4;grid-row:3;">
+        <span class="cb-ref">U6</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
         <div class="cb-tile-name">API</div>
         <div class="cb-tile-type">Custom</div>
@@ -1069,6 +1223,7 @@
 
       <!-- ROW 4 -->
       <div class="cb-tile" data-idx="6" style="grid-column:1/3;grid-row:4;">
+        <span class="cb-ref">U7</span>
         <svg viewBox="0 0 48 48" width="32" height="32">
           <!-- Shopify bag icon -->
           <path d="M13 10.5C13 8 15 6 17.5 6h13C33 6 35 8 35 10.5V12c4.5 1.5 7.5 5.5 7.5 10.5v20c0 4-3.5 7.5-7.5 7.5h-17c-4 0-7.5-3.5-7.5-7.5v-20c0-5 3-9 7.5-10.5V10.5z" fill="#95bf47"/>
@@ -1079,6 +1234,7 @@
         <div class="cb-tile-type">E-commerce</div>
       </div>
       <div class="cb-tile" data-idx="7" style="grid-column:3;grid-row:4;">
+        <span class="cb-ref">U8</span>
         <svg viewBox="0 0 48 28" width="44" height="26">
           <ellipse cx="14" cy="14" rx="10" ry="10" fill="none" stroke="#7f54b3" stroke-width="2.5"/>
           <ellipse cx="24" cy="14" rx="10" ry="10" fill="none" stroke="#7f54b3" stroke-width="2.5"/>
@@ -1088,6 +1244,7 @@
         <div class="cb-tile-type">E-commerce</div>
       </div>
       <div class="cb-tile" data-idx="8" style="grid-column:4;grid-row:4;">
+        <span class="cb-ref">U9</span>
         <svg viewBox="0 0 24 24" fill="#635bff"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.57 0 7.524.654 6.09 1.965 4.688 3.27 4.034 5.1 4.034 7.39c0 4.198 2.56 5.892 6.694 7.442 2.634.964 3.544 1.631 3.544 2.67 0 1.07-.936 1.696-2.61 1.696-2.097 0-4.937-.858-7.035-2.075l-.915 5.557C5.283 23.467 8.64 24 12.33 24c2.953 0 5.243-.593 6.71-1.89 1.556-1.365 2.418-3.406 2.418-5.955 0-4.28-2.61-5.984-7.482-7.005z"/></svg>
         <div class="cb-tile-name">Stripe</div>
         <div class="cb-tile-type">Billing</div>
@@ -1095,11 +1252,13 @@
 
       <!-- ROW 5 -->
       <div class="cb-tile" data-idx="9" style="grid-column:1/3;grid-row:5;">
+        <span class="cb-ref">U10</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
         <div class="cb-tile-name">Analytics</div>
         <div class="cb-tile-type">Monitoring</div>
       </div>
       <div class="cb-tile" data-idx="10" style="grid-column:3/5;grid-row:5;">
+        <span class="cb-ref">U11</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         <div class="cb-tile-name">CRM</div>
         <div class="cb-tile-type">Custom REST</div>
