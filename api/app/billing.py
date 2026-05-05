@@ -45,8 +45,8 @@ def _has_payment(tenant: Tenant) -> bool:
 
 
 def usage(tenant: Tenant) -> dict:
-    plan = (tenant.plan or "trial").lower()
-    plan_info = PLANS.get(plan, None)
+    plan = "free"
+    plan_info = PLANS.get(plan)
 
     resolved = tenant.resolved_count
     limit = TRIAL_DIALOGS
@@ -71,7 +71,6 @@ def usage(tenant: Tenant) -> dict:
         "billing_enabled": tenant.is_active,
         "resolved": resolved,
         "dialogs_limit": limit,
-        "resolution_rate": round(resolved / tenant.dialogs_used, 3) if tenant.dialogs_used else 0,
         "trial_ends": trial_ends,
         "trial_days_left": trial_days_left,
         "overage_charge_usd": round(overage_charge, 2),
