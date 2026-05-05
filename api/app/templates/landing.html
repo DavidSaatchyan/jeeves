@@ -395,14 +395,18 @@
       background-size: 40px 40px;
     }
 
-    /* Wire trace layer */
-    .cb-traces { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-    .cb-traces .wire { fill: none; stroke: rgba(99,102,241,0.06); stroke-width: 0.6; transition: stroke 0.4s ease, filter 0.4s ease; }
-    .cb-traces .wire.live { stroke: rgba(99,102,241,0.55); filter: drop-shadow(0 0 4px rgba(99,102,241,0.45)); }
-
     /* Cyber tiles */
     .cb-tile {
-      background: rgba(8,12,24,0.85);
+      background:
+        /* Scratches / wear texture */
+        linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.015) 40.5%, transparent 41%),
+        linear-gradient(95deg, transparent 60%, rgba(255,255,255,0.012) 60.5%, transparent 61%),
+        linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.01) 25.3%, transparent 25.6%),
+        linear-gradient(88deg, transparent 70%, rgba(255,255,255,0.01) 70.4%, transparent 70.8%),
+        linear-gradient(120deg, transparent 15%, rgba(255,255,255,0.008) 15.2%, transparent 15.5%),
+        radial-gradient(ellipse at 30% 70%, rgba(0,0,0,0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.015) 0%, transparent 40%),
+        rgba(8,12,24,0.85);
       border: 1px solid rgba(99,102,241,0.08);
       border-radius: 6px;
       display: flex;
@@ -415,7 +419,7 @@
       z-index: 3;
     }
     .cb-tile::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(99,102,241,0.15), transparent); opacity: 0; transition: opacity 0.4s ease; }
-    .cb-tile:hover { border-color: rgba(99,102,241,0.15); background: rgba(15,20,35,0.9); }
+    .cb-tile:hover { border-color: rgba(99,102,241,0.15); }
     .cb-tile svg { width: 20px; height: 20px; margin-bottom: 3px; flex-shrink: 0; transition: filter 0.4s ease; }
     .cb-tile .cb-tile-name { font-size: 10px; font-weight: 600; color: #475569; white-space: nowrap; transition: color 0.4s ease; }
     .cb-tile .cb-tile-type { font-size: 8px; color: #334155; margin-top: 2px; transition: color 0.4s ease; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -1032,21 +1036,6 @@
 
     <div class="channel-board reveal" id="channelBoard">
       <div class="cb-pcb">
-        <!-- Wire trace layer — angular connections from Jeeves to modules -->
-        <svg class="cb-traces" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <path class="wire" d="M 50 40 L 30 30 L 25 10" id="wire-0"/>
-          <path class="wire" d="M 50 40 L 62 28 L 62 10" id="wire-1"/>
-          <path class="wire" d="M 50 40 L 68 24 L 87 10" id="wire-2"/>
-          <path class="wire" d="M 50 40 L 30 40 L 12 40" id="wire-3"/>
-          <path class="wire" d="M 50 40 L 68 36 L 87 30" id="wire-4"/>
-          <path class="wire" d="M 50 40 L 68 44 L 87 50" id="wire-5"/>
-          <path class="wire" d="M 50 40 L 30 52 L 25 70" id="wire-6"/>
-          <path class="wire" d="M 50 40 L 62 54 L 62 70" id="wire-7"/>
-          <path class="wire" d="M 50 40 L 68 56 L 87 70" id="wire-8"/>
-          <path class="wire" d="M 50 40 L 28 62 L 25 90" id="wire-9"/>
-          <path class="wire" d="M 50 40 L 75 58 L 75 90" id="wire-10"/>
-        </svg>
-
         <!-- ROW 1: Input Channels -->
         <div class="cb-tile" data-idx="0" style="grid-column:1/3;grid-row:1;">
         <span class="cb-ref">U1</span>
@@ -1373,25 +1362,20 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
   obs.observe(terminal);
 })();
 
-// Cyber trace animation — wire glow, no sparks
+// Cyber tile highlight animation — fair shuffle cycle
 (function() {
   const board = document.getElementById('channelBoard');
-  const tracesSvg = board ? board.querySelector('.cb-traces') : null;
   const jeevesTile = document.getElementById('jeevesTile');
   const tiles = document.querySelectorAll('.cb-tile[data-idx]');
-  if (!board || !tracesSvg || !jeevesTile || !tiles.length) return;
+  if (!board || !jeevesTile || !tiles.length) return;
 
-  const wires = tracesSvg.querySelectorAll('.wire');
   const total = tiles.length;
-
-  // Build a shuffled queue, reshuffle when exhausted
   let queue = [];
   let qi = 0;
   function nextModule() {
     if (qi >= queue.length) {
       queue = [];
       for (var i = 0; i < total; i++) queue.push(i);
-      // Fisher-Yates shuffle
       for (var i = queue.length - 1; i > 0; i--) {
         var j = Math.floor(Math.random() * (i + 1));
         var tmp = queue[i]; queue[i] = queue[j]; queue[j] = tmp;
@@ -1403,36 +1387,25 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
   function cycle() {
     var idx = nextModule();
-    var wireEl = wires[idx];
-
-    // Randomly choose direction: module→Jeeves or Jeeves→module
     var direction = Math.random() > 0.5 ? 1 : -1;
 
     if (direction === 1) {
-      // Module fires up first, wire glows, then Jeeves joins
       tiles[idx].classList.add('active');
-      wireEl.classList.add('live');
-
       setTimeout(function() {
         jeevesTile.classList.add('lit');
         setTimeout(function() {
           jeevesTile.classList.remove('lit');
           tiles[idx].classList.remove('active');
-          wireEl.classList.remove('live');
           setTimeout(cycle, 2000);
         }, 1400);
       }, 600);
     } else {
-      // Jeeves fires up first, wire glows toward module, then module joins
       jeevesTile.classList.add('lit');
-      wireEl.classList.add('live');
-
       setTimeout(function() {
         tiles[idx].classList.add('active');
         setTimeout(function() {
           jeevesTile.classList.remove('lit');
           tiles[idx].classList.remove('active');
-          wireEl.classList.remove('live');
           setTimeout(cycle, 2000);
         }, 1400);
       }, 600);
