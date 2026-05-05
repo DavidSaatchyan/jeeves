@@ -51,9 +51,8 @@
           <th style="width:70px">Channel</th>
           <th style="width:50px">Turns</th>
           <th>Preview</th>
-          <th style="width:70px">Status</th>
-          <th style="width:60px">Duration</th>
-          <th style="width:70px"></th>
+          <th style="width:80px">Status</th>
+          <th style="width:70px">Duration</th>
         </tr>
       </thead>
       <tbody id="convBody"></tbody>
@@ -215,12 +214,24 @@ function groupConversations(rows){
     }
   });
 
-  // Group orphans by user_id + proximity (gap > 30 min = new conversation)
-  orphans.sort(function(a,b){ return a.created_at > b.created_at ? 1 : -1; });
+  // Sort orphans by user, then by time ASC
+  orphans.sort(function(a,b){
+    if(a.user_id < b.user_id) return -1;
+    if(a.user_id > b.user_id) return 1;
+    return a.created_at < b.created_at ? -1 : 1;
+  });
+
+  // Group by user_id + proximity (gap > 30 min = new conversation)
   var orphanGroups = [];
   orphans.forEach(function(r){
     var lastGroup = orphanGroups[orphanGroups.length - 1];
-    if(!lastGroup || r.user_id !== lastGroup.userId || (new Date(r.created_at) - new Date(lastGroup.turns[lastGroup.turns.length - 1].created_at)) > 30 * 60 * 1000){
+    var isNew = !lastGroup || r.user_id !== lastGroup.userId;
+    if(!isNew && lastGroup.turns.length){
+      var lastTurn = lastGroup.turns[lastGroup.turns.length - 1];
+      var gap = new Date(r.created_at).getTime() - new Date(lastTurn.created_at).getTime();
+      if(gap > 30 * 60 * 1000) isNew = true;
+    }
+    if(isNew){
       orphanGroups.push({ userId:r.user_id, channel:r.channel, turns:[r] });
     } else {
       lastGroup.turns.push(r);
@@ -242,9 +253,6 @@ function groupConversations(rows){
   });
 
   var list = Object.values(sessions).sort(function(a,b){ return b.startedAt < a.startedAt ? -1 : 1; });
-  list.forEach(function(conv){
-    conv.turns.sort(function(a,b){ return a.created_at > b.created_at ? 1 : -1; });
-  });
   return list;
 }
 
@@ -272,7 +280,6 @@ function renderConversations(){
       '<td class="msg-cell" title="' + esc(preview) + '">' + esc(preview) + (preview.length >= 120 ? '…' : '') + '</td>' +
       '<td>' + pill + '</td>' +
       '<td style="font-size:12px;color:var(--muted)">' + formatDuration(c.startedAt, c.lastAt) + '</td>' +
-      '<td><button class="ghost sm" onclick="event.stopPropagation();showConversation(CONVERSATIONS[' + idx + '])">Open</button></td>' +
     '</tr>';
   }).join('');
 }
