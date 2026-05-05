@@ -52,6 +52,7 @@
           <th style="width:50px">Turns</th>
           <th>Preview</th>
           <th style="width:80px">Status</th>
+          <th style="width:50px">Rating</th>
           <th style="width:70px">Duration</th>
         </tr>
       </thead>
@@ -133,6 +134,10 @@
 .channel-badge.whatsapp{color:#25d366;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.2)}
 .channel-badge.test_widget{color:var(--muted2);background:rgba(255,255,255,0.04);border:1px solid var(--border)}
 
+.rating-badge{font-size:16px;cursor:default}
+.rating-badge.up{color:var(--green)}
+.rating-badge.down{color:var(--red)}
+
 .chat-timeline{display:flex;flex-direction:column;gap:14px;max-height:520px;overflow-y:auto;padding:4px}
 .chat-turn{padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:12px}
 .chat-turn .turn-time{font-size:10px;color:var(--muted2);margin-bottom:6px;display:flex;justify-content:space-between}
@@ -142,6 +147,13 @@
 .chat-turn .turn-meta .bubble-action{color:var(--amber);font-weight:600}
 .chat-turn .turn-meta .bubble-sources{color:var(--green);cursor:pointer;text-decoration:underline}
 .chat-turn .turn-meta .bubble-sources:hover{color:#34d399}
+
+.convo-rating{margin-top:16px;padding:16px;background:var(--bg);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;gap:12px}
+.convo-rating .cr-icon{font-size:28px}
+.convo-rating .cr-label{font-size:13px;font-weight:600;color:var(--text)}
+.convo-rating .cr-label.positive{color:var(--green)}
+.convo-rating .cr-label.negative{color:var(--red)}
+.convo-rating .cr-feedback{font-size:12px;color:var(--muted);margin-top:2px}
 
 .sources-list{display:flex;flex-direction:column;gap:10px}
 .source-card{padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px}
@@ -159,8 +171,7 @@
 <script>
 var ALL_LOGS = [];
 var CONVERSATIONS = [];
-
-// Gap threshold: 30 minutes between messages = new conversation
+var ALL_RATINGS = [];
 var CONV_GAP_MS = 30 * 60 * 1000;
 
 function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -207,6 +218,18 @@ function scoreLabel(score){
   return 'Weak match';
 }
 
+function findRatingForConv(conv){
+  var lastMsgId = conv.lastOutgoingId;
+  if(!lastMsgId) return null;
+  return ALL_RATINGS.find(function(r){ return r.message_id === lastMsgId; }) || null;
+}
+
+function renderRatingBadge(rating){
+  if(!rating) return '<span class="muted">—</span>';
+  if(rating.rating === 'thumbs_up') return '<span class="rating-badge up" title="Thumbs up">👍</span>';
+  return '<span class="rating-badge down" title="Thumbs down">👎</span>';
+}
+
 function showSources(turnIdx){
   var conv = window._currentConv;
   if(!conv) return;
@@ -233,6 +256,7 @@ function showSources(turnIdx){
 
 function showConversation(conv){
   window._currentConv = conv;
+  var rating = findRatingForConv(conv);
   document.getElementById('detailTitle').textContent = 'Conversation — ' + esc(conv.startedAt.replace('T',' ').slice(0,16)) + ' · ' + esc(conv.userId);
 
   var html = '<div class="chat-timeline">';
@@ -252,12 +276,23 @@ function showConversation(conv){
   });
   html += '</div>';
 
+  // Rating card at bottom
+  if(rating){
+    var icon = rating.rating === 'thumbs_up' ? '👍' : '👎';
+    var label = rating.rating === 'thumbs_up' ? 'User said this was helpful' : 'User said this was not helpful';
+    var labelClass = rating.rating === 'thumbs_up' ? 'positive' : 'negative';
+    var feedbackHtml = rating.feedback ? '<div class="cr-feedback">"' + esc(rating.feedback) + '"</div>' : '';
+    html += '<div class="convo-rating">' +
+      '<span class="cr-icon">'+icon+'</span>' +
+      '<div><div class="cr-label '+labelClass+'">'+label+'</div>' + feedbackHtml + '</div>' +
+    '</div>';
+  }
+
   document.getElementById('detailContent').innerHTML = html;
   document.getElementById('detailModal').classList.add('show');
 }
 
 function groupConversations(rows){
-  // Sort all rows by user_id, then by time ASC
   rows.sort(function(a,b){
     if(a.user_id < b.user_id) return -1;
     if(a.user_id > b.user_id) return 1;
@@ -276,7 +311,7 @@ function groupConversations(rows){
     }
 
     if(isNew){
-      current = { userId:r.user_id, channel:r.channel, turns:[r], startedAt:r.created_at, lastAt:r.created_at, resolutions:[] };
+      current = { userId:r.user_id, channel:r.channel, turns:[r], startedAt:r.created_at, lastAt:r.created_at, resolutions:[], lastOutgoingId:null };
       if(r.resolution) current.resolutions.push(r.resolution);
       conversations.push(current);
     } else {
@@ -284,6 +319,8 @@ function groupConversations(rows){
       current.lastAt = r.created_at;
       if(r.resolution) current.resolutions.push(r.resolution);
     }
+
+    if(r.direction === 'outgoing') current.lastOutgoingId = r.id;
   });
 
   return conversations.sort(function(a,b){ return b.startedAt < a.startedAt ? -1 : 1; });
@@ -301,6 +338,7 @@ function renderConversations(){
     var isResolved = c.resolutions.indexOf('resolved') !== -1;
     var isEscalated = c.resolutions.indexOf('escalated') !== -1;
     var pill = isResolved ? '<span class="pill ok">resolved</span>' : (isEscalated ? '<span class="pill err">escalated</span>' : '<span class="pill muted">—</span>');
+    var rating = findRatingForConv(c);
 
     var firstTurn = c.turns[0];
     var preview = firstTurn && firstTurn.message ? firstTurn.message.slice(0, 120) : '';
@@ -312,6 +350,7 @@ function renderConversations(){
       '<td style="text-align:center;font-weight:700">' + c.turns.length + '</td>' +
       '<td class="msg-cell" title="' + esc(preview) + '">' + esc(preview) + (preview.length >= 120 ? '…' : '') + '</td>' +
       '<td>' + pill + '</td>' +
+      '<td style="text-align:center">' + renderRatingBadge(rating) + '</td>' +
       '<td style="font-size:12px;color:var(--muted)">' + formatDuration(c.startedAt, c.lastAt) + '</td>' +
     '</tr>';
   }).join('');
@@ -325,7 +364,6 @@ function renderUsers(){
       users[uid] = { userId:uid, turns:0, convos:{}, firstAt:null, lastAt:null, resolved:0, total:0 };
     }
     users[uid].turns++;
-    // Find which conversation this row belongs to
     var convKey = null;
     for(var i = 0; i < CONVERSATIONS.length; i++){
       if(CONVERSATIONS[i].userId === uid){
@@ -389,15 +427,21 @@ async function loadLogs(){
   if(ch) qs.set('channel', ch);
   if(res) qs.set('resolution', res);
   qs.set('days', days);
+  var queryStr = qs.toString();
 
   try {
-    var rows = await api('/dashboard/logs?' + qs.toString());
+    var rowsPromise = api('/dashboard/logs?' + queryStr);
+    var ratingsPromise = api('/dashboard/ratings?' + queryStr).catch(function(){ return []; });
+
+    var rows = await rowsPromise;
+    ALL_RATINGS = await ratingsPromise;
     ALL_LOGS = rows;
     CONVERSATIONS = groupConversations(rows);
     renderConversations();
     renderUsers();
   } catch(e) {
     ALL_LOGS = [];
+    ALL_RATINGS = [];
     CONVERSATIONS = [];
     renderConversations();
     renderUsers();

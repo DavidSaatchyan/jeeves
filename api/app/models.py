@@ -170,6 +170,19 @@ class ChatLog(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
+class ConversationRating(Base):
+    """User rating for a conversation. Tied to the last outgoing (bot response) message."""
+    __tablename__ = "conversation_ratings"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Text, index=True, nullable=False)
+    message_id = Column(UUID(as_uuid=True), nullable=True)  # the last outgoing message in the conversation
+    rating = Column(String(16), nullable=False)  # thumbs_up / thumbs_down
+    feedback = Column(Text, default="")            # optional text feedback
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
 class NativeConnector(Base):
     """Stores credentials and status for native third-party integrations (Shopify, WooCommerce, Stripe)."""
     __tablename__ = "native_connectors"

@@ -11,7 +11,7 @@ from fastapi import APIRouter, HTTPException, Response
 from sqlalchemy.orm import Session
 
 from ..db import SessionLocal
-from ..models import ChatLog, Tenant, WebhookConfig, WriteBackConfig
+from ..models import ChatLog, ConversationRating, Tenant, WebhookConfig, WriteBackConfig
 from ..schemas import ChatOut, WidgetChatIn
 from .. import agent, billing
 
@@ -209,5 +209,37 @@ def widget_inbox(tenant_id: uuid.UUID, user_id: str):
             r.delivered = True
         db.commit()
         return {"messages": out}
+    finally:
+        db.close()
+
+
+@router.post("/widget/rating", status_code=201)
+def widget_rating(body: dict):
+    """Submit a conversation rating from the widget."""
+    tenant_id = body.get("tenant_id")
+    user_id = body.get("user_id", "")
+    message_id = body.get("message_id")
+    rating = body.get("rating", "thumbs_up")
+    feedback = body.get("feedback", "")
+
+    if not tenant_id:
+        raise HTTPException(400, "tenant_id required")
+
+    db: Session = SessionLocal()
+    try:
+        tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+        if not tenant:
+            raise HTTPException(404, "tenant not found")
+
+        r = ConversationRating(
+            tenant_id=tenant.id,
+            user_id=user_id,
+            message_id=message_id,
+            rating=rating,
+            feedback=feedback,
+        )
+        db.add(r)
+        db.commit()
+        return {"ok": True, "id": str(r.id)}
     finally:
         db.close()

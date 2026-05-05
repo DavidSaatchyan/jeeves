@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from . import billing
 from .auth import get_current_tenant
 from .db import get_db
-from .models import AgentTool, ChannelConfig, ChatLog, CRMConnection, FileRecord, NativeConnector, Tenant
+from .models import AgentTool, ChannelConfig, ChatLog, ConversationRating, CRMConnection, FileRecord, NativeConnector, Tenant
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -245,3 +245,48 @@ def logs(
 @router.get("/billing")
 def billing_info(tenant: Tenant = Depends(get_current_tenant)):
     return billing.usage(tenant)
+
+
+@router.post("/ratings", status_code=201)
+def submit_rating(
+    body: dict,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    """Submit a conversation rating."""
+    rating = ConversationRating(
+        tenant_id=tenant.id,
+        user_id=body.get("user_id", ""),
+        message_id=body.get("message_id"),
+        rating=body.get("rating", "thumbs_up"),
+        feedback=body.get("feedback", ""),
+    )
+    db.add(rating)
+    db.commit()
+    return {"ok": True, "id": str(rating.id)}
+
+
+@router.get("/ratings")
+def list_ratings(
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+    user_id: str | None = None,
+    days: int = 30,
+):
+    """List conversation ratings."""
+    q = db.query(ConversationRating).filter(ConversationRating.tenant_id == tenant.id)
+    if user_id:
+        q = q.filter(ConversationRating.user_id == user_id)
+    q = q.filter(ConversationRating.created_at >= datetime.utcnow() - timedelta(days=days))
+    rows = q.order_by(ConversationRating.created_at.desc()).all()
+    return [
+        {
+            "id": str(r.id),
+            "user_id": r.user_id,
+            "message_id": str(r.message_id) if r.message_id else None,
+            "rating": r.rating,
+            "feedback": r.feedback,
+            "created_at": r.created_at.isoformat(),
+        }
+        for r in rows
+    ]
