@@ -308,8 +308,12 @@ async function loadLogs(){
 
   try {
     var rows = await api('/dashboard/logs?' + qs.toString());
+    console.log('rows count:', rows.length);
+    if(rows.length) console.log('first row:', JSON.stringify(rows[0],null,2));
     ALL_LOGS = rows;
     CONVERSATIONS = groupConversations(rows);
+    console.log('conversations count:', CONVERSATIONS.length);
+    CONVERSATIONS.forEach(function(c,i){ console.log('conv['+i+'] turns:', c.turns.length, 'userId:', c.userId); });
     renderConversations();
     renderUsers();
   } catch(e) {
