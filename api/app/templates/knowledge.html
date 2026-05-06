@@ -108,6 +108,7 @@
 .spinner{width:16px;height:16px;border:2px solid transparent;border-top:2px solid var(--accent);border-radius:50%;animation:spin .8s linear infinite}
 .step.done .step-icon svg{width:16px;height:16px;stroke:#34d399}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes modalIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
 </style>
 <script>
 var widgetLoaded = false;
@@ -120,9 +121,11 @@ function fmtSize(b){
 
 function relTime(iso){
   if(!iso) return '—';
-  var d = new Date(iso);
+  var s = iso.replace('Z','+00:00');
+  var d = new Date(s);
   if(isNaN(d.getTime())) return '—';
   var diff = (Date.now() - d.getTime()) / 1000;
+  if(diff < 0) diff = 0;
   if(diff < 60) return 'just now';
   if(diff < 3600) return Math.floor(diff/60) + 'm ago';
   if(diff < 86400) return Math.floor(diff/3600) + 'h ago';
@@ -197,17 +200,25 @@ async function refresh(){
   var lastActionTime = lastAction ? new Date(lastAction) : null;
   if(lastActionTime && isNaN(lastActionTime.getTime())) lastActionTime = null;
 
-  var validRows = rows.filter(function(r){ return r.created_at && new Date(r.created_at).toString() !== 'Invalid Date'; });
-  var lastRowDate = validRows.length ? new Date(validRows.reduce(function(a, b){ return a.created_at > b.created_at ? a.created_at : b.created_at; })) : null;
+  var mostRecentFile = null;
+  for(var i = 0; i < rows.length; i++){
+    if(rows[i].created_at){
+      var fd = new Date(rows[i].created_at.replace('Z','+00:00'));
+      if(!isNaN(fd.getTime())){
+        if(!mostRecentFile || fd > mostRecentFile){
+          mostRecentFile = fd;
+        }
+      }
+    }
+  }
 
-  var actualLast = lastActionTime && lastRowDate ? (lastActionTime > lastRowDate ? lastActionTime : lastRowDate) : (lastActionTime || lastRowDate);
+  var actualLast = lastActionTime && mostRecentFile
+    ? (lastActionTime > mostRecentFile ? lastActionTime : mostRecentFile)
+    : (lastActionTime || mostRecentFile);
 
   if(actualLast && !isNaN(actualLast.getTime())){
-    document.getElementById('sumUpdated').textContent = relTime(actualLast.toISOString());
-    document.getElementById('sumAction').textContent = lastActionTime ? 'File deleted' : 'File uploaded';
-  } else if(validRows.length){
-    document.getElementById('sumUpdated').textContent = 'Unknown time';
-    document.getElementById('sumAction').textContent = 'Files in library';
+    document.getElementById('sumUpdated').textContent = relTime(actualLast.toISOString().replace('+00:00','Z'));
+    document.getElementById('sumAction').textContent = (lastActionTime && lastActionTime >= mostRecentFile) ? 'File deleted' : 'File uploaded';
   } else {
     document.getElementById('sumUpdated').textContent = '—';
     document.getElementById('sumAction').textContent = 'No activity';
@@ -248,6 +259,8 @@ async function refresh(){
     _refreshing = false;
   }
 }
+
+function escHtml(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 function esc(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -321,15 +334,83 @@ async function uploadMany(files){
 }
 
 async function del(id){
-  if(!confirm('Delete this file?')) return;
-  var btn = document.querySelector('#tbl tr[data-id="' + id + '"] .del-btn');
-  if(btn) btn.disabled = true;
-  localStorage.setItem('kb_last_action', new Date().toISOString());
+  var row = document.querySelector('#tbl tr[data-id="' + id + '"]');
+  if(!row) return;
+  var fname = row.querySelector('td:first-child strong');
+  var name = fname ? fname.textContent : 'this file';
+
+  showDeleteModal(name, function(){
+    doDelete(id, row);
+  });
+}
+
+function showDeleteModal(filename, onConfirm){
+  var overlay = document.createElement('div');
+  overlay.id = 'deleteModalOverlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+  overlay.innerHTML =
+    '<div id="deleteModalBox" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:400px;width:90%;animation:modalIn .25s ease both;">'
+    + '<h3 style="margin:0 0 8px;font-size:16px;color:var(--text)">Delete file</h3>'
+    + '<p style="margin:0 0 24px;font-size:13px;color:var(--muted);line-height:1.6">Are you sure you want to delete <strong style="color:var(--text)">' + escHtml(filename) + '</strong>? This action cannot be undone.</p>'
+    + '<div style="display:flex;gap:10px;justify-content:flex-end;">'
+    + '<button id="deleteCancelBtn" class="ghost" style="border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;color:var(--muted);border:1px solid var(--border);background:transparent;cursor:pointer;">Cancel</button>'
+    + '<button id="deleteConfirmBtn" style="border-radius:10px;padding:10px 18px;font-size:13px;font-weight:700;background:var(--red);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;">Delete</button>'
+    + '</div>'
+    + '</div>';
+  document.body.appendChild(overlay);
+
+  document.getElementById('deleteCancelBtn').onclick = function(){ hideDeleteModal(); };
+  document.getElementById('deleteConfirmBtn').onclick = function(){
+    hideDeleteModal();
+    onConfirm();
+  };
+  overlay.addEventListener('click', function(e){ if(e.target === overlay) hideDeleteModal(); });
+}
+
+function hideDeleteModal(){
+  var el = document.getElementById('deleteModalOverlay');
+  if(el) el.remove();
+}
+
+function showDeleteLoading(filename){
+  var overlay = document.createElement('div');
+  overlay.id = 'deleteLoadingOverlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+  overlay.innerHTML =
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:360px;width:90%;text-align:center;">'
+    + '<div style="width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;"></div>'
+    + '<h3 style="margin:0 0 6px;font-size:15px;color:var(--text)">Deleting...</h3>'
+    + '<p style="margin:0;font-size:12px;color:var(--muted);word-break:break-all;">' + escHtml(filename) + '</p>'
+    + '</div>';
+  document.body.appendChild(overlay);
+}
+
+function hideDeleteLoading(){
+  var el = document.getElementById('deleteLoadingOverlay');
+  if(el) el.remove();
+}
+
+function escHtml(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function doDelete(id, row){
+  var fname = row.querySelector('td:first-child strong');
+  var name = fname ? fname.textContent : 'file';
+
+  showDeleteLoading(name);
   pausePoll();
+
   try{
-    await fetch('/knowledge/files/' + id, {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}});
-  } finally {
+    var resp = await fetch('/knowledge/files/' + id, {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}});
+    if(!resp.ok && resp.status !== 204){
+      var errData = await resp.json().catch(function(){ return null; });
+      throw new Error(errData ? (errData.detail || 'Delete failed') : 'Delete failed');
+    }
+    localStorage.setItem('kb_last_action', new Date().toISOString());
     await refresh();
+  } catch(e){
+    alert('Error: ' + e.message);
+  } finally {
+    hideDeleteLoading();
     resumePoll();
   }
 }

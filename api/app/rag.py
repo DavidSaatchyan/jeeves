@@ -112,8 +112,6 @@ def delete_file(tenant_id: UUID | str, file_id: UUID | str) -> None:
 
         total_after = col.count()
         print(f"[rag] delete: {col.name} {total_before} -> {total_after} chunks", flush=True)
-
-        _reset_chroma()
     except Exception as e:
         print(f"[rag] delete failed: {e}", flush=True)
 

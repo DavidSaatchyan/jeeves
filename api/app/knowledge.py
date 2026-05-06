@@ -32,6 +32,15 @@ MAX_SIZE_MB = 50
 ALLOWED_EXT = {".txt", ".pdf", ".md"}
 
 
+def _iso_utc(dt) -> str:
+    """Convert naive or aware datetime to UTC ISO string with 'Z' suffix."""
+    if dt is None:
+        dt = datetime.now(timezone.utc)
+    elif dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.strftime("%Y-%m-%dT%H:%M:%S") + "Z"
+
+
 def _tenant_dir(tenant_id: uuid.UUID) -> Path:
     p = Path(_settings.knowledge_dir) / str(tenant_id)
     p.mkdir(parents=True, exist_ok=True)
@@ -127,7 +136,7 @@ def list_files(
             "status": r.status,
             "size_bytes": r.size_bytes or 0,
             "chunks_total": r.chunks_total or 0,
-            "created_at": (r.created_at if r.created_at else datetime.now(timezone.utc)).isoformat(),
+            "created_at": _iso_utc(r.created_at),
             "error": r.error,
         }
         for r in rows
@@ -146,18 +155,28 @@ def delete_file(
 
     print(f"[knowledge] delete: file_id={file_id} filename={rec.filename} tenant={tenant.id}", flush=True)
 
-    # Delete from Chroma
-    rag.delete_file(tenant.id, file_id)
+    # Remove physical file first (fast)
+    file_path = rec.s3_key
+    if file_path and os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except Exception:
+            pass
 
-    # Remove DB record and file
-    try:
-        if rec.s3_key and os.path.exists(rec.s3_key):
-            os.remove(rec.s3_key)
-    except Exception:
-        pass
+    # Delete DB record
     db.delete(rec)
     db.commit()
 
-    # Clear conversation history
-    memory.clear_tenant(str(tenant.id))
+    # Delete from Chroma (can be slow, do after DB commit so user sees it gone)
+    try:
+        rag.delete_file(tenant.id, file_id)
+    except Exception as e:
+        print(f"[knowledge] chroma delete warning: {e}", flush=True)
+
+    # Clear conversation history (non-critical, don't block on errors)
+    try:
+        memory.clear_tenant(str(tenant.id))
+    except Exception:
+        pass
+
     return
