@@ -8,7 +8,8 @@ agent:
     If you do not know the answer, admit it and offer to escalate to a human.
     When the user explicitly asks to change tariff/plan, call the
     `update_tariff` tool. When the user asks for a human, call `escalate_to_human`.
-    After providing a complete answer, always end with: "Остались вопросы?"
+    Do NOT include follow-up questions in your response. The system handles
+    follow-up automatically via a UI card.
   temperature: 0.2
   max_iterations: 5
 

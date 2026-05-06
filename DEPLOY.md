@@ -1,70 +1,416 @@
-# Deploy Jeeves to free services
+# Jeeves — Как устроен проект и деплой
 
-## Architecture (free tier)
+## Что такое Jeeves простыми словами
 
-| Service | What | Why |
-|---------|------|-----|
-| **Render** | FastAPI container | Free web service (750 hrs/mo) |
-| **Neon.tech** | PostgreSQL | Free, permanent, 512MB |
-| **Upstash** | Redis (optional) | Free, 10k cmds/day |
-| **Local disk** | ChromaDB + knowledge | PersistentClient on Render's disk |
+Jeeves — это AI-ассистент для поддержки клиентов. Представь чат-бот на сайте, который:
+- Знает ответы на вопросы из загруженных документов (инструкции, FAQ, прайсы)
+- Видит данные клиента из CRM (тариф, история)
+- Может сам менять тариф или создать тикет
+- Если не знает — переводит на человека
 
-## 1. Create Neon PostgreSQL
+Всё это работает как **один сервис**, который можно встроить на любой сайт одной строчкой кода.
 
-1. Go to https://neon.tech → Sign up (GitHub)
-2. Create project → get connection string like:
-   `postgresql://user:pass@ep-xyz.us-east-2.aws.neon.tech/dbname?sslmode=require`
-3. Copy it
+---
 
-## 2. Create Upstash Redis (optional)
+## Стек технологий (что мы используем и зачем)
 
-1. Go to https://upstash.com → Sign up
-2. Create database → copy the **REST URL** or **REDIS_URL**
-3. If you skip this, conversation memory will be in-memory (lost on restart)
+### Язык и фреймворк
+| Что | Зачем |
+|-----|-------|
+| **Python 3.11** | Основной язык. Простой, много библиотек для AI |
+| **FastAPI** | Веб-фреймворк. Быстрый, автоматическая документация API |
+| **Uvicorn** | Сервер, который запускает FastAPI |
 
-## 3. Deploy to Render
+### База данных
+| Что | Зачем |
+|-----|-------|
+| **PostgreSQL 15** | Главная база. Хранит пользователей, тенантов, логи чатов, рейтинги |
+| **SQLAlchemy** | ORM — работаем с базой через Python-объекты, а не SQL-запросы |
 
-1. Push your code to **GitHub** (private repo is fine)
-2. Go to https://render.com → Sign up (GitHub)
-3. **New → Web Service**
-4. Connect your repo
-5. Settings:
-   - **Name**: `jeeves`
-   - **Region**: Frankfurt (closest to you)
-   - **Branch**: `main`
-   - **Root Directory**: `api`
-   - **Runtime**: `Docker`
-   - **Dockerfile**: `Dockerfile`
-   - **Plan**: **Free**
+### Память и очередь
+| Что | Зачем |
+|-----|-------|
+| **Redis** | Хранит историю разговоров (быстрый доступ). Очередь задач для Celery |
+| **Celery** | Фоновые задачи. Обработка файлов, proactive-сообщения, вебхуки |
+| **Celery Beat** | Планировщик. Запускает задачи по расписанию (проверка метрик каждый час) |
 
-6. Add **Environment Variables**:
+### AI и векторный поиск
+| Что | Зачем |
+|-----|-------|
+| **OpenAI (GPT-4o-mini)** | Мозг агента. Понимает вопросы, генерирует ответы, вызывает инструменты |
+| **ChromaDB** | Векторная база. Хранит загруженные документы в виде "эмбеддингов" — чтобы искать по смыслу, а не по ключевым словам |
 
+### Фронтенд
+| Что | Зачем |
+|-----|-------|
+| **Jinja2 + HTMX** | Админ-панель. Сервер рендерит HTML, HTMX делает интерактивность без React/Vue |
+| **widget.js** | Встраиваемый виджет чата. Чистый JS, работает в Shadow DOM (не ломает стили сайта) |
+
+### Инфраструктура
+| Что | Зачем |
+|-----|-------|
+| **Docker** | Упаковывает всё в контейнеры. Одинаково работает на твоём ноутбуке и на сервере |
+| **Railway** | Хостинг. Автоматический деплой из GitHub, бесплатный Postgres |
+
+---
+
+## Структура проекта (что где лежит)
+
+```
+Jeeves/
+├── api/                    # Главный сервер (FastAPI)
+│   ├── app/
+│   │   ├── main.py         # Точка входа. Все маршруты
+│   │   ├── agent.py        # Мозг агента. Запрос к OpenAI, RAG, инструменты
+│   │   ├── rag.py          # Поиск по базе знаний (ChromaDB)
+│   │   ├── memory.py       # История разговоров (Redis)
+│   │   ├── models.py       # Таблицы базы данных
+│   │   ├── channels/       # Каналы: Telegram, Widget, Webhook
+│   │   ├── crm.py          # Интеграция с CRM
+│   │   └── templates/      # HTML-страницы админки
+│   ├── Dockerfile          # Как собрать контейнер для API
+│   └── requirements.txt    # Python-зависимости
+│
+├── worker/                 # Фоновый обработчик (Celery)
+│   ├── tasks.py            # Задачи: индексация файлов, proactive, вебхуки
+│   ├── chunking.py         # Разбивка документов на чанки
+│   └── Dockerfile          # Как собрать контейнер для воркера
+│
+├── frontend/
+│   ├── widget.js           # Встраиваемый виджет чата
+│   ├── dashboard.css       # Стили админки
+│   └── dashboard.js        # JS админки
+│
+├── knowledge/              # Папка для загруженных файлов (PDF, TXT, MD)
+│
+├── docker-compose.yml      # Запуск всех сервисов вместе (локально)
+├── config.yaml             # Системный промпт, модель, температура
+├── .env                    # Секреты (API ключи, пароли)
+└── scripts/
+    └── init_db.sql         # Инициализация PostgreSQL
+```
+
+---
+
+## Как это работает: путь одного сообщения
+
+1. **Клиент пишет** в виджет на сайте → запрос идёт на `/widget/chat`
+2. **API принимает** сообщение, создаёт запись в базе (лог)
+3. **RAG ищет** в ChromaDB похожие фрагменты из загруженных документов
+4. **CRM читает** данные клиента (тариф, статус)
+5. **Agent.py** собирает всё вместе: системный промпт + история + контекст → отправляет в OpenAI
+6. **OpenAI** возвращает ответ (и может вызвать инструмент, например `escalate_to_human`)
+7. **API сохраняет** ответ в базу и возвращает клиенту
+8. **Widget** показывает ответ. Если разговор "resolved" — через 3 минуты появляется карточка "Any other questions?"
+
+---
+
+## Архитектура контейнеров
+
+```
+┌─────────────────────────────────────────────┐
+│          Локально (docker compose)          │
+│                                             │
+│  ┌──────────┐  ┌───────┐  ┌──────────────┐ │
+│  │ api:8000 │  │worker │  │   beat       │ │
+│  │ FastAPI  │◄─┤Celery │  │ Celery Beat  │ │
+│  │ Uvicorn  │  │       │  │              │ │
+│  └────┬─────┘  └───┬───┘  └──────┬───────┘ │
+│       │            │              │         │
+│  ┌────┴────────────┴──────────────┴──────┐ │
+│  │              Redis :6379              │ │
+│  └─────────────────┬───────────────────┘ │
+│                    │                      │
+│  ┌─────────────────┴───────────────────┐ │
+│  │          PostgreSQL :5432           │ │
+│  └─────────────────────────────────────┘ │
+│                                           │
+│  ┌─────────────────────────────────────┐ │
+│  │           ChromaDB :8000            │ │
+│  └─────────────────────────────────────┘ │
+└───────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────┐
+│            Railway (продакшен)               │
+│                                             │
+│  ┌──────────────┐     ┌──────────────────┐  │
+│  │  API Service │     │  Postgres (DB)   │  │
+│  │  Dockerfile  │◄───►│  Railway managed │  │
+│  │  Uvicorn     │     │                  │  │
+│  └──────┬───────┘     └──────────────────┘  │
+│         │                                    │
+│  ┌──────┴───────┐                            │
+│  │ Chroma volume│  (Persistent Disk)         │
+│  │ /data/chroma │  хранится между деплоями   │
+│  └──────────────┘                            │
+│                                              │
+│  ⚠️ Worker + Beat — НЕ запущены на Railway   │
+│     (нужно добавить для KB и proactive)      │
+└───────────────────────────────────────────────┘
+```
+
+**api** — главный сервер. Отвечает на запросы клиентов и админки.
+**worker** — делает тяжёлую работу в фоне: парсит PDF, индексирует в ChromaDB, отправляет вебхуки.
+**beat** — будильник. Каждые 60 минут запускает проверку proactive-метрик.
+
+---
+
+## Деплой на Railway (реальный процесс)
+
+### Что сейчас работает на Railway
+
+| Сервис | Статус | Что делает |
+|--------|--------|------------|
+| **API** | ✅ Работает | FastAPI, Uvicorn. Главный сервер |
+| **PostgreSQL** | ✅ Работает | Railway managed database |
+| **ChromaDB** | ✅ Работает | Как Persistent Disk volume в API |
+| **Worker** | ❌ Не запущен | Индексация файлов не работает |
+| **Beat** | ❌ Не запущен | Proactive-сообщения не работают |
+| **Redis** | ❌ Не запущен | История разговоров не сохраняется |
+
+### Как устроен деплой
+
+**Автоматически.** Railway подключён к GitHub репозиторию. Каждый раз когда ты делаешь `git push` в ветку `main`:
+
+```
+Твой ноутбук:                    Railway:
+┌──────────────┐                 ┌──────────────────────┐
+│ git add .    │                 │                      │
+│ git commit   │                 │ 1. Видит push в main │
+│ git push     │────────────────►│ 2. Собирает Docker   │
+│              │                 │ 3. Запускает новый   │
+│              │                 │ 4. Миграции БД       │
+│              │                 │ 5. Готово ~2-3 мин   │
+└──────────────┘                 └──────────────────────┘
+```
+
+Тебе **не нужно** заходить на сервер, делать `git pull` или `docker compose up`. Railway всё делает сам.
+
+### Как настроить (пошагово)
+
+**1. Создай проект на Railway**
+- Зайди на [railway.app](https://railway.app) → Sign in через GitHub
+- New Project → Deploy from GitHub repo → выбери `DavidSaatchyan/jeeves`
+
+**2. Добавь PostgreSQL**
+- В проекте → New → Database → PostgreSQL
+- Railway сам создаст базу и добавит переменную `DATABASE_URL`
+
+**3. Настрой API Service**
+- Railway автоматически найдёт `api/Dockerfile` (нужно указать Root Directory = `api`)
+- Или если Dockerfile в корне — оставь как есть
+- Settings → Domain → Generate Domain (получишь `jeeves-xxx.up.railway.app`)
+
+**4. Добавь ChromaDB Persistent Disk**
+- В API Service → Volumes → Add Volume
+  - Mount Path: `/data/chroma`
+  - Size: 1GB (бесплатно дают 1GB)
+- Добавь переменную окружения: `CHROMA_PATH=/data/chroma`
+
+**5. Переменные окружения (Variables)**
 | Key | Value |
 |-----|-------|
-| `DATABASE_URL` | `postgresql+psycopg2://` + your Neon URL |
-| `REDIS_URL` | Upstash URL (or leave empty) |
-| `CHROMA_PATH` | `/opt/data/chroma` |
-| `KNOWLEDGE_DIR` | `/opt/data/knowledge` |
-| `OPENAI_API_KEY` | `sk-...` |
-| `JWT_SECRET` | any random string (min 32 chars) |
-| `PUBLIC_BASE_URL` | will auto-set after deploy |
+| `DATABASE_URL` | Railway подставляет сам (из PostgreSQL) |
+| `OPENAI_API_KEY` | `sk-...` (вставь свой) |
+| `JWT_SECRET` | любая строка 32+ символов |
+| `CHROMA_PATH` | `/data/chroma` |
+| `KNOWLEDGE_DIR` | `/data/knowledge` (если нужно) |
+| `PUBLIC_BASE_URL` | `https://jeeves-xxx.up.railway.app` (твой домен) |
+| `REDIS_URL` | нужен, если подключишь Upstash (см. ниже) |
 
-7. Click **Create Web Service**
+**6. Push → авто-деплой**
+- `git push` → Railway видит → собирает → деплоит
+- Логи в реальном времени в Railway Dashboard
 
-8. After deploy, copy the URL (e.g. `https://jeeves-xyz.onrender.com`)
+### Чего не хватает на Railway
 
-9. Go back to Environment Variables → set `PUBLIC_BASE_URL` to that URL → Save & Redeploy
+**Worker + Beat + Redis** — сейчас не запущены. Без них:
+- ⚠️ Загрузка PDF/TXT работает, но **синхронно** (в HTTP запросе). Большие файлы (>20 страниц) могут таймаутить
+- ❌ Proactive-сообщения не отправляются
+- ❌ Исходящие вебхуки не обрабатываются
+- ❌ История разговоров не сохраняется между перезагрузками API
 
-## 4. Connect Telegram
+**Как это работает сейчас:**
+Когда загружаешь файл в Knowledge Base, API сам разбирает его на чанки, отправляет в OpenAI для эмбеддинга и кладёт в ChromaDB — всё в одном HTTP запросе. Для маленьких файлов это работает, но для больших — Railway убьёт запрос по таймауту (30 сек).
 
-1. In Jeeves admin → Channels → Telegram
-2. Enter bot token
-3. Webhook URL = `https://jeeves-xyz.onrender.com/channels/telegram/webhook`
-4. Save & Test → should show ✅
+**Как добавить Worker на Railway (план):**
 
-## Notes
+1. Подключить **Redis** (Upstash бесплатно или Railway Redis)
+2. New Service → Deploy from GitHub → Root Directory: `worker`
+3. Команда: `celery -A tasks worker --loglevel=info`
+4. Переключить `knowledge.py` с синхронной индексации на Celery задачу
+5. Для Beat — отдельный сервис: `celery -A tasks beat --loglevel=info`
 
-- **Free Render sleeps after 15 min** of inactivity → first request takes ~30s to wake up
-- Telegram webhook will queue messages — they'll be processed when Render wakes up
-- For production reliability, upgrade to Render Starter ($7/mo)
-- Chroma data persists across deploys (stored on Render's persistent disk)
+Проблема: Railway не поддерживает shared volumes между сервисами, поэтому ChromaDB нужно будет оставить в API сервисе, а Worker будет обращаться к нему через API_INTERNAL_URL.
+
+---
+
+## Локальная разработка
+
+### Что нужно
+1. **Docker Desktop** — [download.docker.com](https://www.docker.com/products/docker-desktop)
+2. **.env файл** — создай в корне:
+
+```env
+OPENAI_API_KEY=sk-your-key-here
+JWT_SECRET=any-random-string-at-least-32-characters
+```
+
+### Запуск
+```bash
+docker compose up --build
+```
+
+Запустится **6 контейнеров**: postgres, redis, chroma, api, worker, beat.
+
+Первый раз — 2-5 минут (скачивание образов).
+
+### Что открылось
+- **Админка**: http://localhost:8000/admin
+- **API документация**: http://localhost:8000/docs
+- **Виджет**: http://localhost:8000/widget.js
+
+### Горячая перезагрузка
+Изменения в `api/app/` и `frontend/` подхватываются автоматически. Не нужно пересобирать.
+
+---
+
+## Как происходит деплой при изменении кода
+
+```
+Ты на ноутбуке:                    Railway:
+┌──────────────────┐               ┌──────────────────┐
+│  git add .       │               │                  │
+│  git commit      │               │                  │
+│  git push        │──────────────►│  Auto-deploy     │
+│                  │               │  (2-3 минуты)    │
+└──────────────────┘               └──────────────────┘
+```
+
+**Пошагово:**
+1. Внёс изменения → `git commit -m "описание"` → `git push`
+2. Railway видит push → собирает Docker-образ → деплоит
+3. Старая версия останавливается, новая запускается
+4. Downtime ~10-20 секунд
+5. Если что-то сломалось → Deployments → Rollback (одним кликом)
+
+**Важно:** Railway собирает **только то, что изменилось**. Docker кэширует слои, поэтому обычно быстро.
+
+---
+
+## База данных и данные
+
+### PostgreSQL (Railway managed)
+- Railway сам управляет базой — бэкапы, обновления
+- Таблицы создаются автоматически при старте API
+- Переменная `DATABASE_URL` подставляется автоматически
+- Бэкап: Railway Dashboard → Data → Export
+
+### ChromaDB (Persistent Disk)
+- Хранится в volume `/data/chroma` на Railway
+- Переживает деплои — не удаляется
+- Один collection на тенант: `tenant_{uuid}`
+
+### Загруженные файлы (Knowledge Base)
+- На Railway — в ephemeral файловой системе (удаляется при деплое!)
+- **Проблема:** если загрузил файл → перезапустил → файл исчез
+- **Решение:** хранить файлы в S3 (или добавить Persistent Disk для knowledge)
+
+### Redis
+- На Railway нужен Upstash или Railway Redis
+- Без Redis: история разговоров не сохраняется между перезагрузками, Celery не работает
+
+---
+
+## Переменные окружения
+
+| Переменная | Обязательна? | Где берётся |
+|------------|-------------|-------------|
+| `DATABASE_URL` | ✅ | Railway подставляет сам из PostgreSQL |
+| `OPENAI_API_KEY` | ✅ | Вставляешь руками |
+| `JWT_SECRET` | ✅ | Придумываешь (32+ символов) |
+| `CHROMA_PATH` | ✅ | `/data/chroma` (Persistent Disk) |
+| `KNOWLEDGE_DIR` | Нет | `/data/knowledge` |
+| `PUBLIC_BASE_URL` | Нет | Твой Railway домен |
+| `REDIS_URL` | Нет | Upstash или Railway Redis |
+| `HUBSPOT_CLIENT_ID` | Нет | Для HubSpot CRM |
+| `HUBSPOT_CLIENT_SECRET` | Нет | Для HubSpot CRM |
+
+---
+
+## Лимиты и биллинг
+
+Сейчас — простая система:
+- **100 диалогов** на тенант (счётчик `dialogs_used` в таблице tenants)
+- **14 дней** с момента регистрации
+- После превышения — API возвращает **402 Payment Required**
+
+Это MVP-заглушка. В будущем можно подключить Stripe.
+
+---
+
+## Мониторинг и отладка
+
+### Railway Dashboard
+- **Logs** — вкладка Logs в каждом сервисе, показывает вывод в реальном времени
+- **Deployments** — история всех деплоев, можно откатиться
+- **Metrics** — CPU, RAM, трафик
+
+### Логи локально
+```bash
+# Все контейнеры
+docker compose logs -f
+
+# Только API
+docker compose logs -f api
+```
+
+### Проверка здоровья
+```bash
+# API отвечает?
+curl https://твой-домен.up.railway.app/docs
+
+# Через Railway CLI
+railway logs
+railway status
+```
+
+### Rollback (если сломал)
+Railway Dashboard → Deployments → нажми на предыдущий деплой → Rollback. Занимает ~30 секунд.
+
+---
+
+## Частые проблемы
+
+**«Build failed на Railway»**
+→ Посмотри вкладку Logs в Deployment. Обычно — нет зависимости в requirements.txt или ошибка в Dockerfile.
+
+**«API не подключается к базе»**
+→ Проверь что `DATABASE_URL` есть в Variables. Railway обычно подставляет сам, но если удалил — добавь вручную.
+
+**«ChromaDB теряет данные после деплоя»**
+→ Убедись что Persistent Disk подключен в Volumes и `CHROMA_PATH` указывает на него.
+
+**«Widget не показывает ответы»**
+→ Проверь `PUBLIC_BASE_URL` в Variables. Должен быть твой Railway домен, не localhost.
+
+**«Файл загружен, но поиск не работает»**
+→ Worker не запущен. Файл лежит на диске, но не проиндексирован в Chroma. Нужно добавить Worker сервис.
+
+**«503 Service Unavailable»**
+→ Railway free tier засыпает при неактивности. Первый запрос после сна — 30-60 секунд.
+
+---
+
+## Чек-лист для полного продакшена
+
+- [ ] PostgreSQL — ✅ (Railway managed)
+- [ ] API — ✅ (Dockerfile, авто-деплой)
+- [ ] ChromaDB Persistent Disk — проверить что подключен
+- [ ] Redis — подключить Upstash или Railway Redis
+- [ ] Worker — добавить как отдельный сервис на Railway
+- [ ] Beat — добавить как отдельный сервис (или объединить с Worker)
+- [ ] Domain — подключить свой домен (не `.up.railway.app`)
+- [ ] Knowledge files — решить где хранить (Persistent Disk или S3)
+- [ ] Мониторинг — настроить алерты в Railway

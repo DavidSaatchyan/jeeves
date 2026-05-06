@@ -29,7 +29,8 @@ import chunking
 # --- config ---------------------------------------------------------------
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql+psycopg2://jeeves:jeeves123@postgres:5432/jeeves")
 REDIS_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
-CHROMA_URL = os.environ.get("CHROMA_URL", "http://chroma:8000")
+CHROMA_URL = os.environ.get("CHROMA_URL", "")
+CHROMA_PATH = os.environ.get("CHROMA_PATH", "")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 CONFIG_PATH = os.environ.get("CONFIG_PATH", "/app/config.yaml")
 
@@ -73,8 +74,13 @@ def _chroma():
     global _chroma_client
     if _chroma_client is not None:
         return _chroma_client
-    u = urlparse(CHROMA_URL)
-    _chroma_client = chromadb.HttpClient(host=u.hostname or "chroma", port=u.port or 8000)
+    if CHROMA_PATH:
+        _chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
+    elif CHROMA_URL:
+        u = urlparse(CHROMA_URL)
+        _chroma_client = chromadb.HttpClient(host=u.hostname or "chroma", port=u.port or 8000)
+    else:
+        raise RuntimeError("Neither CHROMA_URL nor CHROMA_PATH is configured")
     return _chroma_client
 
 

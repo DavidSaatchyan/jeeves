@@ -9,7 +9,6 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 
-from . import rag
 from . import memory
 from .chunking import file_sha256, sanitize_filename
 from .auth import get_current_tenant
@@ -109,18 +108,27 @@ async def upload_file(
     db.add(rec)
     db.commit()
 
-    # Always index synchronously — no Celery dependency
-    try:
-        n = rag.index_file(tenant.id, file_id, dest)
-        rec.status = "ready"
-        rec.chunks_total = n
-        db.commit()
-        return {"id": str(file_id), "status": "ready", "chunks": n}
-    except Exception as e:
-        rec.status = "failed"
-        rec.error = str(e)
-        db.commit()
-        raise HTTPException(500, f"Indexing failed: {e}")
+    # Index asynchronously via Celery if Redis is available, otherwise sync fallback
+    if _celery is not None:
+        _celery.send_task(
+            "tasks.index_file",
+            args=[str(tenant.id), str(file_id), str(dest)],
+        )
+        return {"id": str(file_id), "status": "processing", "chunks": 0}
+    else:
+        # Sync fallback for local dev without Redis
+        from . import rag
+        try:
+            n = rag.index_file(tenant.id, file_id, dest)
+            rec.status = "ready"
+            rec.chunks_total = n
+            db.commit()
+            return {"id": str(file_id), "status": "ready", "chunks": n}
+        except Exception as e:
+            rec.status = "failed"
+            rec.error = str(e)
+            db.commit()
+            raise HTTPException(500, f"Indexing failed: {e}")
 
 
 @router.get("/files")

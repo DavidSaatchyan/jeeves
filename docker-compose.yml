@@ -50,6 +50,7 @@ services:
       DATABASE_URL: postgresql+psycopg2://jeeves:jeeves123@postgres:5432/jeeves
       REDIS_URL: redis://redis:6379/0
       CHROMA_URL: http://chroma:8000
+      CHROMA_PATH: /chroma-data
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me-min-32-chars-long!}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8000}
@@ -80,6 +81,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       KNOWLEDGE_DIR: /app/knowledge
       API_INTERNAL_URL: http://api:8000
+      CHROMA_PATH: /chroma-data
     depends_on:
       postgres:
         condition: service_healthy
