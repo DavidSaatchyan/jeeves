@@ -2,11 +2,15 @@
 {% block body %}
 <style>
 aside{display:none}
-main{max-width:none;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;position:relative;background:radial-gradient(ellipse at 50% 0%,rgba(99,102,241,0.06) 0%,transparent 60%);}
+main{display:block;padding:0;max-width:none;}
+
+.auth-page{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;position:relative;background:radial-gradient(ellipse at 50% 0%,rgba(99,102,241,0.06) 0%,transparent 60%);}
 
 .back-link{position:absolute;top:24px;left:24px;}
-.back-link a{font-size:13px;color:var(--muted2);text-decoration:none;transition:color .2s;display:inline-flex;align-items:center;gap:4px;}
+.back-link a{font-size:13px;color:var(--muted2);text-decoration:none;transition:color .2s;}
 .back-link a:hover{color:var(--text);}
+
+.auth-content-row{display:flex;align-items:center;gap:48px;width:100%;max-width:900px;justify-content:center;}
 
 .auth-wrapper{width:100%;max-width:420px;animation:authFadeIn .5s ease both;}
 @keyframes authFadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
@@ -64,72 +68,75 @@ main{max-width:none;display:flex;align-items:center;justify-content:center;min-h
 .pw-strength.visible{opacity:1;}
 .pw-strength-bar{height:100%;width:0;border-radius:2px;transition:width .3s ease,background .3s ease;}
 
-/* Page footer */
-.auth-page-footer{text-align:center;margin-top:32px;font-size:11px;color:var(--muted2);display:flex;flex-direction:column;align-items:center;gap:4px;}
+/* Page footer - right side */
+.auth-page-footer{display:flex;flex-direction:column;align-items:center;gap:4px;padding:20px 24px;border-left:1px solid var(--border);min-height:100%;}
 .auth-page-footer .footer-links{display:flex;gap:16px;}
-.auth-page-footer a{color:var(--muted2);text-decoration:none;transition:color .2s;border:none;}
+.auth-page-footer a{color:var(--muted2);text-decoration:none;font-size:12px;transition:color .2s;border:none;}
 .auth-page-footer a:hover{color:var(--text);}
+.auth-page-footer>span{font-size:11px;color:var(--muted2);}
 </style>
 
-<div class="back-link">
-  <a href="/">← Back</a>
-</div>
+<div class="auth-page">
+  <div class="back-link"><a href="/">← Back</a></div>
 
-<div class="auth-wrapper">
-  <div class="auth-card">
-    <div class="auth-header">
-      <div class="brand-mark">J</div>
-      <h1>Jeeves<span>.</span></h1>
-      <div class="sub" id="authSub">Sign in to your admin panel</div>
-    </div>
-
-    <div class="auth-tabs" id="authTabs">
-      <div class="tab-indicator"></div>
-      <button class="auth-tab-btn active" id="tabLogin" onclick="setMode('login')">Sign in</button>
-      <button class="auth-tab-btn" id="tabReg" onclick="setMode('register')">Sign up</button>
-    </div>
-
-    <div class="field-group" id="regFields">
-      <label>Company</label>
-      <input id="tname" type="text" placeholder="Acme Inc."/>
-    </div>
-
-    <div class="auth-field">
-      <label>Email</label>
-      <input id="email" type="email" placeholder="you@company.com" autocomplete="email"/>
-    </div>
-
-    <div class="auth-field">
-      <label>Password</label>
-      <div class="pw-strength-wrap">
-        <input id="password" type="password" placeholder="Min 8 characters" autocomplete="current-password"/>
-        <div class="pw-strength" id="pwStrength"><div class="pw-strength-bar" id="pwBar"></div></div>
+  <div class="auth-content-row">
+    <div class="auth-wrapper">
+      <div class="auth-card">
+      <div class="auth-header">
+        <div class="brand-mark">J</div>
+        <h1>Jeeves<span>.</span></h1>
+        <div class="sub" id="authSub">Sign in to your admin panel</div>
       </div>
+
+      <div class="auth-tabs" id="authTabs">
+        <div class="tab-indicator"></div>
+        <button class="auth-tab-btn active" id="tabLogin" onclick="setMode('login')">Sign in</button>
+        <button class="auth-tab-btn" id="tabReg" onclick="setMode('register')">Sign up</button>
+      </div>
+
+      <div class="field-group" id="regFields">
+        <label>Company</label>
+        <input id="tname" type="text" placeholder="Acme Inc."/>
+      </div>
+
+      <div class="auth-field">
+        <label>Email</label>
+        <input id="email" type="email" placeholder="you@company.com" autocomplete="email"/>
+      </div>
+
+      <div class="auth-field">
+        <label>Password</label>
+        <div class="pw-strength-wrap">
+          <input id="password" type="password" placeholder="Min 8 characters" autocomplete="current-password"/>
+          <div class="pw-strength" id="pwStrength"><div class="pw-strength-bar" id="pwBar"></div></div>
+        </div>
+      </div>
+
+      <div id="termsCheck" class="auth-terms-check" style="max-height:0;opacity:0;margin:0;">
+        <label>
+          <input type="checkbox" id="termsCheckbox"/>
+          <span>I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a></span>
+        </label>
+      </div>
+
+      <div class="auth-submit">
+        <button id="submitBtn" onclick="go()" disabled><span id="btnText">Continue</span></button>
+      </div>
+
+      <div class="err-msg" id="err"></div>
+
+      <div class="auth-footer" id="authFooter">Don't have an account? <a href="javascript:void(0)" onclick="setMode('register')" style="color:var(--accent);border:none;font-weight:600;">Sign up</a></div>
+    </div>
     </div>
 
-    <div id="termsCheck" class="auth-terms-check" style="max-height:0;opacity:0;margin:0;">
-      <label>
-        <input type="checkbox" id="termsCheckbox"/>
-        <span>I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a></span>
-      </label>
+    <div class="auth-page-footer">
+      <div class="footer-links">
+        <a href="/terms">Terms</a>
+        <a href="/privacy">Privacy</a>
+      </div>
+      <span>&copy; 2026 Jeeves</span>
     </div>
-
-    <div class="auth-submit">
-      <button id="submitBtn" onclick="go()" disabled><span id="btnText">Continue</span></button>
-    </div>
-
-    <div class="err-msg" id="err"></div>
-
-    <div class="auth-footer" id="authFooter">Don't have an account? <a href="javascript:void(0)" onclick="setMode('register')" style="color:var(--accent);border:none;font-weight:600;">Sign up</a></div>
   </div>
-</div>
-
-<div class="auth-page-footer">
-  <div class="footer-links">
-    <a href="/terms">Terms</a>
-    <a href="/privacy">Privacy</a>
-  </div>
-  <span>&copy; 2026 Jeeves</span>
 </div>
 {% endblock %}
 
@@ -199,7 +206,8 @@ function validateForm(){
   var password=document.getElementById('password').value;
   var valid=email.length>0&&password.length>=8;
   if(mode==='register'){
-    valid=valid&&document.getElementById('termsCheckbox').checked;
+    var tname=document.getElementById('tname').value.trim();
+    valid=valid&&document.getElementById('termsCheckbox').checked&&tname.length>0;
   }
   document.getElementById('submitBtn').disabled=!valid;
 }
@@ -213,7 +221,10 @@ async function go(){
 
   if(!email||!password){err.textContent='Please fill in all fields.';return;}
   if(password.length<8){err.textContent='Password must be at least 8 characters.';return;}
-  if(mode==='register'&&!document.getElementById('termsCheckbox').checked){err.textContent='Please agree to the Terms of Service and Privacy Policy.';return;}
+  if(mode==='register'){
+    if(!document.getElementById('tname').value.trim()){err.textContent='Company name is required.';return;}
+    if(!document.getElementById('termsCheckbox').checked){err.textContent='Please agree to the Terms of Service and Privacy Policy.';return;}
+  }
 
   btn.disabled=true;
   btnText.innerHTML='<span class="spinner"></span>';
