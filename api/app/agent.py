@@ -86,6 +86,30 @@ def _source_log(sources: list[dict]) -> list[dict]:
     return out
 
 
+def _strip_trailing_questions(text: str) -> str:
+    """Remove trailing question sentences from the end of a response.
+
+    LLMs often append polite follow-up questions like 'Do you have any other questions?'
+    or 'Let me know if you need anything else.' The system handles follow-up via a
+    dedicated UI card, so these are stripped to avoid duplication.
+    """
+    import re
+    # Remove trailing sentences that are questions or polite offers
+    patterns = [
+        r"\s*[?]+\s*$",  # trailing question mark
+        r"\s*Do you have any (other )?questions?\s*[?]*\.?\s*$",
+        r"\s*Is there anything else I can help (you)? (with|about)?\s*[?]*\.?\s*$",
+        r"\s*Let me know if you (have any questions|need anything else|need help)\s*[?.]*\s*$",
+        r"\s*Feel free to (ask|reach out|contact me) if (you )?(have any questions|need anything)\s*[?.]*\s*$",
+        r"\s*Остались вопросы\s*[?]*\.?\s*$",
+        r"\s*Если у вас (есть|остались) (еще |вопросы )\s*[?]*\.?\s*$",
+        r"\s*Могу ли я (еще |помочь )чем-то\s*[?]*\.?\s*$",
+    ]
+    for pattern in patterns:
+        text = re.sub(pattern, "", text, flags=re.IGNORECASE)
+    return text.strip()
+
+
 async def run(
     db: Session,
     tenant_id: UUID,
@@ -238,6 +262,7 @@ async def run(
         escalated = True
         action_called = action_called or "escalate_to_human"
 
+    final_text = _strip_trailing_questions(final_text)
     memory.append(str(tenant_id), user_id, "assistant", final_text)
     latency = int((time.perf_counter() - started) * 1000)
     return {

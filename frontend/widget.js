@@ -270,6 +270,27 @@
       e.preventDefault();
       send((input.value || "").trim());
     });
+    msgsEl.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-followup-yes]");
+      if (btn) {
+        handleFollowup(parseInt(btn.getAttribute("data-followup-idx"), 10), true);
+        return;
+      }
+      btn = e.target.closest("[data-followup-no]");
+      if (btn) {
+        handleFollowup(parseInt(btn.getAttribute("data-followup-idx"), 10), false);
+        return;
+      }
+      btn = e.target.closest("[data-rating-value]");
+      if (btn) {
+        handleRate(parseInt(btn.getAttribute("data-rating-idx"), 10), btn.getAttribute("data-rating-value"));
+        return;
+      }
+      btn = e.target.closest("[data-rating-submit-idx]");
+      if (btn) {
+        handleSubmitRating(parseInt(btn.getAttribute("data-rating-submit-idx"), 10));
+      }
+    });
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && open) closeWidget();
     });
@@ -377,8 +398,8 @@
     var dismissed = m.dismissed;
     if (dismissed) return "";
     var btns = '<div class="jw-followup-btns">' +
-      '<button class="jw-followup-btn" onclick="window.JeevesWidget.__handleFollowup(' + idx + ', true)">Да, есть</button>' +
-      '<button class="jw-followup-btn" onclick="window.JeevesWidget.__handleFollowup(' + idx + ', false)">Нет, всё ясно</button>' +
+      '<button class="jw-followup-btn" data-followup-idx="' + idx + '" data-followup-yes>Да, есть</button>' +
+      '<button class="jw-followup-btn" data-followup-idx="' + idx + '" data-followup-no>Нет, всё ясно</button>' +
     '</div>';
     return '<div class="jw-followup">' +
       '<div class="jw-followup-text">' + esc(m.text || "Остались вопросы?") + '</div>' +
@@ -395,13 +416,13 @@
     var html = '<div class="jw-rating">' +
       '<div class="jw-rating-title">Оцените ответ</div>' +
       '<div class="jw-rating-btns">' +
-        '<button class="jw-rating-btn ' + upClass + '" onclick="window.JeevesWidget.__rate(' + idx + ', \'thumbs_up\')" aria-label="Good response">👍</button>' +
-        '<button class="jw-rating-btn ' + downClass + '" onclick="window.JeevesWidget.__rate(' + idx + ', \'thumbs_down\')" aria-label="Bad response">👎</button>' +
+        '<button class="jw-rating-btn ' + upClass + '" data-rating-idx="' + idx + '" data-rating-value="thumbs_up" aria-label="Good response">👍</button>' +
+        '<button class="jw-rating-btn ' + downClass + '" data-rating-idx="' + idx + '" data-rating-value="thumbs_down" aria-label="Bad response">👎</button>' +
       '</div>';
     if (m.rating) {
       html += '<div class="jw-rating-feedback">' +
         '<textarea class="jw-rating-textarea" placeholder="Комментарий (необязательно)" maxlength="500">' + esc(m.feedback || "") + '</textarea>' +
-        '<button class="jw-rating-submit" onclick="window.JeevesWidget.__submitRating(' + idx + ')"' + (m.feedbackSubmitted ? ' disabled' : '') + '>' +
+        '<button class="jw-rating-submit" data-rating-submit-idx="' + idx + '"' + (m.feedbackSubmitted ? ' disabled' : '') + '>' +
           (m.feedbackSubmitted ? "Отправлено" : "Отправить") +
         '</button>' +
       '</div>';
@@ -452,7 +473,8 @@
       var response = asText(data.response, "I could not produce a response.");
       addMessage(response, "bot", true);
       if (data.resolution === "resolved") {
-        scheduleFollowUp();
+        var hasQuestion = /[?]\s*$/.test(response.trim());
+        if (!hasQuestion) scheduleFollowUp();
       }
     }).catch(function (err) {
       addMessage(err && err.message ? err.message : "Network error. Please try again.", "bot", true);
@@ -469,7 +491,7 @@
       if (resolvedPending) return;
       resolvedPending = true;
       addMessage({ type: "followup", text: "Остались вопросы?", dismissed: false }, "bot", true);
-    }, 2000);
+    }, 180000);
   }
 
   function handleFollowup(idx, hasMore) {
