@@ -2,7 +2,11 @@
 {% block body %}
 <style>
 aside{display:none}
-main{max-width:none;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:radial-gradient(ellipse at 50% 0%,rgba(99,102,241,0.06) 0%,transparent 60%);}
+main{max-width:none;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;position:relative;background:radial-gradient(ellipse at 50% 0%,rgba(99,102,241,0.06) 0%,transparent 60%);}
+
+.back-link{position:absolute;top:24px;left:24px;}
+.back-link a{font-size:13px;color:var(--muted2);text-decoration:none;transition:color .2s;display:inline-flex;align-items:center;gap:4px;}
+.back-link a:hover{color:var(--text);}
 
 .auth-wrapper{width:100%;max-width:420px;animation:authFadeIn .5s ease both;}
 @keyframes authFadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
@@ -33,25 +37,21 @@ main{max-width:none;display:flex;align-items:center;justify-content:center;min-h
 .auth-field{margin-bottom:18px;}
 .pw-strength-wrap{position:relative;}
 
+/* Terms checkbox */
+.auth-terms-check{margin-bottom:18px;overflow:hidden;transition:max-height .35s cubic-bezier(.4,0,.2,1),opacity .25s ease,margin .35s ease;}
+.auth-terms-check label{display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:12px;color:var(--muted);margin:0;}
+.auth-terms-check label a{color:var(--accent);text-decoration:none;font-weight:500;}
+.auth-terms-check label a:hover{text-decoration:underline;}
+.auth-terms-check input[type="checkbox"]{margin-top:2px;accent-color:var(--accent);flex-shrink:0;cursor:pointer;}
+
 /* Submit */
-.auth-submit{margin-top:24px;}
+.auth-submit{margin-top:6px;}
 .auth-submit button{width:100%;justify-content:center;padding:12px;font-size:14px;border-radius:10px;background:var(--accent);color:#fff;border:none;font-weight:700;cursor:pointer;transition:all .2s ease;display:flex;align-items:center;gap:6px;}
 .auth-submit button:hover:not(:disabled){background:#6366f1;box-shadow:0 4px 16px rgba(99,102,241,0.3);transform:translateY(-1px);}
 .auth-submit button:active:not(:disabled){transform:translateY(0);}
-.auth-submit button:disabled{opacity:.5;cursor:default;}
+.auth-submit button:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
 
 .auth-footer{text-align:center;margin-top:20px;font-size:12px;color:var(--muted2);}
-.back-link{text-align:center;margin-top:24px;}
-.back-link a{font-size:12px;color:var(--muted);text-decoration:none;transition:color .2s;display:inline-flex;align-items:center;gap:4px;}
-.back-link a:hover{color:var(--text);}
-.back-link svg{width:14px;height:14px;opacity:.5;}
-
-.auth-terms-check label a{color:var(--accent);text-decoration:none;font-weight:500;}
-.auth-terms-check label a:hover{text-decoration:underline;}
-
-.auth-page-footer{text-align:center;margin-top:20px;font-size:11px;color:var(--muted2);display:flex;justify-content:center;gap:16px;align-items:center;}
-.auth-page-footer a{color:var(--muted2);text-decoration:none;transition:color .2s;border:none;}
-.auth-page-footer a:hover{color:var(--text);}
 
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -63,7 +63,17 @@ main{max-width:none;display:flex;align-items:center;justify-content:center;min-h
 .pw-strength{height:3px;border-radius:2px;background:var(--border);margin-top:8px;overflow:hidden;opacity:0;transition:opacity .25s;}
 .pw-strength.visible{opacity:1;}
 .pw-strength-bar{height:100%;width:0;border-radius:2px;transition:width .3s ease,background .3s ease;}
+
+/* Page footer */
+.auth-page-footer{text-align:center;margin-top:32px;font-size:11px;color:var(--muted2);display:flex;flex-direction:column;align-items:center;gap:4px;}
+.auth-page-footer .footer-links{display:flex;gap:16px;}
+.auth-page-footer a{color:var(--muted2);text-decoration:none;transition:color .2s;border:none;}
+.auth-page-footer a:hover{color:var(--text);}
 </style>
+
+<div class="back-link">
+  <a href="/">← Back</a>
+</div>
 
 <div class="auth-wrapper">
   <div class="auth-card">
@@ -97,30 +107,28 @@ main{max-width:none;display:flex;align-items:center;justify-content:center;min-h
       </div>
     </div>
 
-    <div class="auth-submit">
-      <button id="submitBtn" onclick="go()"><span id="btnText">Continue</span></button>
+    <div id="termsCheck" class="auth-terms-check" style="max-height:0;opacity:0;margin:0;">
+      <label>
+        <input type="checkbox" id="termsCheckbox"/>
+        <span>I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a></span>
+      </label>
     </div>
 
-    <div id="termsCheck" class="auth-terms-check" style="max-height:0;opacity:0;overflow:hidden;transition:max-height .35s cubic-bezier(.4,0,.2,1),opacity .25s ease;margin:0;">
-      <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:12px;color:var(--muted);margin:0;">
-        <input type="checkbox" id="termsCheckbox" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0;"/>
-        <span>I agree to the <a href="/terms" style="color:var(--accent);border:none;">Terms of Service</a> and <a href="/privacy" style="color:var(--accent);border:none;">Privacy Policy</a></span>
-      </label>
+    <div class="auth-submit">
+      <button id="submitBtn" onclick="go()" disabled><span id="btnText">Continue</span></button>
     </div>
 
     <div class="err-msg" id="err"></div>
 
     <div class="auth-footer" id="authFooter">Don't have an account? <a href="javascript:void(0)" onclick="setMode('register')" style="color:var(--accent);border:none;font-weight:600;">Sign up</a></div>
-
-    <div class="back-link">
-      <a href="/">← Back</a>
-    </div>
   </div>
 </div>
 
 <div class="auth-page-footer">
-  <a href="/terms">Terms</a>
-  <a href="/privacy">Privacy</a>
+  <div class="footer-links">
+    <a href="/terms">Terms</a>
+    <a href="/privacy">Privacy</a>
+  </div>
   <span>&copy; 2026 Jeeves</span>
 </div>
 {% endblock %}
@@ -146,7 +154,7 @@ function setMode(m){
     pw.setAttribute('autocomplete','new-password');
     document.getElementById('pwStrength').classList.add('visible');
     var tc=document.getElementById('termsCheck');
-    tc.style.maxHeight='80px';tc.style.opacity='1';tc.style.marginBottom='12px';
+    tc.style.maxHeight='60px';tc.style.opacity='1';tc.style.marginBottom='18px';
   } else {
     rf.classList.remove('open');
     tabs.classList.remove('register');
@@ -160,6 +168,7 @@ function setMode(m){
     tc.style.maxHeight='0';tc.style.opacity='0';tc.style.marginBottom='0';
     document.getElementById('termsCheckbox').checked=false;
   }
+  validateForm();
 }
 setMode('login');
 
@@ -177,7 +186,23 @@ document.getElementById('password').addEventListener('input',function(){
   var c=['var(--red)','#f59e0b','#eab308','var(--green)','var(--green)'][score];
   bar.style.width=w+'%';
   bar.style.background=c;
+  validateForm();
 });
+
+document.getElementById('termsCheckbox').addEventListener('change',validateForm);
+document.getElementById('email').addEventListener('input',validateForm);
+document.getElementById('password').addEventListener('input',validateForm);
+document.getElementById('tname').addEventListener('input',validateForm);
+
+function validateForm(){
+  var email=document.getElementById('email').value.trim();
+  var password=document.getElementById('password').value;
+  var valid=email.length>0&&password.length>=8;
+  if(mode==='register'){
+    valid=valid&&document.getElementById('termsCheckbox').checked;
+  }
+  document.getElementById('submitBtn').disabled=!valid;
+}
 
 async function go(){
   var err=document.getElementById('err');err.textContent='';
@@ -211,6 +236,7 @@ async function go(){
     err.textContent=e.message;
     btn.disabled=false;
     btnText.textContent='Continue';
+    validateForm();
   }
 }
 
