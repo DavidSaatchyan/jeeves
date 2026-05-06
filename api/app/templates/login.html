@@ -101,7 +101,7 @@ main{display:block;padding:0;max-width:none;}
 
       <div class="field-group" id="regFields">
         <label>Company</label>
-        <input id="tname" type="text" placeholder="Acme Inc."/>
+        <input id="tname" type="text" placeholder="Acme Inc." autocomplete="off"/>
       </div>
 
       <div class="auth-field">
@@ -156,6 +156,9 @@ function setMode(m){
   var pw=document.getElementById('password');
 
   if(m==='register'){
+    document.getElementById('email').value='';
+    document.getElementById('password').value='';
+    document.getElementById('tname').value='';
     rf.classList.add('open');
     tabs.classList.add('register');
     document.getElementById('tabReg').classList.add('active');
@@ -167,6 +170,9 @@ function setMode(m){
     var tc=document.getElementById('termsCheck');
     tc.style.maxHeight='60px';tc.style.opacity='1';tc.style.marginBottom='18px';
   } else {
+    document.getElementById('email').value='';
+    document.getElementById('password').value='';
+    document.getElementById('tname').value='';
     rf.classList.remove('open');
     tabs.classList.remove('register');
     document.getElementById('tabLogin').classList.add('active');
