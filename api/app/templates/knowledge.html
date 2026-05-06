@@ -422,14 +422,20 @@ async function doDelete(id, row){
       var errData = await resp.json().catch(function(){ return null; });
       throw new Error(errData ? (errData.detail || 'Delete failed') : 'Delete failed');
     }
+    row.style.transition = 'opacity .25s ease';
+    row.style.opacity = '0';
     localStorage.setItem('kb_last_action', new Date().toISOString());
-    await refresh();
   } catch(e){
     alert('Error: ' + e.message);
   } finally {
-    hideDeleteLoading();
-    resumePoll();
+    setTimeout(function(){
+      row.remove();
+      hideDeleteLoading();
+      resumePoll();
+    }, 250);
   }
+
+  setTimeout(function(){ refresh().catch(function(){}); }, 600);
 }
 
 /* ── Selection ── */
@@ -522,6 +528,9 @@ async function doDeleteMultiple(){
       if(!resp.ok && resp.status !== 204){
         var errData = await resp.json().catch(function(){ return null; });
         errors.push(ids[i] + ': ' + (errData ? (errData.detail || 'failed') : 'failed'));
+      } else {
+        var row = document.querySelector('#tbl tr[data-id="' + ids[i] + '"]');
+        if(row) row.remove();
       }
     } catch(e){
       errors.push(ids[i] + ': ' + e.message);
@@ -530,8 +539,9 @@ async function doDeleteMultiple(){
 
   localStorage.setItem('kb_last_action', new Date().toISOString());
   hideDeleteLoading();
-  await refresh();
   resumePoll();
+
+  setTimeout(function(){ refresh().catch(function(){}); }, 500);
 
   if(errors.length){
     uerr.textContent = 'Some deletions failed: ' + errors.join('; ');
