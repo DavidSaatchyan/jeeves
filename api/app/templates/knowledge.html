@@ -415,8 +415,6 @@ function hideDeleteLoading(){
   if(el) el.remove();
 }
 
-function escHtml(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
 async function doDelete(id, row){
   var fname = row.querySelector('td:nth-child(2) strong');
   var name = fname ? fname.textContent : 'file';
