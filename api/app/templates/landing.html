@@ -586,12 +586,14 @@ footer .footer-copy { color: var(--muted2); font-size: 11px; }
       .hero-feat { font-size: 12px; }
       .hero-buttons { gap: 10px; }
       .btn-primary, .btn-secondary { padding: 12px 22px; font-size: 14px; border-radius: 12px; }
-      .phone-frame { transform: none !important; width: 230px; }
+      .phone-frame { transform: none !important; width: 230px !important; transition: none !important; }
       .phone-frame:hover { transform: none !important; }
+      .phone-frame::before { display: none !important; }
+      .phone-frame::after { display: none !important; }
+      .hero-mockup::before { display: none !important; }
+      .hero-mockup { perspective: none !important; padding: 30px 0 !important; }
       .phone-btn-side, .phone-btn-vol1, .phone-btn-vol2 { display: none !important; }
       .phone-body { height: 280px; }
-      .phone-frame::before { animation: none !important; }
-      .hero-mockup::before { animation: none !important; }
       .badge { font-size: 12px; padding: 5px 12px; }
 
       /* MOBILE — clean, simple */
@@ -606,17 +608,15 @@ footer .footer-copy { color: var(--muted2); font-size: 11px; }
       .rag-hero h3 { font-size: 14px !important; }
       .rag-hero .rag-desc { font-size: 11px !important; margin-bottom: 10px !important; }
       .rag-pipeline-wrap { display: block !important; padding: 0 !important; margin: 12px 0 0 !important; overflow: visible !important; }
-      .rag-pipeline { display: block !important; padding: 0 !important; position: relative; min-height: 140px !important; min-width: unset !important; transform: none !important; overflow: visible !important; }
+      .rag-pipeline { display: block !important; padding: 0 !important; position: relative; min-height: 170px !important; min-width: unset !important; transform: none !important; overflow: visible !important; }
       .rag-flow-line { display: none !important; }
-      .rag-stage { position: absolute !important; left: 50% !important; top: 0 !important; transform: translateX(-50%) scale(0.95) !important; opacity: 0 !important; transition: opacity 0.5s ease, transform 0.5s ease !important; pointer-events: none !important; }
-      .rag-stage.stage-visible { position: relative !important; left: auto !important; transform: translateX(0) scale(1) !important; opacity: 1 !important; pointer-events: auto !important; }
+      .rag-stage { position: absolute !important; left: 50% !important; top: 0 !important; transform: translateX(-50%) !important; opacity: 0 !important; transition: opacity 0.6s ease !important; pointer-events: none !important; }
+      .rag-stage.stage-visible { opacity: 1 !important; pointer-events: auto !important; }
       .rag-stage-label { font-size: 8px !important; }
       .rag-ingest-stack { transform: scale(0.85) !important; }
       .rag-chunk-visual { transform: scale(0.85) !important; }
       .rag-embed-visual { transform: scale(0.85) !important; }
       .rag-retrieve-visual { transform: scale(0.85) !important; }
-      .rag-generate { transform: scale(0.9) !important; }
-      .rag-answer-box { transform: scale(0.9) !important; }
 
       /* Stats: horizontal row */
       .stats-row { flex-direction: row !important; max-width: 100% !important; border-radius: 10px !important; }
@@ -1489,27 +1489,30 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
   var stageHold = 800;
   var flowHold = 400;
 
-  // Mobile: show one stage at a time, fading between them
   function isMobile() { return window.innerWidth <= 640; }
 
+  var mobileInterval = null;
+  var desktopTimeout = null;
+
+  function clearAll() {
+    if (mobileInterval) { clearInterval(mobileInterval); mobileInterval = null; }
+    if (desktopTimeout) { clearTimeout(desktopTimeout); desktopTimeout = null; }
+  }
+
   function runCycleMobile() {
+    clearAll();
+    stages.forEach(function(s) { s.classList.remove('stage-visible'); });
     var idx = 0;
-    function showStage(i) {
-      if (!isMobile()) { runCycleDesktop(); return; }
-      stages.forEach(function(s) { s.classList.remove('stage-visible'); });
-      setTimeout(function() {
-        stages[i].classList.add('stage-visible');
-        setTimeout(function() {
-          var next = (i + 1) % stages.length;
-          showStage(next);
-        }, 2000);
-      }, 400);
-    }
-    showStage(0);
+    stages[0].classList.add('stage-visible');
+    mobileInterval = setInterval(function() {
+      stages[idx].classList.remove('stage-visible');
+      idx = (idx + 1) % stages.length;
+      stages[idx].classList.add('stage-visible');
+    }, 2500);
   }
 
   function runCycleDesktop() {
-    if (isMobile()) { runCycleMobile(); return; }
+    clearAll();
     // Reset
     stages.forEach(function(s) { s.classList.remove('stage-visible'); });
     flows.forEach(function(f) { f.classList.remove('fl-visible'); });
@@ -1528,7 +1531,7 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
       }
     });
 
-    setTimeout(function() {
+    desktopTimeout = setTimeout(function() {
       if (isMobile()) { runCycleMobile(); } else { runCycleDesktop(); }
     }, totalCycle);
   }
@@ -1543,6 +1546,11 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
     });
   }, { threshold: 0.2 });
   obs.observe(pipeline);
+
+  window.addEventListener('resize', function() {
+    if (!observed) return;
+    if (isMobile()) { runCycleMobile(); } else { runCycleDesktop(); }
+  });
 })();
 </script>
 
