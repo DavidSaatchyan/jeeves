@@ -149,6 +149,20 @@ def landing():
     return _LANDING.read_text(encoding="utf-8")
 
 
+_TERMS = Path(__file__).parent / "templates" / "terms.html"
+_PRIVACY = Path(__file__).parent / "templates" / "privacy.html"
+
+
+@app.get("/terms", response_class=HTMLResponse)
+def terms():
+    return _TERMS.read_text(encoding="utf-8")
+
+
+@app.get("/privacy", response_class=HTMLResponse)
+def privacy():
+    return _PRIVACY.read_text(encoding="utf-8")
+
+
 app.include_router(auth.router)
 app.include_router(routes_chat.router)
 app.include_router(knowledge.router)

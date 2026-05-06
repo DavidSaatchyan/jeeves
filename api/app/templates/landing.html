@@ -540,6 +540,11 @@
     .cta p { color: #6b7a8d; font-size: 15px; margin-bottom: 32px; max-width: 420px; margin-left: auto; margin-right: auto; }
 
     footer { text-align: center; padding: 32px 24px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); }
+footer .footer-inner { max-width: 800px; margin: 0 auto; }
+footer .footer-links { display: flex; justify-content: center; gap: 24px; margin-bottom: 16px; flex-wrap: wrap; }
+footer .footer-links a { color: var(--muted2); text-decoration: none; font-size: 12px; transition: color .2s; border: none; }
+footer .footer-links a:hover { color: var(--text); }
+footer .footer-copy { color: var(--muted2); font-size: 11px; }
 
     @media (max-width: 1024px) {
       .pricing-grid { grid-template-columns: 1fr 1fr; max-width: 600px; margin-left: auto; margin-right: auto; }
@@ -1234,7 +1239,16 @@
 </div>
 
 <footer>
-  &copy; 2026 Jeeves. Built for teams that scale.
+  <div class="footer-inner">
+    <div class="footer-links">
+      <a href="/admin/login">Login</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#how">How it works</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/privacy">Privacy Policy</a>
+    </div>
+    <div class="footer-copy">&copy; 2026 Jeeves. All rights reserved.</div>
+  </div>
 </footer>
 
 <script>
