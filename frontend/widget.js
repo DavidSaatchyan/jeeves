@@ -398,32 +398,32 @@
     var dismissed = m.dismissed;
     if (dismissed) return "";
     var btns = '<div class="jw-followup-btns">' +
-      '<button class="jw-followup-btn" data-followup-idx="' + idx + '" data-followup-yes>Да, есть</button>' +
-      '<button class="jw-followup-btn" data-followup-idx="' + idx + '" data-followup-no>Нет, всё ясно</button>' +
+      '<button class="jw-followup-btn" data-followup-idx="' + idx + '" data-followup-yes>Yes</button>' +
+      '<button class="jw-followup-btn" data-followup-idx="' + idx + '" data-followup-no>No, all clear</button>' +
     '</div>';
     return '<div class="jw-followup">' +
-      '<div class="jw-followup-text">' + esc(m.text || "Остались вопросы?") + '</div>' +
+      '<div class="jw-followup-text">' + esc(m.text || "Any other questions?") + '</div>' +
       btns +
     '</div>';
   }
 
   function renderRatingCard(m, idx) {
     if (m.submitted) {
-      return '<div class="jw-rating"><div class="jw-rating-thanks">Спасибо за вашу оценку!</div></div>';
+      return '<div class="jw-rating"><div class="jw-rating-thanks">Thanks for your feedback!</div></div>';
     }
     var upClass = m.rating === "thumbs_up" ? "selected-up" : "";
     var downClass = m.rating === "thumbs_down" ? "selected-down" : "";
     var html = '<div class="jw-rating">' +
-      '<div class="jw-rating-title">Оцените ответ</div>' +
+      '<div class="jw-rating-title">Rate this response</div>' +
       '<div class="jw-rating-btns">' +
         '<button class="jw-rating-btn ' + upClass + '" data-rating-idx="' + idx + '" data-rating-value="thumbs_up" aria-label="Good response">👍</button>' +
         '<button class="jw-rating-btn ' + downClass + '" data-rating-idx="' + idx + '" data-rating-value="thumbs_down" aria-label="Bad response">👎</button>' +
       '</div>';
     if (m.rating) {
       html += '<div class="jw-rating-feedback">' +
-        '<textarea class="jw-rating-textarea" placeholder="Комментарий (необязательно)" maxlength="500">' + esc(m.feedback || "") + '</textarea>' +
+        '<textarea class="jw-rating-textarea" placeholder="Comment (optional)" maxlength="500">' + esc(m.feedback || "") + '</textarea>' +
         '<button class="jw-rating-submit" data-rating-submit-idx="' + idx + '"' + (m.feedbackSubmitted ? ' disabled' : '') + '>' +
-          (m.feedbackSubmitted ? "Отправлено" : "Отправить") +
+          (m.feedbackSubmitted ? "Submitted" : "Submit") +
         '</button>' +
       '</div>';
     }
@@ -490,7 +490,7 @@
     followUpTimeout = setTimeout(function () {
       if (resolvedPending) return;
       resolvedPending = true;
-      addMessage({ type: "followup", text: "Остались вопросы?", dismissed: false }, "bot", true);
+      addMessage({ type: "followup", text: "Any other questions?", dismissed: false }, "bot", true);
     }, 180000);
   }
 
