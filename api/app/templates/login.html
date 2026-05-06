@@ -10,9 +10,7 @@ main{display:block;padding:0;max-width:none;}
 .back-link a{font-size:13px;color:var(--muted2);text-decoration:none;transition:color .2s;}
 .back-link a:hover{color:var(--text);}
 
-.auth-content-row{display:flex;align-items:center;gap:48px;width:100%;max-width:900px;justify-content:center;}
-
-.auth-wrapper{width:100%;max-width:420px;animation:authFadeIn .5s ease both;}
+.auth-wrapper{width:100%;max-width:420px;animation:authFadeIn .5s ease both;margin-bottom:40px;}
 @keyframes authFadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
 
 .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 36px 36px;box-shadow:0 8px 40px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.02) inset;}
@@ -68,9 +66,9 @@ main{display:block;padding:0;max-width:none;}
 .pw-strength.visible{opacity:1;}
 .pw-strength-bar{height:100%;width:0;border-radius:2px;transition:width .3s ease,background .3s ease;}
 
-/* Page footer - right side */
-.auth-page-footer{display:flex;flex-direction:column;align-items:center;gap:4px;padding:20px 24px;border-left:1px solid var(--border);min-height:100%;}
-.auth-page-footer .footer-links{display:flex;gap:16px;}
+/* Page footer - bottom of page */
+.auth-page-footer{text-align:center;margin-top:auto;padding-top:32px;}
+.auth-page-footer .footer-links{display:flex;justify-content:center;gap:16px;margin-bottom:4px;}
 .auth-page-footer a{color:var(--muted2);text-decoration:none;font-size:12px;transition:color .2s;border:none;}
 .auth-page-footer a:hover{color:var(--text);}
 .auth-page-footer>span{font-size:11px;color:var(--muted2);}
@@ -79,9 +77,8 @@ main{display:block;padding:0;max-width:none;}
 <div class="auth-page">
   <div class="back-link"><a href="/">← Back</a></div>
 
-  <div class="auth-content-row">
-    <div class="auth-wrapper">
-      <div class="auth-card">
+  <div class="auth-wrapper">
+    <div class="auth-card">
       <div class="auth-header">
         <div class="brand-mark">J</div>
         <h1>Jeeves<span>.</span></h1>
@@ -127,15 +124,14 @@ main{display:block;padding:0;max-width:none;}
 
       <div class="auth-footer" id="authFooter">Don't have an account? <a href="javascript:void(0)" onclick="setMode('register')" style="color:var(--accent);border:none;font-weight:600;">Sign up</a></div>
     </div>
-    </div>
+  </div>
 
-    <div class="auth-page-footer">
-      <div class="footer-links">
-        <a href="/terms">Terms</a>
-        <a href="/privacy">Privacy</a>
-      </div>
-      <span>&copy; 2026 Jeeves</span>
+  <div class="auth-page-footer">
+    <div class="footer-links">
+      <a href="/terms">Terms</a>
+      <a href="/privacy">Privacy</a>
     </div>
+    <span>&copy; 2026 Jeeves</span>
   </div>
 </div>
 {% endblock %}
