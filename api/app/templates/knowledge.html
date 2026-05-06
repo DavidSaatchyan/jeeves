@@ -55,13 +55,12 @@
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:420px;width:90%;">
       <h3 style="margin:0 0 8px;font-size:16px;color:var(--text)" id="uploadFileName">Processing...</h3>
       <p class="muted" style="margin:0 0 24px;font-size:13px" id="uploadFileStatus">Starting</p>
-      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
-        <div class="step" id="step-upload"><div class="step-icon" id="step-upload-icon"><div class="spinner"></div></div><span>Uploading file</span></div>
-        <div class="step" id="step-chunking"><div class="step-icon" id="step-chunking-icon"><div class="spinner"></div></div><span>Splitting into chunks</span></div>
-        <div class="step" id="step-embedding"><div class="step-icon" id="step-embedding-icon"><div class="spinner"></div></div><span>Generating embeddings</span></div>
-        <div class="step" id="step-indexing"><div class="step-icon" id="step-indexing-icon"><div class="spinner"></div></div><span>Indexing to knowledge base</span></div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="step" id="step-upload"><div class="step-icon" id="step-upload-icon"></div><span>Uploading file</span></div>
+        <div class="step" id="step-chunking"><div class="step-icon" id="step-chunking-icon"></div><span>Splitting into chunks</span></div>
+        <div class="step" id="step-embedding"><div class="step-icon" id="step-embedding-icon"></div><span>Generating embeddings</span></div>
+        <div class="step" id="step-indexing"><div class="step-icon" id="step-indexing-icon"></div><span>Indexing to knowledge base</span></div>
       </div>
-      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
     </div>
   </div>
 
@@ -77,8 +76,9 @@
       <button class="ghost" style="border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;color:var(--red);border:1px solid rgba(248,113,113,0.2);background:rgba(248,113,113,0.06);cursor:pointer;" onclick="delSelected()">Delete selected</button>
       <button class="ghost" style="border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;color:var(--muted);border:1px solid var(--border);cursor:pointer;" onclick="clearSelection()">Cancel</button>
     </div>
+    <a href="javascript:void(0)" id="selectAllLink" style="font-size:12px;color:var(--accent);font-weight:600;text-decoration:none;border:none;display:none;" onclick="selectAllFromTable()">Select all</a>
   </div>
-  <table><thead><tr><th style="width:40px"><input type="checkbox" id="selectAllCb" style="accent-color:var(--accent);cursor:pointer;" onclick="toggleSelectAll()"/></th><th>Filename</th><th>Status</th><th style="width:90px;text-align:right">Size</th><th style="width:90px;text-align:right">Chunks</th><th style="width:130px">Uploaded</th><th style="width:80px"></th></tr></thead><tbody id="tbl"></tbody></table>
+  <table><thead><tr><th style="width:40px"></th><th>Filename</th><th>Status</th><th style="width:90px;text-align:right">Size</th><th style="width:90px;text-align:right">Chunks</th><th style="width:130px">Uploaded</th><th style="width:80px"></th></tr></thead><tbody id="tbl"></tbody></table>
 </div>
 
 </div>
@@ -102,8 +102,6 @@
 #tbl td,#tbl th{text-align:left}
 .del-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:6px;padding:5px 6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
 .del-btn:hover{color:var(--red);background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.2)}
-.progress-bar{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
-.progress-fill{height:100%;width:0%;background:var(--accent);border-radius:3px;transition:width .4s ease}
 .step{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--muted2);transition:color .3s}
 .step.active{color:var(--text)}
 .step.done{color:#34d399}
@@ -282,9 +280,8 @@ function showProgress(filename){
   STEPS.forEach(function(s){
     var el = document.getElementById('step-' + s);
     el.className = 'step';
-    document.getElementById('step-' + s + '-icon').innerHTML = '<div class="spinner"></div>';
+    document.getElementById('step-' + s + '-icon').innerHTML = '';
   });
-  document.getElementById('progressFill').style.width = '0%';
   document.getElementById('uploadFileStatus').textContent = 'Starting';
 }
 
@@ -299,9 +296,6 @@ function setStep(stepName, state){
     el.className = 'step done';
     icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
   }
-  var idx = STEPS.indexOf(stepName);
-  var pct = ((idx + 1) / STEPS.length) * 100;
-  document.getElementById('progressFill').style.width = pct + '%';
 }
 
 function hideProgress(){
@@ -448,6 +442,8 @@ function saveSelectedIds(){
   localStorage.setItem('kb_sel', JSON.stringify(_selectedIds));
 }
 
+_selectedIds = getSelectedIds();
+
 function onRowCheck(cb){
   var id = cb.getAttribute('data-id');
   if(cb.checked){
@@ -462,9 +458,9 @@ function onRowCheck(cb){
 }
 
 function toggleSelectAll(){
-  var master = document.getElementById('selectAllCb');
   var checks = document.querySelectorAll('.row-cb');
-  if(master.checked){
+  var willSelect = _selectedIds.length < checks.length;
+  if(willSelect){
     _selectedIds = [];
     checks.forEach(function(cb){
       cb.checked = true;
@@ -476,22 +472,37 @@ function toggleSelectAll(){
   }
   saveSelectedIds();
   updateSelectionBar();
+  updateSelectAllLink();
+}
+
+function selectAllFromTable(){
+  _selectedIds = [];
+  document.querySelectorAll('.row-cb').forEach(function(cb){
+    cb.checked = true;
+    _selectedIds.push(cb.getAttribute('data-id'));
+  });
+  saveSelectedIds();
+  updateSelectionBar();
+  updateSelectAllLink();
 }
 
 function updateSelectAllState(rows){
-  var master = document.getElementById('selectAllCb');
-  if(!rows.length){ master.checked = false; master.disabled = true; return; }
-  master.disabled = false;
+  var link = document.getElementById('selectAllLink');
+  if(!rows.length){ link.style.display = 'none'; return; }
+  link.style.display = '';
+  updateSelectAllLink();
+}
+
+function updateSelectAllLink(){
+  var link = document.getElementById('selectAllLink');
   var checks = document.querySelectorAll('.row-cb');
-  var allChecked = checks.length > 0 && Array.from(checks).every(function(c){ return c.checked; });
-  master.checked = allChecked;
+  if(checks.length === 0){ link.style.display = 'none'; return; }
+  var allChecked = Array.from(checks).every(function(c){ return c.checked; });
+  link.textContent = allChecked ? 'Deselect all' : 'Select all';
 }
 
 function updateSelectAllStateFromDom(){
-  var checks = document.querySelectorAll('.row-cb');
-  var master = document.getElementById('selectAllCb');
-  if(checks.length === 0){ master.checked = false; return; }
-  master.checked = Array.from(checks).every(function(c){ return c.checked; });
+  updateSelectAllLink();
 }
 
 function updateSelectionBar(){
