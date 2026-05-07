@@ -32,12 +32,14 @@ if _worker_dir not in sys.path:
     sys.path.insert(0, _worker_dir)
 import chunking
 
+import ssl
+
 # --- config ---------------------------------------------------------------
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql+psycopg2://jeeves:jeeves123@postgres:5432/jeeves")
 REDIS_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
-if REDIS_URL.startswith("rediss://") and "ssl_cert_reqs" not in REDIS_URL:
-    sep = "&" if "?" in REDIS_URL else "?"
-    REDIS_URL = REDIS_URL + sep + "ssl_cert_reqs=CERT_REQUIRED"
+# Strip query params — we configure SSL programmatically via broker_use_ssl
+if REDIS_URL.startswith("rediss://") and "?" in REDIS_URL:
+    REDIS_URL = REDIS_URL.split("?")[0]
 CHROMA_URL = os.environ.get("CHROMA_URL", "")
 CHROMA_PATH = os.environ.get("CHROMA_PATH", "")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
@@ -61,6 +63,9 @@ _OVERLAP_CHARS = CHUNK_OVERLAP * 4
 # --- celery app -----------------------------------------------------------
 app = Celery("jeeves", broker=REDIS_URL, backend=REDIS_URL)
 app.conf.update(task_serializer="json", accept_content=["json"], timezone="UTC")
+if REDIS_URL.startswith("rediss://"):
+    _ssl_opts = {"ssl_cert_reqs": ssl.CERT_REQUIRED}
+    app.conf.update(broker_use_ssl=_ssl_opts, result_backend_transport_options=_ssl_opts)
 app.conf.beat_schedule = {
     # DEFAULT: check proactive triggers every hour.
     "proactive-hourly": {
