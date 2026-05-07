@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 import jwt
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
@@ -21,6 +21,8 @@ from .schemas import AuthOut, LoginIn, RefreshIn, RegisterIn, TokenOut
 settings = get_settings()
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+_SESSION_COOKIE = "jeeves_session"
 
 
 # ── Redis-backed token denylist ──────────────────────────────────────────────
@@ -160,7 +162,7 @@ def issue_email_verify_token(tenant_id: uuid.UUID) -> str:
 
 
 @router.post("/register", response_model=AuthOut, status_code=201)
-def register(body: RegisterIn, request: Request, db: Session = Depends(get_db)):
+def register(body: RegisterIn, request: Request, response: Response, db: Session = Depends(get_db)):
     ip = _get_client_ip(request)
     if not check_rate_limit("register", ip):
         raise HTTPException(429, "Too many registration attempts. Try again later.")
@@ -189,11 +191,23 @@ def register(body: RegisterIn, request: Request, db: Session = Depends(get_db)):
     print(f"[email-stub] Verification link for {tenant.email}: {verify_link}", flush=True)
 
     access, refresh = issue_tokens(tenant.id)
+
+    # Set session cookie so browser can access /admin immediately
+    response.set_cookie(
+        key=_SESSION_COOKIE,
+        value=access,
+        httponly=True,
+        secure=False,  # allow HTTP in dev; security_headers middleware adds HSTS
+        samesite="lax",
+        max_age=900,
+        path="/admin",
+    )
+
     return AuthOut(tenant_id=tenant.id, access_token=access, refresh_token=refresh)
 
 
 @router.post("/login", response_model=AuthOut)
-def login(body: LoginIn, request: Request, db: Session = Depends(get_db)):
+def login(body: LoginIn, request: Request, response: Response, db: Session = Depends(get_db)):
     ip = _get_client_ip(request)
     if not check_rate_limit("login", ip):
         raise HTTPException(429, "Too many login attempts. Try again later.")
@@ -201,6 +215,17 @@ def login(body: LoginIn, request: Request, db: Session = Depends(get_db)):
     if not tenant or not pwd_ctx.verify(_prepare_password(body.password), tenant.hashed_password):
         raise HTTPException(401, "Invalid credentials")
     access, refresh = issue_tokens(tenant.id)
+
+    response.set_cookie(
+        key=_SESSION_COOKIE,
+        value=access,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=900,
+        path="/admin",
+    )
+
     return AuthOut(tenant_id=tenant.id, access_token=access, refresh_token=refresh)
 
 

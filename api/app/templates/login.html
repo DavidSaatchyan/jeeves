@@ -247,6 +247,7 @@ async function go(){
       var data=await r.json();
       if(!r.ok) throw new Error(data.detail||'Registration failed');
       setToken(data.access_token,data.tenant_id);
+      await fetch('/admin/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'email='+encodeURIComponent(email)+'&password='+encodeURIComponent(password)});
     } else {
       var r=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
       var data=await r.json();
