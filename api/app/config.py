@@ -10,6 +10,14 @@ import yaml
 from pydantic_settings import BaseSettings
 
 
+def _normalize_redis_url(url: str) -> str:
+    """Ensure rediss:// URLs include ssl_cert_reqs for redis-py / Kombu."""
+    if url and url.startswith("rediss://") and "ssl_cert_reqs" not in url:
+        sep = "&" if "?" in url else "?"
+        return url + sep + "ssl_cert_reqs=cert_required"
+    return url
+
+
 class Settings(BaseSettings):
     database_url: str
     redis_url: str = ""
@@ -66,6 +74,7 @@ def _validate_secrets(settings: Settings) -> None:
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     settings = Settings()
+    settings.redis_url = _normalize_redis_url(settings.redis_url)
     _validate_secrets(settings)
     return settings
 

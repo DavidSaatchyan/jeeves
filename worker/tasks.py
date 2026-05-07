@@ -29,6 +29,9 @@ import chunking
 # --- config ---------------------------------------------------------------
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql+psycopg2://jeeves:jeeves123@postgres:5432/jeeves")
 REDIS_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
+if REDIS_URL.startswith("rediss://") and "ssl_cert_reqs" not in REDIS_URL:
+    sep = "&" if "?" in REDIS_URL else "?"
+    REDIS_URL = REDIS_URL + sep + "ssl_cert_reqs=cert_required"
 CHROMA_URL = os.environ.get("CHROMA_URL", "")
 CHROMA_PATH = os.environ.get("CHROMA_PATH", "")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
