@@ -11,9 +11,10 @@ from pydantic_settings import BaseSettings
 
 
 def _normalize_redis_url(url: str) -> str:
-    """Strip query params that break Kombu; we configure SSL programmatically."""
-    if url and url.startswith("rediss://") and "?" in url:
-        return url.split("?")[0]
+    """Ensure rediss:// URLs include ssl_cert_reqs for redis-py / Kombu."""
+    if url and url.startswith("rediss://") and "ssl_cert_reqs" not in url:
+        sep = "&" if "?" in url else "?"
+        return url + sep + "ssl_cert_reqs=required"
     return url
 
 

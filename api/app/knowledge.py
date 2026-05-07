@@ -18,22 +18,12 @@ from .models import FileRecord, Tenant
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 
-import ssl
-
 _settings = get_settings()
 
 _has_redis = bool(_settings.redis_url)
 if _has_redis:
     from celery import Celery
     _celery = Celery("jeeves", broker=_settings.redis_url, backend=_settings.redis_url)
-    if _settings.redis_url.startswith("rediss://"):
-        _ssl_opts = {
-            "ssl_cert_reqs": ssl.CERT_REQUIRED,
-        }
-        _celery.conf.update(
-            broker_use_ssl=_ssl_opts,
-            result_backend_transport_options={"ssl_cert_reqs": ssl.CERT_REQUIRED},
-        )
 else:
     _celery = None
 
