@@ -249,16 +249,7 @@ def on_startup() -> None:
         _worker_log = Path("/tmp/celery_worker.log")
         with _worker_log.open("w") as logf:
             proc = subprocess.Popen(
-                [
-                    sys.executable,
-                    "-c",
-                    "import sys; sys.path.insert(0, '/app'); "
-                    "from celery import Celery; "
-                    "from celery.apps.worker import Worker; "
-                    "import worker.tasks; "
-                    "w = Worker(app=worker.tasks.app); "
-                    "w.start()",
-                ],
+                [sys.executable, "/app/start_worker.py"],
                 stdout=logf,
                 stderr=subprocess.STDOUT,
                 env=env,
