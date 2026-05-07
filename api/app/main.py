@@ -245,6 +245,7 @@ def on_startup() -> None:
         env = os.environ.copy()
         env.setdefault("C_FORCE_ROOT", "1")
         env.setdefault("PYTHONUNBUFFERED", "1")
+        env["PYTHONPATH"] = "/app"
         _worker_log = Path("/tmp/celery_worker.log")
         with _worker_log.open("w") as logf:
             proc = subprocess.Popen(
