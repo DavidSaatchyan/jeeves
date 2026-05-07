@@ -114,7 +114,7 @@ main{display:block;padding:0;max-width:none;}
       <div class="auth-field">
         <label>Password</label>
         <div class="pw-strength-wrap">
-          <input id="password" type="password" placeholder="Min 12 chars, uppercase, digit, special" autocomplete="current-password"/>
+          <input id="password" type="password" placeholder="Min 8 chars, uppercase, digit, special" autocomplete="current-password"/>
           <div class="pw-strength" id="pwStrength"><div class="pw-strength-bar" id="pwBar"></div></div>
         </div>
       </div>
@@ -149,8 +149,12 @@ main{display:block;padding:0;max-width:none;}
 {% block tail %}
 <script>
 let mode='login';
+let emailTouched=false;
+
 function setMode(m){
   mode=m;
+  emailTouched=false;
+  document.getElementById('emailErr').textContent='';
   var rf=document.getElementById('regFields');
   var tabs=document.getElementById('authTabs');
   var sub=document.getElementById('authSub');
@@ -197,7 +201,7 @@ document.getElementById('password').addEventListener('input',function(){
   var pw=this.value;
   var bar=document.getElementById('pwBar');
   var score=0;
-  if(pw.length>=12) score++;
+  if(pw.length>=8) score++;
   if(/[A-Z]/.test(pw)) score++;
   if(/[0-9]/.test(pw)) score++;
   if(/[^A-Za-z0-9]/.test(pw)) score++;
@@ -208,34 +212,35 @@ document.getElementById('password').addEventListener('input',function(){
   validateForm();
 });
 
-document.getElementById('termsCheckbox').addEventListener('change',validateForm);
-document.getElementById('email').addEventListener('input',validateForm);
+/* Email validation — show error only on blur, clear on input */
+document.getElementById('email').addEventListener('blur',function(){
+  emailTouched=true;
+  validateForm();
+});
+document.getElementById('email').addEventListener('input',function(){
+  if(emailTouched) validateForm();  /* clear or update error while editing */
+  validateForm();  /* always check button state */
+});
 document.getElementById('password').addEventListener('input',validateForm);
 document.getElementById('tname').addEventListener('input',validateForm);
+document.getElementById('termsCheckbox').addEventListener('change',validateForm);
 
 function validateEmail(email){
-  var errEl=document.getElementById('emailErr');
-  if(!email){errEl.textContent='';return false;}
-  // Only latin characters allowed
-  if(/[^\x20-\x7E]/.test(email)){errEl.textContent='Only Latin characters are allowed.';return false;}
-  // Must contain exactly one @
+  if(!email) return false;
+  if(/[^\x20-\x7E]/.test(email)) return false;
   var parts=email.split('@');
-  if(parts.length!==2){errEl.textContent='Email must contain exactly one @ sign.';return false;}
+  if(parts.length!==2) return false;
   var local=parts[0];var domain=parts[1];
-  // Local part checks
-  if(!local){errEl.textContent='Missing part before @.';return false;}
-  if(local.startsWith('.')||local.endsWith('.')){errEl.textContent='Local part cannot start or end with a dot.';return false;}
-  if(/\.\\./.test(local)){errEl.textContent='Consecutive dots are not allowed.';return false;}
-  if(!/^[a-zA-Z0-9._%+-]+$/.test(local)){errEl.textContent='Invalid characters in email local part.';return false;}
-  // Domain checks
-  if(!domain){errEl.textContent='Missing domain after @.';return false;}
-  if(domain.startsWith('-')||domain.endsWith('-')){errEl.textContent='Invalid domain name.';return false;}
-  if(!/^[a-zA-Z0-9.-]+$/.test(domain)){errEl.textContent='Invalid characters in domain.';return false;}
+  if(!local) return false;
+  if(local.startsWith('.')||local.endsWith('.')) return false;
+  if(/\.\./.test(local)) return false;
+  if(!/^[a-zA-Z0-9._%+-]+$/.test(local)) return false;
+  if(!domain) return false;
+  if(domain.startsWith('-')||domain.endsWith('-')) return false;
+  if(!/^[a-zA-Z0-9.-]+$/.test(domain)) return false;
   var domainParts=domain.split('.');
-  if(domainParts.length<2){errEl.textContent='Domain must have a TLD (e.g. .com).';return false;}
-  var tld=domainParts[domainParts.length-1];
-  if(tld.length<2){errEl.textContent='TLD is too short.';return false;}
-  errEl.textContent='';
+  if(domainParts.length<2) return false;
+  if(domainParts[domainParts.length-1].length<2) return false;
   return true;
 }
 
@@ -243,7 +248,16 @@ function validateForm(){
   var email=document.getElementById('email').value.trim();
   var password=document.getElementById('password').value;
   var emailValid=validateEmail(email);
-  var pwOk=password.length>=12&&/[A-Z]/.test(password)&&/\d/.test(password)&&/[^A-Za-z0-9]/.test(password);
+  var pwOk=password.length>=8&&/[A-Z]/.test(password)&&/\d/.test(password)&&/[^A-Za-z0-9]/.test(password);
+
+  /* Show/hide email error — only after field was touched */
+  var errEl=document.getElementById('emailErr');
+  if(emailTouched&&email&&!emailValid){
+    errEl.textContent='Invalid email format';
+  } else {
+    errEl.textContent='';
+  }
+
   var valid=emailValid&&pwOk;
   if(mode==='register'){
     var tname=document.getElementById('tname').value.trim();
@@ -260,8 +274,8 @@ async function go(){
   var password=document.getElementById('password').value;
 
   if(!email||!password){err.textContent='Please fill in all fields.';return;}
-  if(!validateEmail(email)){return;}
-  if(password.length<12){err.textContent='Password must be at least 12 characters.';return;}
+  if(!validateEmail(email)){err.textContent='Invalid email format';return;}
+  if(password.length<8){err.textContent='Password must be at least 8 characters.';return;}
   if(!/[A-Z]/.test(password)){err.textContent='Password must contain an uppercase letter.';return;}
   if(!/\d/.test(password)){err.textContent='Password must contain a digit.';return;}
   if(!/[^A-Za-z0-9]/.test(password)){err.textContent='Password must contain a special character.';return;}

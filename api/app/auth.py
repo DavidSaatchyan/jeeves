@@ -55,9 +55,9 @@ def is_token_revoked(jti: str) -> bool:
 # ── helpers ──────────────────────────────────────────────────────────────────
 
 def _validate_password_strength(password: str) -> None:
-    """Enforce: min 12 chars, at least one uppercase, one lowercase, one digit, one special."""
-    if len(password) < 12:
-        raise HTTPException(400, "Password must be at least 12 characters")
+    """Enforce: min 8 chars, at least one uppercase, one lowercase, one digit, one special."""
+    if len(password) < 8:
+        raise HTTPException(400, "Password must be at least 8 characters")
     if not re.search(r"[A-Z]", password):
         raise HTTPException(400, "Password must contain at least one uppercase letter")
     if not re.search(r"[a-z]", password):
