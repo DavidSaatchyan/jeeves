@@ -177,6 +177,7 @@ def delete_file(
 
     # Delete from Chroma (can be slow, do after DB commit so user sees it gone)
     try:
+        from . import rag
         rag.delete_file(tenant.id, file_id)
     except Exception as e:
         print(f"[knowledge] chroma delete warning: {e}", flush=True)

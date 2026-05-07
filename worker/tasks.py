@@ -24,6 +24,12 @@ from openai import OpenAI
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
+# Ensure /app/worker is on sys.path so chunking.py is importable when
+# Celery starts with --workdir /app (needed for Chroma PersistentClient).
+import sys
+_worker_dir = str(Path(__file__).parent)
+if _worker_dir not in sys.path:
+    sys.path.insert(0, _worker_dir)
 import chunking
 
 # --- config ---------------------------------------------------------------
