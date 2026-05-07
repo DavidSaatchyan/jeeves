@@ -263,6 +263,22 @@ def on_startup() -> None:
             )
         logging.info("[startup] Celery worker started as PID %s", proc.pid)
 
+        def _tail_worker():
+            import time
+            while True:
+                try:
+                    content = _worker_log.read_text()
+                    if content:
+                        for line in content.split("\n"):
+                            if line.strip():
+                                logging.info("[worker] %s", line)
+                        _worker_log.write_text("")
+                except Exception:
+                    pass
+                time.sleep(3)
+        import threading
+        threading.Thread(target=_tail_worker, daemon=True).start()
+
 
 @app.get("/health")
 def health() -> dict:
