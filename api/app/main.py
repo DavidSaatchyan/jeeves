@@ -243,18 +243,21 @@ def on_startup() -> None:
     if redis_url:
         logging.info("[startup] Starting Celery worker subprocess...")
         env = os.environ.copy()
-        env.setdefault("C_FORCE_ROOT", "1")
-        env.setdefault("PYTHONUNBUFFERED", "1")
+        env["C_FORCE_ROOT"] = "1"
+        env["PYTHONUNBUFFERED"] = "1"
         env["PYTHONPATH"] = "/app"
         _worker_log = Path("/tmp/celery_worker.log")
         with _worker_log.open("w") as logf:
             proc = subprocess.Popen(
                 [
-                    "celery",
-                    "-A", "worker.tasks",
-                    "worker",
-                    "--loglevel=info",
-                    "--workdir", "/app",
+                    sys.executable,
+                    "-c",
+                    "import sys; sys.path.insert(0, '/app'); "
+                    "from celery import Celery; "
+                    "from celery.apps.worker import Worker; "
+                    "import worker.tasks; "
+                    "w = Worker(app=worker.tasks.app); "
+                    "w.start()",
                 ],
                 stdout=logf,
                 stderr=subprocess.STDOUT,
