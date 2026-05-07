@@ -53,18 +53,18 @@ def _ctx(request: Request) -> dict:
         scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
         host = request.headers.get("x-forwarded-host", request.url.netloc)
         base = f"{scheme}://{host}"
-    return {"request": request, "public_base_url": base}
+    return {"public_base_url": base}
 
 
 @router.get("", response_class=HTMLResponse)
 @router.get("/", response_class=HTMLResponse)
 def home(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse("dashboard.html", context=_ctx(request))
+    return templates.TemplateResponse(request, "dashboard.html", context=_ctx(request))
 
 
 @router.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
-    return templates.TemplateResponse("login.html", context=_ctx(request))
+    return templates.TemplateResponse(request, "login.html", context=_ctx(request))
 
 
 @router.post("/login", response_class=HTMLResponse)
@@ -108,47 +108,47 @@ def admin_logout():
 
 @router.get("/knowledge", response_class=HTMLResponse)
 def knowledge(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse("knowledge.html", context=_ctx(request))
+    return templates.TemplateResponse(request, "knowledge.html", context=_ctx(request))
 
 
 @router.get("/integrations", response_class=HTMLResponse)
 def integrations_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse("integrations.html", context=_ctx(request))
+    return templates.TemplateResponse(request, "integrations.html", context=_ctx(request))
 
 
 @router.get("/logs", response_class=HTMLResponse)
 def logs_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse("logs.html", context=_ctx(request))
+    return templates.TemplateResponse(request, "logs.html", context=_ctx(request))
 
 
 @router.get("/channels", response_class=HTMLResponse)
 def channels_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse("channels.html", context=_ctx(request))
+    return templates.TemplateResponse(request, "channels.html", context=_ctx(request))
 
 
 @router.get("/widget-preview", response_class=HTMLResponse)
 def widget_preview(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse("widget_preview.html", context=_ctx(request))
+    return templates.TemplateResponse(request, "widget_preview.html", context=_ctx(request))
 
 
 @router.get("/proactive", response_class=HTMLResponse)
 def proactive_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse("proactive.html", context=_ctx(request))
+    return templates.TemplateResponse(request, "proactive.html", context=_ctx(request))
 
 
 @router.get("/billing", response_class=HTMLResponse)
 def billing_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse("billing.html", context=_ctx(request))
+    return templates.TemplateResponse(request, "billing.html", context=_ctx(request))
 
 
 @router.get("/tools", response_class=HTMLResponse)
 def tools_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse("tools.html", context=_ctx(request))
+    return templates.TemplateResponse(request, "tools.html", context=_ctx(request))
 
 
 @router.get("/api", response_class=HTMLResponse)
 def api_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse("api_docs.html", context=_ctx(request))
+    return templates.TemplateResponse(request, "api_docs.html", context=_ctx(request))
 
 
 @router.get("/crm", response_class=HTMLResponse)
