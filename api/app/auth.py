@@ -66,6 +66,11 @@ def _validate_password_strength(password: str) -> None:
         raise HTTPException(400, "Password must contain at least one special character")
 
 
+def _prepare_password(password: str) -> str:
+    """Truncate to 72 bytes — bcrypt limit."""
+    return password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
+
+
 def _get_client_ip(request: Request) -> str:
     return request.headers.get("x-forwarded-for", request.client.host or "unknown").split(",")[0].strip()
 
@@ -170,7 +175,7 @@ def register(body: RegisterIn, request: Request, db: Session = Depends(get_db)):
     tenant = Tenant(
         name=body.tenant_name,
         email=body.email,
-        hashed_password=pwd_ctx.hash(body.password),
+        hashed_password=pwd_ctx.hash(_prepare_password(body.password)),
         email_verified=False,
         trial_ends=datetime.utcnow() + timedelta(days=trial_days),
     )
@@ -193,7 +198,7 @@ def login(body: LoginIn, request: Request, db: Session = Depends(get_db)):
     if not check_rate_limit("login", ip):
         raise HTTPException(429, "Too many login attempts. Try again later.")
     tenant = db.query(Tenant).filter(Tenant.email == body.email).first()
-    if not tenant or not pwd_ctx.verify(body.password, tenant.hashed_password):
+    if not tenant or not pwd_ctx.verify(_prepare_password(body.password), tenant.hashed_password):
         raise HTTPException(401, "Invalid credentials")
     access, refresh = issue_tokens(tenant.id)
     return AuthOut(tenant_id=tenant.id, access_token=access, refresh_token=refresh)

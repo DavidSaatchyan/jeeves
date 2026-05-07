@@ -79,7 +79,8 @@ async def admin_login(
     pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     tenant = db.query(Tenant).filter(Tenant.email == email).first()
-    if not tenant or not pwd_ctx.verify(password, tenant.hashed_password):
+    pw = password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
+    if not tenant or not pwd_ctx.verify(pw, tenant.hashed_password):
         return RedirectResponse(
             url="/admin/login?error=invalid",
             status_code=status.HTTP_302_FOUND,
