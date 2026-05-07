@@ -52,15 +52,11 @@
     <input id="file" type="file" accept=".pdf,.txt,.md" multiple style="display:none"/>
   </div>
   <div id="uploadModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:10000;align-items:center;justify-content:center;">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:400px;width:90%;animation:modalIn .25s ease both;">
-      <h3 style="margin:0 0 8px;font-size:16px;color:var(--text)" id="uploadFileName">Processing...</h3>
-      <div id="uploadSteps" style="margin-bottom:20px;">
-        <div class="step active" id="step-upload"><div class="step-icon" id="step-upload-icon"></div><span>Uploading file</span></div>
-      </div>
-      <p class="muted" style="margin:0 0 16px;font-size:13px;line-height:1.5" id="uploadFileStatus">Starting</p>
-      <div style="display:flex;gap:10px;justify-content:flex-end;">
-        <button id="uploadCloseBtn" style="display:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;background:var(--accent);color:#fff;border:none;cursor:pointer;">Done</button>
-      </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:360px;width:90%;text-align:center;animation:modalIn .25s ease both;">
+      <div id="uploadSpinner" style="width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;"></div>
+      <h3 style="margin:0 0 6px;font-size:15px;color:var(--text)" id="uploadFileName">Uploading...</h3>
+      <p class="muted" style="margin:0;font-size:12px" id="uploadFileStatus">Please wait</p>
+      <button id="uploadCloseBtn" style="display:none;margin-top:20px;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;background:var(--accent);color:#fff;border:none;cursor:pointer;">Done</button>
     </div>
   </div>
 
@@ -108,7 +104,6 @@
 .step.done .step-icon{border-color:#34d399;background:rgba(52,211,153,0.15)}
 .spinner{width:16px;height:16px;border:2px solid transparent;border-top:2px solid var(--accent);border-radius:50%;animation:spin .8s linear infinite}
 .mini-spinner{width:12px;height:12px;border:2px solid transparent;border-top:2px currentColor;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle;margin-right:4px}
-.step.done .step-icon svg{width:16px;height:16px;stroke:#34d399}
 .processing-pill{display:inline-flex;align-items:center;gap:4px;color:var(--muted2);font-size:12px}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes modalIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
@@ -280,27 +275,23 @@ function esc(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','
 function showProgress(filename){
   document.getElementById('uploadModal').style.display = 'flex';
   document.getElementById('uploadFileName').textContent = filename;
+  document.getElementById('uploadFileStatus').textContent = 'Uploading...';
+  document.getElementById('uploadSpinner').style.display = '';
   document.getElementById('uploadCloseBtn').style.display = 'none';
-  document.getElementById('uploadBgNote').style.display = 'none';
-  document.getElementById('uploadFileStatus').textContent = 'Starting';
-  var el = document.getElementById('step-upload');
-  el.className = 'step active';
-  document.getElementById('step-upload-icon').innerHTML = '<div class="spinner"></div>';
 }
 
 function setUploadDone(){
-  document.getElementById('step-upload').className = 'step done';
-  document.getElementById('step-upload-icon').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-  document.getElementById('uploadFileStatus').textContent = 'File uploaded successfully';
+  document.getElementById('uploadSpinner').style.display = 'none';
+  document.getElementById('uploadFileName').textContent = 'Done';
+  document.getElementById('uploadFileStatus').textContent = 'File uploaded';
   document.getElementById('uploadCloseBtn').style.display = '';
 }
 
 function setUploadError(msg){
-  document.getElementById('step-upload').className = 'step';
-  document.getElementById('step-upload-icon').innerHTML = '';
-  document.getElementById('uploadFileStatus').textContent = 'Failed: ' + msg;
+  document.getElementById('uploadSpinner').style.display = 'none';
+  document.getElementById('uploadFileName').textContent = 'Failed';
+  document.getElementById('uploadFileStatus').textContent = msg;
   document.getElementById('uploadCloseBtn').style.display = '';
-  document.getElementById('uploadCloseBtn').textContent = 'Close';
 }
 
 document.getElementById('uploadCloseBtn').addEventListener('click', hideProgress);
