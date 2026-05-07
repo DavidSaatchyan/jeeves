@@ -212,14 +212,14 @@ document.getElementById('password').addEventListener('input',function(){
   validateForm();
 });
 
-/* Email validation — show error only on blur, clear on input */
+/* Email validation — show error only on blur, clear on any input */
 document.getElementById('email').addEventListener('blur',function(){
   emailTouched=true;
   validateForm();
 });
 document.getElementById('email').addEventListener('input',function(){
-  if(emailTouched) validateForm();  /* clear or update error while editing */
-  validateForm();  /* always check button state */
+  emailTouched=false;  /* reset — errors only appear after next blur */
+  validateForm();
 });
 document.getElementById('password').addEventListener('input',validateForm);
 document.getElementById('tname').addEventListener('input',validateForm);
