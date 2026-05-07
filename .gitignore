@@ -1,9 +1,61 @@
-
+# Secrets
 .env
+*.key
+*.pem
+
+# Python
 *.pyc
 __pycache__/
+*.egg-info/
+*.egg-info
+dist/
+build/
+.eggs/
+
+# Testing
 .pytest_cache/
 .hypothesis/
+.coverage
+htmlcov/
+.tox/
 
-# HubSpot config file
+# IDE
+.kiro/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# AI assistants
+Jeeves/
+CLAUDE.md
+AGENTS.md
+
+# Local config
+config.yaml
 hubspot.config.yml
+
+# Knowledge base (tenant data only)
+knowledge/*/
+!knowledge/.gitkeep
+!knowledge/sample/
+
+# Test CRM
+test-crm/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker
+docker-compose.yml
+
+# Render (we use Railway)
+render.yaml
+
+# Scratch files
+integrations.txt
+spec.txt
