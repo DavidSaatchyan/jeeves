@@ -1,6 +1,7 @@
 """Knowledge Manager routes (FR-2)."""
 from __future__ import annotations
 
+import asyncio
 import os
 import uuid
 from datetime import datetime, timezone
@@ -9,26 +10,38 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 
-from . import memory
+from . import memory, rag
 from .chunking import file_sha256, sanitize_filename
 from .auth import get_current_tenant
 from .config import get_settings
-from .db import get_db
+from .db import get_db, engine
 from .models import FileRecord, Tenant
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 
 _settings = get_settings()
 
-_has_redis = bool(_settings.redis_url)
-if _has_redis:
-    from celery import Celery
-    _celery = Celery("jeeves", broker=_settings.redis_url, backend=_settings.redis_url)
-else:
-    _celery = None
-
 MAX_SIZE_MB = 50
 ALLOWED_EXT = {".txt", ".pdf", ".md"}
+
+
+async def _background_index(tenant_id: uuid.UUID, file_id: uuid.UUID, file_path: Path):
+    """Run RAG indexing in a background thread to avoid blocking the HTTP request."""
+    try:
+        n = await asyncio.to_thread(rag.index_file, tenant_id, file_id, file_path)
+        with engine.begin() as conn:
+            from sqlalchemy import text
+            conn.execute(
+                text("UPDATE files SET status='ready', chunks_total=:n, error=NULL WHERE id=:fid"),
+                {"fid": str(file_id), "n": n},
+            )
+    except Exception as e:
+        with engine.begin() as conn:
+            from sqlalchemy import text
+            conn.execute(
+                text("UPDATE files SET status='failed', error=:error WHERE id=:fid"),
+                {"fid": str(file_id), "error": str(e)[:2000]},
+            )
 
 
 def _iso_utc(dt) -> str:
@@ -108,27 +121,9 @@ async def upload_file(
     db.add(rec)
     db.commit()
 
-    # Index asynchronously via Celery if Redis is available, otherwise sync fallback
-    if _celery is not None:
-        _celery.send_task(
-            "tasks.index_file",
-            args=[str(tenant.id), str(file_id), str(dest)],
-        )
-        return {"id": str(file_id), "status": "processing", "chunks": 0}
-    else:
-        # Sync fallback for local dev without Redis
-        from . import rag
-        try:
-            n = rag.index_file(tenant.id, file_id, dest)
-            rec.status = "ready"
-            rec.chunks_total = n
-            db.commit()
-            return {"id": str(file_id), "status": "ready", "chunks": n}
-        except Exception as e:
-            rec.status = "failed"
-            rec.error = str(e)
-            db.commit()
-            raise HTTPException(500, f"Indexing failed: {e}")
+    # Index asynchronously in background thread
+    asyncio.create_task(_background_index(tenant.id, file_id, dest))
+    return {"id": str(file_id), "status": "processing", "chunks": 0}
 
 
 @router.get("/files")

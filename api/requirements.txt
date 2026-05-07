@@ -22,4 +22,3 @@ jsonpath-ng>=1.7.0
 email-validator>=2.2.0
 stripe>=11.3.0
 cryptography>=44.0.0
-supervisor>=4.2.0

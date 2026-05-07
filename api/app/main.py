@@ -2,10 +2,8 @@
 from __future__ import annotations
 
 import logging
-import os
 import re
-import subprocess
-import sys
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -237,41 +235,6 @@ def on_startup() -> None:
                 conn.execute(_t(stmt))
             except Exception as e:
                 logging.warning("startup migration failed (%s): %s", stmt, e)
-
-    # Start Celery worker as a subprocess if Redis is available
-    redis_url = os.environ.get("REDIS_URL", "")
-    if redis_url:
-        logging.info("[startup] Starting Celery worker subprocess...")
-        env = os.environ.copy()
-        env["C_FORCE_ROOT"] = "1"
-        env["PYTHONUNBUFFERED"] = "1"
-        env["PYTHONPATH"] = "/app"
-        _worker_log = Path("/tmp/celery_worker.log")
-        with _worker_log.open("w") as logf:
-            proc = subprocess.Popen(
-                [sys.executable, "/app/start_worker.py"],
-                stdout=logf,
-                stderr=subprocess.STDOUT,
-                env=env,
-                cwd="/app",
-            )
-        logging.info("[startup] Celery worker started as PID %s", proc.pid)
-
-        def _tail_worker():
-            import time
-            while True:
-                try:
-                    content = _worker_log.read_text()
-                    if content:
-                        for line in content.split("\n"):
-                            if line.strip():
-                                logging.info("[worker] %s", line)
-                        _worker_log.write_text("")
-                except Exception:
-                    pass
-                time.sleep(3)
-        import threading
-        threading.Thread(target=_tail_worker, daemon=True).start()
 
 
 @app.get("/health")
