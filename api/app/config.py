@@ -14,7 +14,7 @@ def _normalize_redis_url(url: str) -> str:
     """Ensure rediss:// URLs include ssl_cert_reqs for redis-py / Kombu."""
     if url and url.startswith("rediss://") and "ssl_cert_reqs" not in url:
         sep = "&" if "?" in url else "?"
-        return url + sep + "ssl_cert_reqs=cert_required"
+        return url + sep + "ssl_cert_reqs=CERT_REQUIRED"
     return url
 
 
