@@ -95,16 +95,9 @@
 #tbl td,#tbl th{text-align:left}
 .del-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:6px;padding:5px 6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
 .del-btn:hover{color:var(--red);background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.2)}
-.step{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--muted2);transition:color .3s}
-.step.active{color:var(--text)}
-.step.done{color:#34d399}
-.step-icon{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s}
-.step.active .step-icon{border-color:var(--accent);background:rgba(99,102,241,0.15)}
-.step.done .step-icon{border-color:#34d399;background:rgba(52,211,153,0.15)}
 .spinner{width:16px;height:16px;border:2px solid transparent;border-top:2px solid var(--accent);border-radius:50%;animation:spin .8s linear infinite}
-.mini-spinner{width:12px;height:12px;border:2px solid transparent;border-top:2px currentColor;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle;margin-right:4px}
-.processing-pill{display:inline-flex;align-items:center;gap:4px;color:var(--muted2);font-size:12px}
-.proc-pill{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.mini-spinner{width:10px;height:10px;border:2px solid transparent;border-top:2px #fbbf24;border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+.processing-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#fbbf24;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2);border-radius:9999px;padding:3px 12px;line-height:1}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes modalIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
 </style>
@@ -238,10 +231,10 @@ async function refresh(){
     const cls = r.status === 'ready' ? 'ok' : (r.status === 'failed' ? 'err' : 'warn');
     const errTip = r.status === 'failed' && r.error ? ' title="' + r.error.replace(/"/g, '&quot;') + '"' : '';
     const checked = selectedIds.has(r.id) ? ' checked' : '';
-    const statusLabel = r.status === 'processing' ? '<span class="pill warn proc-pill"><span class="mini-spinner"></span></span>' : r.status;
+    const statusHtml = r.status === 'processing' ? '<span class="processing-pill"><span class="mini-spinner"></span>Processing</span>' : '<span class="pill ' + cls + '">' + r.status + '</span>';
     return '<tr data-id="' + r.id + '"' + errTip + '><td style="width:40px"><input type="checkbox" class="row-cb" data-id="' + r.id + '"' + checked + ' onclick="onRowCheck(this)" style="accent-color:var(--accent);cursor:pointer;"/></td>'
       + '<td><strong>' + esc(r.filename) + '</strong></td>'
-      + '<td><span class="pill ' + cls + '">' + statusLabel + '</span></td>'
+      + '<td>' + statusHtml + '</td>'
       + '<td style="text-align:right;color:var(--muted)">' + fmtSize(r.size_bytes || 0) + '</td>'
       + '<td style="text-align:right;color:var(--muted)">' + (r.chunks_total || '—') + '</td>'
       + '<td style="color:var(--muted)">' + relTime(r.created_at) + '</td>'
@@ -269,8 +262,6 @@ function esc(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','
 
 const tbl = document.getElementById('tbl');
 const uerr = document.getElementById('uerr');
-
-function esc(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 function showProgress(filename){
   document.getElementById('uploadModal').style.display = 'flex';
