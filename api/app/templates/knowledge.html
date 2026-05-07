@@ -58,10 +58,6 @@
         <div class="step active" id="step-upload"><div class="step-icon" id="step-upload-icon"></div><span>Uploading file</span></div>
       </div>
       <p class="muted" style="margin:0 0 16px;font-size:13px;line-height:1.5" id="uploadFileStatus">Starting</p>
-      <div id="uploadBgNote" style="display:none;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:10px;padding:12px 16px;margin-bottom:16px;">
-        <p style="margin:0;font-size:12px;color:var(--muted);line-height:1.5">📡 <strong style="color:var(--text)">Indexing in background</strong><br>
-        Your file is being processed. It will appear as "Ready" in the table within ~30 seconds. You can close this dialog now.</p>
-      </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;">
         <button id="uploadCloseBtn" style="display:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;background:var(--accent);color:#fff;border:none;cursor:pointer;">Done</button>
       </div>
@@ -296,7 +292,6 @@ function setUploadDone(){
   document.getElementById('step-upload').className = 'step done';
   document.getElementById('step-upload-icon').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
   document.getElementById('uploadFileStatus').textContent = 'File uploaded successfully';
-  document.getElementById('uploadBgNote').style.display = 'block';
   document.getElementById('uploadCloseBtn').style.display = '';
 }
 
