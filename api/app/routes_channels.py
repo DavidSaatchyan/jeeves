@@ -1,6 +1,8 @@
 """Channel management endpoints: config CRUD, webhook handlers, test."""
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -16,6 +18,27 @@ from .models import ChannelConfig, Tenant
 from .schemas import ChannelConfigIn, ChannelConfigOut
 
 router = APIRouter(prefix="/channels", tags=["channels"])
+
+
+def _verify_telegram_signature(request: Request, body_bytes: bytes) -> bool:
+    """Verify X-Telegram-Bot-Api-Secret-Token header."""
+    secret = request.headers.get("x-telegram-bot-api-secret-token", "")
+    if not secret:
+        return False
+    hash_header = request.headers.get("x-telegram-bot-api-signature", "")
+    if not hash_header:
+        return False
+    expected = hmac.new(secret.encode(), body_bytes, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, hash_header)
+
+
+def _verify_whatsapp_signature(body_bytes: bytes, signature: str, secret: str) -> bool:
+    """Verify X-Hub-Signature-256 header for WhatsApp."""
+    if not signature.startswith("sha256="):
+        return False
+    provided = signature[7:]
+    expected = hmac.new(secret.encode(), body_bytes, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, provided)
 
 # ─── Admin API: channel config CRUD ─────────────────────────────────────────
 
@@ -166,7 +189,8 @@ async def test_channel(
 
 @router.post("/telegram/webhook")
 async def telegram_webhook(request: Request):
-    body = await request.json()
+    body_bytes = await request.body()
+    body = json.loads(body_bytes)
     result = await tg.handle_webhook(body)
     return JSONResponse(content=result)
 
@@ -203,6 +227,28 @@ def whatsapp_webhook_verify(
 
 @router.post("/whatsapp/webhook")
 async def whatsapp_webhook(request: Request):
-    body = await request.json()
+    body_bytes = await request.body()
+    body = json.loads(body_bytes)
+
+    # Verify X-Hub-Signature-256 against each active WhatsApp config's app_secret
+    signature = request.headers.get("x-hub-signature-256", "")
+    if signature:
+        db: Session = SessionLocal()
+        try:
+            configs = db.query(ChannelConfig).filter(
+                ChannelConfig.channel_type == "whatsapp",
+                ChannelConfig.status == "active",
+            ).all()
+            verified = False
+            for cfg in configs:
+                app_secret = cfg.config.get("app_secret", "")
+                if app_secret and _verify_whatsapp_signature(body_bytes, signature, app_secret):
+                    verified = True
+                    break
+            if not verified:
+                raise HTTPException(403, "Invalid signature")
+        finally:
+            db.close()
+
     result = await wa.handle_webhook(body)
     return JSONResponse(content=result)

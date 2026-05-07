@@ -3,16 +3,22 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from . import agent, billing
 from .auth import get_current_tenant
 from .db import get_db
 from .models import ChatLog, Tenant
+from .moderation import moderate
+from .rate_limit import check_rate_limit
 from .schemas import ChatIn, ChatOut
 
 router = APIRouter(tags=["chat"])
+
+
+def _get_client_ip(request: Request) -> str:
+    return request.headers.get("x-forwarded-for", request.client.host or "unknown").split(",")[0].strip()
 
 
 def _enqueue_outgoing_webhooks(db: Session, tenant_id, user_id: str, event: str, result: dict):
@@ -70,7 +76,15 @@ def _enqueue_writeback(db: Session, tenant_id, session_id: str):
 
 
 @router.post("/chat", response_model=ChatOut)
-async def chat(body: ChatIn, tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(get_db)):
+async def chat(body: ChatIn, request: Request, tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(get_db)):
+    ip = _get_client_ip(request)
+    if not check_rate_limit("chat", ip):
+        raise HTTPException(429, "Rate limit exceeded. Try again later.")
+
+    flagged, category = moderate(body.message)
+    if flagged:
+        raise HTTPException(400, "Message violates content policy")
+
     billing.enforce(tenant)
 
     session_id = uuid.uuid4()

@@ -9,8 +9,12 @@ from pydantic import BaseModel, EmailStr, Field
 
 class RegisterIn(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=8)
+    password: str = Field(min_length=12)
     tenant_name: str
+
+
+class RefreshIn(BaseModel):
+    refresh_token: str
 
 
 class AuthOut(BaseModel):

@@ -2,14 +2,18 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import secrets
 import uuid
+from datetime import datetime, timedelta
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from .auth import get_current_tenant
+from .config import get_settings
 from .db import get_db
 from .models import ApiKey, Tenant
 
@@ -17,7 +21,9 @@ router = APIRouter(tags=["api-keys"])
 
 
 def _hash_key(key: str) -> str:
-    return hashlib.sha256(key.encode()).hexdigest()
+    """HMAC-SHA256 with pepper to prevent rainbow table attacks even if DB is leaked."""
+    pepper = get_settings().jwt_secret  # reuse as pepper
+    return hmac.new(pepper.encode(), key.encode(), hashlib.sha256).hexdigest()
 
 
 def _generate_key() -> str:
@@ -34,6 +40,7 @@ def list_keys(tenant: Tenant = Depends(get_current_tenant), db: Session = Depend
             "prefix": r.prefix,
             "created_at": r.created_at.isoformat(),
             "last_used_at": r.last_used_at.isoformat() if r.last_used_at else None,
+            "expires_at": r.expires_at.isoformat() if r.expires_at else None,
         }
         for r in rows
     ]
@@ -49,6 +56,10 @@ def create_key(body: dict, tenant: Tenant = Depends(get_current_tenant), db: Ses
 
     raw_key = _generate_key()
     key_id = uuid.uuid4()
+    expires_days = body.get("expires_days")
+    expires_at = None
+    if expires_days and expires_days > 0:
+        expires_at = datetime.utcnow() + timedelta(days=int(expires_days))
 
     key = ApiKey(
         id=key_id,
@@ -56,6 +67,7 @@ def create_key(body: dict, tenant: Tenant = Depends(get_current_tenant), db: Ses
         name=name,
         key_hash=_hash_key(raw_key),
         prefix=raw_key[:12],
+        expires_at=expires_at,
     )
     db.add(key)
     db.commit()
@@ -64,6 +76,7 @@ def create_key(body: dict, tenant: Tenant = Depends(get_current_tenant), db: Ses
         "id": str(key_id),
         "name": name,
         "key": raw_key,
+        "expires_at": expires_at.isoformat() if expires_at else None,
         "warning": "Store this key securely. It will not be shown again.",
     }
 

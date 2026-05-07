@@ -12,10 +12,16 @@ from sqlalchemy.orm import Session
 
 from ..db import SessionLocal
 from ..models import ChannelConfig, ChatLog, ConversationRating, Tenant, WebhookConfig, WriteBackConfig
+from ..moderation import moderate
+from ..rate_limit import check_rate_limit
 from ..schemas import ChatOut, WidgetChatIn
 from .. import agent, billing
 
 router = APIRouter(tags=["widget"])
+
+
+def _get_client_ip(request: Request) -> str:
+    return request.headers.get("x-forwarded-for", request.client.host or "unknown").split(",")[0].strip()
 
 # Serve the widget loader script (frontend/widget.js).
 # In docker, ./frontend is mounted at /app/frontend. Fall back to relative lookup otherwise.
@@ -132,6 +138,14 @@ async def widget_chat(body: WidgetChatIn, request: Request):
     Security: validates Origin against tenant's allowed domains (if configured).
     """
     from urllib.parse import urlparse
+
+    ip = _get_client_ip(request)
+    if not check_rate_limit("widget", ip):
+        raise HTTPException(429, "Rate limit exceeded. Try again later.")
+
+    flagged, category = moderate(body.message)
+    if flagged:
+        raise HTTPException(400, "Message violates content policy")
 
     db: Session = SessionLocal()
     try:

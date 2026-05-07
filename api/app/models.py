@@ -31,7 +31,7 @@ class Tenant(Base):
     email = Column(Text, unique=True, nullable=False, index=True)
     hashed_password = Column(Text, nullable=False)
     # DEFAULT: email auto-verified in MVP; verification_token stored but link only logged.
-    email_verified = Column(Boolean, default=True, nullable=False)
+    email_verified = Column(Boolean, default=False, nullable=False)
     trial_ends = Column(DateTime, default=lambda: datetime.utcnow() + timedelta(days=14))
     is_active = Column(Boolean, default=True, nullable=False)
     dialogs_used = Column(Integer, default=0, nullable=False)  # for billing FR-8
@@ -260,3 +260,4 @@ class ApiKey(Base):
     prefix = Column(String(8), nullable=False)          # first 8 chars for identification (sk_abc12345...)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     last_used_at = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime, nullable=True)        # NULL = never expires

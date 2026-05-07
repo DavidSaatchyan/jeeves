@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import logging
+import re
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.exceptions import RequestValidationError
 from pathlib import Path
 
 from . import admin, auth, dashboard_api, knowledge, routes_chat, routes_crm, routes_proactive, routes_tools, routes_mock, routes_integrations, routes_channels, routes_api_keys
@@ -15,7 +17,68 @@ from .models import *  # noqa: F401,F403  # ensure models are registered
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s :: %(message)s")
 
+_SENSITIVE_FIELDS = {
+    "password", "token", "secret", "key", "authorization",
+    "access_token", "refresh_token", "api_key", "credentials",
+}
+
+
+def _mask_request_log(data: dict) -> dict:
+    """Return a copy of data with sensitive values replaced by ******."""
+    out = {}
+    for k, v in data.items():
+        if isinstance(k, str) and any(s in k.lower() for s in _SENSITIVE_FIELDS):
+            out[k] = "******"
+        elif isinstance(v, dict):
+            out[k] = _mask_request_log(v)
+        elif isinstance(v, str) and len(v) > 100:
+            out[k] = v[:100] + "…"
+        else:
+            out[k] = v
+    return out
+
 app = FastAPI(title="Jeeves — Universal AI Agent", version="1.0.0-mvp")
+
+logger = logging.getLogger("jeeves")
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catch-all handler — return generic message, log details server-side."""
+    logger.exception("Unhandled exception on %s %s", request.url.path, exc)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={"detail": "Invalid request body"},
+    )
+
+@app.middleware("http")
+async def request_logger(request: Request, call_next):
+    """Log request method, path, and masked body. Sensitive fields are redacted."""
+    method = request.method
+    path = request.url.path
+
+    # Log masked body for POST/PUT/PATCH
+    if method in ("POST", "PUT", "PATCH"):
+        try:
+            body = await request.json()
+            masked = _mask_request_log(body)
+            logger.info("%s %s body=%s", method, path, masked)
+        except Exception:
+            logger.info("%s %s", method, path)
+    else:
+        logger.info("%s %s", method, path)
+
+    response = await call_next(request)
+    return response
+
 
 # CORS: widget is embedded on arbitrary customer sites, so widget endpoints allow all origins.
 # API endpoints use a restrictive CORS policy.
@@ -156,6 +219,7 @@ _MIGRATIONS = [
     )""",
     "CREATE INDEX IF NOT EXISTS ix_api_keys_tenant ON api_keys(tenant_id)",
     "CREATE INDEX IF NOT EXISTS ix_api_keys_hash ON api_keys(key_hash)",
+    "ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS expires_at timestamp",
 ]
 
 
