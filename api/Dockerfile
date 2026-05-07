@@ -15,8 +15,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 COPY worker ./worker
-COPY supervisord.conf .
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
 
 EXPOSE 8000
 
-CMD ["supervisord", "-c", "supervisord.conf", "-n"]
+CMD ["./entrypoint.sh"]
