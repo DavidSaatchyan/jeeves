@@ -52,14 +52,18 @@
     <input id="file" type="file" accept=".pdf,.txt,.md" multiple style="display:none"/>
   </div>
   <div id="uploadModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:10000;align-items:center;justify-content:center;">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:420px;width:90%;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:400px;width:90%;animation:modalIn .25s ease both;">
       <h3 style="margin:0 0 8px;font-size:16px;color:var(--text)" id="uploadFileName">Processing...</h3>
-      <p class="muted" style="margin:0 0 24px;font-size:13px" id="uploadFileStatus">Starting</p>
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div class="step" id="step-upload"><div class="step-icon" id="step-upload-icon"></div><span>Uploading file</span></div>
-        <div class="step" id="step-chunking"><div class="step-icon" id="step-chunking-icon"></div><span>Splitting into chunks</span></div>
-        <div class="step" id="step-embedding"><div class="step-icon" id="step-embedding-icon"></div><span>Generating embeddings</span></div>
-        <div class="step" id="step-indexing"><div class="step-icon" id="step-indexing-icon"></div><span>Indexing to knowledge base</span></div>
+      <div id="uploadSteps" style="margin-bottom:20px;">
+        <div class="step active" id="step-upload"><div class="step-icon" id="step-upload-icon"></div><span>Uploading file</span></div>
+      </div>
+      <p class="muted" style="margin:0 0 16px;font-size:13px;line-height:1.5" id="uploadFileStatus">Starting</p>
+      <div id="uploadBgNote" style="display:none;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:10px;padding:12px 16px;margin-bottom:16px;">
+        <p style="margin:0;font-size:12px;color:var(--muted);line-height:1.5">📡 <strong style="color:var(--text)">Indexing in background</strong><br>
+        Your file is being processed. It will appear as "Ready" in the table within ~30 seconds. You can close this dialog now.</p>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button id="uploadCloseBtn" style="display:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;background:var(--accent);color:#fff;border:none;cursor:pointer;">Done</button>
       </div>
     </div>
   </div>
@@ -107,7 +111,9 @@
 .step.active .step-icon{border-color:var(--accent);background:rgba(99,102,241,0.15)}
 .step.done .step-icon{border-color:#34d399;background:rgba(52,211,153,0.15)}
 .spinner{width:16px;height:16px;border:2px solid transparent;border-top:2px solid var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+.mini-spinner{width:12px;height:12px;border:2px solid transparent;border-top:2px currentColor;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle;margin-right:4px}
 .step.done .step-icon svg{width:16px;height:16px;stroke:#34d399}
+.processing-pill{display:inline-flex;align-items:center;gap:4px;color:var(--muted2);font-size:12px}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes modalIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
 </style>
@@ -241,9 +247,10 @@ async function refresh(){
     const cls = r.status === 'ready' ? 'ok' : (r.status === 'failed' ? 'err' : 'warn');
     const errTip = r.status === 'failed' && r.error ? ' title="' + r.error.replace(/"/g, '&quot;') + '"' : '';
     const checked = selectedIds.has(r.id) ? ' checked' : '';
+    const statusLabel = r.status === 'processing' ? '<span class="processing-pill"><span class="mini-spinner"></span>Processing</span>' : r.status;
     return '<tr data-id="' + r.id + '"' + errTip + '><td style="width:40px"><input type="checkbox" class="row-cb" data-id="' + r.id + '"' + checked + ' onclick="onRowCheck(this)" style="accent-color:var(--accent);cursor:pointer;"/></td>'
       + '<td><strong>' + esc(r.filename) + '</strong></td>'
-      + '<td><span class="pill ' + cls + '">' + r.status + '</span></td>'
+      + '<td><span class="pill ' + cls + '">' + statusLabel + '</span></td>'
       + '<td style="text-align:right;color:var(--muted)">' + fmtSize(r.size_bytes || 0) + '</td>'
       + '<td style="text-align:right;color:var(--muted)">' + (r.chunks_total || '—') + '</td>'
       + '<td style="color:var(--muted)">' + relTime(r.created_at) + '</td>'
@@ -269,32 +276,39 @@ async function refresh(){
 
 function esc(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-const STEPS = ['upload','chunking','embedding','indexing'];
-const STEP_DELAYS = [200, 500, 1000];
+const tbl = document.getElementById('tbl');
+const uerr = document.getElementById('uerr');
+
+function esc(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 function showProgress(filename){
   document.getElementById('uploadModal').style.display = 'flex';
   document.getElementById('uploadFileName').textContent = filename;
-  STEPS.forEach(function(s){
-    var el = document.getElementById('step-' + s);
-    el.className = 'step';
-    document.getElementById('step-' + s + '-icon').innerHTML = '';
-  });
+  document.getElementById('uploadCloseBtn').style.display = 'none';
+  document.getElementById('uploadBgNote').style.display = 'none';
   document.getElementById('uploadFileStatus').textContent = 'Starting';
+  var el = document.getElementById('step-upload');
+  el.className = 'step active';
+  document.getElementById('step-upload-icon').innerHTML = '<div class="spinner"></div>';
 }
 
-function setStep(stepName, state){
-  var el = document.getElementById('step-' + stepName);
-  var icon = document.getElementById('step-' + stepName + '-icon');
-  if(state === 'active'){
-    el.className = 'step active';
-    document.getElementById('uploadFileStatus').textContent = 'Processing...';
-    icon.innerHTML = '<div class="spinner"></div>';
-  } else if(state === 'done'){
-    el.className = 'step done';
-    icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-  }
+function setUploadDone(){
+  document.getElementById('step-upload').className = 'step done';
+  document.getElementById('step-upload-icon').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  document.getElementById('uploadFileStatus').textContent = 'File uploaded successfully';
+  document.getElementById('uploadBgNote').style.display = 'block';
+  document.getElementById('uploadCloseBtn').style.display = '';
 }
+
+function setUploadError(msg){
+  document.getElementById('step-upload').className = 'step';
+  document.getElementById('step-upload-icon').innerHTML = '';
+  document.getElementById('uploadFileStatus').textContent = 'Failed: ' + msg;
+  document.getElementById('uploadCloseBtn').style.display = '';
+  document.getElementById('uploadCloseBtn').textContent = 'Close';
+}
+
+document.getElementById('uploadCloseBtn').addEventListener('click', hideProgress);
 
 function hideProgress(){
   document.getElementById('uploadModal').style.display = 'none';
@@ -312,40 +326,17 @@ async function uploadMany(files){
   let done = 0, failed = 0;
   for(const f of arr){
     showProgress(f.name);
-
-    var stepIndex = 0;
-    var requestDone = false;
-    var stepTimer = null;
-
-    function advance(){
-      if(requestDone || stepIndex >= STEPS.length) return;
-      if(stepIndex > 0) setStep(STEPS[stepIndex-1], 'done');
-      setStep(STEPS[stepIndex], 'active');
-      stepIndex++;
-      if(stepIndex < STEPS.length){
-        stepTimer = setTimeout(advance, STEP_DELAYS[stepIndex-1]);
-      }
-    }
-    stepTimer = setTimeout(advance, 200);
-
     try{
-      var result = await uploadOne(f);
-      requestDone = true;
-      clearTimeout(stepTimer);
-      if(stepIndex > 0) setStep(STEPS[stepIndex-1], 'done');
-      for(var i = stepIndex; i < STEPS.length; i++) setStep(STEPS[i], 'done');
-      document.getElementById('uploadFileStatus').textContent = 'Done — ' + (result.chunks || 0) + ' chunks indexed';
+      await uploadOne(f);
+      setUploadDone();
       done++;
     } catch(e){
-      requestDone = true;
-      clearTimeout(stepTimer);
       failed++;
+      setUploadError(e.message);
       uerr.textContent = (uerr.textContent ? uerr.textContent + '; ' : '') + f.name + ': ' + e.message;
-      for(var i = stepIndex; i < STEPS.length; i++) setStep(STEPS[i], 'done');
-      document.getElementById('uploadFileStatus').textContent = 'Failed';
     }
     await refresh();
-    await new Promise(function(r){ setTimeout(r, 600); });
+    await new Promise(function(r){ setTimeout(r, 800); });
     hideProgress();
   }
   document.getElementById('uprog').textContent = 'Uploaded ' + done + '/' + arr.length + (failed ? ' (' + failed + ' failed)' : '');

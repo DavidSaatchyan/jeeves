@@ -27,21 +27,30 @@ ALLOWED_EXT = {".txt", ".pdf", ".md"}
 
 async def _background_index(tenant_id: uuid.UUID, file_id: uuid.UUID, file_path: Path):
     """Run RAG indexing in a background thread to avoid blocking the HTTP request."""
+    import logging
     try:
+        logging.info("[index] Starting indexing file %s at %s", file_id, file_path)
         n = await asyncio.to_thread(rag.index_file, tenant_id, file_id, file_path)
+        logging.info("[index] Indexed %s chunks for file %s, updating DB", n, file_id)
         with engine.begin() as conn:
             from sqlalchemy import text
             conn.execute(
                 text("UPDATE files SET status='ready', chunks_total=:n, error=NULL WHERE id=:fid"),
                 {"fid": str(file_id), "n": n},
             )
+        logging.info("[index] File %s marked as ready", file_id)
     except Exception as e:
-        with engine.begin() as conn:
-            from sqlalchemy import text
-            conn.execute(
-                text("UPDATE files SET status='failed', error=:error WHERE id=:fid"),
-                {"fid": str(file_id), "error": str(e)[:2000]},
-            )
+        import traceback
+        logging.error("[index] Failed to index file %s: %s", file_id, traceback.format_exc())
+        try:
+            with engine.begin() as conn:
+                from sqlalchemy import text
+                conn.execute(
+                    text("UPDATE files SET status='failed', error=:error WHERE id=:fid"),
+                    {"fid": str(file_id), "error": str(e)[:2000]},
+                )
+        except Exception as db_err:
+            logging.error("[index] Failed to update DB status for %s: %s", file_id, db_err)
 
 
 def _iso_utc(dt) -> str:
