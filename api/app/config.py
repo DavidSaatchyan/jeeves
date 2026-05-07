@@ -28,6 +28,14 @@ class Settings(BaseSettings):
     hubspot_redirect_uri: str = "http://localhost:8000/crm/oauth/hubspot/callback"
     fernet_key: str = ""
 
+    # SMTP for transactional emails (verification, notifications)
+    smtp_host: str = ""
+    smtp_port: str = "587"
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = "noreply@jeeves.ai"
+    smtp_use_tls: str = "true"
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

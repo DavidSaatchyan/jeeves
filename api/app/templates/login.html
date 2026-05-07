@@ -107,13 +107,14 @@ main{display:block;padding:0;max-width:none;}
 
       <div class="auth-field">
         <label>Email</label>
-        <input id="email" type="email" placeholder="you@company.com" autocomplete="email"/>
+        <input id="email" type="email" placeholder="you@company.com" autocomplete="email" inputmode="email" spellcheck="false"/>
+        <div id="emailErr" style="font-size:11px;color:var(--red);min-height:16px;margin-top:4px;"></div>
       </div>
 
       <div class="auth-field">
         <label>Password</label>
         <div class="pw-strength-wrap">
-          <input id="password" type="password" placeholder="Min 8 characters" autocomplete="current-password"/>
+          <input id="password" type="password" placeholder="Min 12 chars, uppercase, digit, special" autocomplete="current-password"/>
           <div class="pw-strength" id="pwStrength"><div class="pw-strength-bar" id="pwBar"></div></div>
         </div>
       </div>
@@ -196,7 +197,7 @@ document.getElementById('password').addEventListener('input',function(){
   var pw=this.value;
   var bar=document.getElementById('pwBar');
   var score=0;
-  if(pw.length>=8) score++;
+  if(pw.length>=12) score++;
   if(/[A-Z]/.test(pw)) score++;
   if(/[0-9]/.test(pw)) score++;
   if(/[^A-Za-z0-9]/.test(pw)) score++;
@@ -212,10 +213,38 @@ document.getElementById('email').addEventListener('input',validateForm);
 document.getElementById('password').addEventListener('input',validateForm);
 document.getElementById('tname').addEventListener('input',validateForm);
 
+function validateEmail(email){
+  var errEl=document.getElementById('emailErr');
+  if(!email){errEl.textContent='';return false;}
+  // Only latin characters allowed
+  if(/[^\x20-\x7E]/.test(email)){errEl.textContent='Only Latin characters are allowed.';return false;}
+  // Must contain exactly one @
+  var parts=email.split('@');
+  if(parts.length!==2){errEl.textContent='Email must contain exactly one @ sign.';return false;}
+  var local=parts[0];var domain=parts[1];
+  // Local part checks
+  if(!local){errEl.textContent='Missing part before @.';return false;}
+  if(local.startsWith('.')||local.endsWith('.')){errEl.textContent='Local part cannot start or end with a dot.';return false;}
+  if(/\.\\./.test(local)){errEl.textContent='Consecutive dots are not allowed.';return false;}
+  if(!/^[a-zA-Z0-9._%+-]+$/.test(local)){errEl.textContent='Invalid characters in email local part.';return false;}
+  // Domain checks
+  if(!domain){errEl.textContent='Missing domain after @.';return false;}
+  if(domain.startsWith('-')||domain.endsWith('-')){errEl.textContent='Invalid domain name.';return false;}
+  if(!/^[a-zA-Z0-9.-]+$/.test(domain)){errEl.textContent='Invalid characters in domain.';return false;}
+  var domainParts=domain.split('.');
+  if(domainParts.length<2){errEl.textContent='Domain must have a TLD (e.g. .com).';return false;}
+  var tld=domainParts[domainParts.length-1];
+  if(tld.length<2){errEl.textContent='TLD is too short.';return false;}
+  errEl.textContent='';
+  return true;
+}
+
 function validateForm(){
   var email=document.getElementById('email').value.trim();
   var password=document.getElementById('password').value;
-  var valid=email.length>0&&password.length>=8;
+  var emailValid=validateEmail(email);
+  var pwOk=password.length>=12&&/[A-Z]/.test(password)&&/\d/.test(password)&&/[^A-Za-z0-9]/.test(password);
+  var valid=emailValid&&pwOk;
   if(mode==='register'){
     var tname=document.getElementById('tname').value.trim();
     valid=valid&&document.getElementById('termsCheckbox').checked&&tname.length>0;
@@ -231,7 +260,11 @@ async function go(){
   var password=document.getElementById('password').value;
 
   if(!email||!password){err.textContent='Please fill in all fields.';return;}
-  if(password.length<8){err.textContent='Password must be at least 8 characters.';return;}
+  if(!validateEmail(email)){return;}
+  if(password.length<12){err.textContent='Password must be at least 12 characters.';return;}
+  if(!/[A-Z]/.test(password)){err.textContent='Password must contain an uppercase letter.';return;}
+  if(!/\d/.test(password)){err.textContent='Password must contain a digit.';return;}
+  if(!/[^A-Za-z0-9]/.test(password)){err.textContent='Password must contain a special character.';return;}
   if(mode==='register'){
     if(!document.getElementById('tname').value.trim()){err.textContent='Company name is required.';return;}
     if(!document.getElementById('termsCheckbox').checked){err.textContent='Please agree to the Terms of Service and Privacy Policy.';return;}

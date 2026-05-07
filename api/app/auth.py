@@ -188,7 +188,16 @@ def register(body: RegisterIn, request: Request, response: Response, db: Session
     # Signed email-verification token (24h expiry)
     verify_token = issue_email_verify_token(tenant.id)
     verify_link = f"{settings.public_base_url}/auth/verify?token={verify_token}"
-    print(f"[email-stub] Verification link for {tenant.email}: {verify_link}", flush=True)
+
+    # Try to send real email; fall back to console stub
+    try:
+        from .email_service import send_verification_email
+        sent = send_verification_email(tenant.email, verify_link, body.tenant_name)
+        if not sent:
+            print(f"[email-stub] Verification link for {tenant.email}: {verify_link}", flush=True)
+    except Exception as e:
+        print(f"[email-stub] Verification link for {tenant.email}: {verify_link}", flush=True)
+        print(f"[email-stub] (email sending failed: {e})", flush=True)
 
     access, refresh = issue_tokens(tenant.id)
 
