@@ -3,13 +3,13 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from pathlib import Path
 
 from . import admin, auth, dashboard_api, knowledge, routes_chat, routes_crm, routes_proactive, routes_tools, routes_mock, routes_integrations, routes_channels, routes_api_keys
 from .channels import widget as widget_channel
+from .config import get_settings
 from .db import Base, engine
 from .models import *  # noqa: F401,F403  # ensure models are registered
 
@@ -17,14 +17,51 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 
 app = FastAPI(title="Jeeves — Universal AI Agent", version="1.0.0-mvp")
 
-# CORS: widget is embedded on arbitrary customer sites.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS: widget is embedded on arbitrary customer sites, so widget endpoints allow all origins.
+# API endpoints use a restrictive CORS policy.
+_widget_paths = {"/widget.js", "/widget/chat", "/widget/inbox", "/widget/rating"}
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    """Add security headers to every response."""
+    response = await call_next(request)
+    # HSTS — force HTTPS in production
+    response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "0"  # rely on CSP instead
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Cache-Control"] = "no-store" if "/auth/" in str(request.url.path) else response.headers.get("Cache-Control", "no-cache")
+    return response
+
+
+@app.middleware("http")
+async def dynamic_cors(request: Request, call_next):
+    """Apply restrictive CORS for API endpoints, permissive for widget endpoints."""
+    origin = request.headers.get("origin", "")
+    path = request.url.path
+
+    # Widget endpoints — allow any origin (needed for embedding)
+    if path in _widget_paths or path.startswith("/widget"):
+        response = await call_next(request)
+        if origin:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Vary"] = "Origin"
+        return response
+
+    # API endpoints — restrictive CORS
+    settings = get_settings()
+    allowed = ["http://localhost:8000"]
+    if settings.public_base_url and settings.public_base_url != "http://localhost:8000":
+        allowed.append(settings.public_base_url)
+
+    response = await call_next(request)
+    if origin and origin in allowed:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Vary"] = "Origin"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
+    return response
 
 
 _MIGRATIONS = [

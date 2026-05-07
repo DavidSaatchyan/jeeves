@@ -7,11 +7,11 @@ from __future__ import annotations
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 
 from ..db import SessionLocal
-from ..models import ChatLog, ConversationRating, Tenant, WebhookConfig, WriteBackConfig
+from ..models import ChannelConfig, ChatLog, ConversationRating, Tenant, WebhookConfig, WriteBackConfig
 from ..schemas import ChatOut, WidgetChatIn
 from .. import agent, billing
 
@@ -126,13 +126,33 @@ def dashboard_js():
 
 
 @router.post("/widget/chat", response_model=ChatOut)
-async def widget_chat(body: WidgetChatIn):
-    """Unauthenticated widget entry point — tenant is identified by tenant_id from data-attr."""
+async def widget_chat(body: WidgetChatIn, request: Request):
+    """Unauthenticated widget entry point — tenant is identified by tenant_id from data-attr.
+
+    Security: validates Origin against tenant's allowed domains (if configured).
+    """
+    from urllib.parse import urlparse
+
     db: Session = SessionLocal()
     try:
         tenant = db.get(Tenant, body.tenant_id)
         if not tenant:
             raise HTTPException(404, "tenant not found")
+
+        # Origin validation — prevent tenant impersonation
+        origin = request.headers.get("origin", "")
+        channel_cfg = db.query(ChannelConfig).filter(
+            ChannelConfig.tenant_id == tenant.id,
+            ChannelConfig.channel_type == "web_widget",
+        ).first()
+        if channel_cfg and channel_cfg.config:
+            allowed = channel_cfg.config.get("allowed_origins", [])
+            if allowed and origin:
+                parsed = urlparse(origin)
+                check_origin = f"{parsed.scheme}://{parsed.netloc}"
+                if check_origin not in allowed:
+                    raise HTTPException(403, "Origin not allowed for this tenant")
+
         billing.enforce(tenant)
 
         session_id = uuid.uuid4()
@@ -190,11 +210,34 @@ async def widget_chat(body: WidgetChatIn):
         db.close()
 
 
+def _validate_origin(db: Session, tenant_id: uuid.UUID, request: Request) -> None:
+    """Reject if Origin is not in tenant's allowed_origins list."""
+    from urllib.parse import urlparse
+
+    origin = request.headers.get("origin", "")
+    if not origin:
+        return  # no origin header — skip validation (curl, server-to-server)
+    channel_cfg = db.query(ChannelConfig).filter(
+        ChannelConfig.tenant_id == tenant_id,
+        ChannelConfig.channel_type == "web_widget",
+    ).first()
+    if not channel_cfg or not channel_cfg.config:
+        return  # no config — allow all (backward compatible)
+    allowed = channel_cfg.config.get("allowed_origins", [])
+    if not allowed:
+        return  # empty list — allow all
+    parsed = urlparse(origin)
+    check_origin = f"{parsed.scheme}://{parsed.netloc}"
+    if check_origin not in allowed:
+        raise HTTPException(403, "Origin not allowed for this tenant")
+
+
 @router.get("/widget/inbox")
-def widget_inbox(tenant_id: uuid.UUID, user_id: str):
+def widget_inbox(tenant_id: uuid.UUID, user_id: str, request: Request):
     """Return any undelivered outgoing (proactive) messages for this user."""
     db: Session = SessionLocal()
     try:
+        _validate_origin(db, tenant_id, request)
         rows = (
             db.query(ChatLog)
             .filter(
@@ -216,7 +259,7 @@ def widget_inbox(tenant_id: uuid.UUID, user_id: str):
 
 
 @router.post("/widget/rating", status_code=201)
-def widget_rating(body: dict):
+def widget_rating(body: dict, request: Request):
     """Submit a conversation rating from the widget."""
     tenant_id = body.get("tenant_id")
     user_id = body.get("user_id", "")
@@ -229,6 +272,7 @@ def widget_rating(body: dict):
 
     db: Session = SessionLocal()
     try:
+        _validate_origin(db, uuid.UUID(tenant_id), request)
         tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
         if not tenant:
             raise HTTPException(404, "tenant not found")

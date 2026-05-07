@@ -1,9 +1,12 @@
 """Agent Tools CRUD + execution log routes."""
 from __future__ import annotations
 
+import ipaddress
+import socket
 import time
 import uuid
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
@@ -15,6 +18,69 @@ from .models import AgentTool, AgentToolLog, Tenant
 from .schemas import AgentToolIn, AgentToolOut, AgentToolLogOut
 
 router = APIRouter(prefix="/tools", tags=["tools"])
+
+# Private/reserved IP ranges to block for SSRF prevention
+_BLOCKED_NETWORKS = [
+    ipaddress.ip_network("127.0.0.0/8"),       # loopback
+    ipaddress.ip_network("10.0.0.0/8"),        # private
+    ipaddress.ip_network("172.16.0.0/12"),     # private
+    ipaddress.ip_network("192.168.0.0/16"),    # private
+    ipaddress.ip_network("169.254.0.0/16"),    # link-local (cloud metadata)
+    ipaddress.ip_network("0.0.0.0/8"),         # current network
+    ipaddress.ip_network("::1/128"),           # IPv6 loopback
+    ipaddress.ip_network("fc00::/7"),          # IPv6 unique local
+    ipaddress.ip_network("fe80::/10"),         # IPv6 link-local
+]
+
+
+def _validate_url_safe(url: str) -> None:
+    """Reject URLs pointing to private, loopback, or cloud metadata endpoints."""
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        raise HTTPException(400, f"Invalid URL: {url}")
+    if parsed.scheme not in ("http", "https"):
+        raise HTTPException(400, f"Only http/https allowed: {url}")
+    hostname = parsed.hostname or ""
+    if not hostname:
+        raise HTTPException(400, f"Empty hostname in URL: {url}")
+    if hostname.lower() in {"localhost", "metadata", "169.254.169.254"}:
+        raise HTTPException(400, f"URL not allowed: {url}")
+    try:
+        ip = ipaddress.ip_address(hostname)
+    except ValueError:
+        try:
+            ip = ipaddress.ip_address(socket.gethostbyname(hostname))
+        except (socket.gaierror, ValueError):
+            raise HTTPException(400, f"Cannot resolve hostname: {hostname}")
+    for network in _BLOCKED_NETWORKS:
+        if ip in network:
+            raise HTTPException(400, f"URL resolves to a blocked network: {ip}")
+
+
+def _validate_url_safe_runtime(url: str) -> None:
+    """Runtime SSRF check during tool execution — raises ValueError instead of HTTPException."""
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        raise ValueError(f"Invalid URL: {url}")
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"Only http/https allowed: {url}")
+    hostname = parsed.hostname or ""
+    if not hostname:
+        raise ValueError(f"Empty hostname in URL: {url}")
+    if hostname.lower() in {"localhost", "metadata", "169.254.169.254"}:
+        raise ValueError(f"URL not allowed: {url}")
+    try:
+        ip = ipaddress.ip_address(hostname)
+    except ValueError:
+        try:
+            ip = ipaddress.ip_address(socket.gethostbyname(hostname))
+        except (socket.gaierror, ValueError):
+            raise ValueError(f"Cannot resolve hostname: {hostname}")
+    for network in _BLOCKED_NETWORKS:
+        if ip in network:
+            raise ValueError(f"URL resolves to a blocked network: {ip}")
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -59,6 +125,7 @@ def list_tools(tenant: Tenant = Depends(get_current_tenant), db: Session = Depen
 @router.post("", response_model=AgentToolOut, status_code=201)
 def create_tool(body: AgentToolIn, tenant: Tenant = Depends(get_current_tenant), db: Session = Depends(get_db)):
     _assert_unique_name(db, tenant.id, body.name)
+    _validate_url_safe(body.url_template)
     tool = AgentTool(
         tenant_id=tenant.id,
         name=body.name,
@@ -93,6 +160,8 @@ def update_tool(
     tool = _get_or_404(db, tenant.id, tool_id)
     if body.name != tool.name:
         _assert_unique_name(db, tenant.id, body.name)
+    if body.url_template != tool.url_template:
+        _validate_url_safe(body.url_template)
     tool.name = body.name
     tool.description = body.description
     tool.tool_type = body.tool_type
@@ -242,6 +311,8 @@ async def dispatch_tool(
 
 async def _call_tool(tool: AgentTool, params: dict[str, Any], user_id: str) -> Any:
     url = _fmt_url(tool.url_template, {**params, "user_id": user_id})
+    # Runtime SSRF check — catches template-expanded URLs
+    _validate_url_safe_runtime(url)
     headers = dict(tool.headers or {})
     body = dict(tool.body_template or {})
     # Merge dynamic params into body for non-GET requests

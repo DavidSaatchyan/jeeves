@@ -252,6 +252,7 @@ async function go(){
       var data=await r.json();
       if(!r.ok) throw new Error(data.detail||'Invalid credentials');
       setToken(data.access_token,data.tenant_id);
+      await fetch('/admin/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'email='+encodeURIComponent(email)+'&password='+encodeURIComponent(password)});
     }
     location.href='/admin';
   }catch(e){

@@ -5,10 +5,13 @@ when NativeConnector rows exist, and supports primary_identifier-based lookup.
 """
 from __future__ import annotations
 
-from typing import Any
-from uuid import UUID
+import ipaddress
+import socket
 import time
 import json
+from typing import Any
+from urllib.parse import urlparse
+from uuid import UUID
 
 import httpx
 from jsonpath_ng.ext import parse as jp_parse
@@ -18,12 +21,46 @@ from .crypto import ConnectorError, decrypt
 from .models import CRMActionLog, CRMConfig, NativeConnector
 from . import hubspot
 
-DEFAULT_CAPABILITIES = {
+_DEFAULT_CAPS = {
     "read_customer": True,
     "update_plan": False,
     "create_ticket": False,
     "require_confirmation": True,
 }
+
+_BLOCKED_NETWORKS = [
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("169.254.0.0/16"),
+    ipaddress.ip_network("0.0.0.0/8"),
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+    ipaddress.ip_network("fe80::/10"),
+]
+
+
+def _url_safe(url: str) -> None:
+    """Raise ConnectorError if URL resolves to a private/internal address."""
+    if not url:
+        return
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ConnectorError(f"Only http/https allowed: {url}")
+    hostname = parsed.hostname or ""
+    if hostname.lower() in {"localhost", "metadata", "169.254.169.254"}:
+        raise ConnectorError(f"URL not allowed: {url}")
+    try:
+        ip = ipaddress.ip_address(hostname)
+    except ValueError:
+        try:
+            ip = ipaddress.ip_address(socket.gethostbyname(hostname))
+        except (socket.gaierror, ValueError):
+            return  # unresolvable — let httpx fail naturally
+    for network in _BLOCKED_NETWORKS:
+        if ip in network:
+            raise ConnectorError(f"URL resolves to a blocked network: {ip}")
 
 # Simple TTL cache for CRM reads: {cache_key: (data, expires_at)}
 _customer_cache: dict[str, tuple[dict, float]] = {}
@@ -225,6 +262,7 @@ async def read_customer(
     if not can(cfg, "read_customer"):
         return {}
     url = _fmt_url(cfg.read_url, user_id)
+    _url_safe(url)
     async with httpx.AsyncClient(timeout=10.0) as client:
         r = await client.get(url, headers=cfg.headers or {})
         r.raise_for_status()
@@ -285,6 +323,7 @@ async def write_customer(db: Session, tenant_id: UUID, user_id: str, updates: di
     if not can(cfg, "update_plan"):
         raise RuntimeError("CRM update_plan capability is disabled")
     url = _fmt_url(cfg.write_url, user_id)
+    _url_safe(url)
     # Build body according to write_mapping: field -> jsonpath like $.data.tariff
     # For MVP we build a nested dict from the jsonpath expression.
     body: dict = {}
@@ -312,6 +351,7 @@ async def test_connection(db: Session, tenant_id: UUID, sample_user_id: str = "t
     if not cfg or not cfg.read_url:
         return {"ok": False, "error": "read_url not set"}
     url = _fmt_url(cfg.read_url, sample_user_id)
+    _url_safe(url)
     try:
         started = time.perf_counter()
         async with httpx.AsyncClient(timeout=10.0) as client:
