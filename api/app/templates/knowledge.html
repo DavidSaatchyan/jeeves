@@ -96,8 +96,7 @@
 .del-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:6px;padding:5px 6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
 .del-btn:hover{color:var(--red);background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.2)}
 .spinner{width:16px;height:16px;border:2px solid transparent;border-top:2px solid var(--accent);border-radius:50%;animation:spin .8s linear infinite}
-.mini-spinner{width:10px;height:10px;border:2px solid transparent;border-top:2px #fbbf24;border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
-.processing-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#fbbf24;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2);border-radius:9999px;padding:3px 12px;line-height:1}
+@keyframes spin{to{transform:rotate(360deg)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes modalIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
 </style>
@@ -231,7 +230,8 @@ async function refresh(){
     const cls = r.status === 'ready' ? 'ok' : (r.status === 'failed' ? 'err' : 'warn');
     const errTip = r.status === 'failed' && r.error ? ' title="' + r.error.replace(/"/g, '&quot;') + '"' : '';
     const checked = selectedIds.has(r.id) ? ' checked' : '';
-    const statusHtml = r.status === 'processing' ? '<span class="processing-pill"><span class="mini-spinner"></span>Processing</span>' : '<span class="pill ' + cls + '">' + r.status + '</span>';
+    const label = r.status === 'processing' ? 'Processing' : r.status;
+    const statusHtml = '<span class="pill ' + cls + '">' + label + '</span>';
     return '<tr data-id="' + r.id + '"' + errTip + '><td style="width:40px"><input type="checkbox" class="row-cb" data-id="' + r.id + '"' + checked + ' onclick="onRowCheck(this)" style="accent-color:var(--accent);cursor:pointer;"/></td>'
       + '<td><strong>' + esc(r.filename) + '</strong></td>'
       + '<td>' + statusHtml + '</td>'
@@ -270,12 +270,6 @@ function showProgress(filename){
   document.getElementById('uploadSpinner').style.display = '';
 }
 
-function setUploadDone(){
-  document.getElementById('uploadSpinner').style.display = 'none';
-  document.getElementById('uploadFileName').textContent = 'Done';
-  document.getElementById('uploadFileStatus').textContent = 'File uploaded';
-}
-
 function setUploadError(msg){
   document.getElementById('uploadSpinner').style.display = 'none';
   document.getElementById('uploadFileName').textContent = 'Failed';
@@ -300,15 +294,14 @@ async function uploadMany(files){
     showProgress(f.name);
     try{
       await uploadOne(f);
-      setUploadDone();
       done++;
     } catch(e){
       failed++;
       setUploadError(e.message);
       uerr.textContent = (uerr.textContent ? uerr.textContent + '; ' : '') + f.name + ': ' + e.message;
+      await new Promise(function(r){ setTimeout(r, 1200); });
     }
     await refresh();
-    await new Promise(function(r){ setTimeout(r, 400); });
     hideProgress();
   }
   document.getElementById('uprog').textContent = 'Uploaded ' + done + '/' + arr.length + (failed ? ' (' + failed + ' failed)' : '');
