@@ -11,11 +11,13 @@ RUN apt-get update \
  && groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuser \
  && chown -R appuser:appuser /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt requirements-worker.txt .
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r requirements-worker.txt
 
 COPY app ./app
 COPY worker ./worker
+COPY supervisord.conf .
 
 RUN chown -R appuser:appuser /app
 
@@ -23,5 +25,4 @@ EXPOSE 8000
 
 USER appuser
 
-# Run both API and Celery worker in same container (shares Chroma PersistentClient)
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000 & celery -A worker.tasks worker --loglevel=info --workdir /app"]
+CMD ["supervisord", "-c", "supervisord.conf"]
