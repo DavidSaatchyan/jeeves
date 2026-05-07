@@ -250,7 +250,7 @@ def on_startup() -> None:
         with _worker_log.open("w") as logf:
             proc = subprocess.Popen(
                 [
-                    sys.executable, "-m", "celery",
+                    "celery",
                     "-A", "worker.tasks",
                     "worker",
                     "--loglevel=info",
@@ -262,24 +262,6 @@ def on_startup() -> None:
                 cwd="/app",
             )
         logging.info("[startup] Celery worker started as PID %s", proc.pid)
-
-        # Tail worker log to stdout so Railway shows it
-        def _tail_worker():
-            import time
-            seen = 0
-            while True:
-                try:
-                    content = _worker_log.read_text()
-                    if content:
-                        for line in content.split("\n"):
-                            if line.strip():
-                                logging.info("[worker] %s", line)
-                        _worker_log.write_text("")
-                except Exception:
-                    pass
-                time.sleep(3)
-        import threading
-        threading.Thread(target=_tail_worker, daemon=True).start()
 
 
 @app.get("/health")

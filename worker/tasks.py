@@ -24,12 +24,13 @@ from openai import OpenAI
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-# Ensure /app is on sys.path so api.app.config is importable
-import sys
-_app_dir = str(Path(__file__).parent.parent)
-if _app_dir not in sys.path:
-    sys.path.insert(0, _app_dir)
-from app.config import _normalize_redis_url
+import chunking
+
+def _normalize_redis_url(url: str) -> str:
+    if url and url.startswith("rediss://") and "ssl_cert_reqs" not in url:
+        sep = "&" if "?" in url else "?"
+        return url + sep + "ssl_cert_reqs=required"
+    return url
 
 # Ensure /app/worker is on sys.path so chunking.py is importable when
 # Celery starts with --workdir /app (needed for Chroma PersistentClient).
