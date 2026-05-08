@@ -66,6 +66,7 @@
 <div class="card">
   <div class="card-header">
     <h2 id="filesTitle">Files</h2>
+    <button id="clearAllBtn" style="display:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;color:var(--red);border:1px solid rgba(248,113,113,0.2);background:rgba(248,113,113,0.06);cursor:pointer;" onclick="clearAll()">Clear all</button>
     <div id="selectionActions" style="display:none;align-items:center;gap:10px;">
       <button class="ghost" style="border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;color:var(--red);border:1px solid rgba(248,113,113,0.2);background:rgba(248,113,113,0.06);cursor:pointer;" onclick="delSelected()">Delete selected</button>
       <button class="ghost" style="border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;color:var(--muted);border:1px solid var(--border);cursor:pointer;" onclick="clearSelection()">Cancel</button>
@@ -254,6 +255,9 @@ async function refresh(){
 
   updateSelectAllState(rows);
   updateSelectionBar();
+
+  var clearBtn = document.getElementById('clearAllBtn');
+  if(clearBtn) clearBtn.style.display = rows.length > 0 ? '' : 'none';
 
   const hasReady = rows.some(r => r.status === 'ready');
   if(hasReady){
@@ -458,9 +462,11 @@ function updateSelectAllStateFromDom(){
 function updateSelectionBar(){
   var bar = document.getElementById('selectionActions');
   var title = document.getElementById('filesTitle');
+  var clearBtn = document.getElementById('clearAllBtn');
   if(_selectedIds.length > 0){
     bar.style.display = 'flex';
     if(title) title.style.display = 'none';
+    if(clearBtn) clearBtn.style.display = 'none';
   } else {
     bar.style.display = 'none';
     if(title) title.style.display = '';
@@ -513,6 +519,19 @@ async function doDeleteMultiple(){
   if(errors.length){
     uerr.textContent = 'Some deletions failed: ' + errors.join('; ');
   }
+}
+
+function clearAll(){
+  var rows = document.querySelectorAll('#tbl tr[data-id]');
+  if(!rows.length) return;
+
+  _selectedIds = [];
+  rows.forEach(function(r){ _selectedIds.push(r.getAttribute('data-id')); });
+  saveSelectedIds();
+
+  showDeleteModal(rows.length + ' file(s)', function(){
+    doDeleteMultiple();
+  });
 }
 
 const drop = document.getElementById('drop');
