@@ -272,7 +272,6 @@ Railway Dashboard → Deployments → предыдущий → Rollback (~30 с�
 - [x] API — Dockerfile, авто-деплой
 - [x] ChromaDB — Persistent Volume
 - [x] Alembic миграции
-- [x] API versioning `/v1/`
 - [ ] Knowledge files — S3 для persistency
 - [ ] Stripe billing
 - [ ] Redis production (rate limiting, memory)

@@ -13,6 +13,8 @@ COPY api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY api/app ./app
+COPY api/alembic ./alembic
+COPY api/alembic.ini .
 COPY frontend ./frontend
 
 EXPOSE 8000

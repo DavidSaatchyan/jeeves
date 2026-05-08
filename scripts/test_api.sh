@@ -6,7 +6,7 @@ EMAIL="demo_$(date +%s)@example.com"
 PASS="password123"
 
 echo "== Register =="
-REG=$(curl -sS -X POST "$BASE/v1/auth/register" -H "Content-Type: application/json" \
+REG=$(curl -sS -X POST "$BASE/auth/register" -H "Content-Type: application/json" \
   -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\",\"tenant_name\":\"Demo\"}")
 echo "$REG"
 TOKEN=$(echo "$REG" | python -c "import sys,json;print(json.load(sys.stdin)['access_token'])")
@@ -23,14 +23,14 @@ Jeeves subscription plans:
 - Business: $49/month, unlimited dialogs.
 - Enterprise: contact sales.
 EOF
-curl -sS -X POST "$BASE/v1/knowledge/files" -H "Authorization: Bearer $TOKEN" -F "file=@/tmp/jv/kb.txt"; echo
+curl -sS -X POST "$BASE/knowledge/files" -H "Authorization: Bearer $TOKEN" -F "file=@/tmp/jv/kb.txt"; echo
 
 echo "== List files =="
-curl -sS "$BASE/v1/knowledge/files" -H "Authorization: Bearer $TOKEN"; echo
+curl -sS "$BASE/knowledge/files" -H "Authorization: Bearer $TOKEN"; echo
 
 echo "== Chat (allow time for indexing) =="
 sleep 8
-curl -sS -X POST "$BASE/v1/chat" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+curl -sS -X POST "$BASE/chat" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d '{"user_id":"demo_user","message":"What subscription plans do you offer?"}'; echo
 
 echo "== Widget chat =="

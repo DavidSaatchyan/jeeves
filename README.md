@@ -52,7 +52,8 @@ Open:
 └──────────────────────────────────────────┘
 ```
 
-All endpoints are versioned under `/v1/` (e.g. `/v1/auth/login`, `/v1/dashboard/stats`). Widget endpoints (`/widget/`) remain unversioned for public embeds.
+All endpoints share a common root. Widget endpoints (`/widget/`) remain public for embeds.
+API versioning (`/v1/`) is planned for when external clients appear.
 
 ## Features
 
@@ -72,7 +73,7 @@ All endpoints are versioned under `/v1/` (e.g. `/v1/auth/login`, `/v1/dashboard/
 | Conversation ratings | ✅ | Thumbs up/down with feedback |
 | Admin dashboard | ✅ | Stats, logs, billing, config |
 | Database migrations | ✅ | Alembic, applied on startup |
-| API versioning | ✅ | `/v1/` prefix on all API routes |
+| API versioning | ⏳ | Planned for external client launch |
 | Rate limiting | ✅ | In-memory (dev) / Redis (prod) |
 | Billing | ⚠️ | Internal counters, hardcoded "free" plan |
 

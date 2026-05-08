@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var API = window.location.origin + "/v1";
+  var API = window.location.origin;
   var token = "";
   var tenantId = "";
 

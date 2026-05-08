@@ -82,7 +82,7 @@ def test_health(client):
 def test_register_and_login(client):
     """Registration and login flow works."""
     email = f"new-{uuid.uuid4()}@example.com"
-    response = client.post("/v1/auth/register", json={
+    response = client.post("/auth/register", json={
         "tenant_name": "New Tenant",
         "email": email,
         "password": "secure-password-123",
@@ -92,7 +92,7 @@ def test_register_and_login(client):
     assert "access_token" in data
     assert "refresh_token" in data
 
-    response = client.post("/v1/auth/login", json={
+    response = client.post("/auth/login", json={
         "email": email,
         "password": "secure-password-123",
     })
@@ -102,7 +102,7 @@ def test_register_and_login(client):
 
 def test_login_invalid_credentials(client):
     """Login with wrong password returns 401."""
-    response = client.post("/v1/auth/login", json={
+    response = client.post("/auth/login", json={
         "email": "nonexistent@example.com",
         "password": "wrong",
     })
@@ -111,5 +111,5 @@ def test_login_invalid_credentials(client):
 
 def test_protected_endpoint_requires_auth(client):
     """Dashboard requires authentication."""
-    response = client.get("/v1/dashboard/stats")
+    response = client.get("/dashboard/stats")
     assert response.status_code == 401
