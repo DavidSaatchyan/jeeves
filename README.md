@@ -1,59 +1,140 @@
-# Jeeves — Universal AI Agent (MVP)
+# Jeeves — Universal AI Agent
 
-Self-serve AI support agent: tenant-isolated RAG over uploaded docs, CRM connector (read/write), web chat widget, proactive engine for metric drops, and admin dashboard.
+Self-serve AI support agent: tenant-isolated RAG over uploaded docs, CRM connector (read/write), web chat widget, omnichannel support (Telegram, WhatsApp), and admin dashboard.
 
 ## Quick start
 
+### Production (Railway)
+1. Push to `main` — Railway auto-deploys from root `Dockerfile`
+2. Set required env vars in Railway dashboard:
+   - `DATABASE_URL` — auto-set by Railway PostgreSQL
+   - `OPENAI_API_KEY` — your OpenAI key
+   - `JWT_SECRET` — random 32+ character string
+   - `CHROMA_PATH` — `/data/chroma` (with Persistent Volume mounted)
+3. Open your Railway domain
+
+### Local development
 ```bash
-cp .env.example .env
-# put your OPENAI_API_KEY and a JWT_SECRET into .env
-docker compose up --build
+cd api
+pip install -r requirements.txt
+# Set DATABASE_URL, OPENAI_API_KEY, JWT_SECRET in .env or environment
+uvicorn app.main:app --reload
 ```
 
 Open:
-- Admin dashboard: http://localhost:8000/admin
-- API docs (OpenAPI): http://localhost:8000/docs
-- Widget loader: http://localhost:8000/widget.js
+- **Admin dashboard:** http://localhost:8000/admin
+- **API docs (OpenAPI):** http://localhost:8000/docs
+- **Widget loader:** http://localhost:8000/widget.js
 
-## Acceptance scenarios (MVP OKR)
+## Embed widget on your site
 
-1. **Register** — POST `/auth/register` or use `/admin` form → receive JWT, see dashboard.
-2. **Upload KB** — drag-and-drop `.pdf/.txt/.md` in dashboard → worker indexes into Chroma → ask question in chat.
-3. **CRM** — set read/write URLs + header token → "Test" button → say "change my tariff to business" → agent calls CRM.
-4. **Widget** — paste `<script src="http://localhost:8000/widget.js" data-tenant-id="<YOUR_TENANT_ID>"></script>` onto any page.
-5. **Proactive** — configure metric URL + threshold → Celery beat checks hourly → agent posts "need help?" message.
-6. **Billing** — after 100 dialogs or 14 days API returns 402 Payment Required.
-7. **Resolution rate** — visible on dashboard.
+```html
+<script src="https://YOUR_DOMAIN/widget.js"
+  data-tenant-id="YOUR_TENANT_ID"></script>
+```
+
+## Architecture
+
+```
+┌──────────────────────────────────────────┐
+│           Railway (production)           │
+│                                          │
+│  ┌──────────────┐   ┌─────────────────┐  │
+│  │  API Service │   │  PostgreSQL     │  │
+│  │  FastAPI     │◄─►│  Railway managed│  │
+│  │  Uvicorn     │   │                 │  │
+│  └──────┬───────┘   └─────────────────┘  │
+│         │                                 │
+│  ┌──────┴───────┐                         │
+│  │ Chroma vol.  │  Persistent Disk         │
+│  │ /data/chroma │  survives redeploys      │
+│  └──────────────┘                         │
+└──────────────────────────────────────────┘
+```
+
+All endpoints are versioned under `/v1/` (e.g. `/v1/auth/login`, `/v1/dashboard/stats`). Widget endpoints (`/widget/`) remain unversioned for public embeds.
+
+## Features
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Tenant registration & auth (JWT) | ✅ | `/v1/auth/register`, `/v1/auth/login` |
+| Knowledge base (PDF/TXT/MD upload) | ✅ | Async background indexing via `asyncio` |
+| RAG search (ChromaDB + OpenAI embeddings) | ✅ | Cosine distance threshold filtering |
+| CRM connector (read/write) | ✅ | Custom REST + HubSpot OAuth |
+| Agent tool calling (HTTP actions) | ✅ | CRUD in dashboard, confirmed actions |
+| Web chat widget | ✅ | Embeddable, origin-validated |
+| Telegram channel | ✅ | Webhook-based, O(1) routing |
+| WhatsApp channel | ✅ | Webhook-based |
+| Native integrations (Shopify, WooCommerce) | ✅ | Credential storage with encryption |
+| Incoming webhooks (context enrichment) | ✅ | HMAC-SHA256 signed |
+| Outgoing webhooks (event notifications) | ✅ | HMAC-SHA256 signed |
+| Conversation ratings | ✅ | Thumbs up/down with feedback |
+| Admin dashboard | ✅ | Stats, logs, billing, config |
+| Database migrations | ✅ | Alembic, applied on startup |
+| API versioning | ✅ | `/v1/` prefix on all API routes |
+| Rate limiting | ✅ | In-memory (dev) / Redis (prod) |
+| Billing | ⚠️ | Internal counters, hardcoded "free" plan |
 
 ## Project layout
 
 ```
-jeeves-mvp/
-├── docker-compose.yml
-├── .env.example
-├── config.yaml
-├── api/                 # FastAPI service
-│   └── app/
-├── worker/              # Celery worker + beat
-├── frontend/widget.js   # Embeddable chat widget
-├── knowledge/           # Mounted dir for uploaded files
+Jeeves/
+├── Dockerfile              # Root-level build (api + frontend)
+├── api/
+│   ├── app/
+│   │   ├── main.py         # FastAPI entrypoint, Alembic migrations
+│   │   ├── agent.py        # Agent orchestrator (RAG + CRM + tools)
+│   │   ├── rag.py          # ChromaDB indexing & search
+│   │   ├── memory.py       # Conversation memory
+│   │   ├── models.py       # SQLAlchemy ORM models
+│   │   ├── channels/       # Widget, Telegram, WhatsApp handlers
+│   │   ├── crm.py          # CRM REST connector
+│   │   ├── templates/      # Admin dashboard HTML
+│   │   └── ...
+│   ├── alembic/            # Database migrations
+│   ├── tests/              # Unit & integration tests
+│   └── requirements.txt
+├── frontend/
+│   ├── widget.js           # Embeddable chat widget
+│   ├── dashboard.js        # Admin dashboard JS
+│   └── dashboard.css
+├── knowledge/              # Tenant KB files (git-ignored)
+├── config.yaml             # Agent prompts, model config
 └── scripts/
-    ├── init_db.sql
-    └── test_api.sh
+    └── test_api.sh         # Smoke test script
 ```
-
-## Sensible defaults chosen (see code comments marked `# DEFAULT`)
-
-- **Email verification** — stubbed: verification link is printed to API stdout, account is immediately active.
-- **Admin dashboard** — server-rendered Jinja2 + HTMX (no SPA) to keep MVP lean.
-- **File storage** — local filesystem under `./knowledge/{tenant_id}/{file_id}/` (S3 path is wired but optional).
-- **Billing** — internal counters + `is_active` flag, no real Stripe yet. Endpoint returns 402 when limits exceeded.
-- **Memory** — Redis list per `memory:{tenant_id}:{user_id}`, TTL 7 days, last 20 messages.
-- **Vector DB** — one Chroma collection per tenant (`tenant_{uuid}`).
-- **Proactive** — Celery beat runs every hour; agent posts "outgoing" log row, widget/SSE picks it up via `GET /chat/inbox`.
 
 ## Tests
 
 ```bash
-bash scripts/test_api.sh
+cd api
+pytest tests/
 ```
+
+## Database migrations
+
+Migrations run automatically on startup via Alembic. To create a new migration:
+
+```bash
+cd api
+alembic revision --autogenerate -m "description"
+```
+
+## Environment variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | ✅ | PostgreSQL connection string |
+| `OPENAI_API_KEY` | ✅ | OpenAI API key |
+| `JWT_SECRET` | ✅ | 32+ character random string |
+| `CHROMA_PATH` | ✅ | Path for ChromaDB persistent storage |
+| `REDIS_URL` | No | Redis URL for production rate limiting & memory |
+| `PUBLIC_BASE_URL` | No | Public URL of your instance |
+| `KNOWLEDGE_DIR` | No | Directory for uploaded files |
+| `HUBSPOT_CLIENT_ID` | No | HubSpot OAuth client ID |
+| `HUBSPOT_CLIENT_SECRET` | No | HubSpot OAuth client secret |
+
+## License
+
+Proprietary.
