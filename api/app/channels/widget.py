@@ -20,6 +20,10 @@ from .. import agent, billing
 
 router = APIRouter(tags=["widget"])
 
+_WIDGET_JS_PATH = Path("/app/frontend/widget.js")
+if not _WIDGET_JS_PATH.exists():
+    _WIDGET_JS_PATH = Path(__file__).resolve().parents[3] / "frontend" / "widget.js"
+
 
 def _get_client_ip(request: Request) -> str:
     return request.headers.get("x-forwarded-for", request.client.host or "unknown").split(",")[0].strip()
