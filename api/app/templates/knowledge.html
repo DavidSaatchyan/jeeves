@@ -258,9 +258,6 @@ async function refresh(){
   updateSelectAllState(rows);
   updateSelectionBar();
 
-  var clearBtn = document.getElementById('clearAllBtn');
-  if(clearBtn) clearBtn.style.display = rows.length > 0 ? '' : 'none';
-
   const hasReady = rows.some(r => r.status === 'ready');
   if(hasReady){
     hideWidgetPlaceholder();
@@ -464,11 +461,13 @@ function updateSelectAllStateFromDom(){
 function updateSelectionBar(){
   var bar = document.getElementById('selectionActions');
   var clearBtn = document.getElementById('clearAllBtn');
+  var rows = document.querySelectorAll('#tbl tr[data-id]');
   if(_selectedIds.length > 0){
     bar.style.display = 'flex';
     if(clearBtn) clearBtn.style.display = 'none';
   } else {
     bar.style.display = 'none';
+    if(clearBtn) clearBtn.style.display = rows.length > 0 ? '' : 'none';
   }
 }
 
