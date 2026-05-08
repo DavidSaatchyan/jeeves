@@ -8,27 +8,29 @@ Limits:
 """
 from __future__ import annotations
 
+import threading
 import time
 from collections import defaultdict
 from typing import Any
 
 
 class _InMemoryLimiter:
-    """Thread-unsafe but sufficient for single-process dev."""
+    """Thread-safe in-memory sliding window rate limiter for dev/single-process."""
 
     def __init__(self) -> None:
         self._buckets: dict[str, list[float]] = defaultdict(list)
+        self._lock = threading.Lock()
 
     def is_allowed(self, key: str, max_requests: int, window_seconds: int) -> bool:
         now = time.time()
         cutoff = now - window_seconds
-        bucket = self._buckets[key]
-        # Prune old entries
-        self._buckets[key] = [t for t in bucket if t > cutoff]
-        if len(self._buckets[key]) >= max_requests:
-            return False
-        self._buckets[key].append(now)
-        return True
+        with self._lock:
+            bucket = self._buckets[key]
+            self._buckets[key] = [t for t in bucket if t > cutoff]
+            if len(self._buckets[key]) >= max_requests:
+                return False
+            self._buckets[key].append(now)
+            return True
 
 
 _limiter: Any = None

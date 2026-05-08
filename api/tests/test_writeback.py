@@ -83,7 +83,7 @@ def test_writeback_enqueue_on_conversation_ended():
         assert stored.type != "off"
         assert stored.webhook_url is not None
 
-        # In real code: writeback_conversation.delay(str(tenant_id), session_id)
+        # In real code: await _do_writeback(db, tenant_id, session_id)
         # Here we just verify the condition would trigger
         session_id = str(uuid.uuid4())
         should_enqueue = stored.type != "off"

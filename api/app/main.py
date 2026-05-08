@@ -1,19 +1,20 @@
-"""FastAPI entrypoint — wires all routers and creates DB tables on boot."""
+"""FastAPI entrypoint — wires all routers and applies Alembic migrations on boot."""
 from __future__ import annotations
 
 import logging
 import re
+from pathlib import Path
 
+from alembic.config import Config
+from alembic import command
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
-from pathlib import Path
 
 from . import admin, auth, dashboard_api, knowledge, routes_chat, routes_crm, routes_proactive, routes_tools, routes_mock, routes_integrations, routes_channels, routes_api_keys
 from .channels import widget as widget_channel
 from .config import get_settings
-from .db import Base, engine
-from .models import *  # noqa: F401,F403  # ensure models are registered
+from .db import engine
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s :: %(message)s")
 
@@ -127,114 +128,27 @@ async def dynamic_cors(request: Request, call_next):
     return response
 
 
-_MIGRATIONS = [
-    # Sprint 1 (S1): knowledge/observability columns. Safe to re-run.
-    "ALTER TABLE files ADD COLUMN IF NOT EXISTS content_hash varchar(64)",
-    "CREATE INDEX IF NOT EXISTS ix_files_content_hash ON files(content_hash)",
-    "ALTER TABLE files ADD COLUMN IF NOT EXISTS chunks_total integer NOT NULL DEFAULT 0",
-    "ALTER TABLE files ADD COLUMN IF NOT EXISTS size_bytes integer NOT NULL DEFAULT 0",
-    "ALTER TABLE files ADD COLUMN IF NOT EXISTS error text",
-    "ALTER TABLE chat_logs ADD COLUMN IF NOT EXISTS sources jsonb",
-    "ALTER TABLE crm_config ADD COLUMN IF NOT EXISTS provider varchar(32) NOT NULL DEFAULT 'custom_rest'",
-    "ALTER TABLE crm_config ADD COLUMN IF NOT EXISTS capabilities jsonb",
-    # Agent tools tables (created by SQLAlchemy, but migrations for safety)
-    """CREATE TABLE IF NOT EXISTS agent_tools (
-        id uuid PRIMARY KEY,
-        tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-        name varchar(64) NOT NULL,
-        description text NOT NULL,
-        tool_type varchar(16) NOT NULL,
-        method varchar(8) NOT NULL DEFAULT 'GET',
-        url_template text NOT NULL,
-        headers jsonb,
-        body_template jsonb,
-        parameters jsonb,
-        require_confirmation boolean NOT NULL DEFAULT false,
-        enabled boolean NOT NULL DEFAULT true,
-        created_at timestamp NOT NULL DEFAULT now()
-    )""",
-    """CREATE TABLE IF NOT EXISTS agent_tool_logs (
-        id uuid PRIMARY KEY,
-        tenant_id uuid NOT NULL,
-        tool_id uuid REFERENCES agent_tools(id) ON DELETE SET NULL,
-        tool_name varchar(64) NOT NULL,
-        user_id text NOT NULL,
-        status varchar(16) NOT NULL,
-        request jsonb,
-        response jsonb,
-        error text,
-        latency_ms integer,
-        created_at timestamp NOT NULL DEFAULT now()
-    )""",
-    "CREATE INDEX IF NOT EXISTS ix_agent_tools_tenant ON agent_tools(tenant_id)",
-    "CREATE INDEX IF NOT EXISTS ix_agent_tool_logs_tenant ON agent_tool_logs(tenant_id)",
-    # Integrations upgrade (Sprint 2): new columns and tables.
-    "ALTER TABLE crm_config ADD COLUMN IF NOT EXISTS primary_identifier varchar(32) NOT NULL DEFAULT 'email'",
-    "ALTER TABLE chat_logs ADD COLUMN IF NOT EXISTS session_id uuid",
-    "CREATE INDEX IF NOT EXISTS ix_chat_logs_session_id ON chat_logs(session_id)",
-    "ALTER TABLE chat_logs ADD COLUMN IF NOT EXISTS extra_fields jsonb",
-    """CREATE TABLE IF NOT EXISTS native_connectors (
-        id uuid PRIMARY KEY,
-        tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-        provider varchar(32) NOT NULL,
-        status varchar(16) NOT NULL DEFAULT 'connected',
-        credentials text NOT NULL,
-        meta jsonb,
-        created_at timestamp NOT NULL DEFAULT now(),
-        updated_at timestamp NOT NULL DEFAULT now(),
-        CONSTRAINT uq_native_connectors_tenant_provider UNIQUE (tenant_id, provider)
-    )""",
-    "CREATE INDEX IF NOT EXISTS ix_native_connectors_tenant ON native_connectors(tenant_id)",
-    """CREATE TABLE IF NOT EXISTS webhook_configs (
-        tenant_id uuid PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE,
-        incoming_url text,
-        incoming_secret text,
-        outgoing_url text,
-        outgoing_secret text,
-        field_mapping jsonb,
-        events jsonb,
-        enabled boolean NOT NULL DEFAULT true,
-        created_at timestamp NOT NULL DEFAULT now(),
-        updated_at timestamp NOT NULL DEFAULT now()
-    )""",
-    """CREATE TABLE IF NOT EXISTS writeback_configs (
-        tenant_id uuid PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE,
-        type varchar(32) NOT NULL DEFAULT 'off',
-        hubspot_note_enabled boolean NOT NULL DEFAULT false,
-        hubspot_task_on_escalation boolean NOT NULL DEFAULT false,
-        webhook_url text,
-        created_at timestamp NOT NULL DEFAULT now(),
-        updated_at timestamp NOT NULL DEFAULT now()
-    )""",
-    # Omnichannel: channel tracking on chat_logs
-    "ALTER TABLE chat_logs ADD COLUMN IF NOT EXISTS channel varchar(32) NOT NULL DEFAULT 'web_widget'",
-    """CREATE TABLE IF NOT EXISTS api_keys (
-        id uuid PRIMARY KEY,
-        tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-        name varchar(128) NOT NULL,
-        key_hash varchar(64) NOT NULL UNIQUE,
-        prefix varchar(8) NOT NULL,
-        created_at timestamp NOT NULL DEFAULT now(),
-        last_used_at timestamp
-    )""",
-    "CREATE INDEX IF NOT EXISTS ix_api_keys_tenant ON api_keys(tenant_id)",
-    "CREATE INDEX IF NOT EXISTS ix_api_keys_hash ON api_keys(key_hash)",
-    "ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS expires_at timestamp",
-]
+def _run_alembic_migrations() -> None:
+    """Apply Alembic migrations on startup. Uses the alembic/ directory from the api package."""
+    alembic_cfg = Config(Path(__file__).parent.parent / "alembic.ini")
+    alembic_cfg.set_main_option("script_location", str(Path(__file__).parent.parent / "alembic"))
+    try:
+        command.upgrade(alembic_cfg, "head")
+        logging.info("Alembic migrations applied successfully")
+    except Exception:
+        logging.exception("Alembic migration failed — check database connectivity and migration files")
 
 
 @app.on_event("startup")
 def on_startup() -> None:
-    # DEFAULT: auto-create tables. Alembic can be added later.
-    Base.metadata.create_all(bind=engine)
-    # Idempotent column additions for existing deployments.
-    with engine.begin() as conn:
-        from sqlalchemy import text as _t
-        for stmt in _MIGRATIONS:
-            try:
-                conn.execute(_t(stmt))
-            except Exception as e:
-                logging.warning("startup migration failed (%s): %s", stmt, e)
+    _run_alembic_migrations()
+    from .channels.registry import build_channel_cache
+    from .db import SessionLocal
+    db = SessionLocal()
+    try:
+        build_channel_cache(db)
+    finally:
+        db.close()
 
 
 @app.get("/health")
@@ -264,16 +178,16 @@ def privacy():
     return _PRIVACY.read_text(encoding="utf-8")
 
 
-app.include_router(auth.router)
-app.include_router(routes_chat.router)
-app.include_router(knowledge.router)
-app.include_router(routes_crm.router)
-app.include_router(routes_proactive.router)
-app.include_router(dashboard_api.router)
+app.include_router(auth.router, prefix="/v1")
+app.include_router(routes_chat.router, prefix="/v1")
+app.include_router(knowledge.router, prefix="/v1")
+app.include_router(routes_crm.router, prefix="/v1")
+app.include_router(routes_proactive.router, prefix="/v1")
+app.include_router(dashboard_api.router, prefix="/v1")
 app.include_router(widget_channel.router)
-app.include_router(routes_tools.router)
-app.include_router(routes_mock.router)
-app.include_router(admin.router)
-app.include_router(routes_integrations.router)
-app.include_router(routes_channels.router)
-app.include_router(routes_api_keys.router)
+app.include_router(routes_tools.router, prefix="/v1")
+app.include_router(routes_mock.router, prefix="/v1")
+app.include_router(admin.router, prefix="/v1")
+app.include_router(routes_integrations.router, prefix="/v1")
+app.include_router(routes_channels.router, prefix="/v1")
+app.include_router(routes_api_keys.router, prefix="/v1")

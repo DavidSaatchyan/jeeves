@@ -179,7 +179,7 @@ def register(body: RegisterIn, request: Request, response: Response, db: Session
         key=_SESSION_COOKIE,
         value=access,
         httponly=True,
-        secure=False,  # allow HTTP in dev; security_headers middleware adds HSTS
+        secure=True,
         samesite="lax",
         max_age=900,
         path="/admin",

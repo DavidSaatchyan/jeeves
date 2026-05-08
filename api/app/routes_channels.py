@@ -187,11 +187,11 @@ async def test_channel(
 # ─── Telegram webhook ───────────────────────────────────────────────────────
 
 
-@router.post("/telegram/webhook")
-async def telegram_webhook(request: Request):
+@router.post("/telegram/webhook/{bot_token_prefix}")
+async def telegram_webhook(bot_token_prefix: str, request: Request):
     body_bytes = await request.body()
     body = json.loads(body_bytes)
-    result = await tg.handle_webhook(body)
+    result = await tg.handle_webhook(body, bot_token_prefix)
     return JSONResponse(content=result)
 
 
@@ -204,22 +204,10 @@ def whatsapp_webhook_verify(
     hub_token: str = Query("", alias="hub.verify_token"),
     hub_challenge: str = Query("", alias="hub.challenge"),
 ):
-    verify_token = ""
-    db: Session = SessionLocal()
-    try:
-        configs = db.query(ChannelConfig).filter(
-            ChannelConfig.channel_type == "whatsapp",
-            ChannelConfig.status == "active",
-        ).all()
-        for cfg in configs:
-            vt = cfg.config.get("verify_token", "")
-            if vt:
-                verify_token = vt
-                break
-    finally:
-        db.close()
+    from .channels.registry import channel_cache
 
-    result = wa.verify_webhook(hub_mode, hub_token, verify_token, hub_challenge)
+    verify_token = channel_cache.get_tenant_by_phone(hub_token)
+    result = wa.verify_webhook(hub_mode, hub_token, str(verify_token) if verify_token else "", hub_challenge)
     if result:
         return JSONResponse(content=int(result))
     raise HTTPException(403, "Verification failed")
@@ -230,25 +218,36 @@ async def whatsapp_webhook(request: Request):
     body_bytes = await request.body()
     body = json.loads(body_bytes)
 
-    # Verify X-Hub-Signature-256 against each active WhatsApp config's app_secret
     signature = request.headers.get("x-hub-signature-256", "")
     if signature:
+        from .channels.registry import channel_cache
+
+        verified = False
         db: Session = SessionLocal()
         try:
-            configs = db.query(ChannelConfig).filter(
-                ChannelConfig.channel_type == "whatsapp",
-                ChannelConfig.status == "active",
-            ).all()
-            verified = False
-            for cfg in configs:
-                app_secret = cfg.config.get("app_secret", "")
-                if app_secret and _verify_whatsapp_signature(body_bytes, signature, app_secret):
-                    verified = True
-                    break
-            if not verified:
-                raise HTTPException(403, "Invalid signature")
+            channel_cache.build(db)
         finally:
             db.close()
+
+        for phone_id, tenant_id in channel_cache._phone_to_tenant.items():
+            db = SessionLocal()
+            try:
+                cfg = db.query(ChannelConfig).filter(
+                    ChannelConfig.tenant_id == tenant_id,
+                    ChannelConfig.channel_type == "whatsapp",
+                ).first()
+                if cfg:
+                    app_secret = cfg.config.get("app_secret", "")
+                    if app_secret and _verify_whatsapp_signature(body_bytes, signature, app_secret):
+                        verified = True
+                        break
+            finally:
+                db.close()
+            if verified:
+                break
+
+        if not verified:
+            raise HTTPException(403, "Invalid signature")
 
     result = await wa.handle_webhook(body)
     return JSONResponse(content=result)

@@ -23,25 +23,13 @@ def _api_url(token: str, method: str) -> str:
     return f"{TELEGRAM_API.format(token=token)}/{method}"
 
 
-def _resolve_tenant(db: Session, chat_id: int) -> Tenant | None:
-    """Find the tenant that owns this chat_id by scanning all active telegram configs."""
-    configs = (
-        db.query(ChannelConfig)
-        .filter(
-            ChannelConfig.channel_type == "telegram",
-            ChannelConfig.status == "active",
-        )
-        .all()
-    )
-    for cfg in configs:
-        bot_token = cfg.config.get("bot_token", "")
-        if bot_token:
-            try:
-                me = _get_me(bot_token)
-                if me:
-                    return db.get(Tenant, cfg.tenant_id)
-            except Exception:
-                continue
+def _resolve_tenant(db: Session, chat_id: int, bot_token: str) -> Tenant | None:
+    """Find the tenant that owns this chat_id using the channel lookup cache (O(1))."""
+    from .registry import channel_cache
+
+    tenant_id = channel_cache.get_tenant_by_token(bot_token)
+    if tenant_id:
+        return db.get(Tenant, tenant_id)
     return None
 
 
@@ -97,8 +85,12 @@ def validate_token(token: str) -> tuple[bool, str]:
     return False, "Invalid token or bot unreachable"
 
 
-async def handle_webhook(update: dict) -> dict:
+async def handle_webhook(update: dict, bot_token_prefix: str = "") -> dict:
     """Process an incoming Telegram webhook update.
+
+    Args:
+        update: Telegram webhook payload
+        bot_token_prefix: Bot token or prefix from webhook URL path
 
     Returns dict with status info. Handles messages only (not edits, callbacks, etc).
     """
@@ -115,7 +107,12 @@ async def handle_webhook(update: dict) -> dict:
 
     db: Session = SessionLocal()
     try:
-        tenant = _resolve_tenant(db, chat_id)
+        bot_token = ""
+        if bot_token_prefix:
+            from .registry import channel_cache
+            bot_token = channel_cache.get_full_token(bot_token_prefix) or bot_token_prefix
+
+        tenant = _resolve_tenant(db, chat_id, bot_token) if bot_token else None
         if not tenant:
             return {"ok": False, "reason": "tenant_not_found"}
         billing.enforce(tenant)

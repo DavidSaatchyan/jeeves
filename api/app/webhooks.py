@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import logging
 from typing import Any
 from uuid import UUID
 
@@ -17,6 +18,8 @@ from sqlalchemy.orm import Session
 
 from .crypto import decrypt
 from .models import WebhookConfig
+
+logger = logging.getLogger(__name__)
 
 
 def _hmac_sha256(secret: str, payload: str) -> str:
@@ -81,14 +84,14 @@ async def fetch_incoming_webhook_context(
         async with httpx.AsyncClient(timeout=5.0) as client:
             r = await client.post(cfg.incoming_url, content=body, headers=headers)
         if r.status_code >= 400:
-            print(f"[webhook] incoming returned {r.status_code}", flush=True)
+            logger.warning("incoming webhook returned %d", r.status_code)
             return {}
         data = r.json()
     except httpx.TimeoutException:
-        print("[webhook] incoming webhook timed out", flush=True)
+        logger.warning("incoming webhook timed out")
         return {}
     except Exception as e:
-        print(f"[webhook] incoming webhook error: {e}", flush=True)
+        logger.warning("incoming webhook error: %s", e)
         return {}
 
     return _apply_field_mapping(data, cfg.field_mapping or {})

@@ -10,6 +10,8 @@ Changes vs MVP:
 """
 from __future__ import annotations
 
+import logging
+import threading
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -20,6 +22,8 @@ from openai import OpenAI
 
 from . import chunking
 from .config import get_settings, get_yaml_config
+
+logger = logging.getLogger(__name__)
 
 _settings = get_settings()
 _rag_cfg = get_yaml_config().get("rag", {})
@@ -38,20 +42,25 @@ def _openai() -> OpenAI:
 
 
 _chroma_client = None
+_chroma_lock = threading.Lock()
 
 def _chroma():
     global _chroma_client
     if _chroma_client is not None:
         return _chroma_client
 
-    if _settings.chroma_url:
-        u = urlparse(_settings.chroma_url)
-        _chroma_client = chromadb.HttpClient(host=u.hostname or "chroma", port=u.port or 8000)
-    elif _settings.chroma_path:
-        _chroma_client = chromadb.PersistentClient(path=_settings.chroma_path)
-    else:
-        raise RuntimeError("Neither CHROMA_URL nor CHROMA_PATH is configured")
-    return _chroma_client
+    with _chroma_lock:
+        if _chroma_client is not None:
+            return _chroma_client
+
+        if _settings.chroma_url:
+            u = urlparse(_settings.chroma_url)
+            _chroma_client = chromadb.HttpClient(host=u.hostname or "chroma", port=u.port or 8000)
+        elif _settings.chroma_path:
+            _chroma_client = chromadb.PersistentClient(path=_settings.chroma_path)
+        else:
+            raise RuntimeError("Neither CHROMA_URL nor CHROMA_PATH is configured")
+        return _chroma_client
 
 
 def _collection(tenant_id: UUID | str):
@@ -60,11 +69,6 @@ def _collection(tenant_id: UUID | str):
         name=name,
         metadata={"hnsw:space": "cosine", "embedding_version": EMBEDDING_VERSION},
     )
-
-
-def _reset_chroma():
-    global _chroma_client
-    _chroma_client = None
 
 
 def _count_all_chunks(tenant_id: UUID | str) -> int:
@@ -97,7 +101,6 @@ def index_file(tenant_id: UUID | str, file_id: UUID | str, path: Path) -> int:
         pass
     embeddings = embed_batch(texts)
     col.add(ids=ids, embeddings=embeddings, documents=texts, metadatas=metadatas)
-    _reset_chroma()
     return len(chunks)
 
 
@@ -111,9 +114,9 @@ def delete_file(tenant_id: UUID | str, file_id: UUID | str) -> None:
         col.delete(where={"file_id": fid})
 
         total_after = col.count()
-        print(f"[rag] delete: {col.name} {total_before} -> {total_after} chunks", flush=True)
+        logger.info("delete: %s %d -> %d chunks", col.name, total_before, total_after)
     except Exception as e:
-        print(f"[rag] delete failed: {e}", flush=True)
+        logger.error("delete failed: %s", e)
 
 
 def search(
@@ -130,9 +133,9 @@ def search(
     try:
         col = _collection(tenant_id)
         cnt = col.count()
-        print(f"[rag] search: tenant={tenant_id} collection_count={cnt} query='{query[:80]}'", flush=True)
+        logger.info("search: tenant=%s collection_count=%d query='%s'", tenant_id, cnt, query[:80])
         if cnt == 0:
-            print(f"[rag] search: collection is empty, returning []", flush=True)
+            logger.info("search: collection is empty, returning []")
             return []
         q_emb = embed_batch([query])[0]
         res = col.query(
@@ -144,12 +147,11 @@ def search(
         metas = (res.get("metadatas") or [[]])[0]
         dists = (res.get("distances") or [[]])[0]
         ids = (res.get("ids") or [[]])[0]
-        # Log all raw results before threshold filtering
         raw_log = []
         for i, (doc, meta, dist) in enumerate(zip(docs, metas, dists)):
             fname = (meta or {}).get("filename", "?")
             raw_log.append(f"  [{i}] dist={dist:.4f} file={fname} text={doc[:80]}")
-        print(f"[rag] search raw results ({len(docs)}):\n" + "\n".join(raw_log), flush=True)
+        logger.debug("search raw results (%d):\n%s", len(docs), "\n".join(raw_log))
         out: list[dict[str, Any]] = []
         for i, (doc, meta, dist) in enumerate(zip(docs, metas, dists)):
             meta = meta or {}
@@ -168,12 +170,11 @@ def search(
                     "chunk_hash": meta.get("chunk_hash", ""),
                 }
             )
-        # If the best result is weakly relevant (dist > 0.75), treat as empty
         if out and out[0]["distance"] > 0.75:
-            print(f"[rag] search: best dist={out[0]['distance']:.4f} > 0.75, treating as empty", flush=True)
+            logger.info("search: best dist=%.4f > 0.75, treating as empty", out[0]["distance"])
             return []
-        print(f"[rag] search passed threshold({thr}): {len(out)}/{len(docs)} results", flush=True)
+        logger.info("search passed threshold(%f): %d/%d results", thr, len(out), len(docs))
         return out
     except Exception as e:
-        print(f"[rag] search failed: {e}", flush=True)
+        logger.error("search failed: %s", e)
         return []

@@ -1,18 +1,22 @@
 """Authenticated REST /chat endpoint (FR-5.3)."""
 from __future__ import annotations
 
+import json
+import logging
 import uuid
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from . import agent, billing
 from .auth import get_current_tenant
 from .db import get_db
-from .models import ChatLog, Tenant
+from .models import ChatLog, Tenant, WebhookConfig, WriteBackConfig
 from .moderation import moderate
 from .rate_limit import check_rate_limit
 from .schemas import ChatIn, ChatOut
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["chat"])
 
@@ -21,14 +25,10 @@ def _get_client_ip(request: Request) -> str:
     return request.headers.get("x-forwarded-for", request.client.host or "unknown").split(",")[0].strip()
 
 
-def _enqueue_outgoing_webhooks(db: Session, tenant_id, user_id: str, event: str, result: dict):
-    """Enqueue send_outgoing_webhook Celery task for configured events."""
-    try:
-        from tasks import send_outgoing_webhook
-    except ImportError:
-        return
+async def _fire_outgoing_webhooks(db: Session, tenant_id, user_id: str, event: str, result: dict):
+    """Send outgoing webhooks directly (no Celery) for configured events."""
+    import httpx
 
-    from .models import WebhookConfig
     cfg = db.query(WebhookConfig).filter(
         WebhookConfig.tenant_id == tenant_id,
         WebhookConfig.enabled == True,  # noqa: E712
@@ -49,30 +49,45 @@ def _enqueue_outgoing_webhooks(db: Session, tenant_id, user_id: str, event: str,
         "escalated": result.get("escalated", False),
         "session_id": result.get("session_id"),
     }
-    try:
-        send_outgoing_webhook.delay(str(tenant_id), event, payload)
-    except Exception as e:
-        print(f"[chat] webhook enqueue failed: {e}", flush=True)
 
-
-def _enqueue_writeback(db: Session, tenant_id, session_id: str):
-    """Enqueue writeback_conversation Celery task on conversation end."""
-    try:
-        from tasks import writeback_conversation
-    except ImportError:
+    if not cfg.outgoing_url:
         return
 
-    from .models import WriteBackConfig
+    body = json.dumps(payload, ensure_ascii=False)
+    headers = {"Content-Type": "application/json"}
+    if cfg.outgoing_secret:
+        from .webhooks import compute_outgoing_signature
+        from .crypto import decrypt
+        try:
+            secret = decrypt(cfg.outgoing_secret)
+            headers["X-Jeeves-Signature"] = compute_outgoing_signature(secret, body)
+        except Exception:
+            pass
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            await client.post(cfg.outgoing_url, content=body, headers=headers)
+    except Exception as e:
+        logger.warning("outgoing webhook failed: %s", e)
+
+
+async def _do_writeback(db: Session, tenant_id, session_id: str):
+    """Execute writeback directly (no Celery) on conversation end."""
+    import httpx
+
     cfg = db.query(WriteBackConfig).filter(
         WriteBackConfig.tenant_id == tenant_id,
     ).first()
     if not cfg or cfg.type == "off":
         return
 
-    try:
-        writeback_conversation.delay(str(tenant_id), session_id)
-    except Exception as e:
-        print(f"[chat] writeback enqueue failed: {e}", flush=True)
+    if cfg.type == "webhook" and cfg.webhook_url:
+        payload = {"tenant_id": str(tenant_id), "session_id": session_id}
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                await client.post(cfg.webhook_url, json=payload)
+        except Exception as e:
+            logger.warning("writeback failed: %s", e)
 
 
 @router.post("/chat", response_model=ChatOut)
@@ -112,15 +127,15 @@ async def chat(body: ChatIn, request: Request, tenant: Tenant = Depends(get_curr
         tenant.resolved_count += 1
     db.commit()
 
-    # Enqueue outgoing webhooks for configured events
+    # Fire outgoing webhooks for configured events
     if result.get("action_called"):
-        _enqueue_outgoing_webhooks(db, tenant.id, body.user_id, "action.called", result)
+        await _fire_outgoing_webhooks(db, tenant.id, body.user_id, "action.called", result)
     if result.get("escalated"):
-        _enqueue_outgoing_webhooks(db, tenant.id, body.user_id, "conversation.escalated", result)
-    _enqueue_outgoing_webhooks(db, tenant.id, body.user_id, "conversation.ended", result)
+        await _fire_outgoing_webhooks(db, tenant.id, body.user_id, "conversation.escalated", result)
+    await _fire_outgoing_webhooks(db, tenant.id, body.user_id, "conversation.ended", result)
 
-    # Enqueue writeback on conversation end
-    _enqueue_writeback(db, tenant.id, result.get("session_id", str(session_id)))
+    # Execute writeback on conversation end
+    await _do_writeback(db, tenant.id, result.get("session_id", str(session_id)))
 
     return ChatOut(
         response=result["response"],

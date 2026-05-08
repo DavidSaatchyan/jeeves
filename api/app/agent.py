@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import time
 import uuid
 from typing import Any
@@ -22,6 +23,8 @@ from .crypto import ConnectorError
 from .webhooks import fetch_incoming_webhook_context
 from . import routes_tools as tools_module
 
+logger = logging.getLogger(__name__)
+
 _settings = get_settings()
 _cfg = get_yaml_config()
 _AGENT = _cfg.get("agent", {})
@@ -33,7 +36,7 @@ MODEL = _LLM.get("model", "gpt-4o-mini")
 
 
 def _openai() -> OpenAI:
-    return OpenAI(api_key=_settings.openai_api_key)
+    return OpenAI(api_key=_settings.openai_api_key, timeout=30.0)
 
 
 def _ensure_text(value: Any) -> str:
@@ -161,7 +164,7 @@ async def run(
     try:
         webhook_ctx = await fetch_incoming_webhook_context(db, tenant_id, user_id, extra_fields)
     except Exception as e:
-        print(f"[agent] incoming webhook failed: {e}", flush=True)
+        logger.warning("incoming webhook failed: %s", e)
 
     # 2. Retrieve RAG context
     rag_docs = await asyncio.to_thread(rag.search, tenant_id, message)
@@ -177,7 +180,7 @@ async def run(
         crm_ctx = await read_customer(db, tenant_id, user_id, extra_fields)
         crm_ctx.pop("raw", None)
     except Exception as e:
-        print(f"[agent] crm read failed: {e}", flush=True)
+        logger.warning("crm read failed: %s", e)
 
     # 4. Build messages: system + history + context injection + user
     # XML-delimited sections prevent prompt injection from RAG/user content

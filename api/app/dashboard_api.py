@@ -183,8 +183,16 @@ def logs(
     channel: str | None = None,
     resolution: str | None = None,
     days: int = 30,
-    limit: int = 500,
+    limit: int = 50,
+    last_id: str | None = None,
 ):
+    """Cursor-based pagination for chat logs.
+
+    Args:
+        last_id: UUID of the last log seen; returns logs created before this log.
+        limit: Max items to return (default 50, max 200).
+    """
+    limit = min(limit, 200)
     q = db.query(ChatLog).filter(ChatLog.tenant_id == tenant.id)
     if user_id:
         q = q.filter(ChatLog.user_id == user_id)
@@ -195,9 +203,15 @@ def logs(
     if resolution:
         q = q.filter(ChatLog.resolution == resolution)
     q = q.filter(ChatLog.created_at >= datetime.utcnow() - timedelta(days=days))
-    rows = q.order_by(ChatLog.created_at.desc()).limit(limit).all()
+    if last_id:
+        last_log = db.query(ChatLog.created_at).filter(ChatLog.id == last_id).first()
+        if last_log:
+            q = q.filter(ChatLog.created_at < last_log.created_at)
+    rows = q.order_by(ChatLog.created_at.desc()).limit(limit + 1).all()
+    has_more = len(rows) > limit
+    if has_more:
+        rows = rows[:-1]
 
-    # Aggregate session info
     session_ids = set(r.session_id for r in rows if r.session_id)
     sessions = {}
     if session_ids:
@@ -220,26 +234,31 @@ def logs(
                 "last_at": sr.last_at.isoformat() if sr.last_at else None,
             }
 
-    return [
-        {
-            "id": str(r.id),
-            "session_id": str(r.session_id) if r.session_id else None,
-            "created_at": r.created_at.isoformat(),
-            "user_id": r.user_id,
-            "direction": r.direction,
-            "message": r.message,
-            "response": r.response,
-            "resolution": r.resolution,
-            "action_called": r.action_called,
-            "latency_ms": r.latency_ms,
-            "delivered": r.delivered,
-            "sources": r.sources or [],
-            "channel": r.channel,
-            "extra_fields": r.extra_fields or {},
-            "session_info": sessions.get(str(r.session_id)) if r.session_id else None,
-        }
-        for r in rows
-    ]
+    next_cursor = str(rows[-1].id) if rows and has_more else None
+    return {
+        "logs": [
+            {
+                "id": str(r.id),
+                "session_id": str(r.session_id) if r.session_id else None,
+                "created_at": r.created_at.isoformat(),
+                "user_id": r.user_id,
+                "direction": r.direction,
+                "message": r.message,
+                "response": r.response,
+                "resolution": r.resolution,
+                "action_called": r.action_called,
+                "latency_ms": r.latency_ms,
+                "delivered": r.delivered,
+                "sources": r.sources or [],
+                "channel": r.channel,
+                "extra_fields": r.extra_fields or {},
+                "session_info": sessions.get(str(r.session_id)) if r.session_id else None,
+            }
+            for r in rows
+        ],
+        "next_cursor": next_cursor,
+        "has_more": has_more,
+    }
 
 
 @router.get("/billing")
@@ -272,21 +291,37 @@ def list_ratings(
     db: Session = Depends(get_db),
     user_id: str | None = None,
     days: int = 30,
+    limit: int = 50,
+    last_id: str | None = None,
 ):
-    """List conversation ratings."""
+    """List conversation ratings with cursor-based pagination."""
+    limit = min(limit, 200)
     q = db.query(ConversationRating).filter(ConversationRating.tenant_id == tenant.id)
     if user_id:
         q = q.filter(ConversationRating.user_id == user_id)
     q = q.filter(ConversationRating.created_at >= datetime.utcnow() - timedelta(days=days))
-    rows = q.order_by(ConversationRating.created_at.desc()).all()
-    return [
-        {
-            "id": str(r.id),
-            "user_id": r.user_id,
-            "message_id": str(r.message_id) if r.message_id else None,
-            "rating": r.rating,
-            "feedback": r.feedback,
-            "created_at": r.created_at.isoformat(),
-        }
-        for r in rows
-    ]
+    if last_id:
+        last_rating = db.query(ConversationRating.created_at).filter(ConversationRating.id == last_id).first()
+        if last_rating:
+            q = q.filter(ConversationRating.created_at < last_rating.created_at)
+    rows = q.order_by(ConversationRating.created_at.desc()).limit(limit + 1).all()
+    has_more = len(rows) > limit
+    if has_more:
+        rows = rows[:-1]
+
+    next_cursor = str(rows[-1].id) if rows and has_more else None
+    return {
+        "ratings": [
+            {
+                "id": str(r.id),
+                "user_id": r.user_id,
+                "message_id": str(r.message_id) if r.message_id else None,
+                "rating": r.rating,
+                "feedback": r.feedback,
+                "created_at": r.created_at.isoformat(),
+            }
+            for r in rows
+        ],
+        "next_cursor": next_cursor,
+        "has_more": has_more,
+    }

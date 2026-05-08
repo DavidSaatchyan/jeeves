@@ -5,10 +5,6 @@ Goals:
 - Structure-aware splitting: Markdown by heading hierarchy; PDF per page.
 - Rich per-chunk metadata: filename, section path, page, char offsets.
 - Deterministic chunk IDs so re-indexing is idempotent.
-
-NOTE: this module is duplicated verbatim into worker/chunking.py so that
-the Celery worker (separate Docker context) uses the same logic.
-Keep them in sync, or extract to a shared pip package later.
 """
 from __future__ import annotations
 

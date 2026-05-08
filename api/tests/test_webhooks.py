@@ -1,4 +1,4 @@
-"""Unit tests for webhooks.py and webhook Celery tasks."""
+"""Unit tests for webhooks.py and outgoing webhook functionality."""
 from __future__ import annotations
 
 import hashlib

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import uuid
 from datetime import datetime, timezone
@@ -16,6 +17,8 @@ from .auth import get_current_tenant
 from .config import get_settings
 from .db import get_db, engine
 from .models import FileRecord, Tenant
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 
@@ -165,7 +168,7 @@ def delete_file(
     if not rec:
         raise HTTPException(404, "file not found")
 
-    print(f"[knowledge] delete: file_id={file_id} filename={rec.filename} tenant={tenant.id}", flush=True)
+    logger.info("delete: file_id=%s filename=%s tenant=%s", file_id, rec.filename, tenant.id)
 
     # Remove physical file first (fast)
     file_path = rec.s3_key
@@ -184,7 +187,7 @@ def delete_file(
         from . import rag
         rag.delete_file(tenant.id, file_id)
     except Exception as e:
-        print(f"[knowledge] chroma delete warning: {e}", flush=True)
+        logger.warning("chroma delete warning: %s", e)
 
     # Clear conversation history (non-critical, don't block on errors)
     try:
