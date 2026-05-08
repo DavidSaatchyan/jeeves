@@ -135,8 +135,18 @@ def _run_alembic_migrations() -> None:
     try:
         command.upgrade(alembic_cfg, "head")
         logging.info("Alembic migrations applied successfully")
-    except Exception:
-        logging.exception("Alembic migration failed — check database connectivity and migration files")
+    except Exception as e:
+        error_str = str(e).lower()
+        if "already exists" in error_str or "duplicate" in error_str:
+            from sqlalchemy import inspect
+            inspector = inspect(engine)
+            if "tenants" in inspector.get_table_names():
+                command.stamp(alembic_cfg, "head")
+                logging.info("Existing DB detected — stamped alembic to head without re-running migrations")
+            else:
+                logging.exception("Alembic migration failed — unexpected duplicate table without tenants")
+        else:
+            logging.exception("Alembic migration failed — check database connectivity and migration files")
 
 
 @app.on_event("startup")
