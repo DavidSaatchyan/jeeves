@@ -8,7 +8,6 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from . import agent, billing
 from .auth import get_current_tenant
 from .db import get_db
 from .models import ChatLog, Tenant, WebhookConfig, WriteBackConfig
@@ -19,6 +18,31 @@ from .schemas import ChatIn, ChatOut
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["chat"])
+
+
+async def _simple_llm_response(tenant_id, message: str) -> dict:
+    """Direct LLM call without agent tool loop (v2 replacement)."""
+    import time
+    from .config import get_settings
+
+    settings = get_settings()
+    start = time.monotonic()
+    try:
+        from openai import AsyncOpenAI
+        client = AsyncOpenAI(api_key=settings.openai_api_key)
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": message}],
+            temperature=0.3,
+            max_tokens=500,
+        )
+        text = response.choices[0].message.content or ""
+    except Exception as e:
+        logger.error("LLM call failed: %s", e)
+        text = "I'm sorry, I'm having trouble processing your request."
+
+    elapsed = int((time.monotonic() - start) * 1000)
+    return {"response": text, "latency_ms": elapsed, "escalated": False}
 
 
 def _get_client_ip(request: Request) -> str:
@@ -100,8 +124,6 @@ async def chat(body: ChatIn, request: Request, tenant: Tenant = Depends(get_curr
     if flagged:
         raise HTTPException(400, "Message violates content policy")
 
-    billing.enforce(tenant)
-
     session_id = uuid.uuid4()
 
     log = ChatLog(
@@ -114,17 +136,14 @@ async def chat(body: ChatIn, request: Request, tenant: Tenant = Depends(get_curr
     db.add(log)
     db.commit()
 
-    result = await agent.run(db, tenant.id, body.user_id, body.message, session_id=session_id)
+    result = await _simple_llm_response(tenant.id, body.message)
 
     log.response = result["response"]
-    log.resolution = "escalated" if result["escalated"] else "resolved"
-    log.action_called = result["action_called"]
+    log.resolution = "resolved"
     log.latency_ms = result["latency_ms"]
-    log.sources = result.get("sources") or []
-    log.session_id = result.get("session_id")
+    log.session_id = session_id
     tenant.dialogs_used += 1
-    if not result["escalated"]:
-        tenant.resolved_count += 1
+    tenant.resolved_count += 1
     db.commit()
 
     # Fire outgoing webhooks for configured events
@@ -139,8 +158,8 @@ async def chat(body: ChatIn, request: Request, tenant: Tenant = Depends(get_curr
 
     return ChatOut(
         response=result["response"],
-        action_called=result["action_called"],
+        action_called="",
         latency_ms=result["latency_ms"],
-        escalated=result.get("escalated", False),
-        resolution="escalated" if result.get("escalated") else "resolved",
+        escalated=False,
+        resolution="resolved",
     )

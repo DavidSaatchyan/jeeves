@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Analytics</h1>
+<p class="page-desc">Workflow performance and revenue metrics over the last 30 days.</p>
+
+<div class="stats">
+  <div class="stat">
+    <div class="n" id="statRecoveredRevenue">$0</div>
+    <div class="l">Recovered revenue</div>
+    <div class="sub">Estimated MRR saved</div>
+  </div>
+  <div class="stat">
+    <div class="n" id="statSaveRate">0%</div>
+    <div class="l">Save rate</div>
+    <div class="sub">Workflow success rate</div>
+  </div>
+  <div class="stat">
+    <div class="n" id="statRecovered">0</div>
+    <div class="l">Recovered</div>
+    <div class="sub">Successful resolutions</div>
+  </div>
+  <div class="stat">
+    <div class="n" id="statTotal">0</div>
+    <div class="l">Total workflows</div>
+    <div class="sub">All workflows (30d)</div>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Outcome breakdown</h2>
+    <div id="outcomeChart" class="chart-placeholder">Loading...</div>
+  </div>
+  <div class="card">
+    <h2>Activity</h2>
+    <div class="stat" style="border:none;padding:0;background:transparent">
+      <div class="flex" style="justify-content:space-between;margin-bottom:12px">
+        <span class="l">Active workflows</span>
+        <span class="n" id="statActive" style="font-size:20px">0</span>
+      </div>
+      <div class="flex" style="justify-content:space-between;margin-bottom:12px">
+        <span class="l">Escalations (30d)</span>
+        <span class="n" id="statEscalations" style="font-size:20px">0</span>
+      </div>
+      <div class="flex" style="justify-content:space-between;margin-bottom:12px">
+        <span class="l">Communications sent</span>
+        <span class="n" id="statComms" style="font-size:20px">0</span>
+      </div>
+      <div class="flex" style="justify-content:space-between">
+        <span class="l">Failed</span>
+        <span class="n" id="statFailed" style="font-size:20px">0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadAnalytics() {
+  const r = await fetch('/admin/api/analytics');
+  const data = await r.json();
+  document.getElementById('statRecoveredRevenue').textContent = '$' + (data.recovered_revenue || 0).toLocaleString();
+  document.getElementById('statSaveRate').textContent = (data.save_rate || 0) + '%';
+  document.getElementById('statRecovered').textContent = data.recovered || 0;
+  document.getElementById('statTotal').textContent = data.total_workflows || 0;
+  document.getElementById('statActive').textContent = data.active_workflows || 0;
+  document.getElementById('statEscalations').textContent = data.escalations || 0;
+  document.getElementById('statComms').textContent = data.communications_sent || 0;
+  document.getElementById('statFailed').textContent = data.failed || 0;
+
+  var recovered = data.recovered || 0;
+  var failed = data.failed || 0;
+  var total = data.total_workflows || 1;
+  var active = data.active_workflows || 0;
+  var pctRecovered = Math.round((recovered / total) * 100);
+  var pctFailed = Math.round((failed / total) * 100);
+  var pctActive = Math.round((active / total) * 100);
+  var pctOther = 100 - pctRecovered - pctFailed - pctActive;
+
+  var chart = document.getElementById('outcomeChart');
+  chart.innerHTML = '<div style="display:flex;gap:8px;height:32px;border-radius:8px;overflow:hidden;margin-bottom:16px">' +
+    (pctRecovered > 0 ? '<div style="flex:' + pctRecovered + ';background:var(--green);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + pctRecovered + '%</div>' : '') +
+    (pctFailed > 0 ? '<div style="flex:' + pctFailed + ';background:var(--red);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + pctFailed + '%</div>' : '') +
+    (pctActive > 0 ? '<div style="flex:' + pctActive + ';background:rgba(129,140,248,0.5);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + pctActive + '%</div>' : '') +
+    (pctOther > 0 ? '<div style="flex:' + pctOther + ';background:var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted2)">' + pctOther + '%</div>' : '') +
+    '</div>' +
+    '<div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">' +
+    '<span class="flex gap-sm"><span style="width:10px;height:10px;border-radius:3px;background:var(--green);display:inline-block"></span><span class="muted" style="font-size:11px">Recovered (' + recovered + ')</span></span>' +
+    '<span class="flex gap-sm"><span style="width:10px;height:10px;border-radius:3px;background:var(--red);display:inline-block"></span><span class="muted" style="font-size:11px">Failed (' + failed + ')</span></span>' +
+    '<span class="flex gap-sm"><span style="width:10px;height:10px;border-radius:3px;background:rgba(129,140,248,0.5);display:inline-block"></span><span class="muted" style="font-size:11px">Active (' + active + ')</span></span>' +
+    '</div>';
+}
+loadAnalytics();
+</script>
+
+<style>
+.chart-placeholder { min-height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted2); font-size:13px; }
+</style>
+{% endblock %}

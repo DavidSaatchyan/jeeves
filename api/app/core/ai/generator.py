@@ -1,0 +1,73 @@
+from __future__ import annotations
+
+import json
+import logging
+from typing import Any
+
+from ...config import get_settings
+
+logger = logging.getLogger(__name__)
+
+_settings = get_settings()
+
+
+async def generate_email(context: dict[str, Any], template_name: str) -> str:
+    prompt = (
+        f"Generate a customer-friendly email based on this context:\n"
+        f"Template: {template_name}\n"
+        f"Context: {json.dumps(context)}\n\n"
+        f"Write a concise, professional email. Max 3 paragraphs.\n"
+        f"Respond with JSON: {{\"subject\": \"...\", \"body\": \"...\"}}"
+    )
+
+    try:
+        from openai import AsyncOpenAI
+
+        client = AsyncOpenAI(api_key=_settings.openai_api_key)
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+            max_tokens=300,
+        )
+        raw = response.choices[0].message.content or ""
+    except Exception as e:
+        logger.error("email generator LLM call failed: %s", e)
+        return ""
+
+    try:
+        parsed = json.loads(raw)
+        return parsed.get("body", "")
+    except (json.JSONDecodeError, ValueError, TypeError):
+        return ""
+
+
+async def generate_widget_message(context: dict[str, Any], template_name: str) -> str:
+    prompt = (
+        f"Generate a short, conversational widget message based on:\n"
+        f"Template: {template_name}\n"
+        f"Context: {json.dumps(context)}\n\n"
+        f"Write 1-2 short sentences, conversational tone, max 100 chars.\n"
+        f"Respond with JSON: {{\"message\": \"...\"}}"
+    )
+
+    try:
+        from openai import AsyncOpenAI
+
+        client = AsyncOpenAI(api_key=_settings.openai_api_key)
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+            max_tokens=150,
+        )
+        raw = response.choices[0].message.content or ""
+    except Exception as e:
+        logger.error("widget message generator LLM call failed: %s", e)
+        return ""
+
+    try:
+        parsed = json.loads(raw)
+        return parsed.get("message", "")
+    except (json.JSONDecodeError, ValueError, TypeError):
+        return ""

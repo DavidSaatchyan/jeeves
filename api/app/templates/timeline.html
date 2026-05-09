@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Timeline</h1>
+<p class="page-desc">Unified operational audit trail across all workflows and escalations.</p>
+
+<div class="card">
+  <div class="card-header">
+    <h2>Events</h2>
+    <div class="flex" style="gap:8px">
+      <select id="tlEventType" onchange="loadTimeline()" style="width:auto">
+        <option value="">All types</option>
+        <option value="transition">Transitions</option>
+        <option value="comms_sent">Communications</option>
+        <option value="comms_failed">Comms failed</option>
+        <option value="escalation_created">Escalations</option>
+        <option value="recovered">Recovered</option>
+        <option value="failed">Failed</option>
+      </select>
+      <input type="date" id="tlDateFrom" onchange="loadTimeline()" style="width:auto">
+      <input type="date" id="tlDateTo" onchange="loadTimeline()" style="width:auto">
+    </div>
+  </div>
+  <div id="timelineEvents"></div>
+  <div id="tlPagination" class="flex" style="justify-content:center;margin-top:16px;gap:8px"></div>
+</div>
+
+<script>
+var tlOffset = 0;
+var tlTotal = 0;
+
+async function loadTimeline() {
+  const params = new URLSearchParams();
+  const type = document.getElementById('tlEventType').value;
+  const from = document.getElementById('tlDateFrom').value;
+  const to = document.getElementById('tlDateTo').value;
+  if (type) params.set('event_type', type);
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  params.set('offset', tlOffset);
+  params.set('limit', 50);
+
+  const r = await fetch('/admin/api/timeline?' + params.toString());
+  const data = await r.json();
+  tlTotal = data.total || 0;
+  const container = document.getElementById('timelineEvents');
+  container.innerHTML = (data.events || []).map(e => {
+    var dotColor = e.event_type && e.event_type.indexOf('recovered') >= 0 ? 'var(--green)' : (e.event_type && e.event_type.indexOf('escalation') >= 0 ? 'var(--red)' : (e.event_type && e.event_type.indexOf('failed') >= 0 ? 'var(--red)' : 'var(--muted2)'));
+    var time = e.created_at ? e.created_at.slice(11, 19) : '';
+    return '<div class="tl-row">' +
+      '<span class="tl-dot" style="background:' + dotColor + '"></span>' +
+      '<span class="muted2" style="min-width:50px;font-size:11px">' + time + '</span>' +
+      '<span class="pill ' + (e.event_type && e.event_type.indexOf('recovered') >= 0 ? 'ok' : (e.event_type && e.event_type.indexOf('failed') >= 0 ? 'err' : (e.event_type && e.event_type.indexOf('escalation') >= 0 ? 'err' : 'muted'))) + '" style="font-size:10px">' + esc(e.event_type || '') + '</span>' +
+      '<span class="muted" style="font-size:12px">' + esc(e.entity_type || '') + ' ' + ((e.entity_id||'').slice(0,10)) + '</span>' +
+      '<span class="muted2" style="font-size:11px;margin-left:auto">' + (e.created_at ? e.created_at.slice(0, 10) : '') + '</span>' +
+      '</div>';
+  }).join('') || '<div class="empty-state">No events found.</div>';
+  renderPagination();
+}
+
+function renderPagination() {
+  var el = document.getElementById('tlPagination');
+  var totalPages = Math.ceil(tlTotal / 50);
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+  var cur = Math.floor(tlOffset / 50) + 1;
+  el.innerHTML = '<button class="ghost sm" onclick="tlOffset=Math.max(0,tlOffset-50);loadTimeline()" ' + (tlOffset <= 0 ? 'disabled' : '') + '>← Prev</button>' +
+    '<span class="muted2" style="font-size:12px">Page ' + cur + ' of ' + totalPages + '</span>' +
+    '<button class="ghost sm" onclick="tlOffset=Math.min(tlOffset+50,(totalPages-1)*50);loadTimeline()" ' + (tlOffset >= (totalPages-1)*50 ? 'disabled' : '') + '>Next →</button>';
+}
+
+loadTimeline();
+</script>
+
+<style>
+.tl-row { display:flex; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); }
+.tl-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+</style>
+{% endblock %}

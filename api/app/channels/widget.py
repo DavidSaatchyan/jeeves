@@ -16,7 +16,7 @@ from ..models import ChannelConfig, ChatLog, ConversationRating, Tenant
 from ..moderation import moderate
 from ..rate_limit import check_rate_limit
 from ..schemas import ChatOut, WidgetChatIn
-from .. import agent, billing
+from ..routes_chat import _simple_llm_response
 
 router = APIRouter(tags=["widget"])
 
@@ -118,8 +118,6 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
     if not tenant:
         raise HTTPException(404, "tenant not found")
 
-    billing.enforce(tenant)
-
     session_id = uuid.uuid4()
 
     log = ChatLog(
@@ -133,31 +131,24 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
     db.add(log)
     db.commit()
 
-    result = await agent.run(
-        db, tenant.id, body.user_id, body.message,
-        extra_fields=body.extra_fields or {},
-        session_id=session_id,
-    )
+    result = await _simple_llm_response(tenant.id, body.message)
 
     log.response = result["response"]
-    log.resolution = "escalated" if result["escalated"] else "resolved"
-    log.action_called = result["action_called"]
+    log.resolution = "resolved"
     log.latency_ms = result["latency_ms"]
-    log.sources = result.get("sources") or []
-    log.session_id = result.get("session_id")
+    log.session_id = session_id
     log.channel = body.channel or "web_widget"
     if log.channel != "test_widget":
         tenant.dialogs_used += 1
-        if not result["escalated"]:
-            tenant.resolved_count += 1
+        tenant.resolved_count += 1
     db.commit()
 
     return ChatOut(
         response=result["response"],
-        action_called=result["action_called"],
+        action_called="",
         latency_ms=result["latency_ms"],
-        escalated=result.get("escalated", False),
-        resolution="escalated" if result.get("escalated") else "resolved",
+        escalated=False,
+        resolution="resolved",
     )
 
 

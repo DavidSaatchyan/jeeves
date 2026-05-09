@@ -11,7 +11,6 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 
-from . import memory, rag
 from .chunking import file_sha256, sanitize_filename
 from .auth import get_current_tenant
 from .config import get_settings
@@ -32,6 +31,7 @@ async def _background_index(tenant_id: uuid.UUID, file_id: uuid.UUID, file_path:
     """Run RAG indexing in a background thread to avoid blocking the HTTP request."""
     import logging
     try:
+        from . import rag
         logging.info("[index] Starting indexing file %s at %s", file_id, file_path)
         n = await asyncio.to_thread(rag.index_file, tenant_id, file_id, file_path)
         logging.info("[index] Indexed %s chunks for file %s, updating DB", n, file_id)
@@ -184,15 +184,8 @@ def delete_file(
 
     # Delete from Chroma (can be slow, do after DB commit so user sees it gone)
     try:
-        from . import rag
-        rag.delete_file(tenant.id, file_id)
+rag.delete_file(tenant.id, file_id)
     except Exception as e:
         logger.warning("chroma delete warning: %s", e)
-
-    # Clear conversation history (non-critical, don't block on errors)
-    try:
-        memory.clear_tenant(str(tenant.id))
-    except Exception:
-        pass
 
     return

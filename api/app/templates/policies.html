@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Policies</h1>
+<p class="page-desc">Configure workflow governance rules and toggle which automations are active.</p>
+
+<div class="card">
+  <h2>Enabled workflows</h2>
+  <p class="muted" style="margin-bottom:16px">Toggle entire workflow types on or off. Disabled workflows will not start for new events.</p>
+  <div id="workflowToggles"></div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Retry Policy</h2>
+    <form onsubmit="savePolicy(event, 'retry')">
+      <label>Max attempts</label>
+      <input type="number" id="retryMaxAttempts" value="3" min="1" max="10">
+      <label>Retry windows (seconds, comma-separated)</label>
+      <input type="text" id="retryWindows" value="300,3600,86400">
+      <label>Cooldown (minutes)</label>
+      <input type="number" id="retryCooldown" value="5" min="1">
+      <button type="submit" class="sm" style="margin-top:16px">Save</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Communication Policy</h2>
+    <form onsubmit="savePolicy(event, 'communication')">
+      <label>Max outreach per workflow</label>
+      <input type="number" id="commMaxOutreach" value="3" min="1">
+      <label>Cooldown between messages (hours)</label>
+      <input type="number" id="commCooldown" value="24" min="1">
+      <label>Allowed channels</label>
+      <input type="text" id="commChannels" value="email,widget">
+      <button type="submit" class="sm" style="margin-top:16px">Save</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Escalation Policy</h2>
+    <form onsubmit="savePolicy(event, 'escalation')">
+      <label>Frustration threshold</label>
+      <select id="escFrustrationThreshold">
+        <option value="none">None</option>
+        <option value="low">Low</option>
+        <option value="medium" selected>Medium</option>
+        <option value="high">High</option>
+      </select>
+      <label>Max failures before escalation</label>
+      <input type="number" id="escMaxFailures" value="3" min="1">
+      <label>SLA hours</label>
+      <input type="number" id="escSlaHours" value="24" min="1">
+      <button type="submit" class="sm" style="margin-top:16px">Save</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Approval Policy</h2>
+    <form onsubmit="savePolicy(event, 'approval')">
+      <label>Actions requiring merchant approval</label>
+      <input type="text" id="appActions" value="discount,credit,refund">
+      <label>Allowed save actions</label>
+      <input type="text" id="appSaveActions" value="pause,skip,delay">
+      <button type="submit" class="sm" style="margin-top:16px">Save</button>
+    </form>
+  </div>
+</div>
+
+<script>
+var WF_TYPES = [
+  { key: 'payment_recovery', label: 'Payment Recovery', desc: 'Automatically retry failed recurring payments and recover revenue.' },
+  { key: 'cancellation_save', label: 'Cancellation Save', desc: 'Intercept cancellation requests and offer retention offers.' },
+  { key: 'wismo', label: 'WISMO', desc: 'Respond to "Where Is My Order?" inquiries with shipment status.' },
+];
+
+async function loadPolicies() {
+  const r = await fetch('/admin/api/policies');
+  const data = await r.json();
+
+  // Workflow toggles
+  var enabled = data.enabled_workflows || [];
+  var container = document.getElementById('workflowToggles');
+  container.innerHTML = WF_TYPES.map(function(wt) {
+    var on = enabled.indexOf(wt.key) >= 0;
+    return '<div class="toggle-wrap">' +
+      '<div class="toggle' + (on ? ' on' : '') + '" data-wf="' + wt.key + '" onclick="toggleWorkflow(this)"></div>' +
+      '<div><div class="toggle-label">' + wt.label + '</div><div class="toggle-desc">' + wt.desc + '</div></div>' +
+      '<span class="pill ' + (on ? 'ok' : 'muted') + '" style="margin-left:auto">' + (on ? 'Active' : 'Disabled') + '</span>' +
+      '</div>';
+  }).join('');
+
+  if (data.retry) {
+    document.getElementById('retryMaxAttempts').value = data.retry.max_attempts || 3;
+    document.getElementById('retryWindows').value = (data.retry.retry_windows || []).join(',');
+    document.getElementById('retryCooldown').value = data.retry.cooldown_minutes || 5;
+  }
+  if (data.communication) {
+    document.getElementById('commMaxOutreach').value = data.communication.max_outreach_per_workflow || 3;
+    document.getElementById('commCooldown').value = data.communication.cooldown_between_messages || 24;
+    document.getElementById('commChannels').value = (data.communication.allowed_channels || []).join(',');
+  }
+  if (data.escalation) {
+    document.getElementById('escFrustrationThreshold').value = data.escalation.frustration_threshold || 'medium';
+    document.getElementById('escMaxFailures').value = data.escalation.max_failures_before_escalation || 3;
+    document.getElementById('escSlaHours').value = data.escalation.sla_hours || 24;
+  }
+}
+
+async function toggleWorkflow(el) {
+  var wf = el.getAttribute('data-wf');
+  var on = !el.classList.contains('on');
+  el.classList.toggle('on', on);
+
+  var r = await fetch('/admin/api/policies/enabled_workflows', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(WF_TYPES.map(function(wt) {
+      var toggle = document.querySelector('.toggle[data-wf="'+wt.key+'"]');
+      return toggle && toggle.classList.contains('on') ? wt.key : null;
+    }).filter(Boolean)),
+  });
+  if (r.ok) loadPolicies();
+}
+
+async function savePolicy(e, type) {
+  e.preventDefault();
+  const payload = {};
+  if (type === 'retry') {
+    payload.max_attempts = parseInt(document.getElementById('retryMaxAttempts').value);
+    payload.retry_windows = document.getElementById('retryWindows').value.split(',').map(Number);
+    payload.cooldown_minutes = parseInt(document.getElementById('retryCooldown').value);
+  }
+  if (type === 'communication') {
+    payload.max_outreach_per_workflow = parseInt(document.getElementById('commMaxOutreach').value);
+    payload.cooldown_between_messages = parseInt(document.getElementById('commCooldown').value);
+    payload.allowed_channels = document.getElementById('commChannels').value.split(',');
+  }
+  if (type === 'escalation') {
+    payload.frustration_threshold = document.getElementById('escFrustrationThreshold').value;
+    payload.max_failures_before_escalation = parseInt(document.getElementById('escMaxFailures').value);
+    payload.sla_hours = parseInt(document.getElementById('escSlaHours').value);
+  }
+  if (type === 'approval') {
+    payload.requires_approval = document.getElementById('appActions').value.split(',');
+    payload.allowed_save_actions = document.getElementById('appSaveActions').value.split(',');
+  }
+  await fetch('/admin/api/policies/' + type, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload),
+  });
+  alert('Policy saved');
+}
+loadPolicies();
+</script>
+{% endblock %}

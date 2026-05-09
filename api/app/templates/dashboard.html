@@ -1,383 +1,266 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>Dashboard</h1>
-<p class="page-desc">Performance overview for the last 7 days.</p>
+<p class="page-desc">Operational overview of your automated workflows.</p>
 
-<!-- Content wrapper with skeleton loader -->
-<div id="dashSkeleton">
-  <div class="sk-getting-started ds-skeleton" id="skGettingStarted" style="display:none"></div>
-  <div class="sk-hero">
-    <div class="sk-hero-card ds-skeleton"></div>
-    <div class="sk-hero-card ds-skeleton"></div>
-    <div class="sk-hero-card ds-skeleton"></div>
-    <div class="sk-hero-card ds-skeleton"></div>
+<!-- Onboarding Wizard -->
+<div id="onboardingWizard" class="ob-wizard" style="display:none">
+  <div class="ob-header">
+    <h2>Welcome to Jeeves</h2>
+    <p class="muted">Connect your stack and launch automation in 5 minutes.</p>
   </div>
-  <div class="sk-sub ds-skeleton"></div>
-  <div class="grid grid-2">
-    <div class="card"><h2>Dialogs — last 7 days</h2><div class="sk-chart ds-skeleton"></div></div>
-    <div class="card"><h2>Peak hours</h2><div class="sk-chart ds-skeleton"></div></div>
-  </div>
-  <div class="grid grid-2">
-    <div class="card"><h2>Channels</h2><div class="sk-list ds-skeleton"></div></div>
-    <div class="card"><h2>Recent escalations</h2><div class="sk-list ds-skeleton"></div></div>
+
+  <div class="ob-progress" id="obProgress"></div>
+
+  <div id="obBody" class="ob-body"></div>
+
+  <div class="ob-actions" id="obActions"></div>
+
+  <div style="text-align:center;margin-top:16px">
+    <button class="ghost sm" onclick="dismissOnboarding()">I'll do this later</button>
   </div>
 </div>
 
-<!-- Real content: hidden until data loads -->
+<!-- Dashboard Content -->
 <div id="dashContent" style="display:none">
 
-<div id="gettingStarted" class="card" style="display:none;border-top:2px solid var(--accent)">
-  <div class="flex" style="justify-content:space-between;align-items:start">
-    <div>
-      <h2 style="margin:0">Getting started</h2>
-      <p class="muted" style="margin:4px 0 0">Complete these steps to activate your agent.</p>
-    </div>
-    <button class="ghost sm" onclick="dismissGettingStarted()">Dismiss</button>
-  </div>
-  <div id="stepsList" style="margin-top:16px"></div>
-</div>
+  <!-- Status bar: all-connect progress -->
+  <div class="status-bar" id="statusBar"></div>
 
-<!-- Hero stats row -->
-<div class="ds-hero" id="heroStats">
-  <div class="ds-hero-card ds-hero-primary">
-    <div class="ds-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-    <div>
-      <div class="ds-hero-num" id="s1">–</div>
-      <div class="ds-hero-label">Dialogs</div>
+  <!-- Hero stats -->
+  <div class="stats" id="heroStats">
+    <div class="stat">
+      <div class="n" id="revRecovered">$0</div>
+      <div class="l">Revenue recovered</div>
+      <div class="sub" id="revTrend"></div>
+    </div>
+    <div class="stat">
+      <div class="n" id="saveRate">0%</div>
+      <div class="l">Save rate</div>
+      <div class="sub">Cancellation retention success</div>
+    </div>
+    <div class="stat">
+      <div class="n" id="activeWf">0</div>
+      <div class="l">Active workflows</div>
+      <div class="sub" id="activeWfBreakdown"></div>
+    </div>
+    <div class="stat">
+      <div class="n" id="recoveryRate">0%</div>
+      <div class="l">Recovery rate</div>
+      <div class="sub">Failed payment recovery success</div>
     </div>
   </div>
-  <div class="ds-hero-card ds-hero-green">
-    <div class="ds-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-    <div>
-      <div class="ds-hero-num" id="s2">–</div>
-      <div class="ds-hero-label">Resolved</div>
-    </div>
-  </div>
-  <div class="ds-hero-card ds-hero-amber">
-    <div class="ds-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-    <div>
-      <div class="ds-hero-num" id="s3">–</div>
-      <div class="ds-hero-label">Resolution rate</div>
-    </div>
-  </div>
-  <div class="ds-hero-card ds-hero-cyan">
-    <div class="ds-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
-    <div>
-      <div class="ds-hero-num" id="s6">–</div>
-      <div class="ds-hero-label">Avg response</div>
-    </div>
-  </div>
-</div>
 
-<!-- Sub stats -->
-<div class="ds-sub-stats" id="subStats">
-  <div class="ds-sub-item">
-    <span class="ds-sub-label">Escalated</span>
-    <span class="ds-sub-val" id="s7" style="color:var(--red)">–</span>
+  <!-- Recovery funnel + Recent activity -->
+  <div class="grid grid-2">
+    <div class="card">
+      <h2>Recovery funnel</h2>
+      <div id="recoveryFunnel" class="funnel"></div>
+    </div>
+    <div class="card">
+      <h2>Recent activity</h2>
+      <div id="recentActivity" class="muted" style="padding:16px 0">Loading...</div>
+    </div>
   </div>
-</div>
 
-<!-- Charts row: area chart + dot heatmap -->
-<div class="grid grid-2">
-  <div class="card ds-chart-card">
-    <h2>Dialogs — last 7 days</h2>
-    <canvas id="trendChart" height="220" style="width:100%"></canvas>
-  </div>
-  <div class="card ds-chart-card">
-    <h2>Peak hours</h2>
-    <div id="heatmapContainer" style="padding:8px 0"></div>
+  <!-- Escalations + Workflow metrics -->
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-header">
+        <h2>Open escalations</h2>
+        <a href="/admin/escalations" class="btn ghost sm">View all</a>
+      </div>
+      <div id="escalationsList"></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h2>Workflow activity</h2>
+      </div>
+      <div id="wfActivityList"></div>
+    </div>
   </div>
 </div>
 
-<!-- Bottom row: channels + unresolved -->
-<div class="grid grid-2">
-  <div class="card">
-    <h2>Channels</h2>
-    <div id="channelsBreakdown"></div>
-  </div>
-  <div class="card">
-    <h2>Recent escalations</h2>
-    <div id="unresolvedList"></div>
+<div id="dashSkeleton" style="padding:40px 0">
+  <div class="stats">
+    <div class="stat"><div class="n" style="background:rgba(255,255,255,0.04);border-radius:6px;height:32px;width:80px"></div></div>
+    <div class="stat"><div class="n" style="background:rgba(255,255,255,0.04);border-radius:6px;height:32px;width:60px"></div></div>
+    <div class="stat"><div class="n" style="background:rgba(255,255,255,0.04);border-radius:6px;height:32px;width:40px"></div></div>
+    <div class="stat"><div class="n" style="background:rgba(255,255,255,0.04);border-radius:6px;height:32px;width:60px"></div></div>
   </div>
 </div>
 
-</div>
 {% endblock %}
 {% block tail %}
-<style>
-/* Hero stats */
-.ds-hero { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:14px; }
-.ds-hero-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px 16px; display:flex; align-items:center; gap:14px; }
-.ds-hero-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(255,255,255,0.04); color:#e2e8f0; }
-.ds-hero-icon svg { width:20px; height:20px; }
-.ds-hero-green .ds-hero-icon { background:rgba(16,185,129,0.10); color:#34d399; }
-.ds-hero-amber .ds-hero-icon { background:rgba(245,158,11,0.10); color:#fbbf24; }
-.ds-hero-cyan .ds-hero-icon { background:rgba(6,182,212,0.10); color:#22d3ee; }
-.ds-hero-num { font-size:26px; font-weight:800; letter-spacing:-1px; line-height:1.1; }
-.ds-hero-label { font-size:11px; color:var(--muted); margin-top:2px; font-weight:500; }
-
-/* Sub stats */
-.ds-sub-stats { display:flex; gap:24px; margin-bottom:20px; padding:10px 0; border-bottom:1px solid var(--border); }
-.ds-sub-item { display:flex; align-items:center; gap:8px; font-size:12px; }
-.ds-sub-label { color:var(--muted2); }
-.ds-sub-val { font-weight:700; color:var(--text); }
-
-/* Chart cards */
-.ds-chart-card canvas { display:block; }
-
-/* Heatmap */
-.ds-heatmap-wrap { display:flex; flex-direction:column; gap:4px; }
-.ds-hm-row { display:grid; grid-template-columns:28px repeat(12,1fr); gap:3px; align-items:center; }
-.ds-hm-row-label { font-size:10px; color:var(--muted2); font-weight:600; text-align:right; padding-right:4px; }
-.ds-hm-cell { aspect-ratio:1; border-radius:3px; background:rgba(255,255,255,0.03); position:relative; cursor:default; }
-.ds-hm-cell:hover { outline:1px solid rgba(255,255,255,0.15); }
-.ds-hm-cell[data-tooltip]:hover::after { content:attr(data-tooltip); position:absolute; bottom:calc(100% + 4px); left:50%; transform:translateX(-50%); background:#1e293b; color:#f1f5f9; font-size:10px; padding:2px 6px; border-radius:4px; white-space:nowrap; z-index:10; pointer-events:none; }
-.ds-hm-hours { display:grid; grid-template-columns:28px repeat(12,1fr); gap:3px; margin-bottom:4px; }
-.ds-hm-hours span { font-size:9px; color:var(--muted2); text-align:center; }
-.ds-hm-hours span:first-child { visibility:hidden; }
-
-@media(max-width:768px){ .ds-hero{grid-template-columns:1fr 1fr} .ds-sub-stats{flex-wrap:wrap;gap:12px} }
-
-/* Skeleton loader */
-.ds-skeleton { animation:ds-pulse 1.5s ease-in-out infinite; background:rgba(255,255,255,0.04); border-radius:8px; }
-@keyframes ds-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-.sk-hero { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:14px; }
-.sk-hero-card { height:72px; border-radius:12px; }
-.sk-sub { height:20px; width:80px; margin-bottom:20px; }
-.sk-chart { height:220px; border-radius:12px; }
-.sk-list { height:120px; border-radius:12px; }
-.sk-getting-started { height:100px; border-radius:12px; margin-bottom:14px; }
-</style>
 <script>
-var dismissed = localStorage.getItem('jeeves_gs_dismiss');
-function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+var OBS_DISMISSED = localStorage.getItem('jeeves_ob_dismiss');
 
-async function loadStats(){
-  try{
-    const s = await api('/dashboard/stats');
-    s1.textContent = s.dialogs_week;
-    s2.textContent = s.resolved_week;
-    s3.textContent = (s.resolution_rate_week*100).toFixed(0)+'%';
-    s6.textContent = s.avg_latency_ms ? s.avg_latency_ms+'ms' : '–';
-    s7.textContent = s.escalated_week;
-  }catch(e){ console.error(e); }
+// ─── Onboarding Wizard ─────────────────────────────────────
+var OB_STEPS = [
+  { label: 'Shopify', api: 'integrations', desc: 'Connect your store for orders & customers' },
+  { label: 'Recharge', api: 'integrations', desc: 'Connect subscriptions for save flows' },
+  { label: 'Stripe', api: 'integrations', desc: 'Connect payments for recovery automations' },
+  { label: 'Policies', api: 'policies', desc: 'Set retry limits, escalation rules & more' },
+  { label: 'Launch', api: null, desc: 'Enable workflows and start automating' },
+];
+
+var OB_STATE = [];
+
+async function loadOnboardingStatus() {
+  if (OBS_DISMISSED) return;
+  try {
+    var connectors = await api('/admin/api/integrations');
+    var connected = {};
+    (connectors.native_connectors||[]).forEach(function(nc){ connected[nc.provider] = nc.status === 'connected'; });
+    var policies = await api('/admin/api/policies');
+
+    OB_STATE = [
+      connected.shopify || false,
+      false, // recharge — no endpoint yet, default false
+      connected.stripe || false,
+      !!(policies.retry), // policies configured if retry exists
+      false, // launch — manual toggle
+    ];
+
+    var done = OB_STATE.filter(Boolean).length;
+    if (done >= 5) return; // all done, hide wizard
+
+    document.getElementById('onboardingWizard').style.display = '';
+    renderOnboarding();
+  } catch(e) { console.error('ob status:', e); }
 }
 
-async function loadTrend(){
-  try{
-    const data = await api('/dashboard/trend');
-    console.log('Trend data:', data);
-    drawTrendChart(data);
-  }catch(e){ console.error('Trend error:', e); }
+function renderOnboarding() {
+  var activeIdx = OB_STATE.indexOf(false);
+  if (activeIdx === -1) { document.getElementById('onboardingWizard').style.display = 'none'; return; }
+
+  // Progress dots
+  document.getElementById('obProgress').innerHTML = OB_STEPS.map(function(s, i) {
+    var cls = OB_STATE[i] ? 'ob-step-dot ob-step-done' : (i === activeIdx ? 'ob-step-dot ob-step-current' : 'ob-step-dot ob-step-pending');
+    var lineCls = i < OB_STEPS.length - 1 ? (OB_STATE[i] ? 'ob-step-line done' : 'ob-step-line') : '';
+    return '<div class="ob-step"><div class="' + cls + '">' + (OB_STATE[i] ? '✓' : (i + 1)) + '<span class="ob-step-label">' + s.label + '</span></div>' + (lineCls ? '<div class="' + lineCls + '"></div>' : '') + '</div>';
+  }).join('');
+
+  var step = OB_STEPS[activeIdx];
+  var body = document.getElementById('obBody');
+  var actions = document.getElementById('obActions');
+
+  if (activeIdx < 4) {
+    body.innerHTML = '<div style="text-align:center;padding:20px 0"><div style="font-size:18px;font-weight:700;margin-bottom:8px">Connect ' + step.label + '</div><p class="muted" style="margin-bottom:20px">' + step.desc + '</p><a href="/admin/integrations" class="btn">Go to Integrations</a></div>';
+    actions.innerHTML = '<button class="ghost" onclick="skipObStep()">Skip this step</button>';
+  } else {
+    body.innerHTML = '<div style="text-align:center;padding:20px 0"><div style="font-size:18px;font-weight:700;margin-bottom:8px">Ready to launch?</div><p class="muted" style="margin-bottom:20px">Enable your workflows and Jeeves will start automating payment recovery, cancellation saves, and WISMO responses.</p><a href="/admin/policies" class="btn accent">Configure workflows</a></div>';
+    actions.innerHTML = '<button class="ghost" onclick="completeOnboarding()">Done, skip</button>';
+  }
 }
 
-async function loadHourly(){
-  try{
-    const data = await api('/dashboard/hourly');
-    drawHeatmap(data);
-  }catch(e){}
+function skipObStep() {
+  var idx = OB_STATE.indexOf(false);
+  if (idx >= 0 && idx < 4) { OB_STATE[idx] = true; renderOnboarding(); }
 }
 
-async function loadChannelsBreakdown(){
-  try{
-    const data = await api('/dashboard/channels-breakdown');
-    if(!data.length){
-      document.getElementById('channelsBreakdown').innerHTML = '<div class="muted" style="padding:20px;text-align:center">No data yet</div>';
-      return;
-    }
-    const total = data.reduce((a,b) => a+b.count, 0);
-    const colors = ['#818cf8','#a78bfa','#f472b6','#fbbf24','#34d399','#22d3ee'];
-    document.getElementById('channelsBreakdown').innerHTML = data.map((d,i) => {
-      const pct = ((d.count/total)*100).toFixed(0);
-      const label = d.channel==='web_widget'?'Website':d.channel==='telegram'?'Telegram':d.channel==='whatsapp'?'WhatsApp':d.channel;
-      const c = colors[i%colors.length];
-      return `<div style="margin-bottom:14px">
-        <div class="flex" style="justify-content:space-between;margin-bottom:5px">
-          <span style="font-size:13px;font-weight:600">${esc(label)}</span>
-          <span class="muted">${d.count} · ${pct}%</span>
-        </div>
-        <div style="height:5px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:${c};border-radius:3px;transition:width .6s ease"></div>
-        </div>
-      </div>`;
+function completeOnboarding() {
+  document.getElementById('onboardingWizard').style.display = 'none';
+}
+
+function dismissOnboarding() {
+  document.getElementById('onboardingWizard').style.display = 'none';
+  localStorage.setItem('jeeves_ob_dismiss', '1');
+}
+
+// ─── Dashboard Data ────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    var [stats, analytics, wfData, escData, tlData] = await Promise.allSettled([
+      api('/dashboard/stats').catch(function(){ return {}; }),
+      api('/admin/api/analytics').catch(function(){ return {}; }),
+      api('/admin/api/workflows').catch(function(){ return {workflows:[]}; }),
+      api('/admin/api/escalations').catch(function(){ return {escalations:[]}; }),
+      api('/admin/api/timeline?limit=10').catch(function(){ return {events:[]}; }),
+    ]);
+
+    var s = stats.value || {};
+    var a = analytics.value || {};
+    var wf = wfData.value || {workflows:[]};
+    var esc = escData.value || {escalations:[]};
+    var tl = tlData.value || {events:[]};
+
+    // Hero stats
+    document.getElementById('revRecovered').textContent = '$' + ((a.recovered_revenue || 0)).toLocaleString();
+    document.getElementById('saveRate').textContent = (a.save_rate || 0) + '%';
+
+    var workflows = wf.workflows || [];
+    var active = workflows.filter(function(w){ return w.status === 'active' || w.status === 'paused'; });
+    document.getElementById('activeWf').textContent = active.length;
+
+    var recovered = workflows.filter(function(w){ return w.current_state === 'RECOVERED'; }).length;
+    var failed = workflows.filter(function(w){ return w.current_state === 'FAILED'; }).length;
+    var total = recovered + failed;
+    document.getElementById('recoveryRate').textContent = total > 0 ? Math.round((recovered / total) * 100) + '%' : '—';
+
+    // Breakdown
+    var byType = {};
+    active.forEach(function(w){ byType[w.workflow_type] = (byType[w.workflow_type] || 0) + 1; });
+    document.getElementById('activeWfBreakdown').textContent = Object.entries(byType).map(function(e){ return e[1] + ' ' + e[0].replace('_', ' '); }).join(', ');
+
+    // Status bar (connection progress)
+    var connectors = {};
+    try {
+      var ci = await api('/admin/api/integrations');
+      (ci.native_connectors||[]).forEach(function(nc){ connectors[nc.provider] = nc.status === 'connected'; });
+    } catch(e) {}
+    var connNames = ['shopify', 'stripe'];
+    var doneConn = connNames.filter(function(p){ return connectors[p]; }).length;
+    document.getElementById('statusBar').innerHTML = connNames.map(function(p) {
+      var on = connectors[p];
+      return '<div class="sb-segment' + (on ? ' done' : '') + '" title="' + p + ': ' + (on ? 'connected' : 'not connected') + '"></div>';
+    }).join('') + '<span class="muted2" style="font-size:10px;margin-left:8px">' + doneConn + '/' + connNames.length + ' connected</span>';
+
+    // Recovery funnel
+    var detected = workflows.filter(function(w){ return w.workflow_type === 'payment_recovery'; }).length;
+    var outreached = workflows.filter(function(w){ return w.workflow_type === 'payment_recovery' && ['OUTREACH_SENT','WAITING_CUSTOMER','RETRY_SCHEDULED','RETRY_PENDING','RETRYING','VERIFYING_RESULT'].indexOf(w.current_state) >= 0; }).length;
+    var retried = workflows.filter(function(w){ return w.workflow_type === 'payment_recovery' && ['RETRY_PENDING','RETRYING','VERIFYING_RESULT'].indexOf(w.current_state) >= 0; }).length;
+    var recoveredCount = recovered;
+    var maxFunnel = Math.max(detected, 1);
+    var funnelBars = [
+      { v: detected, l: 'Detected', c: 'rgba(129,140,248,0.5)' },
+      { v: outreached, l: 'Outreach', c: 'rgba(129,140,248,0.65)' },
+      { v: retried, l: 'Retried', c: 'rgba(129,140,248,0.8)' },
+      { v: recoveredCount, l: 'Recovered', c: 'rgba(16,185,129,0.8)' },
+    ];
+    document.getElementById('recoveryFunnel').innerHTML = funnelBars.map(function(b) {
+      var pct = Math.max((b.v / maxFunnel) * 100, 4);
+      return '<div class="funnel-bar" style="height:' + pct + '%;background:' + b.c + '"><span class="f-val">' + b.v + '</span><span class="f-lbl">' + b.l + '</span></div>';
     }).join('');
-  }catch(e){}
+
+    // Recent activity
+    var events = (tl.events || []).slice(0, 8);
+    document.getElementById('recentActivity').innerHTML = events.length
+      ? events.map(function(e) {
+          var dotColor = e.event_type && e.event_type.indexOf('recovered') >= 0 ? 'var(--green)' : (e.event_type && e.event_type.indexOf('escalation') >= 0 ? 'var(--red)' : 'var(--muted2)');
+          var time = e.created_at ? e.created_at.slice(11, 19) : '';
+          return '<div class="tl-row"><span class="tl-dot" style="background:' + dotColor + '"></span><span class="muted2" style="min-width:50px;font-size:11px">' + time + '</span><span class="pill ' + (e.event_type && e.event_type.indexOf('recovered') >= 0 ? 'ok' : (e.event_type && e.event_type.indexOf('escalation') >= 0 ? 'err' : 'muted')) + '" style="font-size:10px">' + (e.event_type || '') + '</span><span class="muted" style="font-size:12px">' + (e.entity_type || '') + ' ' + ((e.entity_id||'').slice(0,8)) + '</span></div>';
+        }).join('')
+      : '<div class="muted" style="text-align:center;padding:16px">No activity yet. Activity appears once workflows start running.</div>';
+
+    // Escalations
+    var escalations = (esc.escalations || []).slice(0, 5);
+    document.getElementById('escalationsList').innerHTML = escalations.length
+      ? escalations.map(function(e) {
+          var slaColor = e.sla_breached ? 'err' : (e.sla_hours_left && e.sla_hours_left < 6 ? 'warn' : 'muted');
+          return '<div class="tl-row"><span class="tl-dot" style="background:' + (e.status === 'OPEN' ? 'var(--red)' : 'var(--amber)') + '"></span><span class="muted" style="flex:1;font-size:12px">' + (e.reason || '').slice(0, 40) + '</span><span class="pill ' + slaColor + '" style="font-size:10px">' + (e.status || '') + '</span></div>';
+        }).join('')
+      : '<div class="muted" style="text-align:center;padding:16px">No open escalations.</div>';
+
+    // Show content
+    document.getElementById('dashSkeleton').style.display = 'none';
+    document.getElementById('dashContent').style.display = '';
+  } catch(e) { console.error('dashboard error:', e); }
 }
 
-async function loadUnresolved(){
-  try{
-    const data = await api('/dashboard/recent-unresolved');
-    if(!data.length){
-      document.getElementById('unresolvedList').innerHTML = '<div class="muted" style="padding:20px;text-align:center">No escalations — all good</div>';
-      return;
-    }
-    document.getElementById('unresolvedList').innerHTML = data.slice(0,5).map(r => {
-      const time = r.created_at.replace('T',' ').slice(0,16);
-      const ch = r.channel==='web_widget'?'🌐':r.channel==='telegram'?'✈️':r.channel==='whatsapp'?'📱':'💬';
-      return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
-        <div class="flex" style="justify-content:space-between;margin-bottom:4px">
-          <span style="font-size:12px;font-weight:600">${ch} ${esc(r.user_id)}</span>
-          <span class="muted">${esc(time)}</span>
-        </div>
-        <div class="muted" style="font-size:12px;max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.message)}</div>
-      </div>`;
-    }).join('');
-  }catch(e){}
-}
-
-async function loadSetupStatus(){
-  if(dismissed) return;
-  try{
-    const s = await api('/dashboard/setup-status');
-    const steps = [];
-    if(!s.knowledge_uploaded) steps.push({num:1, label:'Upload knowledge base', desc:'Add FAQ, product docs, policies', href:'/admin/knowledge', done:false});
-    if(!s.channels_active || !s.channels_active.length) steps.push({num:steps.length+1, label:'Activate a channel', desc:'Widget, Telegram, or WhatsApp', href:'/admin/channels', done:false});
-    if(!s.crm_configured && !s.native_integrations) steps.push({num:steps.length+1, label:'Connect CRM or integration', desc:'Give the agent access to customer data', href:'/admin/integrations', done:false});
-    if(!s.tools_enabled) steps.push({num:steps.length+1, label:'Add agent tools', desc:'Let the agent perform actions', href:'/admin/tools', done:false});
-    if(steps.length > 0){
-      document.getElementById('gettingStarted').style.display = '';
-      document.getElementById('stepsList').innerHTML = steps.map(s =>
-        `<div class="step"><div class="step-num">${s.num}</div><div class="step-content">
-          <strong><a href="${s.href}">${s.label}</a></strong>
-          <div class="muted">${s.desc}</div>
-        </div></div>`
-      ).join('');
-    }
-  }catch(e){}
-}
-
-function dismissGettingStarted(){
-  document.getElementById('gettingStarted').style.display='none';
-  localStorage.setItem('jeeves_gs_dismiss','1');
-}
-
-function drawTrendChart(data){
-  var canvas = document.getElementById('trendChart');
-  if(!canvas || !data || !data.length) return;
-  var totalSum = data.reduce(function(a,d){return a+d.total;},0);
-  var ctx = canvas.getContext('2d');
-  var dpr = window.devicePixelRatio || 1;
-  var rect = canvas.getBoundingClientRect();
-  if(rect.width < 10){ setTimeout(function(){drawTrendChart(data)},200); return; }
-  canvas.width = rect.width * dpr;
-  canvas.height = 220 * dpr;
-  ctx.scale(dpr, dpr);
-  var W = rect.width, H = 220;
-  var pad = {t:16,r:16,b:32,l:40};
-  var cW = W-pad.l-pad.r, cH = H-pad.t-pad.b;
-
-  // Show "No data" when all zeros
-  if(totalSum === 0){
-    ctx.fillStyle='#4b5563';ctx.font='13px Inter,sans-serif';ctx.textAlign='center';
-    ctx.fillText('No dialogs in the last 7 days',W/2,H/2);
-    // Still draw the axes for structure
-    ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
-    for(var i=0;i<=4;i++){var y=pad.t+cH*(i/4);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();}
-    var step = cW/(data.length-1||1);
-    ctx.fillStyle='#4b5563';ctx.font='10px Inter,sans-serif';ctx.textAlign='center';
-    data.forEach(function(d,i){var label=d.date.slice(5);ctx.fillText(label,pad.l+i*step,H-8);});
-    return;
-  }
-
-  var max = Math.max.apply(null, data.map(function(d){return d.total}));
-  max = Math.ceil(max * 1.2);
-
-  // Grid
-  ctx.strokeStyle='rgba(255,255,255,0.04)';
-  ctx.lineWidth=1;
-  for(var i=0;i<=4;i++){
-    var y=pad.t+cH*(i/4);
-    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
-    ctx.fillStyle='#4b5563';ctx.font='10px Inter,sans-serif';ctx.textAlign='right';
-    ctx.fillText(Math.round(max*(1-i/4)),pad.l-8,y+3);
-  }
-
-  var step = cW/(data.length-1||1);
-
-  // Area fill — total
-  ctx.beginPath();
-  ctx.moveTo(pad.l,pad.t+cH);
-  data.forEach(function(d,i){ctx.lineTo(pad.l+i*step,pad.t+cH-(d.total/max)*cH)});
-  ctx.lineTo(pad.l+(data.length-1)*step,pad.t+cH);
-  ctx.closePath();
-  var grad = ctx.createLinearGradient(0,pad.t,0,H-pad.b);
-  grad.addColorStop(0,'rgba(255,255,255,0.12)');grad.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.fillStyle=grad;ctx.fill();
-
-  // Line — total (white)
-  ctx.beginPath();
-  data.forEach(function(d,i){var x=pad.l+i*step,y=pad.t+cH-(d.total/max)*cH;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
-  ctx.strokeStyle='#e2e8f0';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
-
-  // Dots on total
-  data.forEach(function(d,i){
-    var x=pad.l+i*step,y=pad.t+cH-(d.total/max)*cH;
-    ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fillStyle='#e2e8f0';ctx.fill();
-  });
-
-  // Line — resolved (green, thinner)
-  ctx.beginPath();
-  data.forEach(function(d,i){var x=pad.l+i*step,y=pad.t+cH-(d.resolved/max)*cH;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
-  ctx.strokeStyle='#34d399';ctx.lineWidth=1.5;ctx.lineJoin='round';ctx.stroke();
-
-  // X labels
-  ctx.fillStyle='#64748b';ctx.font='10px Inter,sans-serif';ctx.textAlign='center';
-  data.forEach(function(d,i){
-    var label = d.date.slice(5);
-    ctx.fillText(label,pad.l+i*step,H-8);
-  });
-
-  // Legend
-  var lx = pad.l;
-  ctx.fillStyle='#e2e8f0';ctx.fillRect(lx,4,14,3);ctx.fillStyle='#94a3b8';ctx.font='10px Inter,sans-serif';ctx.textAlign='left';ctx.fillText('Total',lx+18,9);
-  ctx.fillStyle='#34d399';ctx.fillRect(lx+60,4,14,3);ctx.fillStyle='#94a3b8';ctx.fillText('Resolved',lx+78,9);
-}
-
-function drawHeatmap(data){
-  var el = document.getElementById('heatmapContainer');
-  if(!el || !data) return;
-  var max = Math.max.apply(null, data);
-  if(max===0) max=1;
-  var html = '<div class="ds-heatmap-wrap">';
-  // Hour labels row
-  html += '<div class="ds-hm-hours">';
-  html += '<span></span>';
-  for(var h=0;h<12;h++) html += '<span>'+h+'</span>';
-  html += '</div>';
-  // AM row (0-11)
-  html += '<div class="ds-hm-row"><span class="ds-hm-row-label">AM</span>';
-  for(var h=0;h<12;h++){
-    var v = data[h]||0;
-    var intensity = v/max;
-    var bg = intensity>0.7?'rgba(255,255,255,0.35)':intensity>0.4?'rgba(255,255,255,0.2)':intensity>0.1?'rgba(255,255,255,0.1)':intensity>0?'rgba(255,255,255,0.05)':'rgba(255,255,255,0.02)';
-    var label = h===0?'12 AM':h<12?h+' AM':'';
-    html += '<div class="ds-hm-cell" style="background:'+bg+'" data-tooltip="'+label+' \u2014 '+v+' dialogs"></div>';
-  }
-  html += '</div>';
-  // PM row (12-23)
-  html += '<div class="ds-hm-row"><span class="ds-hm-row-label">PM</span>';
-  for(var h=12;h<24;h++){
-    var v = data[h]||0;
-    var intensity = v/max;
-    var bg = intensity>0.7?'rgba(255,255,255,0.35)':intensity>0.4?'rgba(255,255,255,0.2)':intensity>0.1?'rgba(255,255,255,0.1)':intensity>0?'rgba(255,255,255,0.05)':'rgba(255,255,255,0.02)';
-    var label = h===12?'12 PM':(h-12)+' PM';
-    html += '<div class="ds-hm-cell" style="background:'+bg+'" data-tooltip="'+label+' \u2014 '+v+' dialogs"></div>';
-  }
-  html += '</div></div>';
-  el.innerHTML = html;
-}
-
-// Load all data in parallel, reveal when ready
 Promise.allSettled([
-  loadStats(),
-  loadTrend(),
-  loadHourly(),
-  loadChannelsBreakdown(),
-  loadUnresolved(),
-  loadSetupStatus()
-]).then(function(){
-  document.getElementById('dashSkeleton').style.display = 'none';
-  document.getElementById('dashContent').style.display = '';
-});
+  loadOnboardingStatus(),
+  loadDashboard(),
+]);
 </script>
 {% endblock %}

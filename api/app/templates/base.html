@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Jeeves Admin</title>
+  <title>Jeeves — Workflow Operations</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -17,6 +17,7 @@
       --green: #10b981;
       --red: #f87171;
       --amber: #f59e0b;
+      --cyan: #22d3ee;
       --text: #f1f5f9;
       --muted: #94a3b8;
       --muted2: #64748b;
@@ -77,8 +78,12 @@
     button.ghost.danger { color: var(--red); }
     button.ghost.danger:hover { background: rgba(248,113,113,0.06); border-color: rgba(248,113,113,0.2); }
     button.sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+    button.accent { background: var(--accent); color: #fff; }
+    button.accent:hover { background: #6d78f0; }
+    button.green { background: var(--green); color: #fff; }
+    button.green:hover { background: #059669; }
 
-    /* ── TABLES ── */
+    /* ── TABLE ── */
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th { padding: 10px 14px; text-align: left; font-weight: 600; color: var(--muted2); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--border); }
     td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
@@ -91,6 +96,8 @@
     .pill.err { color: var(--red); background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.2); }
     .pill.warn { color: var(--amber); background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); }
     .pill.muted { color: var(--muted2); background: rgba(255,255,255,0.04); border: 1px solid var(--border); }
+    .pill.cyan { color: var(--cyan); background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.2); }
+    .pill.accent { color: var(--accent); background: rgba(129,140,248,0.1); border: 1px solid rgba(129,140,248,0.2); }
 
     /* ── STAT CARDS ── */
     .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
@@ -98,6 +105,7 @@
     .stat:hover { border-color: var(--border-bright); }
     .stat .n { font-size: 32px; font-weight: 800; letter-spacing: -1px; color: var(--text); }
     .stat .l { color: var(--muted); font-size: 12px; margin-top: 4px; font-weight: 500; }
+    .stat .sub { color: var(--muted2); font-size: 11px; margin-top: 2px; }
 
     /* ── HELP BOX ── */
     .help { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-left: 3px solid var(--muted2); padding: 16px 18px; border-radius: 0 12px 12px 0; margin-bottom: 20px; font-size: 13px; line-height: 1.55; }
@@ -124,6 +132,7 @@
 
     /* ── MISC ── */
     .muted { color: var(--muted); font-size: 12px; }
+    .muted2 { color: var(--muted2); font-size: 12px; }
     .err-msg { color: var(--red); font-size: 13px; margin-top: 8px; }
     code, pre { font-family: 'SF Mono', ui-monospace, Consolas, monospace; font-size: 12px; }
     pre { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px; overflow: auto; }
@@ -139,6 +148,26 @@
     .step-content strong { color: var(--text); font-size: 14px; }
     .step-content .muted { margin-top: 2px; }
 
+    /* ── INTEGRATION CARDS ── */
+    .int-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 14px; transition: border-color .2s; }
+    .int-card:hover { border-color: var(--border-bright); }
+    .int-card .int-logo { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .int-card .int-name { font-size: 16px; font-weight: 700; }
+    .int-card .int-desc { font-size: 12px; color: var(--muted); }
+    .int-card .int-status { margin-top: auto; }
+    .int-card .int-inputs { display: flex; flex-direction: column; gap: 8px; }
+    .int-card .int-inputs input { font-size: 12px; padding: 8px 12px; }
+
+    /* ── TOGGLE ── */
+    .toggle-wrap { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .toggle-wrap:last-child { border-bottom: none; }
+    .toggle { width: 40px; height: 22px; border-radius: 11px; background: var(--border); cursor: pointer; position: relative; transition: background .2s; flex-shrink: 0; }
+    .toggle.on { background: var(--green); }
+    .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; }
+    .toggle.on::after { transform: translateX(18px); }
+    .toggle-label { font-size: 13px; font-weight: 600; }
+    .toggle-desc { font-size: 11px; color: var(--muted2); }
+
     /* ── SECTION TOGGLE ── */
     .section-toggle { cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
     .section-toggle:hover h2 { color: var(--text); }
@@ -152,18 +181,65 @@
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .modal-header h2 { margin: 0; font-size: 16px; text-transform: none; letter-spacing: 0; color: var(--text); }
 
+    /* ── CHANNEL TABS ── */
+    .ch-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content}
+    .ch-tab{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;color:var(--muted2);transition:all .15s;user-select:none;border:none;background:transparent}
+    .ch-tab:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+    .ch-tab.active{color:var(--text);background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+    .ch-tab-icon{width:18px;height:18px;flex-shrink:0}
+    .ch-tab-badge{font-size:10px;line-height:1;margin-left:2px}
+    .ch-panel{display:none}
+    .ch-panel.active{display:block}
+    .ch-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;padding:14px 16px;background:var(--bg);border:1px solid var(--border);border-radius:8px}
+    .ch-step{display:flex;gap:12px;align-items:flex-start;font-size:13px;color:var(--muted)}
+    .ch-step strong{color:var(--text)}
+    .ch-step-num{width:22px;height:22px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted2);flex-shrink:0}
+    .ch-actions{display:flex;gap:12px;align-items:center;margin-top:20px;flex-wrap:wrap}
+    .snippet-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px}
+    .snippet-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2)}
+    .snippet-box pre{font-size:12px;margin:0;max-height:120px;overflow:auto;color:var(--muted);line-height:1.6}
+
+    /* ── TIMELINE ── */
+    .tl-row { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .tl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── FUNNEL ── */
+    .funnel { display: flex; gap: 6px; align-items: flex-end; height: 120px; padding: 16px 0; }
+    .funnel-bar { flex: 1; border-radius: 6px 6px 0 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 6px; min-width: 0; }
+    .funnel-bar .f-val { font-size: 18px; font-weight: 800; color: #fff; }
+    .funnel-bar .f-lbl { font-size: 9px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: .3px; margin-top: 4px; }
+
+    /* ── ONBOARDING ── */
+    .ob-wizard { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; margin-bottom: 24px; }
+    .ob-header { text-align: center; margin-bottom: 32px; }
+    .ob-header h2 { font-size: 20px; font-weight: 800; color: var(--text); text-transform: none; letter-spacing: -.3px; margin-bottom: 6px; }
+    .ob-header .muted { font-size: 13px; }
+    .ob-progress { display: flex; justify-content: center; gap: 0; margin-bottom: 32px; }
+    .ob-step { display: flex; align-items: center; }
+    .ob-step-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; transition: all .3s; position: relative; }
+    .ob-step-done { background: var(--green); color: #fff; }
+    .ob-step-current { background: var(--accent); color: #fff; box-shadow: 0 0 0 4px rgba(129,140,248,0.2); }
+    .ob-step-pending { background: var(--bg); color: var(--muted2); border: 1px solid var(--border); }
+    .ob-step-line { width: 48px; height: 2px; background: var(--border); margin: 0 4px; }
+    .ob-step-line.done { background: var(--green); }
+    .ob-step-label { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); font-size: 9px; color: var(--muted2); white-space: nowrap; margin-top: 4px; text-transform: uppercase; letter-spacing: .3px; font-weight: 600; }
+    .ob-body { max-width: 520px; margin: 0 auto; }
+    .ob-actions { display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
+
+    /* ── STATUS BAR ── */
+    .status-bar { display: flex; gap: 4px; align-items: center; margin-bottom: 20px; }
+    .status-bar .sb-segment { height: 4px; border-radius: 2px; flex: 1; background: var(--border); }
+    .status-bar .sb-segment.done { background: var(--green); }
+
     /* ── ACTIVE STATES ── */
-    .ecom-card.active{border-color:var(--border-bright)!important;background:rgba(255,255,255,0.03)!important}
-    .ecom-card:hover{border-color:var(--border-bright)}
-    .crm-tab.active{background:#fff!important;color:var(--bg)!important;border-color:#fff!important;box-shadow:0 4px 12px rgba(0,0,0,0.3)}
-    button:not(.ghost):not([disabled]):active{box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+    .active-states{display:flex;gap:6px;flex-wrap:wrap}
   </style>
 </head>
 <body>
 <aside>
   <div class="brand">
     <h1>Jeeves<span>.</span></h1>
-    <div class="brand-sub">Admin Panel</div>
+    <div class="brand-sub">Workflow Operations</div>
   </div>
 
   <nav>
@@ -176,35 +252,52 @@
     </div>
 
     <div class="nav-group">
-      <div class="nav-label">Setup</div>
-      <a href="/admin/knowledge" class="nav-link" data-path="/admin/knowledge">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-        Knowledge
-      </a>
-      <a href="/admin/channels" class="nav-link" data-path="/admin/channels">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Channels
-      </a>
+      <div class="nav-label">Connect</div>
       <a href="/admin/integrations" class="nav-link" data-path="/admin/integrations">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         Integrations
       </a>
     </div>
 
-    <!-- HIDDEN: Agent tools & Proactive — will be re-enabled later -->
-    <!--
     <div class="nav-group">
-      <div class="nav-label">Automate</div>
-      <a href="/admin/tools" class="nav-link" data-path="/admin/tools">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-        Agent tools
-      </a>
-      <a href="/admin/proactive" class="nav-link" data-path="/admin/proactive">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        Proactive
+      <div class="nav-label">Channels</div>
+      <a href="/admin/channels" class="nav-link" data-path="/admin/channels">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Channels
       </a>
     </div>
-    -->
+
+    <div class="nav-group">
+      <div class="nav-label">Workflows</div>
+      <a href="/admin/workflows" class="nav-link" data-path="/admin/workflows">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        Active
+      </a>
+      <a href="/admin/escalations" class="nav-link" data-path="/admin/escalations">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Escalations
+      </a>
+      <a href="/admin/policies" class="nav-link" data-path="/admin/policies">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Policies
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Analytics</div>
+      <a href="/admin/analytics" class="nav-link" data-path="/admin/analytics">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Analytics
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Activity</div>
+      <a href="/admin/timeline" class="nav-link" data-path="/admin/timeline">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Timeline
+      </a>
+    </div>
 
     <div class="nav-group">
       <div class="nav-label">Developer</div>
@@ -212,13 +305,9 @@
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
         API
       </a>
-    </div>
-
-    <div class="nav-group">
-      <div class="nav-label">Operations</div>
-      <a href="/admin/logs" class="nav-link" data-path="/admin/logs">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Chat logs
+      <a href="/admin/knowledge" class="nav-link" data-path="/admin/knowledge">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Knowledge
       </a>
       <a href="/admin/billing" class="nav-link" data-path="/admin/billing">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
@@ -264,6 +353,7 @@ async function api(path, opts={}){
   if(!r.ok) throw new Error(typeof data==='string'?data:JSON.stringify(data));
   return data;
 }
+function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 if(!token() && !location.pathname.endsWith('/login')){ location.href='/admin/login'; }
 </script>
 {% block tail %}{% endblock %}

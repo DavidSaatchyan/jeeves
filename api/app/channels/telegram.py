@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from ..db import SessionLocal
 from ..models import ChannelConfig, ChatLog, Tenant
-from .. import agent, billing
+from ..routes_chat import _simple_llm_response
 
 
 TELEGRAM_API = "https://api.telegram.org/bot{token}"

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Workflow <code>{{ workflow.id }}</code></h1>
+<p class="page-desc">{{ workflow.workflow_type }} &middot; {{ workflow.status }}</p>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Details</h2>
+    <table class="kv">
+      <tr><td>Type</td><td>{{ workflow.workflow_type }}</td></tr>
+      <tr><td>Current state</td><td><span class="pill {{ workflow.current_state.lower() }}">{{ workflow.current_state }}</span></td></tr>
+      <tr><td>Status</td><td><span class="pill {{ workflow.status }}">{{ workflow.status }}</span></td></tr>
+      <tr><td>Customer</td><td>{{ workflow.customer_id }}</td></tr>
+      <tr><td>Started</td><td>{{ workflow.started_at }}</td></tr>
+      <tr><td>Expiration</td><td>{{ workflow.expiration_at }}</td></tr>
+    </table>
+    <div style="margin-top:16px;display:flex;gap:8px">
+      <button class="ghost sm" onclick="replayWorkflow()">Replay</button>
+      <button class="ghost sm danger" onclick="escalateWorkflow()">Escalate</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Transitions</h2>
+    <div id="transitionsList">
+      {% for t in transitions %}
+      <div class="transition-row">
+        <code>{{ t.from_state }}</code> &rarr; <code>{{ t.to_state }}</code>
+        <span class="muted2" style="font-size:11px">{{ t.created_at }}</span>
+        <div class="muted2" style="font-size:11px;margin-top:2px">{{ t.decision_reason }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Timeline</h2>
+  <div id="timelineList"></div>
+</div>
+
+<script>
+async function replayWorkflow() {
+  const r = await fetch('/admin/api/workflows/{{ workflow.id }}/replay', { method: 'POST' });
+  if (r.ok) location.reload();
+}
+async function escalateWorkflow() {
+  const r = await fetch('/admin/api/workflows/{{ workflow.id }}/escalate', { method: 'POST' });
+  if (r.ok) location.reload();
+}
+async function loadTimeline() {
+  const r = await fetch('/admin/api/workflows/{{ workflow.id }}/timeline');
+  const data = await r.json();
+  const list = document.getElementById('timelineList');
+  list.innerHTML = (data.events || []).map(e => `
+    <div class="timeline-row">
+      <span class="pill ${e.event_type}">${e.event_type}</span>
+      <span class="muted2" style="font-size:11px">${e.created_at}</span>
+    </div>
+  `).join('');
+}
+loadTimeline();
+</script>
+
+<style>
+.kv { width:100%; }
+.kv td { padding:6px 0; border-bottom:1px solid var(--border); }
+.kv td:first-child { color:var(--muted2); font-size:12px; width:100px; }
+.transition-row { padding:8px 0; border-bottom:1px solid var(--border); }
+.timeline-row { padding:6px 0; border-bottom:1px solid var(--border); display:flex; gap:12px; align-items:center; }
+</style>
+{% endblock %}

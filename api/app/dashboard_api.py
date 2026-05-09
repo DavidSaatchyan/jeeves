@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from . import billing
 from .auth import get_current_tenant
 from .db import get_db
-from .models import AgentTool, ChannelConfig, ChatLog, ConversationRating, CRMConnection, FileRecord, NativeConnector, Tenant
+from .models import ChannelConfig, ChatLog, ConversationRating, FileRecord, Tenant
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -132,16 +132,9 @@ def setup_status(tenant: Tenant = Depends(get_current_tenant), db: Session = Dep
         and_(ChannelConfig.tenant_id == tenant.id, ChannelConfig.status == "active")
     ).all()
 
-    has_crm = db.query(CRMConnection).filter(CRMConnection.tenant_id == tenant.id).first() is not None
-    has_tools = db.query(AgentTool).filter(and_(AgentTool.tenant_id == tenant.id, AgentTool.enabled == True)).first() is not None
-    has_native = db.query(NativeConnector).filter(and_(NativeConnector.tenant_id == tenant.id, NativeConnector.status == "connected")).first() is not None
-
     return {
         "knowledge_uploaded": kb_ready,
         "channels_active": [c.channel_type for c in active_channels],
-        "crm_configured": has_crm,
-        "tools_enabled": has_tools,
-        "native_integrations": has_native,
         "setup_complete": kb_ready and len(active_channels) > 0,
     }
 

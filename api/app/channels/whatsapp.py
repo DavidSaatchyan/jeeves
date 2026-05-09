@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from ..db import SessionLocal
 from ..models import ChannelConfig, ChatLog, Tenant
-from .. import agent, billing
+from ..routes_chat import _simple_llm_response
 
 
 WHATSAPP_API = "https://graph.facebook.com/v17.0/{phone_number_id}/messages"

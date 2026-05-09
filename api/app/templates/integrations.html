@@ -1,590 +1,142 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>Integrations</h1>
-<p class="page-desc">Connect your external systems so Jeeves can answer with personalized, live data.</p>
+<p class="page-desc">Connect your commerce stack to enable automated workflows.</p>
 
-<!-- Main tabs -->
-<div class="int-tabs">
-  <div class="int-tab active" data-tab="crm" onclick="selectIntTab('crm')">
-    <svg class="int-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    <span>CRM</span>
-    <span class="int-tab-badge pill ok" id="crmTabBadge" style="display:none"></span>
-  </div>
-  <div class="int-tab" data-tab="ecommerce" onclick="selectIntTab('ecommerce')">
-    <svg class="int-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-    <span>E-commerce</span>
-    <span class="int-tab-badge pill ok" id="ecomTabBadge" style="display:none"></span>
-  </div>
-  <div class="int-tab" data-tab="billing" onclick="selectIntTab('billing')">
-    <svg class="int-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-    <span>Billing</span>
-    <span class="int-tab-badge pill ok" id="billingTabBadge" style="display:none"></span>
-  </div>
+<div class="help" style="margin-bottom:24px">
+  <p>All three integrations are required for full automation. Jeeves uses <strong>Shopify</strong> for orders and customers, <strong>Recharge</strong> for subscriptions, and <strong>Stripe</strong> for payments and invoices.</p>
 </div>
 
-<!-- CRM Panel -->
-<div class="int-panel active" id="panel-crm">
-  <div class="card">
-    <div class="card-header">
-      <h2>Customer Lookup</h2>
-      <span id="crmStatusBadge" class="pill muted">not connected</span>
-    </div>
-
-    <!-- Identifier section -->
-    <div class="ident-section">
-      <div class="ident-header">
-        <span class="ident-label">How Jeeves identifies the customer</span>
-        <span id="identBadge" class="pill muted"></span>
+<div class="grid grid-3" id="intGrid">
+  <!-- Shopify -->
+  <div class="int-card">
+    <div class="flex" style="gap:12px">
+      <div class="int-logo" style="background:rgba(149,191,71,0.1);color:#95bf47">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
       </div>
-      <div class="ident-row">
-        <select id="primary-identifier" onchange="toggleIdentField()">
-          <option value="email">Email address</option>
-          <option value="user_id">User ID</option>
-          <option value="custom">Custom field</option>
-        </select>
-        <input id="identifier-field" type="text" placeholder="field name" style="display:none"/>
-        <button class="ghost sm" onclick="savePrimaryIdentifier()">Save</button>
-        <span class="muted" id="identMsg" style="font-size:12px"></span>
-      </div>
-      <p class="ident-hint" id="identHint"></p>
-    </div>
-
-    <div class="divider" style="margin:20px 0"></div>
-
-    <!-- Provider sub-tabs -->
-    <div class="int-subtabs">
-      <div class="int-subtab active" data-crm="custom" onclick="selectCrmTab('custom')">
-        <svg class="int-subtab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
-        <span>Custom API</span>
-      </div>
-      <div class="int-subtab" data-crm="hubspot" onclick="selectCrmTab('hubspot')">
-        <svg class="int-subtab-icon" viewBox="0 0 24 24" fill="#ff7a59"><circle cx="12" cy="12" r="10" opacity="0.2"/><circle cx="8" cy="12" r="2.5"/><circle cx="16" cy="12" r="2.5"/></svg>
-        <span>HubSpot</span>
+      <div>
+        <div class="int-name">Shopify</div>
+        <div class="int-desc">Orders, customers, fulfillments</div>
       </div>
     </div>
-
-    <!-- Custom API -->
-    <div id="crmPanelCustom">
-      <div class="int-service-card">
-        <div class="int-service-header">
-          <div class="int-service-info">
-            <svg class="int-service-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
-            <div><strong>Custom API</strong><span class="muted">Any internal CRM or backend</span></div>
-          </div>
-        </div>
-
-        <label style="margin-top:16px">Read endpoint <span class="muted">— GET</span></label>
-        <input id="read_url" type="text" placeholder="https://yourapp.com/api/customers/{user_id}"/>
-
-        <label>API key <span class="muted">— Authorization header</span></label>
-        <div class="flex" style="gap:8px;align-items:center">
-          <input id="api_key" type="password" placeholder="Enter key" style="flex:1"/>
-          <span id="apiKeyStatus" class="pill ok" style="font-size:11px;display:none">saved</span>
-        </div>
-
-        <label style="margin-top:12px">Fields for Jeeves</label>
-        <div id="fieldsList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
-        <button class="ghost sm" onclick="addField()">+ Add field</button>
-
-        <div class="divider" style="margin:16px 0"></div>
-        <strong style="font-size:13px">Capabilities</strong>
-        <label class="flex" style="margin-top:8px;cursor:pointer"><input id="capRead" type="checkbox" checked style="width:auto"/> Read customer profile</label>
-        <label class="flex" style="margin-top:4px;cursor:pointer"><input id="capUpdate" type="checkbox" style="width:auto" onchange="toggleWriteSection()"/> Update customer data</label>
-        <label class="flex" style="margin-top:4px;cursor:pointer"><input id="capConfirm" type="checkbox" checked style="width:auto"/> Ask confirmation before writing</label>
-
-        <div id="writeSection" style="display:none">
-          <div class="divider" style="margin:16px 0"></div>
-          <strong style="font-size:13px">Write endpoint</strong>
-          <label style="margin-top:8px">Update URL <span class="muted">— PATCH</span></label>
-          <input id="write_url" type="text" placeholder="https://yourapp.com/api/customers/{user_id}"/>
-        </div>
-
-        <div class="int-actions" style="margin-top:20px">
-          <button onclick="saveCrm()">Save</button>
-          <button class="ghost" onclick="testCrm()">Test</button>
-          <input id="test_user" type="text" placeholder="test user ID" style="max-width:180px"/>
-          <span id="crmSaveStatus" class="muted"></span>
-        </div>
-        <div class="err-msg" id="crmErr"></div>
-        <div id="crmTestResult" style="display:none;margin-top:14px;padding:12px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
-          <div class="muted" style="font-size:12px;margin-bottom:6px">What Jeeves will see:</div>
-          <pre id="crmPreview" style="margin:0;font-size:12px;border:none;background:transparent"></pre>
-        </div>
-      </div>
+    <div class="int-inputs" id="shopifyInputs">
+      <input id="sf-shop" type="text" placeholder="my-store.myshopify.com">
+      <input id="sf-token" type="password" placeholder="Admin API token (shpat_...)">
     </div>
-
-    <!-- HubSpot -->
-    <div id="crmPanelHubspot" style="display:none">
-      <div class="int-service-card">
-        <div class="int-service-header">
-          <div class="int-service-info">
-            <svg class="int-service-logo" viewBox="0 0 24 24" fill="#ff7a59"><circle cx="12" cy="12" r="10" opacity="0.15"/><circle cx="8" cy="12" r="2.5"/><circle cx="16" cy="12" r="2.5"/></svg>
-            <div><strong>HubSpot</strong><span class="muted">Contacts, companies, notes via OAuth</span></div>
-          </div>
-          <span id="badge-hubspot" class="pill muted">—</span>
-        </div>
-        <p class="muted" style="margin:12px 0 16px">Jeeves finds the contact by email and shows data in conversation.</p>
-        <div class="int-actions">
-          <button onclick="connectHubSpot()" id="hubspotConnect">Connect</button>
-          <button class="ghost danger" onclick="disconnectHubSpot()" id="hubspotDisconnect" style="display:none">Disconnect</button>
-          <span id="hubspotStatus" class="muted" style="font-size:12px"></span>
-        </div>
-        <div class="err-msg" id="msg-hubspot"></div>
+    <div class="flex" style="justify-content:space-between">
+      <div class="flex gap-sm">
+        <button onclick="connectNative('shopify')" id="conn-sf">Connect</button>
+        <button class="ghost" onclick="testNative('shopify')" id="test-sf" disabled>Test</button>
+        <button class="ghost danger" onclick="disconnectNative('shopify')" id="disc-sf" style="display:none">Disconnect</button>
       </div>
+      <span id="badge-shopify" class="pill muted">—</span>
     </div>
+    <div class="err-msg" id="msg-shopify"></div>
   </div>
-</div>
 
-<!-- E-commerce Panel -->
-<div class="int-panel" id="panel-ecommerce" style="display:none">
-  <div class="card">
-    <div class="card-header">
-      <h2>E-commerce</h2>
-    </div>
-    <p class="muted" style="margin:0 0 20px">Connect your store to let Jeeves answer order and shipping questions.</p>
-
-    <div class="int-subtabs">
-      <div class="int-subtab active" data-ecom="shopify" onclick="selectEcomTab('shopify')">
-        <svg class="int-subtab-icon" viewBox="0 0 24 24" fill="#95bf47"><rect x="2" y="2" width="20" height="20" rx="4" opacity="0.15"/><path d="M12 6l-2 12h4L12 6z"/></svg>
-        <span>Shopify</span>
+  <!-- Recharge -->
+  <div class="int-card">
+    <div class="flex" style="gap:12px">
+      <div class="int-logo" style="background:rgba(99,102,241,0.1);color:#6366f1">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
       </div>
-      <div class="int-subtab" data-ecom="woocommerce" onclick="selectEcomTab('woocommerce')">
-        <svg class="int-subtab-icon" viewBox="0 0 24 24" fill="#7f54b3"><rect x="2" y="2" width="20" height="20" rx="4" opacity="0.15"/><path d="M7 17l3-10 3 6 2-4 2 8"/></svg>
-        <span>WooCommerce</span>
+      <div>
+        <div class="int-name">Recharge</div>
+        <div class="int-desc">Subscriptions, billing, retries</div>
       </div>
     </div>
-
-    <!-- Shopify -->
-    <div id="ecomPanelShopify">
-      <div class="int-service-card">
-        <div class="int-service-header">
-          <div class="int-service-info">
-            <svg class="int-service-logo" viewBox="0 0 24 24" fill="#95bf47"><rect x="2" y="2" width="20" height="20" rx="4" opacity="0.15"/><path d="M12 6l-2 12h4L12 6z"/></svg>
-            <div><strong>Shopify</strong><span class="muted">Orders, shipping, products</span></div>
-          </div>
-          <span id="badge-shopify" class="pill muted">—</span>
-        </div>
-        <div class="grid grid-2" style="margin-top:12px">
-          <div><label>Shop domain</label><input id="sf-shop" type="text" placeholder="my-store.myshopify.com"/></div>
-          <div><label>Admin API token</label><input id="sf-token" type="password" placeholder="shpat_"/></div>
-        </div>
-        <div class="int-actions" style="margin-top:16px">
-          <button onclick="connectNative('shopify')">Connect</button>
-          <button class="ghost" onclick="testNative('shopify')" id="test-sf" disabled>Test</button>
-          <button class="ghost danger" onclick="disconnectNative('shopify')" id="disc-sf" style="display:none">Disconnect</button>
-        </div>
-        <div class="err-msg" id="msg-shopify"></div>
-      </div>
+    <div class="int-inputs" id="rechargeInputs">
+      <input id="rch-key" type="password" placeholder="Recharge API key">
     </div>
-
-    <!-- WooCommerce -->
-    <div id="ecomPanelWoo" style="display:none">
-      <div class="int-service-card">
-        <div class="int-service-header">
-          <div class="int-service-info">
-            <svg class="int-service-logo" viewBox="0 0 24 24" fill="#7f54b3"><rect x="2" y="2" width="20" height="20" rx="4" opacity="0.15"/><path d="M7 17l3-10 3 6 2-4 2 8"/></svg>
-            <div><strong>WooCommerce</strong><span class="muted">Orders, customers, products</span></div>
-          </div>
-          <span id="badge-woocommerce" class="pill muted">—</span>
-        </div>
-        <label style="margin-top:12px">Store URL</label>
-        <input id="woo-url" type="text" placeholder="https://my-store.com"/>
-        <div class="grid grid-2" style="margin-top:12px">
-          <div><label>Consumer Key</label><input id="woo-key" type="password" placeholder="ck_"/></div>
-          <div><label>Consumer Secret</label><input id="woo-secret" type="password" placeholder="cs_"/></div>
-        </div>
-        <div class="int-actions" style="margin-top:16px">
-          <button onclick="connectNative('woocommerce')">Connect</button>
-          <button class="ghost" onclick="testNative('woocommerce')" id="test-woo" disabled>Test</button>
-          <button class="ghost danger" onclick="disconnectNative('woocommerce')" id="disc-woo" style="display:none">Disconnect</button>
-        </div>
-        <div class="err-msg" id="msg-woocommerce"></div>
+    <div class="flex" style="justify-content:space-between">
+      <div class="flex gap-sm">
+        <button onclick="connectNative('recharge')" id="conn-rch">Connect</button>
+        <button class="ghost" onclick="testNative('recharge')" id="test-rch" disabled>Test</button>
+        <button class="ghost danger" onclick="disconnectNative('recharge')" id="disc-rch" style="display:none">Disconnect</button>
       </div>
+      <span id="badge-recharge" class="pill muted">—</span>
     </div>
+    <div class="err-msg" id="msg-recharge"></div>
   </div>
-</div>
 
-<!-- Billing Panel -->
-<div class="int-panel" id="panel-billing" style="display:none">
-  <div class="card">
-    <div class="card-header">
-      <h2>Billing</h2>
-    </div>
-    <p class="muted" style="margin:0 0 20px">Connect Stripe so Jeeves can answer subscription and payment questions.</p>
-
-    <!-- Stripe -->
-    <div class="int-service-card">
-      <div class="int-service-header">
-        <div class="int-service-info">
-          <svg class="int-service-logo" viewBox="0 0 24 24" fill="#635bff"><rect x="2" y="2" width="20" height="20" rx="4" opacity="0.15"/><path d="M13 7c-1.5 0-2.5.8-2.5 2.5s1 2.5 2.5 2.5c1.5 0 2.5-.8 2.5-2.5S14.5 7 13 7zm-3 7.5c0-1 2-1.5 2-1.5s2 .5 2 1.5c0 1.5-1.5 2-3 2h-1v2h1c2 0 3-1 3-2.5S14 12 12 12s-2 1-2 1z"/></svg>
-          <div><strong>Stripe</strong><span class="muted">Subscriptions, billing, payments</span></div>
-        </div>
-        <span id="badge-stripe" class="pill muted">—</span>
+  <!-- Stripe -->
+  <div class="int-card">
+    <div class="flex" style="gap:12px">
+      <div class="int-logo" style="background:rgba(99,91,255,0.1);color:#635bff">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M13 7c-1.5 0-2.5.8-2.5 2.5s1 2.5 2.5 2.5c1.5 0 2.5-.8 2.5-2.5S14.5 7 13 7zm-3 7.5c0-1 2-1.5 2-1.5s2 .5 2 1.5c0 1.5-1.5 2-3 2h-1v2h1c2 0 3-1 3-2.5S14 12 12 12s-2 1-2 1z"/></svg>
       </div>
-      <label style="margin-top:12px">Secret API key</label>
-      <input id="str-key" type="password" placeholder="sk_live_ or sk_test_"/>
-      <div class="int-actions" style="margin-top:16px">
-        <button onclick="connectNative('stripe')">Connect</button>
+      <div>
+        <div class="int-name">Stripe</div>
+        <div class="int-desc">Payments, invoices, billing</div>
+      </div>
+    </div>
+    <div class="int-inputs" id="stripeInputs">
+      <input id="str-key" type="password" placeholder="Secret key (sk_live_... or sk_test_...)">
+    </div>
+    <div class="flex" style="justify-content:space-between">
+      <div class="flex gap-sm">
+        <button onclick="connectNative('stripe')" id="conn-str">Connect</button>
         <button class="ghost" onclick="testNative('stripe')" id="test-str" disabled>Test</button>
         <button class="ghost danger" onclick="disconnectNative('stripe')" id="disc-str" style="display:none">Disconnect</button>
       </div>
-      <div class="err-msg" id="msg-stripe"></div>
+      <span id="badge-stripe" class="pill muted">—</span>
     </div>
+    <div class="err-msg" id="msg-stripe"></div>
   </div>
 </div>
 
 {% endblock %}
 {% block tail %}
-<style>
-.int-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content}
-.int-tab{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;color:var(--muted2);transition:all .15s;user-select:none;border:none;background:transparent}
-.int-tab:hover{color:var(--text);background:rgba(255,255,255,0.04)}
-.int-tab.active{color:var(--text);background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,0.2)}
-.int-tab-icon{width:18px;height:18px;flex-shrink:0}
-.int-tab-badge{font-size:10px;line-height:1;margin-left:2px;padding:1px 6px}
-
-.ident-section{padding:14px 16px;background:var(--bg);border:1px solid var(--border);border-radius:10px}
-.ident-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.ident-label{font-size:13px;font-weight:600}
-.ident-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.ident-row select{background:transparent;border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:6px;font-size:13px;outline:none;appearance:none;-webkit-appearance:none}
-.ident-row select:focus{border-color:var(--muted)}
-.ident-input{background:transparent;border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:6px;font-size:13px;outline:none}
-.ident-input:focus{border-color:var(--muted)}
-.ident-hint{margin:6px 0 0;font-size:12px}
-
-.int-panel{display:none}
-.int-panel.active{display:block}
-
-.int-subtabs{display:flex;gap:4px;margin-bottom:20px;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:8px;width:fit-content}
-.int-subtab{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted2);transition:all .15s;border:none;background:transparent}
-.int-subtab:hover{color:var(--text)}
-.int-subtab.active{color:var(--text);background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,0.15)}
-.int-subtab-icon{width:14px;height:14px;flex-shrink:0}
-
-.int-service-card{padding:20px;background:var(--bg);border:1px solid var(--border);border-radius:12px;margin-top:16px}
-.int-service-header{display:flex;justify-content:space-between;align-items:center}
-.int-service-info{display:flex;gap:12px;align-items:center}
-.int-service-logo{width:36px;height:36px;flex-shrink:0}
-.int-service-info strong{font-size:15px;display:block}
-.int-service-info .muted{font-size:12px;display:block}
-
-.int-actions{display:flex;gap:12px;align-items:center;margin-top:16px;flex-wrap:wrap}
-</style>
 <script>
-function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function showMsg(id, text, type){
   var el = document.getElementById(id);
   if(!el) return;
   el.textContent = text;
-  if(type==='ok'){ el.style.color='var(--green)'; setTimeout(function(){ el.textContent=''; el.style.color=''; }, 3000); }
-}
-
-function selectIntTab(tab){
-  document.querySelectorAll('.int-panel').forEach(function(el){ el.classList.remove('active'); el.style.display='none'; });
-  document.querySelectorAll('.int-tab').forEach(function(el){ el.classList.remove('active'); });
-  var panel = document.getElementById('panel-'+tab);
-  var t = document.querySelector('.int-tab[data-tab="'+tab+'"]');
-  if(panel) panel.style.display='block';
-  if(t) t.classList.add('active');
-}
-
-function selectCrmTab(tab){
-  document.getElementById('crmPanelCustom').style.display = tab==='custom' ? '' : 'none';
-  document.getElementById('crmPanelHubspot').style.display = tab==='hubspot' ? '' : 'none';
-  document.querySelectorAll('.int-subtab[data-crm]').forEach(function(el){ el.classList.remove('active'); });
-  var t = document.querySelector('.int-subtab[data-crm="'+tab+'"]');
-  if(t) t.classList.add('active');
-}
-
-function selectEcomTab(tab){
-  document.getElementById('ecomPanelShopify').style.display = tab==='shopify' ? '' : 'none';
-  document.getElementById('ecomPanelWoo').style.display = tab==='woocommerce' ? '' : 'none';
-  document.querySelectorAll('.int-subtab[data-ecom]').forEach(function(el){ el.classList.remove('active'); });
-  var t = document.querySelector('.int-subtab[data-ecom="'+tab+'"]');
-  if(t) t.classList.add('active');
-}
-
-function connectHubSpot(){
-  api('/crm/connect/hubspot').then(function(r){ location.href = r.auth_url; }).catch(function(e){ showMsg('msg-hubspot', e.message, ''); });
-}
-
-function disconnectHubSpot(){
-  if(!confirm('Disconnect HubSpot?')) return;
-  api('/crm/disconnect/hubspot', {method:'POST'}).then(function(){ showMsg('msg-hubspot','Disconnected','ok'); loadAll(); }).catch(function(e){ showMsg('msg-hubspot', e.message, ''); });
-}
-
-var crmFields = [];
-
-function renderFields(){
-  document.getElementById('fieldsList').innerHTML = crmFields.map(function(f,i){
-    return '<div class="flex gap-sm">' +
-      '<input type="text" value="'+esc(f.name)+'" placeholder="field" oninput="crmFields['+i+'].name=this.value" style="max-width:130px"/>' +
-      '<input type="text" value="'+esc(f.label)+'" placeholder="description" oninput="crmFields['+i+'].label=this.value" style="flex:1"/>' +
-      '<button class="ghost sm" onclick="removeField('+i+')" style="color:var(--red)">x</button>' +
-    '</div>';
-  }).join('');
-}
-
-function addField(){ crmFields.push({name:'',label:''}); renderFields(); }
-function removeField(i){ crmFields.splice(i,1); renderFields(); }
-
-function _buildReadMapping(){
-  var m = {};
-  crmFields.forEach(function(f){ if(f.name) m[f.name] = '$.'+f.name; });
-  return m;
-}
-
-function capabilities(){
-  return {
-    read_customer: document.getElementById('capRead').checked,
-    update_plan: document.getElementById('capUpdate').checked,
-    require_confirmation: document.getElementById('capConfirm').checked,
-  };
-}
-
-function setCapabilities(c){
-  c = c || {};
-  document.getElementById('capRead').checked = c.read_customer !== false;
-  document.getElementById('capUpdate').checked = !!c.update_plan;
-  document.getElementById('capConfirm').checked = c.require_confirmation !== false;
-}
-
-function toggleWriteSection(){
-  document.getElementById('writeSection').style.display = document.getElementById('capUpdate').checked ? '' : 'none';
-}
-
-function updateIdentHint(){
-  var v = document.getElementById('primary-identifier').value;
-  var hint = document.getElementById('identHint');
-  if(v==='email') hint.textContent = 'Jeeves uses the visitor email to look up the customer.';
-  else if(v==='user_id') hint.textContent = 'Jeeves uses the user_id from widget.identify() to look up the customer.';
-  else hint.textContent = 'Jeeves uses a custom field from widget.identify() extra_fields.';
-}
-
-async function loadCrm(){
-  try {
-    var c = await api('/crm/config');
-    document.getElementById('read_url').value = c.read_url || '';
-    document.getElementById('write_url').value = c.write_url || '';
-    setCapabilities(c.capabilities);
-    toggleWriteSection();
-
-    var headers = c.headers || {};
-    var hasKey = Object.keys(headers).some(function(k){ return headers[k] !== '********' && headers[k] !== ''; });
-    var apiKeyStatus = document.getElementById('apiKeyStatus');
-    if(hasKey){ apiKeyStatus.style.display=''; apiKeyStatus.textContent='saved'; apiKeyStatus.className='pill ok'; }
-    else { apiKeyStatus.style.display='none'; }
-
-    var mapping = c.read_mapping || {};
-    crmFields = Object.entries(mapping).map(function(e){ return {name:e[0], label:e[0].replace(/_/g,' ')}; });
-    if(!crmFields.length) crmFields = [{name:'plan',label:'subscription plan'}];
-    renderFields();
-
-    var provider = c.provider || 'custom_rest';
-    selectCrmTab(provider === 'hubspot' ? 'hubspot' : 'custom');
-    _crmHasCustom = provider === 'custom_rest' && !!c.read_url;
-    updateCrmBadge();
-  } catch(e) {
-    crmFields = [{name:'plan',label:'subscription plan'}];
-    renderFields();
-    selectCrmTab('custom');
-  }
-}
-
-async function saveCrm(){
-  document.getElementById('crmErr').textContent='';
-  document.getElementById('crmSaveStatus').textContent='Saving';
-  try {
-    var keyVal = document.getElementById('api_key').value.trim();
-    var apiKeyStatus = document.getElementById('apiKeyStatus');
-    var headers = {};
-    if(keyVal && keyVal !== '********'){
-      headers = {'Authorization':'Bearer '+keyVal};
-      apiKeyStatus.style.display=''; apiKeyStatus.textContent='saved'; apiKeyStatus.className='pill ok';
-    }
-    var body = {
-      provider: 'custom_rest',
-      read_url: document.getElementById('read_url').value.trim()||null,
-      write_url: document.getElementById('write_url').value.trim()||null,
-      headers: headers,
-      read_mapping: _buildReadMapping(),
-      write_mapping: {},
-      capabilities: capabilities(),
-    };
-    await api('/crm/config',{method:'POST',body});
-    document.getElementById('crmSaveStatus').textContent='Saved';
-    document.getElementById('crmSaveStatus').style.color='var(--green)';
-    setTimeout(function(){ document.getElementById('crmSaveStatus').textContent=''; document.getElementById('crmSaveStatus').style.color=''; },1800);
-  } catch(e){
-    document.getElementById('crmErr').textContent=e.message;
-    document.getElementById('crmSaveStatus').textContent='';
-  }
-}
-
-async function testCrm(){
-  document.getElementById('crmErr').textContent='';
-  document.getElementById('crmSaveStatus').textContent='Testing';
-  document.getElementById('crmTestResult').style.display='none';
-  try{
-    await saveCrm();
-    var uid = document.getElementById('test_user').value.trim()||'test';
-    var r = await api('/crm/test?'+new URLSearchParams({sample_user_id:uid}).toString(),{method:'POST'});
-    if(r.ok){
-      document.getElementById('crmSaveStatus').textContent='Connected';
-      document.getElementById('crmSaveStatus').style.color='var(--green)';
-    } else {
-      document.getElementById('crmSaveStatus').textContent='Failed ('+r.status_code+')';
-      document.getElementById('crmSaveStatus').style.color='var(--red)';
-    }
-    var preview = r.mapped && Object.keys(r.mapped).length ? r.mapped : (r.error ? {error:r.error} : r.sample || {});
-    document.getElementById('crmPreview').textContent = JSON.stringify(preview, null, 2);
-    document.getElementById('crmTestResult').style.display='';
-    setTimeout(function(){ document.getElementById('crmSaveStatus').textContent=''; document.getElementById('crmSaveStatus').style.color=''; },3000);
-  }catch(e){
-    document.getElementById('crmSaveStatus').textContent='Error';
-    document.getElementById('crmSaveStatus').style.color='var(--red)';
-    document.getElementById('crmErr').textContent=e.message;
-  }
-}
-
-function toggleIdentField(){
-  var v = document.getElementById('primary-identifier').value;
-  document.getElementById('identifier-field').style.display = v==='custom' ? '' : 'none';
-  updateIdentHint();
-}
-
-function savePrimaryIdentifier(){
-  var ident = document.getElementById('primary-identifier').value;
-  var body = { provider:'custom_rest', primary_identifier: ident };
-  if(ident==='custom'){ body.capabilities = { identifier_field: document.getElementById('identifier-field').value.trim() }; }
-  api('/crm/config',{method:'POST',body:body})
-    .then(function(){ showMsg('identMsg','Saved','ok'); updateIdentHint(); })
-    .catch(function(e){ showMsg('identMsg',e.message,''); });
-}
-
-function loadPrimaryIdentifier(){
-  api('/crm/config').then(function(d){
-    var ident = d.primary_identifier||'email';
-    document.getElementById('primary-identifier').value = ident;
-    document.getElementById('identBadge').textContent = ident;
-    if(d.capabilities && d.capabilities.identifier_field){ document.getElementById('identifier-field').value = d.capabilities.identifier_field; }
-    toggleIdentField();
-  }).catch(function(){ updateIdentHint(); });
+  if(type==='ok'){ el.style.color='var(--green)'; el.className='err-msg'; setTimeout(function(){ el.textContent=''; }, 3000); }
 }
 
 function connectNative(provider){
-  var creds = {}, meta = {};
-  if(provider==='shopify'){ creds = { shop_domain: document.getElementById('sf-shop').value.trim(), access_token: document.getElementById('sf-token').value.trim() }; meta = { domain: creds.shop_domain }; }
-  else if(provider==='woocommerce'){ creds = { store_url: document.getElementById('woo-url').value.trim(), consumer_key: document.getElementById('woo-key').value.trim(), consumer_secret: document.getElementById('woo-secret').value.trim() }; }
+  var creds = {};
+  if(provider==='shopify'){ creds = { shop_domain: document.getElementById('sf-shop').value.trim(), access_token: document.getElementById('sf-token').value.trim() }; }
+  else if(provider==='recharge'){ creds = { api_key: document.getElementById('rch-key').value.trim() }; }
   else if(provider==='stripe'){ creds = { secret_key: document.getElementById('str-key').value.trim() }; }
-  showMsg('msg-'+provider, 'Connecting', '');
-  api('/integrations/native', {method:'POST', body:{provider:provider, credentials:creds, meta:meta}})
-    .then(function(){ showMsg('msg-'+provider, 'Connected', 'ok'); loadAll(); })
-    .catch(function(e){ showMsg('msg-'+provider, e.message, ''); });
+  showMsg('msg-'+provider, 'Connecting…');
+  api('/integrations/native', {method:'POST', body:{provider:provider, credentials:creds}})
+    .then(function(){ showMsg('msg-'+provider, 'Connected', 'ok'); loadConnectors(); })
+    .catch(function(e){ showMsg('msg-'+provider, e.message); });
 }
 
 function testNative(provider){
-  showMsg('msg-'+provider, 'Testing', '');
+  showMsg('msg-'+provider, 'Testing…');
   api('/integrations/native/'+provider+'/test', {method:'POST'})
     .then(function(d){ showMsg('msg-'+provider, d.ok ? 'Test passed' : 'Failed: '+(d.error||'unknown'), d.ok?'ok':''); })
-    .catch(function(e){ showMsg('msg-'+provider, e.message, ''); });
+    .catch(function(e){ showMsg('msg-'+provider, e.message); });
 }
 
 function disconnectNative(provider){
   if(!confirm('Disconnect '+provider+'?')) return;
-  showMsg('msg-'+provider, 'Disconnecting', '');
   api('/integrations/native/'+provider, {method:'DELETE'})
-    .then(function(){ showMsg('msg-'+provider, 'Disconnected', 'ok'); loadAll(); })
-    .catch(function(e){ showMsg('msg-'+provider, e.message, ''); });
-}
-
-function loadAll(){
-  loadConnectors();
-  loadCrm();
-  loadPrimaryIdentifier();
-}
-
-var _crmHasCustom = false;
-var _crmHubspotConnected = false;
-
-function updateCrmBadge(){
-  var badge = document.getElementById('crmStatusBadge');
-  var tabBadge = document.getElementById('crmTabBadge');
-  if(_crmHubspotConnected || _crmHasCustom){
-    badge.textContent = 'connected';
-    badge.className = 'pill ok';
-    tabBadge.style.display = '';
-    tabBadge.textContent = _crmHubspotConnected ? 'HubSpot' : 'API';
-  } else {
-    badge.textContent = 'not connected';
-    badge.className = 'pill muted';
-    tabBadge.style.display = 'none';
-  }
+    .then(function(){ showMsg('msg-'+provider, 'Disconnected', 'ok'); loadConnectors(); })
+    .catch(function(e){ showMsg('msg-'+provider, e.message); });
 }
 
 function loadConnectors(){
   api('/integrations').then(function(data){
     var connected = {};
     (data.native_connectors||[]).forEach(function(nc){ connected[nc.provider] = nc.status==='connected'; });
-
-    ['shopify','woocommerce'].forEach(function(p){
+    ['shopify','recharge','stripe'].forEach(function(p){
       var badge = document.getElementById('badge-'+p);
-      var short = p==='woocommerce'?'woo':'sf';
-      var testBtn = document.getElementById('test-'+short);
-      var discBtn = document.getElementById('disc-'+short);
+      var testBtn = document.getElementById('test-'+p);
+      var discBtn = document.getElementById('disc-'+p);
+      var connBtn = document.getElementById('conn-'+p);
+      var prefix = p === 'recharge' ? 'rch' : (p === 'shopify' ? 'sf' : 'str');
       if(badge){ badge.textContent = connected[p]?'connected':'—'; badge.className = 'pill '+(connected[p]?'ok':'muted'); }
       if(testBtn) testBtn.disabled = !connected[p];
       if(discBtn) discBtn.style.display = connected[p] ? '' : 'none';
     });
-    var strBadge = document.getElementById('badge-stripe');
-    var strConn = connected.stripe;
-    if(strBadge){ strBadge.textContent = strConn?'connected':'—'; strBadge.className = 'pill '+(strConn?'ok':'muted'); }
-    document.getElementById('test-str').disabled = !strConn;
-    document.getElementById('disc-str').style.display = strConn ? '' : 'none';
-
-    var ecomConn = connected.shopify || connected.woocommerce;
-    var ecomBadge = document.getElementById('ecomTabBadge');
-    if(ecomBadge){ ecomBadge.style.display = ecomConn ? '' : 'none'; ecomBadge.textContent = '●'; }
-
-    var billingConn = connected.stripe;
-    var billingBadge = document.getElementById('billingTabBadge');
-    if(billingBadge){ billingBadge.style.display = billingConn ? '' : 'none'; billingBadge.textContent = '●'; }
   }).catch(function(){});
-
-  api('/crm/providers/status').then(function(s){
-    var hs = s.hubspot || {};
-    var badge = document.getElementById('badge-hubspot');
-    var connBtn = document.getElementById('hubspotConnect');
-    var discBtn = document.getElementById('hubspotDisconnect');
-    var statusEl = document.getElementById('hubspotStatus');
-
-    _crmHubspotConnected = hs.connected === true;
-
-    if(badge){ badge.textContent = _crmHubspotConnected ? 'connected' : '—'; badge.className = 'pill ' + (_crmHubspotConnected ? 'ok' : 'muted'); }
-
-    if(connBtn) connBtn.style.display = _crmHubspotConnected ? 'none' : '';
-    if(discBtn) discBtn.style.display = _crmHubspotConnected ? '' : 'none';
-    if(statusEl) statusEl.textContent = _crmHubspotConnected ? ((hs.scopes||[]).join(', ')||'') : '';
-
-    updateCrmBadge();
-  }).catch(function(){
-    _crmHubspotConnected = false;
-    updateCrmBadge();
-  });
 }
 
-selectIntTab('crm');
-loadAll();
-updateIdentHint();
-
-var hsParams = new URLSearchParams(location.search);
-if(hsParams.get('hubspot')){
-  setTimeout(function(){
-    loadAll();
-    if(hsParams.get('hubspot')==='connected') showMsg('msg-hubspot','HubSpot connected','ok');
-    else if(hsParams.get('hubspot')==='error') showMsg('msg-hubspot','Error: '+hsParams.get('reason'),'');
-  }, 500);
-}
+loadConnectors();
 </script>
 {% endblock %}

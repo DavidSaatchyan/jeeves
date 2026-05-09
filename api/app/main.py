@@ -11,10 +11,11 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
 
-from . import admin, auth, dashboard_api, knowledge, routes_chat, routes_crm, routes_proactive, routes_tools, routes_mock, routes_integrations, routes_channels, routes_api_keys
+from . import admin, auth, dashboard_api, integrations_routes, knowledge, routes_chat
 from .channels import widget as widget_channel
 from .config import get_settings
 from .db import engine
+from sqlalchemy import text
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s :: %(message)s")
 
@@ -165,6 +166,22 @@ def on_startup() -> None:
 def health() -> dict:
     return {"status": "ok"}
 
+@app.get("/health/ready")
+def health_ready() -> dict:
+    import os
+    return {"status": "ok", "workers": {"scheduler": os.environ.get("WORKER_TYPE", "api") == "scheduler"}}
+
+@app.get("/health/db")
+def health_db() -> dict:
+    from .db import SessionLocal
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db.close()
+        return {"status": "ok"}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
 
 _LANDING = Path(__file__).parent / "templates" / "landing.html"
 
@@ -191,13 +208,7 @@ def privacy():
 app.include_router(auth.router)
 app.include_router(routes_chat.router)
 app.include_router(knowledge.router)
-app.include_router(routes_crm.router)
-app.include_router(routes_proactive.router)
 app.include_router(dashboard_api.router)
 app.include_router(widget_channel.router)
-app.include_router(routes_tools.router)
-app.include_router(routes_mock.router)
 app.include_router(admin.router)
-app.include_router(routes_integrations.router)
-app.include_router(routes_channels.router)
-app.include_router(routes_api_keys.router)
+app.include_router(integrations_routes.router)
