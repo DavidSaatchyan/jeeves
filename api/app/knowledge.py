@@ -184,7 +184,7 @@ def delete_file(
 
     # Delete from Chroma (can be slow, do after DB commit so user sees it gone)
     try:
-rag.delete_file(tenant.id, file_id)
+        rag.delete_file(tenant.id, file_id)
     except Exception as e:
         logger.warning("chroma delete warning: %s", e)
 
