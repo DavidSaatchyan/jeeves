@@ -466,7 +466,7 @@ def api_escalations(
                 "source": e.source,
                 "sla_breached": e.sla_breached or False,
                 "sla_hours_left": None,
-                "metadata": e.metadata,
+                "extra_metadata": e.extra_metadata,
                 "created_at": e.created_at.isoformat() if e.created_at else None,
                 "resolved_at": e.resolved_at.isoformat() if e.resolved_at else None,
                 "updated_at": e.updated_at.isoformat() if e.updated_at else None,

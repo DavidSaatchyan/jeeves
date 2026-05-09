@@ -33,7 +33,7 @@ def upgrade() -> None:
         sa.Column('template_name', sa.String(64)),
     )
 
-    # escalations: add assigned_to, source, metadata, sla_breached, updated_at
+    # escalations: add assigned_to, source, extra_metadata, sla_breached, updated_at
     op.add_column(
         'escalations',
         sa.Column('assigned_to', sa.Text()),
@@ -44,7 +44,7 @@ def upgrade() -> None:
     )
     op.add_column(
         'escalations',
-        sa.Column('metadata', postgresql.JSONB(), server_default='{}'),
+        sa.Column('extra_metadata', postgresql.JSONB(), server_default='{}'),
     )
     op.add_column(
         'escalations',
@@ -62,6 +62,6 @@ def downgrade() -> None:
     op.drop_column('communications', 'template_name')
     op.drop_column('escalations', 'assigned_to')
     op.drop_column('escalations', 'source')
-    op.drop_column('escalations', 'metadata')
+    op.drop_column('escalations', 'extra_metadata')
     op.drop_column('escalations', 'sla_breached')
     op.drop_column('escalations', 'updated_at')

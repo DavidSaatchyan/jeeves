@@ -353,7 +353,7 @@ class Escalation(Base):
     owner_id = Column(Text)
     assigned_to = Column(Text)
     source = Column(String(64))
-    metadata = Column(JSONB, default=dict)
+    extra_metadata = Column(JSONB, default=dict)
     sla_breached = Column(Boolean, default=False)
     status = Column(String(32), nullable=False, default="OPEN")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
