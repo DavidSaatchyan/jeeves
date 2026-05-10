@@ -1,22 +1,96 @@
 {% extends "base.html" %}
 {% block body %}
-<h1>Settings</h1>
-<p class="page-desc">Configure how Jeeves works — connections, automations, knowledge, channels, account.</p>
+<h1>Integrate</h1>
+<p class="page-desc">Connect your commerce stack and configure how Jeeves works.</p>
 
 <div class="st-tabs" id="settingsTabs">
   <button class="st-tab active" data-tab="connections">Connections</button>
   <button class="st-tab" data-tab="automations">Automations</button>
   <button class="st-tab" data-tab="knowledge">Knowledge</button>
   <button class="st-tab" data-tab="channels">Channels</button>
-  <button class="st-tab" data-tab="account">Account</button>
 </div>
 
 <!-- Connections -->
 <div id="tabConnections" class="tab-panel">
-  <div class="card">
-    <h2>Connections</h2>
-    <p class="muted" style="font-size:12px;margin-bottom:16px">Connected platforms and data sources.</p>
-    <div id="connectionsList" style="font-size:13px">Loading...</div>
+  <div class="help" style="margin-bottom:24px">
+    <p>All three integrations are required for full automation. Jeeves uses <strong>Shopify</strong> for orders and customers, <strong>Recharge</strong> for subscriptions, and <strong>Stripe</strong> for payments and invoices.</p>
+  </div>
+  <div class="grid grid-3" id="intGrid">
+    <!-- Shopify -->
+    <div class="int-card">
+      <div class="flex" style="gap:12px;align-items:center">
+        <div class="int-logo" style="background:rgba(149,191,71,0.12);color:#95bf47">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6v2h2V6h-2zm-8 0v2h2V6H8zM4 4v16h16V4H4zm14 14H6V8h12v10z"/></svg>
+        </div>
+        <div>
+          <div class="int-name">Shopify</div>
+          <div class="int-desc">Orders, customers, fulfillments</div>
+        </div>
+      </div>
+      <div class="int-inputs" id="shopifyInputs">
+        <input id="sf-shop" type="text" placeholder="my-store.myshopify.com">
+        <input id="sf-token" type="password" placeholder="Admin API token (shpat_...)">
+      </div>
+      <div class="flex" style="justify-content:space-between">
+        <div class="flex gap-sm">
+          <button onclick="connectNative('shopify')" id="conn-sf">Connect</button>
+          <button class="ghost" onclick="testNative('shopify')" id="test-sf" disabled>Test</button>
+          <button class="ghost danger" onclick="disconnectNative('shopify')" id="disc-sf" style="display:none">Disconnect</button>
+        </div>
+        <span id="badge-shopify" class="pill muted">—</span>
+      </div>
+      <div class="err-msg" id="msg-shopify"></div>
+    </div>
+
+    <!-- Recharge -->
+    <div class="int-card">
+      <div class="flex" style="gap:12px;align-items:center">
+        <div class="int-logo" style="background:rgba(99,102,241,0.12);color:#6366f1">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </div>
+        <div>
+          <div class="int-name">Recharge</div>
+          <div class="int-desc">Subscriptions, billing, retries</div>
+        </div>
+      </div>
+      <div class="int-inputs" id="rechargeInputs">
+        <input id="rch-key" type="password" placeholder="Recharge API key">
+      </div>
+      <div class="flex" style="justify-content:space-between">
+        <div class="flex gap-sm">
+          <button onclick="connectNative('recharge')" id="conn-rch">Connect</button>
+          <button class="ghost" onclick="testNative('recharge')" id="test-rch" disabled>Test</button>
+          <button class="ghost danger" onclick="disconnectNative('recharge')" id="disc-rch" style="display:none">Disconnect</button>
+        </div>
+        <span id="badge-recharge" class="pill muted">—</span>
+      </div>
+      <div class="err-msg" id="msg-recharge"></div>
+    </div>
+
+    <!-- Stripe -->
+    <div class="int-card">
+      <div class="flex" style="gap:12px;align-items:center">
+        <div class="int-logo" style="background:rgba(99,91,255,0.12);color:#635bff">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        </div>
+        <div>
+          <div class="int-name">Stripe</div>
+          <div class="int-desc">Payments, invoices, billing</div>
+        </div>
+      </div>
+      <div class="int-inputs" id="stripeInputs">
+        <input id="str-key" type="password" placeholder="Secret key (sk_live_... or sk_test_...)">
+      </div>
+      <div class="flex" style="justify-content:space-between">
+        <div class="flex gap-sm">
+          <button onclick="connectNative('stripe')" id="conn-str">Connect</button>
+          <button class="ghost" onclick="testNative('stripe')" id="test-str" disabled>Test</button>
+          <button class="ghost danger" onclick="disconnectNative('stripe')" id="disc-str" style="display:none">Disconnect</button>
+        </div>
+        <span id="badge-stripe" class="pill muted">—</span>
+      </div>
+      <div class="err-msg" id="msg-stripe"></div>
+    </div>
   </div>
 </div>
 
@@ -63,40 +137,9 @@
   </div>
 </div>
 
-<!-- Account -->
-<div id="tabAccount" class="tab-panel" style="display:none">
-  <div class="card" style="margin-bottom:12px">
-    <h2>Workspace</h2>
-    <div id="workspaceInfo" style="font-size:13px">Loading...</div>
-  </div>
-  <div class="card" style="margin-bottom:12px">
-    <div class="card-header">
-      <h2>API keys</h2>
-      <button class="btn ghost sm" onclick="showKeyForm()">+ New</button>
-    </div>
-    <div id="apiKeysList" style="font-size:13px">Loading...</div>
-    <div id="keyForm" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-      <input type="text" id="newKeyName" placeholder="Key name (e.g. Production)" style="width:100%;margin-bottom:8px">
-      <div class="flex gap-sm">
-        <button class="btn sm" onclick="createKey()">Create</button>
-        <button class="ghost sm" onclick="hideKeyForm()">Cancel</button>
-      </div>
-    </div>
-    <div id="keyReveal" style="display:none;margin-top:12px;padding:12px;background:rgba(245,158,11,0.08);border-radius:6px">
-      <div class="muted" style="font-size:11px;margin-bottom:4px">Copy this key now — it won't be shown again.</div>
-      <div id="rawKey" style="font-family:monospace;font-size:12px;word-break:break-all;margin-bottom:8px"></div>
-      <button class="btn sm" onclick="navigator.clipboard.writeText(rawKeyValue);alert('Copied!')">Copy</button>
-      <button class="ghost sm" onclick="hideReveal()">Done</button>
-    </div>
-  </div>
-  <div class="card">
-    <h2>Billing</h2>
-    <div id="billingInfo" style="font-size:13px">Loading...</div>
-  </div>
-</div>
-
+{% endblock %}
+{% block tail %}
 <script>
-var rawKeyValue = '';
 var currentTab = 'connections';
 
 document.querySelectorAll('#settingsTabs .st-tab').forEach(function(tab){
@@ -109,28 +152,61 @@ document.querySelectorAll('#settingsTabs .st-tab').forEach(function(tab){
   });
 });
 
-async function loadSettings() {
+// ── Integration card helpers ──────────────────────────────────────
+function showMsg(id, text, type){
+  var el = document.getElementById('msg-'+id);
+  if(!el) return;
+  el.textContent = text;
+  if(type==='ok'){ el.style.color='var(--green)'; el.className='err-msg'; setTimeout(function(){ el.textContent=''; }, 3000); }
+  else { el.style.color='var(--red)'; }
+}
+
+function connectNative(provider){
+  var creds = {};
+  if(provider==='shopify'){ creds = { shop_domain: document.getElementById('sf-shop').value.trim(), access_token: document.getElementById('sf-token').value.trim() }; }
+  else if(provider==='recharge'){ creds = { api_key: document.getElementById('rch-key').value.trim() }; }
+  else if(provider==='stripe'){ creds = { secret_key: document.getElementById('str-key').value.trim() }; }
+  showMsg(provider, 'Connecting…');
+  api('/integrations/native', {method:'POST', body:{provider:provider, credentials:creds}})
+    .then(function(){ showMsg(provider, 'Connected ✓', 'ok'); loadConnectors(); })
+    .catch(function(e){ showMsg(provider, e.message); });
+}
+
+function testNative(provider){
+  showMsg(provider, 'Testing…');
+  api('/integrations/native/'+provider+'/test', {method:'POST'})
+    .then(function(d){ showMsg(provider, d.ok ? 'Test passed ✓' : 'Failed: '+(d.error||'unknown'), d.ok?'ok':''); })
+    .catch(function(e){ showMsg(provider, e.message); });
+}
+
+function disconnectNative(provider){
+  if(!confirm('Disconnect '+provider+'? This will stop all workflows using this integration.')) return;
+  api('/integrations/native/'+provider, {method:'DELETE'})
+    .then(function(){ showMsg(provider, 'Disconnected', 'ok'); loadConnectors(); })
+    .catch(function(e){ showMsg(provider, e.message); });
+}
+
+function loadConnectors(){
+  api('/admin/api/integrations').then(function(data){
+    var connected = {};
+    (data.native_connectors||[]).forEach(function(nc){ connected[nc.provider] = nc.status==='connected'; });
+    ['shopify','recharge','stripe'].forEach(function(p){
+      var badge = document.getElementById('badge-'+p);
+      var testBtn = document.getElementById('test-'+p);
+      var discBtn = document.getElementById('disc-'+p);
+      var connBtn = document.getElementById('conn-'+p);
+      if(badge){ badge.textContent = connected[p]?'connected':'—'; badge.className = 'pill '+(connected[p]?'ok':'muted'); }
+      if(testBtn) testBtn.disabled = !connected[p];
+      if(discBtn) discBtn.style.display = connected[p] ? '' : 'none';
+    });
+  }).catch(function(){});
+}
+
+// ── Automations ───────────────────────────────────────────────────
+async function loadPolicies() {
   try {
-    var [s, pols, conns] = await Promise.allSettled([
-      api('/admin/api/settings'),
-      api('/admin/api/policies'),
-      api('/admin/api/integrations'),
-    ]);
-    var settings = s.value || {};
-    var policies = pols.value || {};
-    var integrations = conns.value || {};
-    var bill = settings.billing || {};
-
-    // Connections
-    var connectors = integrations.native_connectors || [];
-    document.getElementById('connectionsList').innerHTML = ['shopify', 'stripe', 'recharge'].map(function(p){
-      var c = connectors.find(function(nc){ return nc.provider === p; });
-      var ok = c && c.status === 'connected';
-      return '<div class="tl-row"><span>' + (ok ? '✅' : '🔌') + '</span><span style="flex:1;font-weight:600;text-transform:capitalize">' + p + '</span><span class="pill ' + (ok ? 'ok' : 'muted') + '" style="font-size:10px">' + (ok ? 'Connected' : 'Not connected') + '</span></div>';
-    }).join('') || '<div class="muted">No connections.</div>';
-
-    // Automations - workflow toggles
-    var ew = policies.enabled_workflows || {};
+    var pols = await api('/admin/api/policies');
+    var ew = pols.enabled_workflows || {};
     document.getElementById('wfToggles').innerHTML = [
       { k: 'payment_recovery', l: 'Payment Recovery' },
       { k: 'cancellation_save', l: 'Cancellation Save' },
@@ -140,56 +216,17 @@ async function loadSettings() {
       return '<div class="tl-row" style="justify-content:space-between"><span style="font-weight:500">' + w.l + '</span><label class="switch"><input type="checkbox" ' + (checked ? 'checked' : '') + ' onchange="toggleWorkflow(\'' + w.k + '\', this.checked)"><span class="slider"></span></label></div>';
     }).join('');
 
-    // Retry policy
-    var rp = policies.retry || {};
+    var rp = pols.retry || {};
     document.getElementById('retryPolicy').innerHTML =
       '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Max retries</span><span style="font-weight:600">' + (rp.max_retries || 3) + '</span></div>' +
       '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Retry intervals</span><span style="font-weight:600">' + ((rp.intervals||[]).join(', ') || '5min, 1h, 24h') + '</span></div>' +
       '<div class="flex" style="justify-content:space-between"><span class="muted2">Action on failure</span><span style="font-weight:600;text-transform:capitalize">' + (rp.on_failure || 'escalate') + '</span></div>';
 
-    // Escalation policy
-    var ep = policies.escalation || {};
+    var ep = pols.escalation || {};
     document.getElementById('escPolicy').innerHTML =
       '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Trigger</span><span style="font-weight:600">' + (ep.trigger || 'frustration or amount > $300') + '</span></div>' +
       '<div class="flex" style="justify-content:space-between"><span class="muted2">Channel</span><span style="font-weight:600">' + (ep.channel || 'in-app') + '</span></div>';
-
-    // Knowledge
-    try {
-      var kbf = await api('/knowledge/files');
-      var ready = kbf.filter(function(r){ return r.status === 'ready'; });
-      document.getElementById('kbStatus').textContent = ready.length + ' file' + (ready.length !== 1 ? 's' : '') + ' ready (' + kbf.length + ' total)';
-      document.getElementById('kbFiles').innerHTML = kbf.length
-        ? kbf.map(function(r){ return '<div class="tl-row"><span style="flex:1;font-size:12px">' + esc(r.filename) + '</span><span class="pill ' + (r.status === 'ready' ? 'ok' : r.status === 'failed' ? 'err' : 'warn') + '" style="font-size:9px">' + r.status + '</span><button class="ghost sm" style="color:var(--red)" onclick="deleteFile(\'' + r.id + '\')">✕</button></div>'; }).join('')
-        : '<div class="muted">No files uploaded.</div>';
-    } catch(e) { document.getElementById('kbFiles').innerHTML = '<div class="muted">Error loading files.</div>'; }
-
-    // Channels
-    document.getElementById('channelsList').innerHTML =
-      '<div class="tl-row"><span>💬</span><span style="flex:1;font-weight:500">Website Widget</span><span class="pill ok" style="font-size:10px">Active</span></div>' +
-      '<div class="tl-row"><span>📧</span><span style="flex:1;font-weight:500">Email</span><span class="pill ' + (settings.notifications ? 'ok' : 'muted') + '" style="font-size:10px">' + (settings.notifications ? 'Configured' : 'Not set up') + '</span></div>';
-
-    // Account
-    var ws = settings.workspace || {};
-    document.getElementById('workspaceInfo').innerHTML =
-      '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Organization</span><span style="font-weight:600">' + esc(ws.name || '—') + '</span></div>' +
-      '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Email</span><span>' + esc(ws.email || '—') + '</span></div>' +
-      '<div class="flex" style="justify-content:space-between"><span class="muted2">Plan</span><span class="pill muted" style="text-transform:capitalize;font-size:10px">' + esc(ws.plan || 'free') + '</span></div>';
-
-    // API keys
-    var keys = settings.api_keys || [];
-    document.getElementById('apiKeysList').innerHTML = keys.length
-      ? keys.map(function(k){
-          return '<div class="tl-row"><span style="flex:1;font-size:12px"><strong>' + esc(k.name) + '</strong> <span class="muted2" style="font-size:11px;font-family:monospace">' + esc(k.prefix) + '...</span></span><span class="muted2" style="font-size:10px">' + (k.last_used_at ? k.last_used_at.slice(0,10) : 'Never') + '</span><button class="ghost sm" style="color:var(--red)" onclick="revokeKey(\'' + k.id + '\')">Revoke</button></div>';
-        }).join('')
-      : '<div class="muted">No API keys.</div>';
-
-    // Billing
-    document.getElementById('billingInfo').innerHTML =
-      '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Resolved this period</span><span style="font-weight:600">' + (bill.resolved || 0) + '</span></div>' +
-      '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Plan limit</span><span style="font-weight:600">' + (bill.dialogs_limit || 0) + '</span></div>' +
-      '<div class="flex" style="justify-content:space-between"><span class="muted2">Overage</span><span style="font-weight:600">' + (bill.overage_charge_usd ? '$' + bill.overage_charge_usd.toFixed(2) : '$0') + '</span></div>';
-
-  } catch(e) { console.error('settings error:', e); }
+  } catch(e) { console.error('policies error:', e); }
 }
 
 async function toggleWorkflow(type, enabled) {
@@ -201,31 +238,21 @@ async function toggleWorkflow(type, enabled) {
   } catch(e) { console.error(e); }
 }
 
-function showKeyForm() { document.getElementById('keyForm').style.display = ''; document.getElementById('newKeyName').focus(); }
-function hideKeyForm() { document.getElementById('keyForm').style.display = 'none'; }
-function hideReveal() { document.getElementById('keyReveal').style.display = 'none'; rawKeyValue = ''; }
-
-async function createKey() {
-  var name = document.getElementById('newKeyName').value.trim() || 'default';
+// ── Knowledge ─────────────────────────────────────────────────────
+async function loadKnowledge() {
   try {
-    var data = await api('/admin/api/settings/api-keys', { method: 'POST', body: { name: name } });
-    rawKeyValue = data.raw_key || '';
-    document.getElementById('rawKey').textContent = rawKeyValue;
-    document.getElementById('keyReveal').style.display = '';
-    hideKeyForm();
-    loadSettings();
-  } catch(e) { alert('Error: ' + e.message); }
-}
-
-async function revokeKey(id) {
-  if (!confirm('Revoke this key?')) return;
-  try { await api('/admin/api/settings/api-keys/' + id, { method: 'DELETE' }); loadSettings(); }
-  catch(e) { alert('Error: ' + e.message); }
+    var kbf = await api('/knowledge/files');
+    var ready = kbf.filter(function(r){ return r.status === 'ready'; });
+    document.getElementById('kbStatus').textContent = ready.length + ' file' + (ready.length !== 1 ? 's' : '') + ' ready (' + kbf.length + ' total)';
+    document.getElementById('kbFiles').innerHTML = kbf.length
+      ? kbf.map(function(r){ return '<div class="tl-row"><span style="flex:1;font-size:12px">' + esc(r.filename) + '</span><span class="pill ' + (r.status === 'ready' ? 'ok' : r.status === 'failed' ? 'err' : 'warn') + '" style="font-size:9px">' + r.status + '</span><button class="ghost sm" style="color:var(--red)" onclick="deleteFile(\'' + r.id + '\')">✕</button></div>'; }).join('')
+      : '<div class="muted">No files uploaded.</div>';
+  } catch(e) { document.getElementById('kbFiles').innerHTML = '<div class="muted">Error loading files.</div>'; }
 }
 
 async function deleteFile(id) {
   if (!confirm('Delete this file?')) return;
-  try { await fetch('/knowledge/files/' + id, { method: 'DELETE', headers: {'Authorization': 'Bearer ' + token()}}); loadSettings(); }
+  try { await fetch('/knowledge/files/' + id, { method: 'DELETE', headers: {'Authorization': 'Bearer ' + token()}}); loadKnowledge(); }
   catch(e) { alert('Error: ' + e.message); }
 }
 
@@ -248,10 +275,24 @@ async function uploadFiles(files) {
       await api('/knowledge/files', { method: 'POST', body: fd });
     } catch(e) { alert(files[i].name + ': ' + e.message); }
   }
-  loadSettings();
+  loadKnowledge();
 }
 
-loadSettings();
+// ── Channels ──────────────────────────────────────────────────────
+async function loadChannels() {
+  try {
+    var settings = await api('/admin/api/settings');
+    document.getElementById('channelsList').innerHTML =
+      '<div class="tl-row"><span>💬</span><span style="flex:1;font-weight:500">Website Widget</span><span class="pill ok" style="font-size:10px">Active</span></div>' +
+      '<div class="tl-row"><span>📧</span><span style="flex:1;font-weight:500">Email</span><span class="pill ' + (settings.notifications ? 'ok' : 'muted') + '" style="font-size:10px">' + (settings.notifications ? 'Configured' : 'Not set up') + '</span></div>';
+  } catch(e) { console.error('channels error:', e); }
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+loadConnectors();
+loadPolicies();
+loadKnowledge();
+loadChannels();
 </script>
 
 <style>
@@ -271,5 +312,17 @@ input:checked + .slider { background:var(--accent); }
 input:checked + .slider:before { transform:translateX(16px); }
 .drop { padding:24px; text-align:center; border:1px dashed var(--border); border-radius:8px; transition:all .15s; }
 .drop.hot { border-color:var(--accent); background:rgba(129,140,248,0.05); }
+
+/* Integration cards */
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.int-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; display:flex; flex-direction:column; gap:14px; }
+.int-logo { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.int-name { font-size:15px; font-weight:700; }
+.int-desc { font-size:12px; color:var(--muted2); margin-top:1px; }
+.int-inputs { display:flex; flex-direction:column; gap:8px; }
+.int-inputs input { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--fg); font-size:12px; outline:none; transition:border .15s; }
+.int-inputs input:focus { border-color:var(--accent); }
+.err-msg { font-size:11px; min-height:0; transition:all .15s; }
+@media (max-width:900px){ .grid-3 { grid-template-columns:1fr; } }
 </style>
 {% endblock %}

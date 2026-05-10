@@ -192,6 +192,11 @@ def settings_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
     return templates.TemplateResponse(request, "settings.html", context=_ctx(request))
 
 
+@router.get("/account", response_class=HTMLResponse)
+def account_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
+    return templates.TemplateResponse(request, "account.html", context=_ctx(request))
+
+
 @router.get("/workflows/{workflow_id}", response_class=HTMLResponse)
 def workflow_detail_page(
     request: Request,
