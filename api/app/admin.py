@@ -154,12 +154,6 @@ for _old_path, _suffix in _REDIRECT_MAP.items():
 
     router.get(_old_path, response_class=HTMLResponse)(_mk_redir)
 
-for _old_path, _new_path in _OLD_PAGE_REDIRECTS.items():
-
-    def _make_redirect(path: str = _new_path):
-        return RedirectResponse(url=path, status_code=status.HTTP_302_FOUND)
-
-    router.get(_old_path, response_class=HTMLResponse)(_make_redirect)
 
 
 @router.get("/customers", response_class=HTMLResponse)
