@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from typing import Any
+
+from sqlalchemy.orm import Session
+
 from .client import (
     pause_subscription,
     skip_next_shipment,
@@ -7,6 +11,7 @@ from .client import (
     cancel_subscription,
     get_subscription,
 )
+from ..credentials import get_credentials
 from ...shared.idempotency import idempotency_check, idempotency_set
 
 __all__ = [
@@ -18,42 +23,47 @@ __all__ = [
 ]
 
 
-async def execute_pause_subscription(subscription_id: str, pause_note: str = "") -> dict | None:
+async def execute_pause_subscription(tenant_id: Any, subscription_id: str, db: Session, pause_note: str = "") -> dict | None:
+    creds = get_credentials(tenant_id, "recharge", db)
     idem_key = f"subscription_mutation:{subscription_id}:pause"
     is_dup, cached = await idempotency_check(idem_key, None)
     if is_dup:
         return cached
-    result = await pause_subscription(subscription_id, pause_note)
+    result = await pause_subscription(creds, subscription_id, pause_note)
     if result:
         await idempotency_set(idem_key, result)
     return result
 
 
-async def execute_skip_shipment(subscription_id: str) -> dict | None:
+async def execute_skip_shipment(tenant_id: Any, subscription_id: str, db: Session) -> dict | None:
+    creds = get_credentials(tenant_id, "recharge", db)
     idem_key = f"subscription_mutation:{subscription_id}:skip"
     is_dup, cached = await idempotency_check(idem_key, None)
     if is_dup:
         return cached
-    result = await skip_next_shipment(subscription_id)
+    result = await skip_next_shipment(creds, subscription_id)
     if result:
         await idempotency_set(idem_key, result)
     return result
 
 
-async def execute_delay_renewal(subscription_id: str, delay_days: int = 7) -> dict | None:
+async def execute_delay_renewal(tenant_id: Any, subscription_id: str, db: Session, delay_days: int = 7) -> dict | None:
+    creds = get_credentials(tenant_id, "recharge", db)
     idem_key = f"subscription_mutation:{subscription_id}:delay_{delay_days}"
     is_dup, cached = await idempotency_check(idem_key, None)
     if is_dup:
         return cached
-    result = await delay_renewal(subscription_id, delay_days)
+    result = await delay_renewal(creds, subscription_id, delay_days)
     if result:
         await idempotency_set(idem_key, result)
     return result
 
 
-async def execute_cancel_subscription(subscription_id: str, reason: str = "") -> dict | None:
-    return await cancel_subscription(subscription_id, reason)
+async def execute_cancel_subscription(tenant_id: Any, subscription_id: str, db: Session, reason: str = "") -> dict | None:
+    creds = get_credentials(tenant_id, "recharge", db)
+    return await cancel_subscription(creds, subscription_id, reason)
 
 
-async def fetch_subscription_state(subscription_id: str) -> dict | None:
-    return await get_subscription(subscription_id)
+async def fetch_subscription_state(tenant_id: Any, subscription_id: str, db: Session) -> dict | None:
+    creds = get_credentials(tenant_id, "recharge", db)
+    return await get_subscription(creds, subscription_id)

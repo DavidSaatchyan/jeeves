@@ -62,7 +62,7 @@ class WismoWorkflow(Workflow):
             await self.transition("FAILED", event, db, reason="no_order_id")
             return
 
-        order = await fetch_order(order_id)
+        order = await fetch_order(event.tenant_id, order_id, db)
         if not order:
             logger.warning("order %s not found in Shopify", order_id)
             await self.transition("FAILED", event, db, reason="order_not_found")
@@ -73,7 +73,7 @@ class WismoWorkflow(Workflow):
     async def _handle_retrieving_shipment(self, event: CanonicalEvent, db: Session) -> None:
         order_id = event.payload.get("order_id", event.entity_id)
 
-        fulfillments = await fetch_fulfillments(order_id)
+        fulfillments = await fetch_fulfillments(event.tenant_id, order_id, db)
         if not fulfillments:
             logger.info("no fulfillments for order %s", order_id)
             self.shipment_data = {"status": "processing", "tracking": None}

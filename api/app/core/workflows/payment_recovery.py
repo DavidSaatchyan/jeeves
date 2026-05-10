@@ -219,7 +219,7 @@ class PaymentRecoveryWorkflow(Workflow):
         invoice_id = event.entity_id
         self.attempt_count += 1
 
-        result = await execute_retry_payment(invoice_id, self.attempt_count)
+        result = await execute_retry_payment(event.tenant_id, invoice_id, self.attempt_count, db)
         if result and result.get("status") in ("paid", "succeeded"):
             await self.transition("VERIFYING_RESULT", event, db, reason="retry_attempt_succeeded")
         else:
@@ -244,7 +244,7 @@ class PaymentRecoveryWorkflow(Workflow):
 
     async def _handle_verifying_result(self, event: CanonicalEvent, db: Session) -> None:
         invoice_id = event.entity_id
-        invoice_state = await fetch_invoice_state(invoice_id)
+        invoice_state = await fetch_invoice_state(event.tenant_id, invoice_id, db)
 
         if not invoice_state:
             await self.transition("ESCALATED", event, db, reason="cannot_verify_invoice_state")
@@ -263,7 +263,7 @@ class PaymentRecoveryWorkflow(Workflow):
 
     async def _handle_paused_reconciliation(self, event: CanonicalEvent, db: Session) -> None:
         invoice_id = event.entity_id
-        invoice_state = await fetch_invoice_state(invoice_id)
+        invoice_state = await fetch_invoice_state(event.tenant_id, invoice_id, db)
 
         if invoice_state and invoice_state.get("status") in ("paid", "succeeded"):
             await self.transition("RECOVERED", event, db, reason="reconciled_paid")

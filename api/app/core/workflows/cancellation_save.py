@@ -183,11 +183,11 @@ class CancellationSaveWorkflow(Workflow):
 
         result = None
         if self.selected_action == "pause":
-            result = await execute_pause_subscription(subscription_id, "customer_request")
+            result = await execute_pause_subscription(event.tenant_id, subscription_id, db, "customer_request")
         elif self.selected_action == "skip":
-            result = await execute_skip_shipment(subscription_id)
+            result = await execute_skip_shipment(event.tenant_id, subscription_id, db)
         elif self.selected_action == "delay":
-            result = await execute_delay_renewal(subscription_id, 7)
+            result = await execute_delay_renewal(event.tenant_id, subscription_id, db, 7)
 
         if result:
             await self.transition("RETAINED", event, db, reason=f"save_action_{self.selected_action}_executed")
