@@ -192,6 +192,11 @@ def settings_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
     return templates.TemplateResponse(request, "settings.html", context=_ctx(request))
 
 
+@router.get("/connections", response_class=HTMLResponse)
+def connections_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
+    return templates.TemplateResponse(request, "connections.html", context=_ctx(request))
+
+
 @router.get("/account", response_class=HTMLResponse)
 def account_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
     return templates.TemplateResponse(request, "account.html", context=_ctx(request))
@@ -253,15 +258,35 @@ def api_integrations(
         "stripe": ["invoice.payment_failed", "invoice.payment_succeeded", "customer.subscription.updated", "customer.subscription.deleted"],
     }
 
+    PROVIDER_REQUIRED_FIELDS = {
+        "shopify": ["shop_domain", "access_token"],
+        "recharge": ["api_key"],
+        "stripe": ["secret_key"],
+    }
+
+    from .crypto import decrypt
+
     connectors = db.query(NativeConnector).filter(NativeConnector.tenant_id == tenant.id).all()
     conn_map = {c.provider: c for c in connectors}
 
     result = []
     for provider in ("shopify", "recharge", "stripe"):
         c = conn_map.get(provider)
+        status = "disconnected"
+        if c and c.status == "connected":
+            try:
+                creds = json.loads(decrypt(c.credentials))
+                required = PROVIDER_REQUIRED_FIELDS.get(provider, [])
+                if all(creds.get(f) for f in required):
+                    status = "connected"
+                else:
+                    status = "disconnected"
+            except Exception:
+                status = "disconnected"
+
         result.append({
             "provider": provider,
-            "status": c.status if c else "disconnected",
+            "status": status,
             "has_webhook_secret": bool((c.meta or {}).get("webhook_secret")) if c else False,
             "webhook_url": f"{webhook_base}/{provider}" if webhook_base else None,
             "webhook_events": PROVIDER_WEBHOOK_EVENTS.get(provider, []),

@@ -3,6 +3,7 @@ Converts external webhook payloads → CanonicalEvents → dispatched to workflo
 """
 from __future__ import annotations
 
+import base64
 import hashlib
 import hmac
 import json
@@ -95,7 +96,7 @@ async def shopify_webhook(request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No Shopify connector found for this shop domain")
 
     webhook_secret = (connector.meta or {}).get("webhook_secret", "")
-    if webhook_secret and not _verify_hmac(raw_body, hmac_header, webhook_secret):
+    if webhook_secret and not _verify_shopify_hmac(raw_body, hmac_header, webhook_secret):
         raise HTTPException(status_code=401, detail="Invalid HMAC signature")
 
     topic = request.headers.get("X-Shopify-Topic", "")
@@ -136,7 +137,7 @@ async def recharge_webhook(request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No Recharge connector found")
 
     webhook_secret = (connector.meta or {}).get("webhook_secret", "")
-    if webhook_secret and not _verify_hmac(raw_body, hmac_header, webhook_secret):
+    if webhook_secret and not _verify_recharge_hmac(raw_body, hmac_header, webhook_secret):
         raise HTTPException(status_code=401, detail="Invalid HMAC signature")
 
     payload = json.loads(raw_body) if raw_body else {}
@@ -188,18 +189,27 @@ def _find_recharge_connector_by_hmac(db: Session, raw_body: bytes, hmac_header: 
         secret = (cxn.meta or {}).get("webhook_secret", "")
         if not secret:
             continue
-        if _verify_hmac(raw_body, hmac_header, secret):
+        if _verify_recharge_hmac(raw_body, hmac_header, secret):
             return cxn
 
     return None
 
 
-def _verify_hmac(raw_body: bytes, header_value: str, secret: str) -> bool:
-    """Verify HMAC-SHA256 signature (Shopify & Recharge style)."""
-    expected = hmac.new(secret.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
-    return hmac.compare_digest(f"sha256={expected}", header_value) or hmac.compare_digest(
-        expected, header_value
-    )
+def _verify_shopify_hmac(raw_body: bytes, header_value: str, secret: str) -> bool:
+    """Shopify HMAC verification: HMAC-SHA256(secret, raw_body) → base64 digest."""
+    expected = base64.b64encode(
+        hmac.new(secret.encode("utf-8"), raw_body, hashlib.sha256).digest()
+    ).decode()
+    return hmac.compare_digest(expected, header_value)
+
+
+def _verify_recharge_hmac(raw_body: bytes, header_value: str, secret: str) -> bool:
+    """Recharge HMAC verification: SHA256(secret + raw_body_string) → hex digest.
+    Note: secret is concatenated BEFORE body, not used as HMAC key.
+    """
+    body_str = raw_body.decode("utf-8")
+    expected = hashlib.sha256((secret + body_str).encode("utf-8")).hexdigest()
+    return hmac.compare_digest(expected, header_value)
 
 
 async def _dispatch(event: CanonicalEvent, db: Session) -> None:
