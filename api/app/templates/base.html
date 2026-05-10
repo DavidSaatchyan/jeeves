@@ -293,8 +293,7 @@ function logout(){ localStorage.removeItem('jeeves_token'); localStorage.removeI
 async function api(path, opts={}){
   const headers = opts.headers||{};
   if(!(opts.body instanceof FormData)) headers['Content-Type']='application/json';
-  const t = token(); if(t) headers['Authorization']='Bearer '+t;
-  const r = await fetch(path,{...opts,headers,body: opts.body && !(opts.body instanceof FormData) ? JSON.stringify(opts.body):opts.body});
+  const r = await fetch(path,{...opts,headers,credentials:'include',body: opts.body && !(opts.body instanceof FormData) ? JSON.stringify(opts.body):opts.body});
   if(r.status===401){ location.href='/admin/login'; throw new Error('unauth'); }
   if(r.status===402){ location.href='/admin/billing'; }
   const ct=r.headers.get('content-type')||''; const data = ct.includes('json')?await r.json():await r.text();

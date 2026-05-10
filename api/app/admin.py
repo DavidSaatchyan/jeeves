@@ -44,14 +44,20 @@ _SESSION_COOKIE = "jeeves_session"
 
 
 def get_admin_tenant(
+    request: Request,
     token: Optional[str] = Cookie(default=None, alias=_SESSION_COOKIE),
     db: Session = Depends(get_db),
 ) -> Tenant:
-    """Extract tenant from session cookie for admin pages."""
-    if not token:
+    """Extract tenant from session cookie OR Authorization Bearer header."""
+    raw = token
+    if not raw:
+        auth = request.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            raw = auth[7:]
+    if not raw:
         raise HTTPException(status_code=status.HTTP_302_FOUND, headers={"Location": "/admin/login"})
     try:
-        payload = decode_token(token)
+        payload = decode_token(raw)
     except HTTPException:
         raise HTTPException(status_code=status.HTTP_302_FOUND, headers={"Location": "/admin/login"})
     if payload.get("kind") != "access":
