@@ -202,6 +202,21 @@ def automations_page(request: Request, tenant: Tenant = Depends(get_admin_tenant
     return templates.TemplateResponse(request, "automations.html", context=_ctx(request))
 
 
+@router.get("/agents", response_class=HTMLResponse)
+def agents_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
+    return templates.TemplateResponse(request, "agents.html", context=_ctx(request))
+
+
+@router.get("/knowledge", response_class=HTMLResponse)
+def knowledge_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
+    return templates.TemplateResponse(request, "settings.html", context={**_ctx(request), "active_tab": "knowledge"})
+
+
+@router.get("/channels", response_class=HTMLResponse)
+def channels_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
+    return templates.TemplateResponse(request, "settings.html", context={**_ctx(request), "active_tab": "channels"})
+
+
 @router.get("/account", response_class=HTMLResponse)
 def account_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
     return templates.TemplateResponse(request, "account.html", context=_ctx(request))

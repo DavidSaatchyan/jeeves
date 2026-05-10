@@ -14,7 +14,8 @@ from ..commerce.billing import InvoiceService, PaymentFailureService
 from ...integrations.stripe.actions import execute_retry_payment, fetch_invoice_state, fetch_customer_data, fetch_payment_method_data
 from ...shared.idempotency import idempotency_get
 from ...shared.locks import workflow_lock
-from ..policies.retry_rules import compute_retry_schedule, is_retry_eligible
+from ..policies.retry_rules import compute_retry_schedule
+from ..policies.escalation_rules import should_escalate
 from ..ai.classifier import classify_failure
 from ..ai.sentiment import detect_frustration
 from ..communications.service import send_communication
@@ -67,6 +68,7 @@ class PaymentRecoveryWorkflow(Workflow):
         invoice_id = event.entity_id
         customer_id = event.payload.get("customer_id", "")
         subscription_id = event.payload.get("subscription_id", "")
+        amount_due = event.payload.get("amount_due", 0)
 
         inv_service = InvoiceService(db)
         invoice = inv_service.get_by_external_id(invoice_id)
@@ -76,20 +78,44 @@ class PaymentRecoveryWorkflow(Workflow):
                 customer_id=customer_id,
                 external_invoice_id=invoice_id,
                 status="open",
-                amount_due=event.payload.get("amount_due", 0),
+                amount_due=amount_due,
                 currency=event.payload.get("currency", "usd"),
             )
 
         sub_service = SubscriptionService(db)
         sub = sub_service.get_by_external_id(subscription_id)
+        subscription_active = sub is not None and sub.get("status") == "active"
 
-        if not is_retry_eligible(
-            subscription_active=sub is not None and sub["status"] == "active",
-            is_duplicate=False,
-            is_escalated=False,
-        ):
-            logger.info("validation failed: retry not eligible")
-            await self.transition("FAILED", event, db, reason="validation_failed")
+        if not subscription_active:
+            logger.info("validation failed: subscription not active")
+            await self.transition("FAILED", event, db, reason="subscription_inactive")
+            return
+
+        invoice_status = invoice.get("status", "") if isinstance(invoice, dict) else getattr(invoice, "status", "")
+        if invoice_status in ("paid", "succeeded", "canceled"):
+            logger.info("validation failed: invoice already resolved")
+            await self.transition("FAILED", event, db, reason="invoice_already_resolved")
+            return
+
+        from ..workflows.registry import _find_or_create_workflow
+        existing = _find_or_create_workflow(
+            tenant_id=event.tenant_id,
+            customer_id=customer_id,
+            workflow_type="payment_recovery",
+            event=event,
+        )
+        has_existing_active = existing is not None and existing.id != self.workflow_id
+
+        should_skip = await should_escalate(
+            tenant_id=event.tenant_id,
+            amount=float(amount_due) if amount_due else 0,
+            failure_count=self.attempt_count,
+            is_duplicate=has_existing_active,
+        )
+
+        if should_skip:
+            logger.info("validation failed: should skip per policy")
+            await self.transition("FAILED", event, db, reason="policy_blocks_recovery")
             return
 
         await self.transition("CLASSIFYING_FAILURE", event, db, reason="validation_passed")
@@ -110,6 +136,11 @@ class PaymentRecoveryWorkflow(Workflow):
             interaction_type="failure_classification",
         )
 
+        if classification.get("category") == "blocked":
+            logger.warning("blocked failure category, escalating without retry")
+            await self.transition("ESCALATED", event, db, reason="blocked_failure_category")
+            return
+
         if classification.get("confidence", 0) < 0.3:
             logger.warning("low confidence classification, escalating")
             await self.transition("ESCALATED", event, db, reason="low_confidence_classification")
@@ -119,6 +150,17 @@ class PaymentRecoveryWorkflow(Workflow):
 
     async def _handle_selecting_strategy(self, event: CanonicalEvent, db: Session) -> None:
         from ..policies.retry_rules import compute_retry_schedule
+
+        amount_due = event.payload.get("amount_due", 0)
+        should_esc = await should_escalate(
+            tenant_id=event.tenant_id,
+            amount=float(amount_due) if amount_due else 0,
+            failure_count=self.attempt_count,
+        )
+        if should_esc:
+            logger.info("amount exceeds escalation threshold, escalating")
+            await self.transition("ESCALATED", event, db, reason="amount_exceeds_threshold")
+            return
 
         schedule = compute_retry_schedule(
             failure_category=self.failure_category,
@@ -164,7 +206,8 @@ class PaymentRecoveryWorkflow(Workflow):
         if comm_id:
             await self.transition("OUTREACH_SENT", event, db, reason=f"comms_sent_{template_name}")
         else:
-            await self.transition("RETRY_SCHEDULED", event, db, reason="comms_failed_skip_to_retry")
+            logger.warning("outreach failed, escalating")
+            await self.transition("ESCALATED", event, db, reason="outreach_failed")
 
     async def _handle_outreach_sent(self, event: CanonicalEvent, db: Session) -> None:
         await self.transition("WAITING_CUSTOMER", event, db, reason="outreach_complete")
@@ -174,8 +217,14 @@ class PaymentRecoveryWorkflow(Workflow):
             await self.transition("RETRY_PENDING", event, db, reason="payment_method_updated")
         elif event.event_type == "customer_frustrated":
             frustration = await detect_frustration(event.payload.get("message", ""))
-            if frustration.get("level") in ("medium", "high"):
-                await self.transition("ESCALATED", event, db, reason="customer_frustrated")
+            level = frustration.get("level", "low")
+            should_esc = await should_escalate(
+                tenant_id=event.tenant_id,
+                frustration_level=level,
+                failure_count=self.attempt_count,
+            )
+            if should_esc or level in ("medium", "high"):
+                await self.transition("ESCALATED", event, db, reason=f"customer_frustrated_{level}")
             else:
                 logger.info("frustration level low, continuing wait")
         elif event.event_type == "external_payment_success":
@@ -183,6 +232,13 @@ class PaymentRecoveryWorkflow(Workflow):
         elif event.event_type == "subscription_cancel_requested":
             await self._escalate(event, db, "customer_cancelled_during_recovery")
             return
+        elif event.event_type == "customer_replied":
+            reply = event.payload.get("message", "")
+            frustration = await detect_frustration(reply)
+            if frustration.get("level") in ("medium", "high"):
+                await self.transition("ESCALATED", event, db, reason="frustrated_reply")
+            else:
+                logger.info("customer replied, continuing wait")
         elif event.event_type == "workflow_timeout":
             await self.transition("RETRY_SCHEDULED", event, db, reason="wait_timeout_proceed_to_retry")
 
@@ -213,6 +269,16 @@ class PaymentRecoveryWorkflow(Workflow):
         await self.transition("RETRY_PENDING", event, db, reason=f"retry_scheduled_attempt_{self.attempt_count + 1}")
 
     async def _handle_retry_pending(self, event: CanonicalEvent, db: Session) -> None:
+        invoice_id = event.entity_id
+        invoice_state = await fetch_invoice_state(event.tenant_id, invoice_id, db)
+        if invoice_state and invoice_state.get("status") in ("paid", "succeeded"):
+            logger.info("invoice already paid before retry, skipping")
+            await self.transition("RECOVERED", event, db, reason="invoice_already_paid")
+            return
+        if self.attempt_count >= 3:
+            logger.warning("retry limit exceeded in pending state")
+            await self.transition("FAILED", event, db, reason="retry_limit_exceeded")
+            return
         await self.transition("RETRYING", event, db, reason="retry_triggered")
 
     async def _handle_retrying(self, event: CanonicalEvent, db: Session) -> None:
@@ -257,7 +323,7 @@ class PaymentRecoveryWorkflow(Workflow):
             if self.attempt_count >= 3:
                 await self.transition("WAITING_CUSTOMER", event, db, reason="retries_exhausted_waiting_customer")
             else:
-                await self.transition("RETRY_SCHEDULED", event, db, reason="still_unpaid_retry_again")
+                await self.transition("WAITING_CUSTOMER", event, db, reason="still_unpaid_waiting_customer")
         else:
             await self.transition("PAUSED_RECONCILIATION", event, db, reason="state_mismatch_reconciliation")
 
