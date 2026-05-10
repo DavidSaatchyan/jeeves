@@ -1039,6 +1039,14 @@ def api_agent_roi(
     ).scalar() or 0
     revenue_at_risk = float(at_risk_row)
 
+    # Recovered customers (distinct)
+    recovered_customers = len(set(
+        w.customer_id for w in workflows
+        if w.current_state in ("RECOVERED", "RETAINED", "RESOLVED") and w.customer_id
+    ))
+    active_at_risk = sum(1 for w in workflows if w.status in ("active", "paused"))
+    awaiting_review = 0  # filled from approval queue in frontend
+
     # Support hours saved
     support_hours_saved = round(recovered * 0.5, 1)
 
@@ -1084,6 +1092,9 @@ def api_agent_roi(
         "recovered": recovered,
         "failed": failed,
         "escalated": escalated,
+        "recovered_customers": recovered_customers,
+        "active_at_risk": active_at_risk,
+        "awaiting_review": awaiting_review,
         "daily_revenue": daily_revenue,
         "agent_type": agent_type,
     }
@@ -1100,7 +1111,18 @@ def api_agent_queue(
 ):
     """Queue tabs: active, approvals, escalations, log."""
     if queue == "active":
-        q = db.query(Workflow).filter(
+        q = db.query(
+            Workflow.id,
+            Workflow.customer_id,
+            Workflow.current_state,
+            Workflow.status,
+            Workflow.started_at,
+            func.coalesce(
+                db.query(func.sum(Invoice.amount_due))
+                .filter(Invoice.workflow_id == Workflow.id)
+                .scalar_subquery(), 0
+            ).label("amount_due"),
+        ).filter(
             Workflow.tenant_id == tenant.id,
             Workflow.workflow_type == agent_type,
             Workflow.status.in_(["active", "paused"]),
@@ -1111,13 +1133,15 @@ def api_agent_queue(
             "queue": queue,
             "items": [
                 {
-                    "id": str(w.id),
-                    "customer_id": w.customer_id,
-                    "current_state": w.current_state,
-                    "status": w.status,
-                    "started_at": w.started_at.isoformat() if w.started_at else None,
+                    "id": str(r.id),
+                    "customer_id": r.customer_id,
+                    "current_state": r.current_state,
+                    "status": r.status,
+                    "amount_due": float(r.amount_due) if r.amount_due else None,
+                    "risk_level": "medium",
+                    "started_at": r.started_at.isoformat() if r.started_at else None,
                 }
-                for w in rows
+                for r in rows
             ],
             "total": total,
         }

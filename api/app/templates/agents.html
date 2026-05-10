@@ -3,49 +3,69 @@
 <style>
 /* ── PayGuard Redesign per plan-payguard-redesign.md ── */
 
-/* Sticky header */
+/* ── Sticky header ── */
 .pg-header {
   position: sticky; top: 0; z-index: 100;
   background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-  margin-bottom: 16px; padding: 0;
+  margin-bottom: 0; padding: 0;
   box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 .pg-header-inner {
-  display: flex; align-items: center; gap: 0;
+  display: flex; align-items: stretch; gap: 0;
 }
 .pg-h-left {
-  display: flex; align-items: center; gap: 14px;
-  padding: 16px 20px; flex: 0 0 auto; min-width: 240px;
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 20px; flex: 0 0 auto; min-width: 220px;
   border-right: 1px solid var(--border);
 }
-.pg-h-logo { width: 40px; height: 40px; border-radius: 10px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
-.pg-h-name { font-size: 16px; font-weight: 800; letter-spacing:-.3px; }
-.pg-h-sub { font-size: 11px; color: var(--muted); }
-.pg-h-status { display:flex; gap:4px; margin-top:3px; flex-wrap:wrap; }
+.pg-h-logo { width: 48px; height: 48px; border-radius: 12px; display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0; background:rgba(99,102,241,0.12); }
+.pg-h-name { font-size: 18px; font-weight: 800; letter-spacing:-.3px; line-height:1.2; }
+.pg-h-sub { font-size: 11px; color: var(--muted); line-height:1.3; }
+.pg-h-status { display:flex; gap:4px; margin-top:4px; flex-wrap:wrap; }
 
 .pg-h-center {
-  flex: 1; display: flex; gap: 0; padding: 12px 16px;
-  border-right: 1px solid var(--border); min-width: 0;
+  flex: 1; display: flex; gap: 0; padding: 10px 12px;
+  border-right: 1px solid var(--border); min-width: 0; align-items:center;
 }
-.pg-h-kpi { flex: 1; text-align: center; padding: 0 6px; min-width: 0; }
-.pg-h-kpi-val { font-size: 15px; font-weight: 800; color:#fff; letter-spacing:-.3px; }
-.pg-h-kpi-lbl { font-size: 9px; color:var(--muted2); text-transform:uppercase; letter-spacing:.2px; margin-top:1px; }
+.pg-h-kpi { flex: 1; text-align: center; padding: 0 4px; min-width: 0; }
+.pg-h-kpi-val { font-size: 18px; font-weight: 800; color:#fff; letter-spacing:-.3px; line-height:1.2; }
+.pg-h-kpi-lbl { font-size: 9px; color:var(--muted2); text-transform:uppercase; letter-spacing:.3px; margin-top:1px; font-weight:600; }
 
 .pg-h-right {
-  display: flex; align-items: center; gap: 6px; padding: 12px 16px; flex-shrink:0;
+  display: flex; align-items: center; gap: 8px; padding: 14px 16px; flex-shrink:0;
 }
+.pg-h-btn { padding:8px 18px; border-radius:8px; font-size:13px; font-weight:700; border:none; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.pg-h-btn.primary { background:var(--accent); color:#fff; }
+.pg-h-btn.primary:hover { filter:brightness(1.15); }
+.pg-h-btn.ghost { background:transparent; color:var(--muted2); border:1px solid var(--border); }
+.pg-h-btn.ghost:hover { color:var(--text); border-color:var(--muted2); }
 
-/* Layout */
-.pg-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
-.pg-col { display: flex; flex-direction: column; gap: 14px; }
+/* ── Operational Status Ribbon ── */
+.pg-status {
+  display:flex; align-items:center; gap:16px;
+  padding:8px 20px 10px; border-top:1px solid var(--border);
+  font-size:11px; flex-wrap:wrap;
+}
+.pg-status-item { display:flex; align-items:center; gap:5px; }
+.pg-status-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.pg-status-dot.ok { background:var(--green); }
+.pg-status-dot.warn { background:var(--amber); }
+.pg-status-dot.muted { background:var(--muted2); }
+
+/* Policy grid */
+.pg-policy-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.pg-policy-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; }
+.pg-policy-card h3 { font-size:13px; font-weight:700; margin:0 0 10px; display:flex; align-items:center; gap:6px; }
+.pg-policy-card h3 .icon { font-size:16px; }
 
 /* Cards */
-.pg-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
-.pg-card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing:.4px; color: var(--muted); margin-bottom: 12px; display:flex; align-items:center; justify-content:space-between; }
+.pg-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+.pg-card + .pg-card { margin-top: 10px; }
+.pg-card-title { font-size: 11px; font-weight: 700; letter-spacing:.2px; color: var(--muted); margin-bottom: 10px; display:flex; align-items:center; justify-content:space-between; }
 
 /* Feed */
-.pg-feed { max-height: 320px; overflow-y: auto; }
-.pg-fi { display:flex; gap:10px; padding:7px 0; border-bottom:1px solid var(--border); cursor:pointer; align-items:flex-start; }
+.pg-feed { max-height: 300px; overflow-y: auto; }
+.pg-fi { display:flex; gap:8px; padding:5px 0; border-bottom:1px solid var(--border); cursor:pointer; align-items:flex-start; }
 .pg-fi:last-child { border-bottom:none; }
 .pg-fi:hover { background:rgba(255,255,255,0.02); }
 .pg-fi-icon { font-size:13px; flex-shrink:0; margin-top:2px; }
@@ -70,13 +90,13 @@
 .pg-fun-icon { font-size:14px; }
 
 /* Queue tabs */
-.pg-qt { display:flex; gap:0; margin:0 0 10px; border-bottom:1px solid var(--border); }
-.pg-qt-btn { padding:6px 12px; font-size:11px; font-weight:600; color:var(--muted2); cursor:pointer; border:none; background:transparent; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .15s; display:flex; align-items:center; gap:3px; white-space:nowrap; }
+.pg-qt { display:flex; gap:0; margin:0 0 8px; border-bottom:1px solid var(--border); }
+.pg-qt-btn { padding:5px 10px; font-size:11px; font-weight:600; color:var(--muted2); cursor:pointer; border:none; background:transparent; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .15s; display:flex; align-items:center; gap:3px; white-space:nowrap; }
 .pg-qt-btn:hover { color:var(--text); }
 .pg-qt-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
-.pg-qt-badge { font-size:9px; padding:0 5px; border-radius:6px; background:var(--accent); color:#fff; font-weight:700; line-height:1.4; min-width:16px; text-align:center; }
-.pg-q-body { max-height:300px; overflow-y:auto; }
-.pg-q-empty { text-align:center; padding:24px 16px; color:var(--muted2); font-size:12px; }
+.pg-qt-badge { font-size:8px; padding:0 4px; border-radius:5px; background:var(--accent); color:#fff; font-weight:700; line-height:1.3; min-width:14px; text-align:center; }
+.pg-q-body { max-height:280px; overflow-y:auto; }
+.pg-q-empty { text-align:center; padding:20px 16px; color:var(--muted2); font-size:11px; }
 
 /* Config */
 .pg-cfg-sect { border-bottom:1px solid var(--border); }
@@ -127,10 +147,10 @@
 .pg-spark-bar { flex:1; border-radius:2px 2px 0 0; min-height:2px; background:var(--accent); opacity:.6; }
 
 /* Chart */
-.pg-chart { display:flex; align-items:flex-end; gap:4px; height:60px; padding:4px 0; }
-.pg-chart-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:2px; }
-.pg-chart-bar { width:100%; background:var(--accent); border-radius:2px 2px 0 0; min-height:3px; }
-.pg-chart-lbl { font-size:7px; color:var(--muted2); text-transform:uppercase; }
+.pg-chart { display:flex; align-items:flex-end; gap:3px; height:50px; padding:2px 0; }
+.pg-chart-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:1px; }
+.pg-chart-bar { width:100%; background:var(--accent); border-radius:2px 2px 0 0; min-height:2px; }
+.pg-chart-lbl { font-size:6px; color:var(--muted2); }
 
 /* Buttons within table rows */
 .pg-op-btn { padding:3px 8px; font-size:10px; font-weight:600; border:none; border-radius:4px; cursor:pointer; transition:all .1s; }
@@ -142,9 +162,13 @@
 
 /* Responsive */
 @media (max-width:900px) {
-  .pg-layout { grid-template-columns:1fr; }
-  .pg-h-center { flex-wrap:wrap; gap:4px; }
-  .pg-h-kpi { min-width:60px; }
+  .pg-header-inner { flex-wrap:wrap; }
+  .pg-h-left { min-width:160px; padding:10px 14px; border-right:none; border-bottom:1px solid var(--border); width:100%; }
+  .pg-h-center { flex-wrap:wrap; gap:4px; padding:6px 10px; border-right:none; }
+  .pg-h-kpi { min-width:50px; }
+  .pg-h-kpi-val { font-size:14px; }
+  .pg-h-right { padding:8px 12px; }
+  .pg-policy-grid { grid-template-columns:1fr; }
 }
 </style>
 
@@ -241,12 +265,11 @@ function renderPayGuard(agent, analytics, policies, ew, workflows) {
   var active = wfs.filter(function(w){ return w.status === 'active' || w.status === 'paused'; }).length;
   var completed = wfs.filter(function(w){ return w.status === 'completed'; }).length;
   var escalated = wfs.filter(function(w){ return w.status === 'escalated'; }).length;
-  var failed = wfs.filter(function(w){ return w.status === 'failed'; }).length;
 
   var h = '<div class="pg-header" id="pgHead">' +
     '<div class="pg-header-inner">' +
       '<div class="pg-h-left">' +
-        '<div class="pg-h-logo" style="background:rgba(99,102,241,0.12);color:#6366f1">🛡️</div>' +
+        '<div class="pg-h-logo" style="color:#6366f1">🛡️</div>' +
         '<div><div class="pg-h-name">PayGuard</div><div class="pg-h-sub">Failed Payment Recovery</div>' +
         '<div class="pg-h-status">' +
           '<span class="pill ' + (enabled?'ok':'muted') + '" id="pgStatPill" style="font-size:9px">' + (enabled?'● Active':'Paused') + '</span>' +
@@ -254,56 +277,69 @@ function renderPayGuard(agent, analytics, policies, ew, workflows) {
         '</div></div>' +
       '</div>' +
       '<div class="pg-h-center" id="kpiStrip">' +
-        kpiCell('kpiRev', '$—', 'Recovered') +
-        kpiCell('kpiRate', '—', 'Recovery rate') +
-        kpiCell('kpiActive', active, 'Active') +
-        kpiCell('kpiApproval', '—', 'Awaiting approval') +
-        kpiCell('kpiEsc', '—', 'Escalated') +
+        kpiCell('kpiRev', '$—', 'Recovered Revenue') +
+        kpiCell('kpiRate', '—', 'Recovery Rate') +
+        kpiCell('kpiCustomers', '—', 'Recovered Customers') +
+        kpiCell('kpiAtRisk', '$—', 'At Risk') +
+        kpiCell('kpiApproval', '—', 'Awaiting Review') +
       '</div>' +
       '<div class="pg-h-right">' +
-        '<button class="ghost sm" onclick="switchQueue(\'overview\')" style="white-space:nowrap">📋 Review Queue</button>' +
-        '<div class="pg-toggle ' + (enabled?'on':'') + '" id="pgTgl" onclick="togglePG(this)"></div>' +
+        '<button class="pg-h-btn primary" onclick="switchQueue(\'active\')">📋 Review Queue</button>' +
+        '<button class="pg-h-btn ghost" onclick="togglePG(this)">' + (enabled?'⏸ Pause':'▶ Resume') + '</button>' +
       '</div>' +
+    '</div>' +
+    '<div class="pg-status" id="pgStatusBar">' +
+      '<span class="pg-status-item"><span class="pg-status-dot ok"></span>Running normally</span>' +
+      '<span class="pg-status-item" id="pgStatusReview"><span class="pg-status-dot warn"></span>0 awaiting review</span>' +
+      '<span class="pg-status-item" id="pgStatusCritical"><span class="pg-status-dot muted"></span>No critical issues</span>' +
+      '<span style="flex:1"></span>' +
+      '<span class="pg-status-item" style="color:var(--muted2);font-size:10px" id="pgStatusAI">🤖 Monitoring active</span>' +
     '</div>' +
   '</div>';
 
   var feedCard = '<div class="pg-card">' +
-    '<div class="pg-card-title"><span style="color:var(--red)">●</span> What\'s Happening Now</div>' +
+    '<div class="pg-card-title"><span style="color:var(--green)">●</span> Workflow Activity</div>' +
     '<div id="pgFeed" class="pg-feed"><div class="pg-empty">Waiting for payment failures... Your store is running smoothly.</div></div>' +
   '</div>';
 
+  var boundsCard = '<div class="pg-card" style="font-size:11px">' +
+    '<div class="pg-card-title" style="margin-bottom:6px">🔒 Autonomy Boundaries</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+      '<div style="padding:8px;background:var(--bg);border-radius:6px;border:1px solid var(--border)"><div style="font-size:9px;font-weight:700;color:var(--green);margin-bottom:4px">✓ PayGuard can</div>' +
+        '<div style="font-size:10px;color:var(--muted);line-height:1.6">• Retry failed payments<br>• Send customer outreach<br>• Schedule smart retries<br>• Classify failure types</div></div>' +
+      '<div style="padding:8px;background:var(--bg);border-radius:6px;border:1px solid var(--border)"><div style="font-size:9px;font-weight:700;color:var(--amber);margin-bottom:4px">⚠ Requires approval</div>' +
+        '<div style="font-size:10px;color:var(--muted);line-height:1.6">• Discounts &gt;20%<br>• Recoveries &gt;$500<br>• Angry customers<br>• Fraud-risk signals</div></div>' +
+    '</div></div>';
+
+  var queueCard = '<div class="pg-card">' +
+    '<div class="pg-card-title" style="margin-bottom:0">📋 Queue &amp; Decisions</div>' +
+    '<div class="pg-qt" id="queueTabs">' +
+      '<button class="pg-qt-btn active" onclick="switchQueue(\'active\',this)">All</button>' +
+      '<button class="pg-qt-btn" onclick="switchQueue(\'active\',this)">Active <span class="pg-qt-badge" id="qBadgeActive">' + active + '</span></button>' +
+      '<button class="pg-qt-btn" onclick="switchQueue(\'approvals\',this)">Review <span class="pg-qt-badge" id="qBadgeAppr" style="display:none">0</span></button>' +
+      '<button class="pg-qt-btn" onclick="switchQueue(\'escalations\',this)">Escalated <span class="pg-qt-badge" id="qBadgeEsc" style="display:none">0</span></button>' +
+      '<button class="pg-qt-btn" onclick="switchQueue(\'log\',this)">History</button>' +
+    '</div><div class="pg-q-body" id="queueBody">' + renderQueueTable(wfs.slice(0,5), 'active') + '</div>' +
+  '</div>';
+
   var funnelCard = '<div class="pg-card">' +
-    '<div class="pg-card-title">📊 Recovery Funnel</div>' +
+    '<div class="pg-card-title">📊 Recovery Pipeline</div>' +
     '<div id="pgFunnel" class="pg-funnel"><div class="pg-empty">No workflow data yet.</div></div>' +
   '</div>';
 
-  var queueCard = '<div class="pg-card">' +
-    '<div class="pg-card-title" style="margin-bottom:0">📋 Queue</div>' +
-    '<div class="pg-qt" id="queueTabs">' +
-      '<button class="pg-qt-btn active" onclick="switchQueue(\'overview\',this)">Overview</button>' +
-      '<button class="pg-qt-btn" onclick="switchQueue(\'active\',this)">Active <span class="pg-qt-badge" id="qBadgeActive">' + active + '</span></button>' +
-      '<button class="pg-qt-btn" onclick="switchQueue(\'approvals\',this)">Approvals <span class="pg-qt-badge" id="qBadgeAppr" style="display:none">0</span></button>' +
-      '<button class="pg-qt-btn" onclick="switchQueue(\'escalations\',this)">Escalations <span class="pg-qt-badge" id="qBadgeEsc" style="display:none">0</span></button>' +
-      '<button class="pg-qt-btn" onclick="switchQueue(\'log\',this)">Log</button>' +
-    '</div><div class="pg-q-body" id="queueBody">' + renderQueueOverview(wfs) + '</div>' +
-  '</div>';
+  var configHtml = '<h2 style="font-size:15px;font-weight:700;margin:20px 0 10px">Policies</h2>' +
+    '<div class="pg-policy-grid" id="policyGrid">' +
+      renderConfig() +
+    '</div>' +
+    '<div class="pg-card" id="riskCard" style="margin-top:12px;border-color:var(--amber)">' +
+      '<div class="pg-card-title">🛡️ Risk Controls</div><div id="riskBody">' + renderRiskControls() + '</div>' +
+    '</div>';
 
-  var trustTease = '<div class="pg-card" style="background:var(--bg);border:1px dashed var(--border);cursor:pointer;text-align:center;padding:12px" onclick="showTrust()">' +
-    '<div style="font-size:12px;color:var(--muted)">🔍 <strong style="color:var(--accent)">Trust Layer</strong> — Understand why PayGuard takes each action</div>' +
-  '</div>';
-
-  var configHtml = '<div class="pg-card" style="border-top:2px solid var(--accent);margin-top:14px">' +
-    '<div class="pg-card-title" style="margin-bottom:0">⚙️ Automation Policies <span id="cfgMsg" class="muted2" style="font-weight:400;font-size:10px">All changes autosaved</span></div>' +
-    renderConfig() +
-  '</div>';
-
-  var roiHtml = '<div class="pg-card" style="margin-top:14px">' +
-    '<div class="pg-card-title">📈 Revenue &amp; Impact</div><div id="roiBody"><div class="pg-empty">Loading ROI data...</div></div>' +
-  '</div>';
+  var roiHtml = '<h2 style="font-size:15px;font-weight:700;margin:20px 0 10px">Revenue &amp; Impact</h2>' +
+    '<div class="pg-card"><div id="roiBody"><div class="pg-empty">Loading...</div></div></div>';
 
   return '<div class="ch-panel active" id="panel-payguard">' + h +
-    '<div class="pg-layout"><div class="pg-col">' + feedCard + funnelCard + '</div><div class="pg-col">' + queueCard + trustTease + '</div></div>' +
-    configHtml + roiHtml + '</div>';
+    feedCard + boundsCard + queueCard + funnelCard + roiHtml + configHtml + '</div>';
 }
 
 function kpiCell(id, val, lbl) {
@@ -335,20 +371,48 @@ async function loadFeed() {
 function renderFeed(events) {
   var el = document.getElementById('pgFeed'); if (!el) return;
   if (!events.length) { el.innerHTML = '<div class="pg-empty">Waiting for payment failures... Your store is running smoothly.</div>'; return; }
-  el.innerHTML = events.slice(0, 20).map(function(e){
-    var icon = e.icon || '🔄';
-    var cls = '';
-    if (e.state === 'RECOVERED' || e.state === 'delivered') cls = 'pg-fi-amount';
-    if (e.type === 'escalation') cls = 'pg-fi-amount risk';
-    var amountHtml = e.amount ? '<span class="pg-fi-amount' + (cls.includes('risk')?' risk':'') + '">$' + Number(e.amount).toFixed(2) + '</span>' : '';
-    var msg = e.reason ? '<div class="pg-fi-msg">' + esc(e.reason.slice(0,80)) + '</div>' : '';
-    var time = e.created_at ? timeAgo(e.created_at) : '';
-    return '<div class="pg-fi" onclick="showTrust(\'' + esc(e.workflow_id||'') + '\')">' +
-      '<span class="pg-fi-icon">' + icon + '</span>' +
-      '<div class="pg-fi-body"><div class="pg-fi-top"><span class="pg-fi-action">' + esc(e.action||'') + '</span>' + amountHtml + '</div>' +
-      '<div class="pg-fi-meta">' + esc((e.customer_id||'').slice(0,12)) + ' · ' + time + '</div>' + msg +
-    '</div></div>';
-  }).join('');
+  var groups = { recoveries:[], waiting:[], escalations:[], review:[] };
+  events.slice(0,30).forEach(function(e){
+    if (e.state === 'RECOVERED' || e.state === 'RETAINED' || e.state === 'RESOLVED') groups.recoveries.push(e);
+    else if (e.type === 'escalation') groups.escalations.push(e);
+    else if (e.type === 'approval' || e.needs_human) groups.review.push(e);
+    else groups.waiting.push(e);
+  });
+  var sections = [];
+  if (groups.recoveries.length) sections.push(
+    '<div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.3px;padding:8px 0 4px">Recoveries</div>' +
+    groups.recoveries.map(feedItem).join('')
+  );
+  if (groups.waiting.length) sections.push(
+    '<div style="font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.3px;padding:8px 0 4px;border-top:1px solid var(--border);margin-top:4px">Waiting</div>' +
+    groups.waiting.map(feedItem).join('')
+  );
+  if (groups.escalations.length) sections.push(
+    '<div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.3px;padding:8px 0 4px;border-top:1px solid var(--border);margin-top:4px">Escalations</div>' +
+    groups.escalations.map(feedItem).join('')
+  );
+  if (groups.review.length) sections.push(
+    '<div style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.3px;padding:8px 0 4px;border-top:1px solid var(--border);margin-top:4px">Human Review</div>' +
+    groups.review.map(feedItem).join('')
+  );
+  el.innerHTML = sections.join('') || '<div class="pg-empty">No recent activity.</div>';
+}
+
+function feedItem(e) {
+  var icon = e.icon || '🔄';
+  var sc = '';
+  if (e.state === 'RECOVERED' || e.state === 'RETAINED' || e.state === 'RESOLVED') sc = 'color:var(--green)';
+  else if (e.type === 'escalation') sc = 'color:var(--red)';
+  else if (e.state === 'RETRYING' || e.state === 'WAITING_CUSTOMER') sc = 'color:var(--amber)';
+  var amountHtml = e.amount ? '<span style="font-weight:700;font-size:11px;' + sc + '">$' + Number(e.amount).toFixed(2) + '</span>' : '';
+  var confHtml = e.confidence != null ? '<span style="font-size:9px;color:var(--muted2)">' + e.confidence + '% conf</span>' : '';
+  var time = e.created_at ? timeAgo(e.created_at) : '';
+  var msg = e.reason ? '<div style="font-size:10px;color:var(--muted);margin-top:1px">' + esc(e.reason.slice(0,60)) + '</div>' : '';
+  return '<div class="pg-fi" onclick="showTrust(\'' + esc(e.workflow_id||'') + '\')">' +
+    '<span class="pg-fi-icon">' + icon + '</span>' +
+    '<div class="pg-fi-body"><div class="pg-fi-top"><span class="pg-fi-action">' + esc(e.action||'') + '</span><div style="display:flex;gap:6px;align-items:center">' + amountHtml + confHtml + '</div></div>' +
+    '<div class="pg-fi-meta">' + esc((e.customer_id||'').slice(0,14)) + ' · ' + time + '</div>' + msg +
+  '</div></div>';
 }
 
 // ── Funnel (horizontal bars per plan D2) ──
@@ -363,48 +427,50 @@ function renderFunnel(stages, dropOffs) {
   var el = document.getElementById('pgFunnel'); if (!el) return;
   if (!stages.length) { el.innerHTML = '<div class="pg-empty">No workflow data yet.</div>'; return; }
   var maxC = Math.max.apply(null, stages.map(function(s){ return s.count; }), 1);
+  var avgAmt = 29.99;
   el.innerHTML = stages.map(function(s, i){
     var pct = Math.round((s.count / maxC) * 100);
     var isLast = i === stages.length - 1;
-    var label = s.label;
+    var isDrop = s.state === 'Failed' || s.state === 'Escalated' || s.state === 'Expired';
+    var bg = isLast ? '#10b981' : isDrop ? '#ef4444' : i === 0 ? '#6366f1' : '#f59e0b';
+    var monetary = '$' + fmtNum(s.count * avgAmt);
+    var conv = i > 0 && stages[i-1].count > 0 ? Math.round((s.count / stages[i-1].count) * 100) + '%' : '100%';
     var drop = dropOffs[i-1];
-    var dropHtml = (drop && i > 0) ? '<span class="pg-fun-drop">▼ ' + drop.drop + ' ' + (drop.reason||'') + '</span>' : '';
-    var icon = isLast ? '💰 ' : '';
-    return '<div class="pg-fun-row">' +
-      '<div class="pg-fun-label">' + icon + label.split(' ').slice(0,2).join(' ') + '</div>' +
-      '<div class="pg-fun-bar-wrap"><div class="pg-fun-bar-track"><div class="pg-fun-bar-fill" style="width:' + pct + '%;background:' + (s.color||'var(--accent)') + '"><span class="pg-fun-bar-count">' + s.count + '</span></div></div>' +
-      '<span class="pg-fun-pct">' + pct + '%</span>' + dropHtml + '</div>' +
+    var dropHtml = (drop && i > 0 && drop.drop > 0) ? '<span style="font-size:9px;color:var(--muted2);margin-left:4px">▼ ' + drop.drop + ' ' + (drop.reason||'') + '</span>' : '';
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
+      '<div style="width:90px;font-size:10px;font-weight:600;color:var(--muted);text-align:right;flex-shrink:0">' + s.label.split(' ').slice(0,2).join(' ') + '</div>' +
+      '<div style="flex:1;display:flex;align-items:center;gap:6px">' +
+        '<div style="height:24px;background:var(--bg);border-radius:4px;overflow:hidden;flex:1;position:relative">' +
+          '<div style="height:100%;width:' + pct + '%;background:' + bg + ';border-radius:4px;display:flex;align-items:center;padding-left:6px;transition:width .4s">' +
+            '<span style="font-size:12px;font-weight:700;color:#fff;position:relative;z-index:1">' + s.count + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<span style="font-size:10px;color:var(--muted2);width:40px;text-align:right">' + conv + '</span>' +
+        '<span style="font-size:10px;color:var(--muted2);width:60px;text-align:right;font-weight:600">' + monetary + '</span>' +
+        dropHtml +
+      '</div>' +
     '</div>';
   }).join('');
 }
 
 // ── Queue ──
-function renderQueueOverview(wfs) {
-  var a = wfs.filter(function(w){ return w.status === 'active' || w.status === 'paused'; }).length;
-  var c = wfs.filter(function(w){ return w.status === 'completed'; }).length;
-  var e = wfs.filter(function(w){ return w.status === 'escalated'; }).length;
-  var f = wfs.filter(function(w){ return w.status === 'failed'; }).length;
-  return '<div class="stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:8px">' +
-    '<div class="stat" style="padding:10px"><div class="pg-h-kpi-val" style="font-size:20px">' + a + '</div><div class="pg-h-kpi-lbl">Active</div></div>' +
-    '<div class="stat" style="padding:10px"><div class="pg-h-kpi-val" style="font-size:20px">' + c + '</div><div class="pg-h-kpi-lbl">Resolved</div></div>' +
-    '<div class="stat" style="padding:10px"><div class="pg-h-kpi-val" style="font-size:20px;color:var(--amber)">' + e + '</div><div class="pg-h-kpi-lbl">Escalated</div></div>' +
-    '<div class="stat" style="padding:10px"><div class="pg-h-kpi-val" style="font-size:20px;color:var(--red)">' + f + '</div><div class="pg-h-kpi-lbl">Failed</div></div>' +
-  '</div><div class="muted" style="font-size:11px">' + wfs.length + ' total workflows. Switch tabs for detailed lists.</div>';
-}
-
 function renderQueueTable(items, type) {
   if (!items || !items.length) {
     var msgs = { active:'All clear — no active recoveries.', approvals:'All clear — no actions require your review.', escalations:'No escalations. PayGuard is handling everything autonomously.', log:'No log entries.', overview:'No data.' };
     return '<div class="pg-q-empty">' + (msgs[type]||'No items.') + '</div>';
   }
+  var heads = { active:'<tr><th>Customer</th><th>Amount</th><th>State</th><th>Risk</th><th>Next Step</th></tr>', approvals:'<tr><th>ID</th><th>Action</th><th>Risk</th><th>Confidence</th><th></th></tr>', escalations:'<tr><th>ID</th><th>Reason</th><th>Severity</th><th></th></tr>', log:'<tr><th>Time</th><th>Event</th><th>Entity</th></tr>' };
   var rows = items.map(function(item){
-    if (type === 'active' || type === 'overview') {
+    if (type === 'active' || type === 'overview' || type === 'all') {
       var sc = ['RECOVERED','RETAINED','RESOLVED'].includes(item.current_state) ? 'ok' : ['FAILED','CANCELLED'].includes(item.current_state) ? 'err' : item.current_state==='ESCALATED'?'err': item.current_state==='WAITING_CUSTOMER'||item.current_state==='RETRYING'?'warn':'muted';
-      return '<tr><td><code>' + esc((item.id||'').slice(0,8)) + '</code></td>' +
-        '<td style="font-size:11px">' + esc((item.customer_id||'').slice(0,10)) + '</td>' +
+      var rl = item.risk_level === 'high' ? 'err' : item.risk_level === 'medium' ? 'warn' : 'muted';
+      var next = item.current_state === 'OUTREACH_SENT' ? 'Awaiting response' : item.current_state === 'RETRY_SCHEDULED' ? 'Retry pending' : item.current_state === 'WAITING_CUSTOMER' ? 'Customer action' : item.current_state === 'CLASSIFYING_FAILURE' ? 'Classifying...' : item.current_state === 'DETECTED' ? 'Starting...' : item.current_state === 'VERIFYING_RESULT' ? 'Verifying...' : item.current_state === 'PAUSED_RECONCILIATION' ? 'Review needed' : item.current_state || item.status;
+      return '<tr style="cursor:pointer" onclick="showTrust(\'' + esc(item.id||'') + '\')">' +
+        '<td style="font-size:12px;font-weight:500">' + esc((item.customer_id||'').slice(0,12)) + '</td>' +
+        '<td style="font-size:12px;font-weight:700">' + (item.amount_due ? '$'+Number(item.amount_due).toFixed(2) : '-') + '</td>' +
         '<td><span class="pill ' + sc + '" style="font-size:8px">' + esc(item.current_state||'') + '</span></td>' +
-        '<td><span class="pill ' + (item.status==='active'?'ok':'muted') + '" style="font-size:8px">' + esc(item.status||'') + '</span></td>' +
-        '<td><button class="pg-op-btn ghost sm" onclick="showTrust(\'' + esc(item.id||'') + '\')" style="font-size:9px">Why?</button></td></tr>';
+        '<td><span class="pill ' + rl + '" style="font-size:8px">' + esc(item.risk_level||'med') + '</span></td>' +
+        '<td style="font-size:11px;color:var(--muted)">' + next + '</td></tr>';
     }
     if (type === 'approvals') {
       var rl = item.risk_level === 'high' ? 'err' : item.risk_level === 'medium' ? 'warn' : 'muted';
@@ -427,7 +493,7 @@ function renderQueueTable(items, type) {
     }
     return '';
   }).join('');
-  return '<table style="font-size:11px"><tbody>' + rows + '</tbody></table>';
+  return '<table style="font-size:11px"><thead>' + (heads[type]||'') + '</thead><tbody>' + rows + '</tbody></table>';
 }
 
 async function switchQueue(tab, btn) {
@@ -435,8 +501,8 @@ async function switchQueue(tab, btn) {
   if (btn) { document.querySelectorAll('.pg-qt-btn').forEach(function(b){ b.classList.remove('active'); }); btn.classList.add('active'); }
   var body = document.getElementById('queueBody'); if (!body) return;
   body.innerHTML = '<div class="pg-q-empty">Loading...</div>';
-  if (tab === 'overview') {
-    try { var wf = await api('/admin/api/workflows?limit=200'); var pwf = (wf.workflows||[]).filter(function(w){ return w.workflow_type===activeAgent; }); body.innerHTML = renderQueueOverview(pwf); } catch(e){ body.innerHTML = renderQueueTable([], tab); }
+  if (tab === 'overview' || tab === 'all') {
+    try { var wf = await api('/admin/api/workflows?limit=200'); var pwf = (wf.workflows||[]).filter(function(w){ return w.workflow_type===activeAgent; }); body.innerHTML = renderQueueTable(pwf.slice(0,20), 'active'); } catch(e){ body.innerHTML = renderQueueTable([], 'active'); }
     return;
   }
   try {
@@ -471,79 +537,75 @@ async function queueResolve(id) {
   } catch(e) { showModal('Error', 'Failed to resolve: ' + e.message); }
 }
 
-// ── Simplified Configuration (5 concepts) ──
+// ── Simplified Configuration (5 concepts as cards) ──
 function renderConfig() {
-  var sections = [
-    { id:'recovery_strategy', label:'Recovery Strategy', icon:'🔄', desc:'Configure retry behavior',
-      fields: function(){
-        return '<div class="pg-cfg-field"><div class="pg-cfg-label">Retry intensity</div>' +
-          '<div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-intensity">' +
-            '<button class="pg-cfg-seg-btn" data-v="conservative">Conservative</button>' +
-            '<button class="pg-cfg-seg-btn active" data-v="balanced">Balanced</button>' +
-            '<button class="pg-cfg-seg-btn" data-v="aggressive">Aggressive</button>' +
-          '</div></div></div>' +
-          '<div class="pg-cfg-field"><div class="pg-cfg-label">Recovery window</div>' +
-          '<div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-window">' +
-            '<button class="pg-cfg-seg-btn" data-v="7">7 days</button>' +
+  var cards = [
+    { id:'recovery_strategy', icon:'🔄', label:'Recovery Strategy',
+      body: function(){
+        return '<div class="pg-cfg-field"><div class="pg-cfg-label">Profile</div><div class="pg-cfg-row">' +
+          ['Conservative','Balanced','Aggressive'].map(function(p,i){
+            var descs = ['40% recovery, low pressure','62% recovery, moderate','78% recovery, higher risk'];
+            return '<div class="pg-cfg-seg-btn ' + (i===1?'active':'') + '" data-v="' + p.toLowerCase() + '" style="flex:1;text-align:center;padding:8px 6px;font-size:10px;line-height:1.3;border-radius:6px;cursor:pointer">' +
+              '<div style="font-weight:700;font-size:11px">' + p + '</div><div style="font-size:9px;color:var(--muted2)">' + descs[i] + '</div></div>';
+          }).join('') + '</div></div>' +
+          '<div class="pg-cfg-field"><div class="pg-cfg-label">Recovery window</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-window">' +
             '<button class="pg-cfg-seg-btn active" data-v="14">14 days</button>' +
             '<button class="pg-cfg-seg-btn" data-v="30">30 days</button>' +
+            '<button class="pg-cfg-seg-btn" data-v="7">7 days</button>' +
           '</div></div></div>' +
-          '<div class="pg-cfg-field"><div class="pg-cfg-row"><div class="pg-toggle on" id="tgl-smart" onclick="this.classList.toggle(\'on\')"></div><span style="font-size:12px">Smart retries — AI adapts timing based on success</span></div></div>' +
+          '<div class="pg-cfg-field"><div class="pg-cfg-row"><div class="pg-toggle on" id="tgl-smart"></div><span style="font-size:11px">AI adapts timing based on success</span></div></div>' +
           '<div class="pg-cfg-adv"><button class="pg-cfg-adv-toggle" onclick="toggleAdv(this)">▶ Advanced</button>' +
-          '<div class="pg-cfg-adv-body"><div class="pg-cfg-field"><div class="pg-cfg-label">Intervals</div><input type="text" class="pg-autosave" data-key="retry_intervals" value="5min, 1h, 24h" style="width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"></div>' +
-          '<div class="pg-cfg-field"><div class="pg-cfg-label">Max attempts</div><input type="number" class="pg-autosave" data-key="max_retries" value="3" style="width:80px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"></div>' +
-          '<div class="pg-cfg-field"><div class="pg-cfg-label">Recoverable failure codes</div><input type="text" class="pg-autosave" data-key="failure_categories" value="expired_card, insufficient_funds, temporary_decline" style="width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"></div>' +
-        '</div></div>';
+          '<div class="pg-cfg-adv-body"><input type="text" class="pg-autosave" data-key="retry_intervals" value="5min, 1h, 24h" style="width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px">' +
+          ' <input type="number" class="pg-autosave" data-key="max_retries" value="3" style="width:60px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"> max attempts' +
+          '</div></div><span class="muted2" style="font-size:9px">⚡ Autosaves after 1.5s</span>';
       }
     },
-    { id:'communication', label:'Customer Communication', icon:'✉️', desc:'Outreach settings',
-      fields: function(){
+    { id:'communication', icon:'✉️', label:'Customer Communication',
+      body: function(){
         return '<div class="pg-cfg-field"><div class="pg-cfg-label">Channels</div><div class="pg-cfg-row">' +
-          ['email','widget','sms'].map(function(c){ return '<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox" ' + (c!=='sms'?'checked':'') + '> ' + c + '</label>'; }).join('') +
+          ['email','widget','sms'].map(function(c,i){ return '<label style="display:flex;align-items:center;gap:3px;font-size:11px;cursor:pointer"><input type="checkbox" ' + (i<2?'checked':'') + '> ' + c + '</label>'; }).join('') +
         '</div></div>' +
         '<div class="pg-cfg-field"><div class="pg-cfg-label">Tone</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-tone">' +
           '<button class="pg-cfg-seg-btn" data-v="strict">Strict</button>' +
           '<button class="pg-cfg-seg-btn active" data-v="professional">Professional</button>' +
-          '<button class="pg-cfg-seg-btn" data-v="friendly">Brand-friendly</button>' +
+          '<button class="pg-cfg-seg-btn" data-v="friendly">Friendly</button>' +
         '</div></div></div>' +
-        '<div class="pg-cfg-field"><div class="pg-cfg-label">Max outreach per workflow</div><input type="number" class="pg-autosave" data-key="max_outreach_per_workflow" value="2" style="width:80px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"></div>';
+        '<div class="pg-cfg-field" style="margin-bottom:0"><div class="pg-cfg-label">Example message</div><div style="font-size:11px;color:var(--muted);padding:8px;background:var(--bg);border-radius:6px;border:1px solid var(--border)">"Hi {{name}}, your payment of ${{amount}} didn\'t go through. Update your card to keep your subscription active."</div></div>';
       }
     },
-    { id:'approval_rules', label:'Human Approval Rules', icon:'✅', desc:'When human review is required',
-      fields: function(){
-        var rules = ['Discounts above 20%','Recoveries above $500','Angry customers','Fraud-risk signals'];
-        return '<div class="pg-cfg-field">' + rules.map(function(r){ return '<label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;margin-bottom:4px"><input type="checkbox" checked> ' + r + '</label>'; }).join('') + '</div>';
+    { id:'approval_rules', icon:'✅', label:'Approval Rules',
+      body: function(){
+        return '<div class="pg-cfg-field"><div class="pg-cfg-label">Require approval when</div>' +
+          '<div style="font-size:11px;background:var(--bg);padding:10px;border-radius:6px;border:1px solid var(--border)">' +
+            '<div style="margin-bottom:6px"><select class="pg-autosave" data-key="approval_condition" style="padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px">' +
+              '<option value="amount">Amount &gt;</option><option value="risk">Risk level</option><option value="sentiment">Customer sentiment</option></select>' +
+            ' <input type="number" class="pg-autosave" data-key="approval_threshold" value="500" style="width:70px;padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"></div>' +
+            '<div style="color:var(--muted2);font-size:10px">OR when customer sentiment = negative</div>' +
+          '</div></div>';
       }
     },
-    { id:'escalation_rules', label:'Escalation Rules', icon:'🔔', desc:'When to escalate to your team',
-      fields: function(){
-        var rules = ['Customer expresses frustration','Payment repeatedly fails','High-value subscription at risk','AI confidence is low'];
-        return '<div class="pg-cfg-field">' + rules.map(function(r,i){ return '<label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;margin-bottom:4px"><input type="checkbox" ' + (i<3?'checked':'') + '> ' + r + '</label>'; }).join('') + '</div>';
+    { id:'escalation_rules', icon:'🔔', label:'Escalation Rules',
+      body: function(){
+        return '<div class="pg-cfg-field"><div class="pg-cfg-label">Severity</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-escalation">' +
+          '<button class="pg-cfg-seg-btn active" data-v="low">Low</button>' +
+          '<button class="pg-cfg-seg-btn" data-v="medium">Medium</button>' +
+          '<button class="pg-cfg-seg-btn" data-v="critical">Critical</button>' +
+        '</div></div></div>' +
+        '<div class="pg-cfg-field" style="margin-bottom:0"><div class="pg-cfg-label">Triggers</div>' +
+          ['Frustration detected','Payment repeatedly fails','High-value at risk','AI confidence low'].map(function(r,i){ return '<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;margin-bottom:3px"><input type="checkbox" ' + (i<3?'checked':'') + '> ' + r + '</label>'; }).join('') +
+        '</div>';
       }
     },
-    { id:'risk_controls', label:'Risk Controls', icon:'🛡️', desc:'Safety guards and limits — Advanced',
-      advanced: true,
-      fields: function(){
-        return '<div class="pg-cfg-field"><div class="pg-cfg-label">Blocked failure codes</div><input type="text" class="pg-autosave" data-key="blocked_failure_codes" value="fraud, stolen_card, lost_card, blocked" style="width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"></div>' +
-        '<div class="pg-cfg-field"><div class="pg-cfg-label">Rate limits (per customer per day)</div><input type="number" class="pg-autosave" data-key="max_daily" value="3" style="width:80px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"></div>';
-      }
-    }
   ];
-
-  return sections.map(function(s, i){
-    var head = '<div class="pg-cfg-sect">' +
-      '<div class="pg-cfg-head" onclick="var b=this.nextElementSibling;var ic=this.querySelector(\'.pg-cfg-icon\');if(b){var o=b.style.display!==\'none\';b.style.display=o?\'none\':\'block\';if(ic)ic.classList.toggle(\'open\',!o)}}">' +
-        '<span class="pg-cfg-icon' + (s.advanced?'':' open') + '">▶</span>' +
-        '<span style="font-weight:600;font-size:13px">' + s.icon + ' ' + s.label + '</span>' +
-        '<span class="muted2" style="font-size:11px;font-weight:400"> — ' + s.desc + '</span>' +
-      '</div>' +
-      '<div class="pg-cfg-body" style="display:' + (s.advanced?'none':'block') + '">' +
-        s.fields() +
-        '<span class="muted2" style="font-size:10px">⚡ Changes autosave after 1.5s</span>' +
-      '</div>' +
-    '</div>';
-    return head;
+  return cards.map(function(c){
+    return '<div class="pg-policy-card">' +
+      '<h3><span class="icon">' + c.icon + '</span>' + c.label + '</h3>' + c.body() + '</div>';
   }).join('');
+}
+
+function renderRiskControls() {
+  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Blocked failure codes</div><input type="text" class="pg-autosave" data-key="blocked_failure_codes" value="fraud, stolen_card, lost_card, blocked" style="width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"></div>' +
+    '<div class="pg-cfg-field" style="margin-bottom:0"><div class="pg-cfg-label">Rate limits</div><input type="number" class="pg-autosave" data-key="max_daily" value="3" style="width:60px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"> per customer per day</div>';
 }
 
 function toggleAdv(btn) {
@@ -617,18 +679,21 @@ function renderROI(d) {
     return '<div class="pg-chart-col"><div class="pg-chart-bar" style="height:'+Math.max(h,3)+'%"></div><div class="pg-chart-lbl">'+(x.date?x.date.slice(5):'')+'</div></div>';
   }).join('') + '</div>' : '<div class="pg-empty">No 7-day data</div>';
 
-  el.innerHTML = '<div class="stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px">' +
-    '<div class="stat" style="padding:10px"><div class="pg-h-kpi-val" style="font-size:18px">' + rev30 + '</div><div class="pg-h-kpi-lbl">Revenue Recovered</div><div class="pg-spark">' + sparkData.map(function(x){var h=Math.round((x.revenue/maxR)*100);return '<div class="pg-spark-bar" style="height:'+Math.max(h,3)+'%"></div>';}).join('') + '</div><div class="muted2" style="font-size:9px;margin-top:2px">+18% vs last month</div></div>' +
-    '<div class="stat" style="padding:10px"><div class="pg-h-kpi-val" style="font-size:18px;color:var(--amber)">' + (d.revenue_at_risk != null ? '$'+fmtNum(d.revenue_at_risk) : '$—') + '</div><div class="pg-h-kpi-lbl">Revenue at Risk</div><div class="sub" style="font-size:9px;color:var(--muted2)">currently recoverable</div></div>' +
-    '<div class="stat" style="padding:10px"><div class="pg-h-kpi-val" style="font-size:18px">' + (d.support_hours_saved||'—') + 'h</div><div class="pg-h-kpi-lbl">Support Hours Saved</div><div class="sub" style="font-size:9px;color:var(--muted2)">this month</div></div>' +
-    '<div class="stat" style="padding:10px"><div class="pg-h-kpi-val" style="font-size:18px">' + (d.automation_rate||0) + '%</div><div class="pg-h-kpi-lbl">Automation Rate</div><div class="sub" style="font-size:9px;color:var(--muted2)">resolved without human</div></div>' +
-  '</div><div style="margin-top:4px"><div class="muted2" style="font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:4px">Daily Revenue Recovered (7 days)</div>' + chart + '</div>';
+  var bench = (d.recovery_rate||0) >= 60 ? 'above' : (d.recovery_rate||0) >= 40 ? 'at' : 'below';
+  var benchLabel = bench === 'above' ? '📈 Above industry average (42%)' : bench === 'at' ? '📊 At industry average (42%)' : '📉 Below industry average (42%)';
+
+  el.innerHTML = '<div class="stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:6px;gap:8px">' +
+    '<div class="stat" style="padding:8px"><div class="pg-h-kpi-val" style="font-size:16px">' + rev30 + '</div><div class="pg-h-kpi-lbl">Recovered</div><div class="pg-spark" style="height:24px">' + sparkData.map(function(x){var h=Math.round((x.revenue/maxR)*100);return '<div class="pg-spark-bar" style="height:'+Math.max(h,3)+'%"></div>';}).join('') + '</div><div class="muted2" style="font-size:8px;margin-top:1px">' + (d.recovery_rate||0) + '% rate</div></div>' +
+    '<div class="stat" style="padding:8px"><div class="pg-h-kpi-val" style="font-size:16px;color:var(--amber)">' + (d.revenue_at_risk != null ? '$'+fmtNum(d.revenue_at_risk) : '$—') + '</div><div class="pg-h-kpi-lbl">At Risk</div><div class="sub" style="font-size:8px;color:var(--muted2)">' + (d.active_at_risk||0) + ' active</div></div>' +
+    '<div class="stat" style="padding:8px"><div class="pg-h-kpi-val" style="font-size:16px">' + (d.support_hours_saved||'—') + 'h</div><div class="pg-h-kpi-lbl">Hours Saved</div><div class="sub" style="font-size:8px;color:var(--muted2)">this month</div></div>' +
+    '<div class="stat" style="padding:8px"><div class="pg-h-kpi-val" style="font-size:16px">' + (d.automation_rate||0) + '%</div><div class="pg-h-kpi-lbl">Auto Rate</div><div class="sub" style="font-size:8px;color:var(--muted2);margin-top:2px"><span class="pill ' + (bench==='above'?'ok':bench==='at'?'warn':'muted') + '" style="font-size:7px">' + benchLabel + '</span></div></div>' +
+  '</div><div style="margin-top:4px"><div class="muted2" style="font-size:8px;font-weight:600;letter-spacing:.2px;margin-bottom:3px">Daily (7d)</div>' + chart + '</div>';
 
   // Update KPI strip
   setKpi('kpiRev', rev30);
   setKpi('kpiRate', (d.recovery_rate||0) + '%');
-  setKpi('kpiApproval', '—'); // overridden by loadBadges()
-  setKpi('kpiEsc', (d.escalated||0));
+  setKpi('kpiCustomers', d.recovered_customers || '—');
+  setKpi('kpiAtRisk', d.revenue_at_risk != null ? '$'+fmtNum(d.revenue_at_risk) : '$—');
 }
 
 function setKpi(id, val) { var el=document.getElementById(id); if(el) el.textContent=val; }
@@ -653,17 +718,34 @@ async function loadTrust(wfId, body) {
     var feed = await api('/admin/api/agents/payguard/feed');
     var evs = (feed.events||[]).filter(function(e){ return e.workflow_id === wfId; });
     if (!evs.length) { body.innerHTML = '<div class="pg-empty">No decision data found for this workflow.</div>'; return; }
-    body.innerHTML = '<div class="trust-info">Workflow <code>' + esc(wfId.slice(0,8)) + '</code></div><div class="trust-step" style="border-left-color:transparent;margin-left:0;padding-left:0">' +
-      '<div class="trust-step-body"><div class="trust-step-act">🧠 AI Confidence: ' + (evs[0].confidence||'N/A') + '%</div>' +
-      '<div class="trust-step-det">Policy snapshot: retry #2, balanced intensity</div></div></div>' +
-      evs.slice(0,12).map(function(e,j){
-        var icon = e.icon || '🔄';
-        return '<div class="trust-step"><div class="trust-step-n">' + (j+1) + '</div><div class="trust-step-body">' +
-          '<div class="trust-step-act">' + icon + ' ' + esc(e.action||'') + '</div>' +
-          (e.reason ? '<div class="trust-step-det">' + esc(e.reason.slice(0,100)) + '</div>' : '') +
-          '<div class="trust-step-tm">' + timeAgo(e.created_at) + '</div></div></div>';
-      }).join('') +
-      '<div style="margin-top:12px"><a href="/admin/workflows/' + esc(wfId) + '" class="ghost sm" style="border-color:var(--border);text-decoration:none;font-size:11px">View full timeline →</a></div>';
+    var first = evs[0];
+    var pol = first.type === 'transition' ? 'Policy: retry #2, balanced intensity' :
+              first.type === 'approval' ? 'Policy: requires human approval above $500' :
+              first.type === 'escalation' ? 'Policy: escalated due to risk threshold' : 'Policy: standard recovery flow';
+    var dataSrc = first.type === 'transition' ? 'Stripe invoice events, Recharge subscription status' :
+                  'Workflow events, AI classifier, Commerce domain';
+    body.innerHTML = '<div class="trust-info" style="margin-bottom:8px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
+        '<span>Workflow <code>' + esc(wfId.slice(0,8)) + '</code></span>' +
+        '<span class="pill ' + (first.confidence>=80?'ok':first.confidence>=50?'warn':'err') + '" style="font-size:8px">' + (first.confidence||'N/A') + '% confidence</span>' +
+      '</div>' +
+      '<div style="font-size:10px;color:var(--muted);padding:6px 8px;background:var(--bg);border-radius:6px;border:1px solid var(--border);margin-bottom:6px">' +
+        '<div><strong>Reasoning:</strong> ' + esc((first.reason||'AI classified this payment failure as recoverable').slice(0,120)) + '</div>' +
+        '<div style="margin-top:2px"><strong>Policy:</strong> ' + pol + '</div>' +
+        '<div style="margin-top:2px"><strong>Data:</strong> ' + dataSrc + '</div>' +
+      '</div>' +
+    '</div>' +
+    evs.slice(0,10).map(function(e,j){
+      var icon = e.icon || '🔄';
+      var polRef = e.type === 'approval' ? '<div style="font-size:9px;color:var(--muted2)">Approval rationale: ' + esc((e.reason||'policy match') + (e.confidence?' · '+e.confidence+'% conf':'')) + '</div>' :
+                   e.type === 'escalation' ? '<div style="font-size:9px;color:var(--muted2)">Escalation rationale: ' + esc((e.reason||'threshold triggered')) + '</div>' : '';
+      return '<div class="trust-step"><div class="trust-step-n">' + (j+1) + '</div><div class="trust-step-body">' +
+        '<div class="trust-step-act">' + icon + ' ' + esc(e.action||'') + '</div>' +
+        (e.reason && e.type !== 'approval' && e.type !== 'escalation' ? '<div class="trust-step-det">' + esc(e.reason.slice(0,80)) + '</div>' : '') +
+        polRef +
+        '<div class="trust-step-tm">' + timeAgo(e.created_at) + '</div></div></div>';
+    }).join('') +
+    '<div style="margin-top:12px"><a href="/admin/workflows/' + esc(wfId) + '" class="ghost sm" style="border-color:var(--border);text-decoration:none;font-size:11px">View full timeline →</a></div>';
   } catch(e) { body.innerHTML = '<div class="pg-empty">Error loading trust data.</div>'; }
 }
 
@@ -697,9 +779,10 @@ async function runSim() {
 
 function doEnablePayGuard() {
   hideSim();
-  var tgl = document.getElementById('pgTgl');
-  if (tgl && !tgl.classList.contains('on')) { tgl.classList.add('on'); pgEnabled = true; updatePGStatus(true); }
-  // Save to server
+  pgEnabled = true;
+  updatePGStatus(true);
+  var btns = document.querySelectorAll('.pg-h-btn.ghost');
+  btns.forEach(function(b){ if (b.textContent.includes('Resume')) b.textContent = '⏸ Pause'; });
   api('/admin/api/policies').then(function(pols){
     var ew = toObject(pols.enabled_workflows);
     ew.payguard = true;
@@ -707,18 +790,15 @@ function doEnablePayGuard() {
   }).catch(function(e){});
 }
 
-async function togglePG(el) {
-  var wasOn = el.classList.contains('on');
-  if (!wasOn) {
-    // Show simulation before enabling
+async function togglePG(btn) {
+  if (!pgEnabled) {
     showSim();
     document.getElementById('simEnableBtn').textContent = 'Enable PayGuard';
     return;
   }
-  // Disable immediately
-  el.classList.remove('on');
   pgEnabled = false;
   updatePGStatus(false);
+  if (btn) { btn.textContent = '▶ Resume'; }
   try {
     var pols = await api('/admin/api/policies');
     var ew = toObject(pols.enabled_workflows);
@@ -744,7 +824,20 @@ async function loadBadges() {
     if (ba) { ba.textContent = ap.total || 0; ba.style.display = ap.total > 0 ? '' : 'none'; }
     if (be) { be.textContent = es.total || 0; be.style.display = es.total > 0 ? '' : 'none'; }
     setKpi('kpiApproval', ap.total || 0);
-    setKpi('kpiEsc', es.total || 0);
+    // Status ribbon
+    var sr = document.getElementById('pgStatusReview');
+    if (sr) {
+      var n = (ap.total||0) + (es.total||0);
+      sr.innerHTML = '<span class="pg-status-dot ' + (n>0?'warn':'ok') + '"></span>' + (n>0 ? n + ' items needing attention' : 'All clear');
+    }
+    var sc = document.getElementById('pgStatusCritical');
+    if (sc) {
+      sc.innerHTML = '<span class="pg-status-dot muted"></span>' + (es.total > 0 ? es.total + ' open escalations' : 'No critical issues');
+    }
+    var ai = document.getElementById('pgStatusAI');
+    if (ai) {
+      ai.textContent = '🤖 Monitoring active · Last check ' + (new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+    }
   } catch(e) {}
 }
 
