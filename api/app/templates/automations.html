@@ -31,6 +31,10 @@
 {% endblock %}
 {% block tail %}
 <script>
+function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function toObject(arr){ return (arr && typeof arr === 'object' && !Array.isArray(arr)) ? arr : {}; }
+
 var WORKFLOWS = [
   {
     id: 'payment_recovery',
@@ -126,8 +130,7 @@ var WORKFLOWS = [
 
 // ── Render ───────────────────────────────────────────────────
 function renderAutomations(analytics, policies, workflows) {
-  var enabledWf = (policies.enabled_workflows || {});
-  var tabsHtml = document.getElementById('automationTabs').innerHTML;
+  var enabledWf = toObject(policies.enabled_workflows);
   var panelsHtml = '';
 
   // ── Overview panel ──
@@ -145,8 +148,7 @@ function renderAutomations(analytics, policies, workflows) {
 }
 
 function renderOverview(analytics, policies, workflows) {
-  var enabledWf = (policies.enabled_workflows || {});
-  var activeCount = (policies.enabled_workflows || []).length;
+  var enabledWf = toObject(policies.enabled_workflows);
   var wfList = WORKFLOWS.map(function(wf){
     var enabled = enabledWf[wf.id] !== false;
     var wfWorkflows = (workflows || []).filter(function(w){ return w.workflow_type === wf.id; });
@@ -197,9 +199,8 @@ function renderOverview(analytics, policies, workflows) {
 function renderWorkflowPanel(wf, analytics, policies, enabledWf, workflows) {
   var enabled = enabledWf[wf.id] !== false;
   var retry = policies.retry || {};
-  var esc = policies.escalation || {};
-  var app = policies.approval || {};
-
+  var escPol = policies.escalation || {};
+  var appPol = policies.approval || {};
   var wfWorkflows = (workflows || []).filter(function(w){ return w.workflow_type === wf.id; });
   var total = wfWorkflows.length;
   var active = wfWorkflows.filter(function(w){ return w.status === 'active' || w.status === 'paused'; }).length;
@@ -220,7 +221,7 @@ function renderWorkflowPanel(wf, analytics, policies, enabledWf, workflows) {
   }).join('');
 
   var escFieldsHtml = wf.escalationFields.map(function(f){
-    var val = (esc[f.key] !== undefined ? esc[f.key] : f.default);
+    var val = (escPol[f.key] !== undefined ? escPol[f.key] : f.default);
     if (f.type === 'select') {
       var opts = f.options.map(function(o){
         return '<option value="' + o.value + '"' + (String(val) === o.value ? ' selected' : '') + '>' + o.label + '</option>';
@@ -359,7 +360,7 @@ function renderInstances(instances) {
 function renderGlobalSettings(policies) {
   var retry = policies.retry || {};
   var comm = policies.communication || {};
-  var esc = policies.escalation || {};
+  var escPol = policies.escalation || {};
   var app = policies.approval || {};
 
   return '<div class="ch-panel" id="panel-settings">' +
@@ -407,15 +408,15 @@ function renderGlobalSettings(policies) {
           '<span class="section-arrow open">▼</span>' +
         '</div>' +
         '<div class="section-body">' +
-          '<div class="field-row"><label>Default trigger condition</label><input id="g-esc-trigger" type="text" value="' + esc(esc.trigger || 'frustration detected OR amount > $300') + '"></div>' +
+          '<div class="field-row"><label>Default trigger condition</label><input id="g-esc-trigger" type="text" value="' + escPol.trigger + '"></div>' +
           '<div class="field-row"><label>Default escalation channel</label>' +
             '<select id="g-esc-channel">' +
-              '<option value="in-app"' + (esc.channel === 'in-app' ? ' selected' : '') + '>In-app notification</option>' +
-              '<option value="email"' + (esc.channel === 'email' ? ' selected' : '') + '>Email</option>' +
-              '<option value="sms"' + (esc.channel === 'sms' ? ' selected' : '') + '>SMS</option>' +
+              '<option value="in-app"' + (escPol.channel === 'in-app' ? ' selected' : '') + '>In-app notification</option>' +
+              '<option value="email"' + (escPol.channel === 'email' ? ' selected' : '') + '>Email</option>' +
+              '<option value="sms"' + (escPol.channel === 'sms' ? ' selected' : '') + '>SMS</option>' +
             '</select>' +
           '</div>' +
-          '<div class="field-row"><label>SLA hours to respond</label><input id="g-esc-sla" type="number" value="' + (esc.sla_hours || 4) + '"></div>' +
+          '<div class="field-row"><label>SLA hours to respond</label><input id="g-esc-sla" type="number" value="' + (escPol.sla_hours || 4) + '"></div>' +
           '<div style="margin-top:12px"><button class="ghost sm accent" onclick="saveGlobalPolicy(\'escalation\')">Save escalation policy</button><span class="muted2 save-msg" id="msg-global-escalation" style="margin-left:8px;font-size:12px"></span></div>' +
         '</div>' +
       '</div>' +
