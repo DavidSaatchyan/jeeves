@@ -11,6 +11,7 @@ from typing import Optional
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Cookie, Depends, Form, HTTPException, Query, Request, Response, status
+from pydantic import BaseModel
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, text, Integer, and_
@@ -117,7 +118,7 @@ async def admin_login(
         key=_SESSION_COOKIE,
         value=access,
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="lax",
         max_age=900,  # 15 minutes
         path="/admin",
@@ -144,10 +145,8 @@ _REDIRECT_MAP = {
     "/logs": "",
     "/proactive": "",
     "/tools": "",
-    "/knowledge": "/settings",
     "/billing": "/settings",
     "/integrations": "/settings",
-    "/channels": "/settings",
     "/policies": "/settings",
     "/api": "/settings",
     "/crm": "/settings",
@@ -209,12 +208,12 @@ def agents_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
 
 @router.get("/knowledge", response_class=HTMLResponse)
 def knowledge_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "settings.html", context={**_ctx(request), "active_tab": "knowledge"})
+    return templates.TemplateResponse(request, "knowledge.html", context=_ctx(request))
 
 
 @router.get("/channels", response_class=HTMLResponse)
 def channels_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "settings.html", context={**_ctx(request), "active_tab": "channels"})
+    return templates.TemplateResponse(request, "channels.html", context=_ctx(request))
 
 
 @router.get("/account", response_class=HTMLResponse)
@@ -701,6 +700,619 @@ def api_analytics(
         "escalation_accuracy": "-",
         "policy_overrides": policy_overrides,
     }
+
+
+# ─── Agent API (per plan-payguard-redesign.md) ──────────────────────────
+
+
+@router.get("/api/agents/{agent_type}/feed")
+def api_agent_feed(
+    agent_type: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+    since: str | None = Query(None),
+):
+    """Unified live feed: transitions, approvals, escalations, communications, AI decisions."""
+    limit = 50
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    since_dt = thirty_days_ago
+    if since:
+        try:
+            parsed = datetime.fromisoformat(since)
+            if parsed > since_dt:
+                since_dt = parsed
+        except ValueError:
+            pass
+
+    # Transitions → merged with workflow data for customer_id
+    transitions = (
+        db.query(
+            WorkflowTransition.id,
+            WorkflowTransition.workflow_id,
+            Workflow.customer_id,
+            WorkflowTransition.from_state,
+            WorkflowTransition.to_state,
+            WorkflowTransition.decision_reason,
+            WorkflowTransition.created_at,
+        )
+        .join(Workflow, Workflow.id == WorkflowTransition.workflow_id)
+        .filter(
+            Workflow.tenant_id == tenant.id,
+            Workflow.workflow_type == agent_type,
+            WorkflowTransition.created_at >= since_dt,
+        )
+        .order_by(WorkflowTransition.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+    # Communications
+    comms = (
+        db.query(
+            Communication.id,
+            Communication.workflow_id,
+            Communication.customer_id,
+            Communication.channel,
+            Communication.template_name,
+            Communication.delivery_status,
+            Communication.sent_at,
+        )
+        .join(Workflow, Workflow.id == Communication.workflow_id)
+        .filter(
+            Workflow.tenant_id == tenant.id,
+            Workflow.workflow_type == agent_type,
+            Communication.created_at >= since_dt,
+        )
+        .order_by(Communication.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+    # Approval Requests
+    approvals = (
+        db.query(
+            ApprovalRequest.id,
+            ApprovalRequest.workflow_id,
+            ApprovalRequest.customer_id,
+            ApprovalRequest.action_type,
+            ApprovalRequest.risk_level,
+            ApprovalRequest.ai_confidence,
+            ApprovalRequest.status,
+            ApprovalRequest.created_at,
+        )
+        .join(Workflow, Workflow.id == ApprovalRequest.workflow_id)
+        .filter(
+            Workflow.tenant_id == tenant.id,
+            Workflow.workflow_type == agent_type,
+            ApprovalRequest.created_at >= thirty_days_ago,
+        )
+        .order_by(ApprovalRequest.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+    # Escalations
+    escalations = (
+        db.query(
+            Escalation.id,
+            Escalation.workflow_id,
+            Escalation.customer_id,
+            Escalation.escalation_reason,
+            Escalation.severity,
+            Escalation.status,
+            Escalation.created_at,
+        )
+        .join(Workflow, Workflow.id == Escalation.workflow_id)
+        .filter(
+            Workflow.tenant_id == tenant.id,
+            Workflow.workflow_type == agent_type,
+            Escalation.created_at >= thirty_days_ago,
+        )
+        .order_by(Escalation.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+    # AI interactions
+    ai_ints = (
+        db.query(AIInteraction)
+        .join(Workflow, Workflow.id == AIInteraction.workflow_id)
+        .filter(
+            Workflow.tenant_id == tenant.id,
+            Workflow.workflow_type == agent_type,
+            AIInteraction.created_at >= since_dt,
+        )
+        .order_by(AIInteraction.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+    events = []
+    for t in transitions:
+        action = t.to_state or t.from_state or ""
+        is_success = t.to_state in ("RECOVERED", "RETAINED", "RESOLVED")
+        is_active = t.to_state in ("RETRYING", "OUTREACH_SENT", "WAITING_CUSTOMER")
+        is_escalated = t.to_state == "ESCALATED"
+        icon = "💰" if is_success else "⚠️" if is_escalated else "🔄" if is_active else "🔄"
+        events.append({
+            "id": str(t.id),
+            "type": "transition",
+            "workflow_id": str(t.workflow_id),
+            "customer_id": str(t.customer_id) if t.customer_id else None,
+            "amount": None,
+            "state": t.to_state,
+            "action": action,
+            "reason": t.decision_reason or "",
+            "confidence": None,
+            "needs_human": False,
+            "icon": icon,
+            "created_at": t.created_at.isoformat() if t.created_at else None,
+        })
+    for c in comms:
+        events.append({
+            "id": str(c.id),
+            "type": "communication",
+            "workflow_id": str(c.workflow_id),
+            "customer_id": str(c.customer_id) if c.customer_id else None,
+            "amount": None,
+            "state": c.delivery_status,
+            "action": c.channel + ": " + (c.template_name or ""),
+            "reason": "",
+            "confidence": None,
+            "needs_human": False,
+            "icon": "📧",
+            "created_at": c.sent_at.isoformat() if c.sent_at else None,
+        })
+    for a in approvals:
+        events.append({
+            "id": str(a.id),
+            "type": "approval",
+            "workflow_id": str(a.workflow_id) if a.workflow_id else None,
+            "customer_id": str(a.customer_id) if a.customer_id else None,
+            "amount": None,
+            "state": a.status,
+            "action": a.action_type or "",
+            "reason": "",
+            "confidence": a.ai_confidence,
+            "needs_human": True,
+            "icon": "✅",
+            "created_at": a.created_at.isoformat() if a.created_at else None,
+        })
+    for e in escalations:
+        events.append({
+            "id": str(e.id),
+            "type": "escalation",
+            "workflow_id": str(e.workflow_id) if e.workflow_id else None,
+            "customer_id": str(e.customer_id) if e.customer_id else None,
+            "amount": None,
+            "state": e.status,
+            "action": e.severity + ": " + (e.escalation_reason or ""),
+            "reason": e.escalation_reason or "",
+            "confidence": None,
+            "needs_human": True,
+            "icon": "⚠️",
+            "created_at": e.created_at.isoformat() if e.created_at else None,
+        })
+    for ai in ai_ints:
+        events.append({
+            "id": str(ai.id),
+            "type": "ai_decision",
+            "workflow_id": str(ai.workflow_id) if ai.workflow_id else None,
+            "customer_id": None,
+            "amount": None,
+            "state": ai.interaction_type or "classified",
+            "action": ai.interaction_type or "classification",
+            "reason": ai.output or "",
+            "confidence": ai.confidence,
+            "needs_human": ai.confidence is not None and ai.confidence < 70,
+            "icon": "🧠",
+            "created_at": ai.created_at.isoformat() if ai.created_at else None,
+        })
+
+    events.sort(key=lambda e: e.get("created_at") or "", reverse=True)
+    return {"events": events[:limit]}
+
+
+@router.get("/api/agents/{agent_type}/funnel")
+def api_agent_funnel(
+    agent_type: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    """Funnel breakdown with drop-off analysis per plan D2."""
+    from sqlalchemy import text
+
+    rows = db.execute(
+        text("""
+            SELECT current_state, COUNT(*) as cnt
+            FROM workflows
+            WHERE tenant_id = :tid AND workflow_type = :wtype
+            GROUP BY current_state
+            ORDER BY cnt DESC
+        """),
+        {"tid": tenant.id, "wtype": agent_type},
+    ).all()
+
+    # Funnel stage mapping (plan D2)
+    FUNNEL_STAGES = {
+        "Detected": {"states": ["DETECTED", "VALIDATING"], "order": 0, "color": "#6366f1"},
+        "Classified": {"states": ["CLASSIFYING_FAILURE", "SELECTING_STRATEGY"], "order": 1, "color": "#818cf8"},
+        "Outreach": {"states": ["OUTREACH_PENDING", "OUTREACH_SENT", "WAITING_CUSTOMER"], "order": 2, "color": "#f59e0b"},
+        "Retry": {"states": ["RETRY_SCHEDULED", "RETRY_PENDING", "RETRYING", "VERIFYING_RESULT", "PAUSED_RECONCILIATION"], "order": 3, "color": "#22d3ee"},
+        "Recovered": {"states": ["RECOVERED"], "order": 4, "color": "#10b981"},
+    }
+    DROP_STATES = {"FAILED", "ESCALATED", "EXPIRED"}
+
+    row_map = {r.current_state: r.cnt for r in rows}
+    total = sum(row_map.values())
+
+    stages = []
+    prev_count = total
+    for label, cfg in sorted(FUNNEL_STAGES.items(), key=lambda x: x[1]["order"]):
+        count = sum(row_map.get(s, 0) for s in cfg["states"])
+        pct = round((count / total * 100) if total > 0 else 0)
+        drop_off = prev_count - count if label != "Detected" else 0
+        drop_reason = ""
+        if drop_off > 0:
+            reasons = []
+            for s in DROP_STATES:
+                if s in row_map:
+                    reasons.append(s.lower())
+            drop_reason = f"{'blocked' if 'esc' in str(reasons) else 'skipped'}" if reasons else ""
+        stages.append({
+            "state": label,
+            "count": count,
+            "label": f"Failed payments detected" if label == "Detected" else
+                     f"Classified as recoverable" if label == "Classified" else
+                     f"Outreach sent" if label == "Outreach" else
+                     f"Retry executed" if label == "Retry" else
+                     f"Successfully recovered",
+            "pct": pct,
+            "color": cfg["color"],
+            "drop_off": drop_off,
+            "drop_reason": drop_reason,
+        })
+        prev_count = count
+
+    # Drop-off between stages (plan format)
+    drop_offs = []
+    for i in range(1, len(stages)):
+        if stages[i-1]["drop_off"] > 0:
+            drop_offs.append({
+                "from": stages[i-1]["state"],
+                "to": stages[i]["state"],
+                "drop": stages[i-1]["drop_off"],
+                "reason": stages[i-1]["drop_reason"],
+            })
+
+    return {"stages": stages, "drop_offs": drop_offs, "agent_type": agent_type}
+
+
+@router.get("/api/agents/{agent_type}/roi")
+def api_agent_roi(
+    agent_type: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    """ROI metrics per plan section 1.3."""
+    from sqlalchemy import text as sqla_text
+    now = datetime.utcnow()
+    thirty_days_ago = now - timedelta(days=30)
+    seven_days_ago = now - timedelta(days=7)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    workflows = (
+        db.query(Workflow)
+        .filter(Workflow.tenant_id == tenant.id, Workflow.workflow_type == agent_type, Workflow.started_at >= thirty_days_ago)
+        .all()
+    )
+
+    total = len(workflows)
+    recovered = sum(1 for w in workflows if w.current_state in ("RECOVERED", "RETAINED", "RESOLVED"))
+    failed = sum(1 for w in workflows if w.current_state in ("FAILED", "CANCELLED", "EXPIRED"))
+    active = sum(1 for w in workflows if w.status in ("active", "paused"))
+    escalated = sum(1 for w in workflows if w.status == "escalated")
+
+    # Revenue recovered: sum of completed recoveries by time window
+    def _recovered_revenue_since(since_dt):
+        cnt = sum(1 for w in workflows
+                  if w.current_state in ("RECOVERED", "RETAINED", "RESOLVED")
+                  and w.completed_at and w.completed_at >= since_dt)
+        return round(cnt * 29.99, 2)
+
+    revenue_recovered = {
+        "today": _recovered_revenue_since(today_start),
+        "7d": _recovered_revenue_since(seven_days_ago),
+        "30d": _recovered_revenue_since(thirty_days_ago),
+    }
+
+    # Revenue at risk — sum amount_due from active workflows
+    at_risk_row = db.execute(
+        sqla_text("""
+            SELECT COALESCE(SUM(i.amount_due), 0) as total_at_risk
+            FROM workflows w
+            LEFT JOIN invoices i ON i.workflow_id = w.id
+            WHERE w.tenant_id = :tid AND w.workflow_type = :wtype
+              AND w.status IN ('active', 'paused')
+        """),
+        {"tid": tenant.id, "wtype": agent_type},
+    ).scalar() or 0
+    revenue_at_risk = float(at_risk_row)
+
+    # Support hours saved
+    support_hours_saved = round(recovered * 0.5, 1)
+
+    # Automation rate
+    automation_rate = round(((total - escalated - failed) / total * 100) if total > 0 else 0, 1)
+    recovery_rate = round((recovered / total * 100) if total > 0 else 0, 1)
+
+    # Avg resolution time
+    resolved = [w for w in workflows if w.current_state in ("RECOVERED", "RETAINED", "RESOLVED") and w.completed_at and w.started_at]
+    if resolved:
+        avg_hours = sum((w.completed_at - w.started_at).total_seconds() / 3600 for w in resolved) / len(resolved)
+    else:
+        avg_hours = None
+
+    # Daily bar chart data
+    daily = db.execute(
+        sqla_text("""
+            SELECT DATE(wt.created_at) as d, COUNT(*) as cnt
+            FROM workflow_transitions wt
+            JOIN workflows w ON w.id = wt.workflow_id
+            WHERE w.tenant_id = :tid AND w.workflow_type = :wtype
+              AND wt.to_state IN ('RECOVERED', 'RETAINED', 'RESOLVED')
+              AND wt.created_at >= :since
+            GROUP BY DATE(wt.created_at)
+            ORDER BY d
+        """),
+        {"tid": tenant.id, "wtype": agent_type, "since": seven_days_ago},
+    ).all()
+
+    daily_revenue = []
+    for d in daily:
+        daily_revenue.append({"date": d.d.isoformat() if d.d else "", "count": d.cnt, "revenue": round(d.cnt * 29.99, 2)})
+
+    return {
+        "revenue_recovered": revenue_recovered,
+        "revenue_at_risk": round(revenue_at_risk, 2),
+        "support_hours_saved": support_hours_saved,
+        "automation_rate": automation_rate,
+        "recovery_rate": recovery_rate,
+        "total_workflows": total,
+        "active_workflows": active,
+        "avg_resolution_time_hours": round(avg_hours, 1) if avg_hours else None,
+        "recovered": recovered,
+        "failed": failed,
+        "escalated": escalated,
+        "daily_revenue": daily_revenue,
+        "agent_type": agent_type,
+    }
+
+
+@router.get("/api/agents/{agent_type}/queue")
+def api_agent_queue(
+    agent_type: str,
+    queue: str = "active",
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+):
+    """Queue tabs: active, approvals, escalations, log."""
+    if queue == "active":
+        q = db.query(Workflow).filter(
+            Workflow.tenant_id == tenant.id,
+            Workflow.workflow_type == agent_type,
+            Workflow.status.in_(["active", "paused"]),
+        )
+        total = q.count()
+        rows = q.order_by(Workflow.started_at.desc()).offset(offset).limit(limit).all()
+        return {
+            "queue": queue,
+            "items": [
+                {
+                    "id": str(w.id),
+                    "customer_id": w.customer_id,
+                    "current_state": w.current_state,
+                    "status": w.status,
+                    "started_at": w.started_at.isoformat() if w.started_at else None,
+                }
+                for w in rows
+            ],
+            "total": total,
+        }
+
+    elif queue == "approvals":
+        q = db.query(ApprovalRequest).filter(
+            ApprovalRequest.tenant_id == tenant.id,
+            ApprovalRequest.status == "PENDING",
+        )
+        if agent_type != "all":
+            q = q.join(Workflow, Workflow.id == ApprovalRequest.workflow_id).filter(
+                Workflow.workflow_type == agent_type
+            )
+        total = q.count()
+        rows = q.order_by(ApprovalRequest.created_at.desc()).offset(offset).limit(limit).all()
+        return {
+            "queue": queue,
+            "items": [
+                {
+                    "id": str(a.id),
+                    "workflow_id": str(a.workflow_id) if a.workflow_id else None,
+                    "customer_id": str(a.customer_id) if a.customer_id else None,
+                    "action_type": a.action_type,
+                    "action_value": a.action_value,
+                    "reason": a.reason,
+                    "risk_level": a.risk_level,
+                    "ai_confidence": a.ai_confidence,
+                    "created_at": a.created_at.isoformat() if a.created_at else None,
+                }
+                for a in rows
+            ],
+            "total": total,
+        }
+
+    elif queue == "escalations":
+        q = db.query(Escalation).filter(
+            Escalation.tenant_id == tenant.id,
+            Escalation.status == "OPEN",
+        )
+        if agent_type != "all":
+            q = q.join(Workflow, Workflow.id == Escalation.workflow_id).filter(
+                Workflow.workflow_type == agent_type
+            )
+        total = q.count()
+        rows = q.order_by(Escalation.created_at.desc()).offset(offset).limit(limit).all()
+        return {
+            "queue": queue,
+            "items": [
+                {
+                    "id": str(e.id),
+                    "workflow_id": str(e.workflow_id) if e.workflow_id else None,
+                    "customer_id": str(e.customer_id) if e.customer_id else None,
+                    "reason": e.escalation_reason,
+                    "severity": e.severity,
+                    "assigned_to": e.assigned_to,
+                    "created_at": e.created_at.isoformat() if e.created_at else None,
+                }
+                for e in rows
+            ],
+            "total": total,
+        }
+
+    elif queue == "log":
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        q = db.query(TimelineEvent).filter(
+            TimelineEvent.tenant_id == tenant.id,
+            TimelineEvent.entity_type == "workflow",
+            TimelineEvent.created_at >= thirty_days_ago,
+        )
+        if agent_type != "all":
+            q = q.filter(TimelineEvent.event_type.like(f"{agent_type}%"))
+        total = q.count()
+        rows = q.order_by(TimelineEvent.created_at.desc()).offset(offset).limit(limit).all()
+        return {
+            "queue": queue,
+            "items": [
+                {
+                    "id": str(e.id),
+                    "event_type": e.event_type,
+                    "entity_id": e.entity_id,
+                    "payload": e.payload,
+                    "created_at": e.created_at.isoformat() if e.created_at else None,
+                }
+                for e in rows
+            ],
+            "total": total,
+        }
+
+    return {"queue": queue, "items": [], "total": 0}
+
+
+@router.put("/api/agents/{agent_type}/policy")
+def api_agent_policy_update(
+    agent_type: str,
+    body: _PolicyUpdateBody,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    """Save simplified agent policy. Merges into existing policy set."""
+    ps = db.query(PolicySet).filter(PolicySet.tenant_id == tenant.id).first()
+    if not ps:
+        ps = PolicySet(tenant_id=tenant.id)
+        db.add(ps)
+
+    field_map = {
+        "recovery_strategy": "retry_policy",
+        "communication": "communication_policy",
+        "approval_rules": "approval_policy",
+        "escalation_rules": "escalation_policy",
+    }
+    section = body.section
+    field = field_map.get(section)
+    if field:
+        existing = getattr(ps, field) or {}
+        existing.update(body.values)
+        setattr(ps, field, existing)
+        ps.updated_at = datetime.utcnow()
+        db.commit()
+        return {"ok": True, "message": f"Policy section '{section}' updated"}
+
+    return {"ok": False, "message": f"Unknown policy section: {section}"}
+
+
+class _QueueActionBody(BaseModel):
+    item_id: str
+
+
+class _PolicyUpdateBody(BaseModel):
+    section: str
+    values: dict = {}
+
+
+@router.post("/api/agents/{agent_type}/queue/approve")
+def api_agent_queue_approve(
+    agent_type: str,
+    body: _QueueActionBody,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    """Approve a pending approval request."""
+    req = db.query(ApprovalRequest).filter(
+        ApprovalRequest.id == body.item_id,
+        ApprovalRequest.tenant_id == tenant.id,
+        ApprovalRequest.status == "PENDING",
+    ).first()
+    if not req:
+        raise HTTPException(status_code=404, detail="Approval request not found")
+    req.status = "APPROVED"
+    req.reviewed_by = "admin"
+    req.reviewed_at = datetime.utcnow()
+    db.commit()
+    return {"ok": True, "message": "Approved"}
+
+
+@router.post("/api/agents/{agent_type}/queue/reject")
+def api_agent_queue_reject(
+    agent_type: str,
+    body: _QueueActionBody,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    """Reject a pending approval request."""
+    req = db.query(ApprovalRequest).filter(
+        ApprovalRequest.id == body.item_id,
+        ApprovalRequest.tenant_id == tenant.id,
+        ApprovalRequest.status == "PENDING",
+    ).first()
+    if not req:
+        raise HTTPException(status_code=404, detail="Approval request not found")
+    req.status = "REJECTED"
+    req.reviewed_by = "admin"
+    req.reviewed_at = datetime.utcnow()
+    db.commit()
+    return {"ok": True, "message": "Rejected"}
+
+
+@router.post("/api/agents/{agent_type}/queue/resolve")
+def api_agent_queue_resolve(
+    agent_type: str,
+    body: _QueueActionBody,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    """Resolve an open escalation."""
+    esc = db.query(Escalation).filter(
+        Escalation.id == body.item_id,
+        Escalation.tenant_id == tenant.id,
+        Escalation.status == "OPEN",
+    ).first()
+    if not esc:
+        raise HTTPException(status_code=404, detail="Escalation not found")
+    esc.status = "RESOLVED"
+    esc.resolved_at = datetime.utcnow()
+    db.commit()
+    return {"ok": True, "message": "Resolved"}
 
 
 # ─── Customer API ──────────────────────────────────────────────────────

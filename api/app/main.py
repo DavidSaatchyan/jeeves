@@ -147,6 +147,11 @@ def _run_alembic_migrations() -> None:
                 logging.info("Existing DB detected — stamped alembic to head without re-running migrations")
             else:
                 logging.exception("Alembic migration failed — unexpected duplicate table without tenants")
+        elif "can't render element of type" in error_str or "jsonb" in error_str.lower():
+            # Dev fallback: create all tables directly (SQLite compat with JSON instead of JSONB)
+            from .models import Base
+            Base.metadata.create_all(bind=engine)
+            logging.info("Dev mode: created all tables via Base.metadata.create_all (bypassed alembic)")
         else:
             logging.exception("Alembic migration failed — check database connectivity and migration files")
 

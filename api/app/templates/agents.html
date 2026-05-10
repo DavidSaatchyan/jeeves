@@ -1,705 +1,885 @@
 {% extends "base.html" %}
 {% block body %}
+<style>
+/* ── PayGuard Redesign per plan-payguard-redesign.md ── */
+
+/* Sticky header */
+.pg-header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  margin-bottom: 16px; padding: 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.pg-header-inner {
+  display: flex; align-items: center; gap: 0;
+}
+.pg-h-left {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 20px; flex: 0 0 auto; min-width: 240px;
+  border-right: 1px solid var(--border);
+}
+.pg-h-logo { width: 40px; height: 40px; border-radius: 10px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.pg-h-name { font-size: 16px; font-weight: 800; letter-spacing:-.3px; }
+.pg-h-sub { font-size: 11px; color: var(--muted); }
+.pg-h-status { display:flex; gap:4px; margin-top:3px; flex-wrap:wrap; }
+
+.pg-h-center {
+  flex: 1; display: flex; gap: 0; padding: 12px 16px;
+  border-right: 1px solid var(--border); min-width: 0;
+}
+.pg-h-kpi { flex: 1; text-align: center; padding: 0 6px; min-width: 0; }
+.pg-h-kpi-val { font-size: 15px; font-weight: 800; color:#fff; letter-spacing:-.3px; }
+.pg-h-kpi-lbl { font-size: 9px; color:var(--muted2); text-transform:uppercase; letter-spacing:.2px; margin-top:1px; }
+
+.pg-h-right {
+  display: flex; align-items: center; gap: 6px; padding: 12px 16px; flex-shrink:0;
+}
+
+/* Layout */
+.pg-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.pg-col { display: flex; flex-direction: column; gap: 14px; }
+
+/* Cards */
+.pg-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.pg-card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing:.4px; color: var(--muted); margin-bottom: 12px; display:flex; align-items:center; justify-content:space-between; }
+
+/* Feed */
+.pg-feed { max-height: 320px; overflow-y: auto; }
+.pg-fi { display:flex; gap:10px; padding:7px 0; border-bottom:1px solid var(--border); cursor:pointer; align-items:flex-start; }
+.pg-fi:last-child { border-bottom:none; }
+.pg-fi:hover { background:rgba(255,255,255,0.02); }
+.pg-fi-icon { font-size:13px; flex-shrink:0; margin-top:2px; }
+.pg-fi-body { flex:1; min-width:0; }
+.pg-fi-top { display:flex; justify-content:space-between; align-items:center; }
+.pg-fi-action { font-size:12px; font-weight:500; }
+.pg-fi-amount { font-size:11px; font-weight:700; color:var(--green); flex-shrink:0; }
+.pg-fi-amount.risk { color:var(--amber); }
+.pg-fi-meta { font-size:10px; color:var(--muted2); margin-top:1px; }
+.pg-fi-msg { font-size:11px; color:var(--muted); margin-top:1px; }
+
+/* Funnel */
+.pg-funnel { display:flex; flex-direction:column; gap:8px; }
+.pg-fun-row { display:flex; align-items:center; gap:10px; }
+.pg-fun-label { width:80px; font-size:10px; font-weight:600; color:var(--muted); flex-shrink:0; text-align:right; }
+.pg-fun-bar-wrap { flex:1; display:flex; align-items:center; gap:8px; }
+.pg-fun-bar-track { flex:1; height:28px; background:var(--bg); border-radius:6px; overflow:hidden; position:relative; }
+.pg-fun-bar-fill { height:100%; border-radius:6px; transition:width .4s ease; display:flex; align-items:center; padding-left:8px; }
+.pg-fun-bar-count { font-size:13px; font-weight:800; color:#fff; position:relative; z-index:1; }
+.pg-fun-pct { font-size:10px; color:var(--muted2); width:35px; text-align:right; }
+.pg-fun-drop { font-size:9px; color:var(--muted2); margin-left:auto; white-space:nowrap; }
+.pg-fun-icon { font-size:14px; }
+
+/* Queue tabs */
+.pg-qt { display:flex; gap:0; margin:0 0 10px; border-bottom:1px solid var(--border); }
+.pg-qt-btn { padding:6px 12px; font-size:11px; font-weight:600; color:var(--muted2); cursor:pointer; border:none; background:transparent; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .15s; display:flex; align-items:center; gap:3px; white-space:nowrap; }
+.pg-qt-btn:hover { color:var(--text); }
+.pg-qt-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+.pg-qt-badge { font-size:9px; padding:0 5px; border-radius:6px; background:var(--accent); color:#fff; font-weight:700; line-height:1.4; min-width:16px; text-align:center; }
+.pg-q-body { max-height:300px; overflow-y:auto; }
+.pg-q-empty { text-align:center; padding:24px 16px; color:var(--muted2); font-size:12px; }
+
+/* Config */
+.pg-cfg-sect { border-bottom:1px solid var(--border); }
+.pg-cfg-sect:last-child { border-bottom:none; }
+.pg-cfg-head { display:flex; align-items:center; gap:8px; padding:10px 0; cursor:pointer; user-select:none; }
+.pg-cfg-head:hover { color:var(--text); }
+.pg-cfg-icon { font-size:10px; color:var(--muted2); transition:transform .2s; }
+.pg-cfg-icon.open { transform:rotate(90deg); }
+.pg-cfg-body { padding:0 0 10px 18px; }
+.pg-cfg-field { margin-bottom:8px; }
+.pg-cfg-label { font-size:10px; font-weight:600; color:var(--muted2); margin-bottom:2px; text-transform:uppercase; letter-spacing:.2px; }
+.pg-cfg-desc { font-size:10px; color:var(--muted2); margin-top:1px; }
+.pg-cfg-row { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.pg-cfg-seg { display:flex; gap:1px; background:var(--bg); border-radius:6px; padding:2px; }
+.pg-cfg-seg-btn { padding:4px 10px; font-size:11px; font-weight:600; border:none; background:transparent; color:var(--muted2); cursor:pointer; border-radius:4px; transition:all .1s; }
+.pg-cfg-seg-btn.active { background:var(--surface); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.2); }
+.pg-cfg-seg-btn:hover:not(.active) { color:var(--text); }
+.pg-cfg-adv { margin-top:6px; }
+.pg-cfg-adv-toggle { font-size:10px; color:var(--accent); cursor:pointer; border:none; background:none; font-weight:600; padding:2px 0; }
+.pg-cfg-adv-body { display:none; margin-top:4px; padding:8px; background:var(--bg); border-radius:6px; border:1px solid var(--border); }
+.pg-cfg-adv-body.open { display:block; }
+
+/* Toggle switch */
+.pg-toggle { width:36px; height:18px; border-radius:9px; background:var(--border); cursor:pointer; position:relative; transition:background .2s; flex-shrink:0; }
+.pg-toggle.on { background:var(--green); }
+.pg-toggle::after { content:''; position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:#fff; transition:transform .2s; }
+.pg-toggle.on::after { transform:translateX(18px); }
+
+/* Trust panel */
+.trust-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200; }
+.trust-overlay.show { display:block; }
+.trust-panel { position:fixed; top:0; right:-480px; width:460px; max-width:90vw; height:100vh; background:var(--surface); border-left:1px solid var(--border); z-index:201; transition:right .3s ease; display:flex; flex-direction:column; box-shadow:-4px 0 20px rgba(0,0,0,.3); }
+.trust-panel.show { right:0; }
+.trust-head { display:flex; justify-content:space-between; align-items:center; padding:16px 18px; border-bottom:1px solid var(--border); }
+.trust-head h3 { font-size:14px; font-weight:700; margin:0; }
+.trust-body { flex:1; overflow-y:auto; padding:16px 18px; }
+.trust-info { font-size:12px; color:var(--muted); margin-bottom:12px; }
+.trust-step { display:flex; gap:10px; padding:8px 0; border-left:2px solid var(--border); margin-left:10px; padding-left:14px; position:relative; }
+.trust-step:last-child { border-left-color:transparent; }
+.trust-step-n { position:absolute; left:-11px; width:20px; height:20px; border-radius:50%; background:var(--bg); border:2px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:var(--muted2); }
+.trust-step-body { flex:1; }
+.trust-step-act { font-size:12px; font-weight:600; }
+.trust-step-det { font-size:11px; color:var(--muted); margin-top:1px; }
+.trust-step-tm { font-size:9px; color:var(--muted2); margin-top:1px; }
+
+/* ROI sparkline bar chart */
+.pg-spark { display:flex; align-items:flex-end; gap:2px; height:32px; margin-top:4px; }
+.pg-spark-bar { flex:1; border-radius:2px 2px 0 0; min-height:2px; background:var(--accent); opacity:.6; }
+
+/* Chart */
+.pg-chart { display:flex; align-items:flex-end; gap:4px; height:60px; padding:4px 0; }
+.pg-chart-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:2px; }
+.pg-chart-bar { width:100%; background:var(--accent); border-radius:2px 2px 0 0; min-height:3px; }
+.pg-chart-lbl { font-size:7px; color:var(--muted2); text-transform:uppercase; }
+
+/* Buttons within table rows */
+.pg-op-btn { padding:3px 8px; font-size:10px; font-weight:600; border:none; border-radius:4px; cursor:pointer; transition:all .1s; }
+.pg-op-btn:hover { filter:brightness(1.2); }
+
+/* Empty states */
+.pg-empty { text-align:center; padding:32px 16px; color:var(--muted2); font-size:13px; }
+.pg-empty.big { font-size:16px; padding:48px; }
+
+/* Responsive */
+@media (max-width:900px) {
+  .pg-layout { grid-template-columns:1fr; }
+  .pg-h-center { flex-wrap:wrap; gap:4px; }
+  .pg-h-kpi { min-width:60px; }
+}
+</style>
+
 <h1>Agents</h1>
 <p class="page-desc">Intelligent agents that automate customer lifecycle workflows. Each agent handles a specific scenario end-to-end.</p>
 
 <div class="ch-tabs" id="agentTabs">
-  <button class="ch-tab active" data-tab="payguard">
-    <span class="ch-tab-icon" style="font-size:16px;line-height:1">🛡️</span>
-    PayGuard
-  </button>
-  <button class="ch-tab" data-tab="retain">
-    <span class="ch-tab-icon" style="font-size:16px;line-height:1">⚓</span>
-    Retain
-  </button>
-  <button class="ch-tab" data-tab="trace">
-    <span class="ch-tab-icon" style="font-size:16px;line-height:1">🧭</span>
-    Trace
-  </button>
-  <button class="ch-tab" data-tab="settings">
-    <svg class="ch-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-    Settings
-  </button>
+  <button class="ch-tab active" data-tab="payguard"><span style="font-size:16px;line-height:1">🛡️</span> PayGuard</button>
+  <button class="ch-tab" data-tab="retain"><span style="font-size:16px;line-height:1">⚓</span> Retain</button>
+  <button class="ch-tab" data-tab="trace"><span style="font-size:16px;line-height:1">🧭</span> Trace</button>
+  <button class="ch-tab" data-tab="settings"><svg class="ch-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</button>
+</div>
+
+<!-- Trust Panel slide-out -->
+<div class="trust-overlay" id="trustOverlay" onclick="hideTrust()"></div>
+<div class="trust-panel" id="trustPanel">
+  <div class="trust-head"><h3>Why PayGuard Took This Action</h3><button class="ghost sm" onclick="hideTrust()" style="border:none;font-size:16px">✕</button></div>
+  <div class="trust-body" id="trustBody"><div class="pg-empty">Select a workflow row or feed event to see the decision chain.</div></div>
+</div>
+
+<!-- Simulation modal -->
+<div class="modal-overlay" id="simModal">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header"><h2>🧪 Simulation: Preview PayGuard Before Enabling</h2><button class="ghost sm" onclick="hideSim()" style="border:none;font-size:18px">✕</button></div>
+    <div id="simBody">
+      <p class="muted" style="margin-bottom:16px">Based on your last 30 days of payment failures:</p>
+      <div class="stats" style="grid-template-columns:1fr 1fr 1fr 1fr;margin-bottom:16px">
+        <div class="stat"><div class="n" id="simRev">—</div><div class="l">Recovered revenue</div><div class="sub" id="simRevComp"></div></div>
+        <div class="stat"><div class="n" id="simAuto">—</div><div class="l">Automation rate</div><div class="sub">vs 0% currently</div></div>
+        <div class="stat"><div class="n" id="simEsc">—</div><div class="l">Escalations</div><div class="sub" id="simEscNote"></div></div>
+        <div class="stat"><div class="n" id="simHrs">—</div><div class="l">Support hours saved</div></div>
+      </div>
+      <div class="help" style="margin-top:12px">
+        <h3>Confidence</h3>
+        <p>Based on <strong id="simSample">0</strong> historical payment failures analyzed. Simulation accuracy: <strong id="simAcc">±8%</strong></p>
+      </div>
+      <div class="ch-actions" style="margin-top:16px">
+        <button class="ghost" onclick="hideSim()">Adjust Policy First</button>
+        <button class="accent" id="simEnableBtn" onclick="doEnablePayGuard()">Enable PayGuard</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="agentPanels"></div>
-
 {% endblock %}
+
 {% block tail %}
 <script>
 function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function toObject(arr){ return (arr && typeof arr === 'object' && !Array.isArray(arr)) ? arr : {}; }
 
-var AGENTS = [
-  {
-    id: 'payguard',
-    name: 'PayGuard',
-    subtitle: 'Failed Payment Recovery',
-    icon: '🛡️',
-    color: '#6366f1',
-    tagline: 'Automatically recover failed subscription payments and prevent revenue leakage.',
-    whatItDoes: 'PayGuard detects failed payments from Stripe and Recharge, classifies the failure type (recoverable, semi-recoverable, or blocked), and orchestrates intelligent retries with customer outreach. It handles 3DS/SCA challenges, monitors for external payment resolution, and escalates only when needed.',
-    whatItGives: [
-      'Recovers 40-60% of failed subscription payments automatically',
-      'Prevents revenue leakage from involuntary churn',
-      'Reduces support burden by handling retries and outreach',
-      'Intelligently classifies failures to avoid retrying blocked payments',
-      'Handles edge cases: 3DS, customer frustration, external payments',
-    ],
-    provider: 'stripe',
-    events: ['invoice.payment_failed', 'charge.failed', 'invoice.payment_succeeded'],
-    states: ['DETECTED', 'VALIDATING', 'CLASSIFYING', 'STRATEGY', 'OUTREACH', 'WAITING', 'RETRY_SCHEDULED', 'RETRYING', 'VERIFYING', 'RECONCILIATION', 'RECOVERED', 'FAILED', 'ESCALATED'],
-    fields: [
-      { id: 'pg-max-retries', key: 'max_retries', label: 'Max retry attempts', type: 'number', default: 3, desc: 'Maximum number of payment retry attempts per invoice' },
-      { id: 'pg-intervals', key: 'retry_intervals', label: 'Retry intervals (minutes, comma-separated)', type: 'text', default: '5,60,1440', desc: 'Time between retry attempts (first, second, third...)' },
-      { id: 'pg-on-failure', key: 'on_failure', label: 'When retries exhausted', type: 'select', default: 'escalate', options: [
-        { value: 'escalate', label: 'Escalate to human' },
-        { value: 'notify', label: 'Notify customer, then close' },
-        { value: 'quiet_fail', label: 'Fail silently (log only)' },
-      ]},
-      { id: 'pg-retry-window', key: 'retry_window_hours', label: 'Max recovery window (hours)', type: 'number', default: 72, desc: 'Workflow auto-expires after this time' },
-      { id: 'pg-failure-categories', key: 'failure_categories', label: 'Recoverable failure codes (comma-separated)', type: 'text', default: 'expired_card, insufficient_funds, temporary_decline, authentication_required, processing_error', desc: 'Failure codes that trigger automatic retry' },
-      { id: 'pg-blocked-codes', key: 'blocked_failure_codes', label: 'Blocked failure codes (comma-separated)', type: 'text', default: 'fraud, blocked, do_not_honor, stolen_card, lost_card, pick_up_card', desc: 'These always escalate without retry' },
-    ],
-    outreachFields: [
-      { id: 'pg-outreach-enabled', key: 'outreach_enabled', label: 'Enable customer outreach', type: 'select', default: 'true', options: [
-        { value: 'true', label: 'Enabled — send emails for semi-recoverable failures' },
-        { value: 'false', label: 'Disabled — retry silently' },
-      ]},
-      { id: 'pg-outreach-max', key: 'max_outreach_per_workflow', label: 'Max outreach messages per workflow', type: 'number', default: 2 },
-      { id: 'pg-outreach-cooldown', key: 'outreach_cooldown_minutes', label: 'Cooldown between outreach messages (minutes)', type: 'number', default: 1440 },
-      { id: 'pg-outreach-channels', key: 'outreach_channels', label: 'Allowed channels (comma-separated, priority order)', type: 'text', default: 'email, widget, sms' },
-    ],
-    escalationFields: [
-      { id: 'pg-esc-enabled', key: 'escalation_enabled', label: 'Enable escalation', type: 'select', default: 'true', options: [
-        { value: 'true', label: 'Enabled — escalate on frustration or high value' },
-        { value: 'false', label: 'Disabled — handle everything automatically' },
-      ]},
-      { id: 'pg-esc-frustration', key: 'frustration_threshold', label: 'Frustration threshold for escalation', type: 'select', default: 'medium', options: [
-        { value: 'low', label: 'Low — escalate on any frustration signal' },
-        { value: 'medium', label: 'Medium — escalate on moderate frustration' },
-        { value: 'high', label: 'High — only escalate on strong frustration' },
-      ]},
-      { id: 'pg-esc-amount', key: 'escalation_amount_threshold', label: 'Escalate for amounts above ($)', type: 'number', default: 300 },
-      { id: 'pg-esc-sla', key: 'escalation_sla_hours', label: 'SLA to respond after escalation (hours)', type: 'number', default: 4 },
-      { id: 'pg-esc-channel', key: 'escalation_channel', label: 'Escalation notification channel', type: 'select', default: 'in-app', options: [
-        { value: 'in-app', label: 'In-app notification' },
-        { value: 'email', label: 'Email to support team' },
-        { value: 'slack', label: 'Slack webhook' },
-      ]},
-    ],
-    approvalFields: [
-      { id: 'pg-app-threshold', key: 'approval_amount_threshold', label: 'Require human approval above ($)', type: 'number', default: 500 },
-      { id: 'pg-app-discount', key: 'approval_discount_threshold', label: 'Require approval for discount above (%)', type: 'number', default: 50 },
-      { id: 'pg-app-confidence', key: 'approval_ai_confidence', label: 'AI confidence threshold for auto-approve (%)', type: 'number', default: 90, desc: 'If AI confidence is below this, require human review' },
-    ],
-  },
-  {
-    id: 'retain',
-    name: 'Retain',
-    subtitle: 'Cancellation Save',
-    icon: '⚓',
-    color: '#f59e0b',
-    tagline: 'Detect cancellation intent and offer personalized save options to keep customers.',
-    whatItDoes: 'Retain intercepts cancellation requests and subscription skip/pause events, then engages the customer with tailored save offers — pause, skip, discount, or delay — based on their subscription history and value.',
-    whatItGives: [
-      'Reduces voluntary churn by 20-35% with timely save offers',
-      'Personalizes save options based on customer value and history',
-      'Automates the entire save flow while offering human escalation',
-      'Learns which save actions work best per customer segment',
-      'Handles edge cases: high-value customers, repeat cancellations',
-    ],
-    provider: 'recharge',
-    events: ['subscription/cancelled', 'subscription/skipped', 'subscription/paused'],
-    states: ['PENDING', 'OFFERING_SAVES', 'AWAITING_RESPONSE', 'RETAINED', 'CANCELLED', 'ESCALATED'],
-    fields: [
-      { id: 'rt-max-retries', key: 'max_retries', label: 'Max save attempts', type: 'number', default: 2 },
-      { id: 'rt-save-actions', key: 'allowed_save_actions', label: 'Allowed save actions (comma-separated)', type: 'text', default: 'pause,skip,delay,discount,plan_change', desc: 'Actions the agent can offer in order of preference' },
-      { id: 'rt-response-window', key: 'response_window_minutes', label: 'Customer response window (minutes)', type: 'number', default: 1440, desc: 'Time customer has to respond before cancellation proceeds' },
-      { id: 'rt-on-no-response', key: 'on_response_expire', label: 'On no response from customer', type: 'select', default: 'process_cancellation', options: [
-        { value: 'process_cancellation', label: 'Process cancellation' },
-        { value: 'escalate', label: 'Escalate to human' },
-        { value: 'apply_best_save', label: 'Apply most-likely save action' },
-      ]},
-      { id: 'rt-high-value-threshold', key: 'high_value_threshold', label: 'High-value customer threshold ($/mo)', type: 'number', default: 100, desc: 'Customers above this get priority handling' },
-    ],
-    outreachFields: [
-      { id: 'rt-outreach-enabled', key: 'outreach_enabled', label: 'Enable save outreach', type: 'select', default: 'true', options: [
-        { value: 'true', label: 'Enabled — send save offers' },
-        { value: 'false', label: 'Disabled — process cancellations immediately' },
-      ]},
-      { id: 'rt-outreach-actions', key: 'outreach_save_actions', label: 'Save actions to offer per message (comma-separated)', type: 'text', default: 'pause,skip' },
-      { id: 'rt-outreach-channel', key: 'outreach_channel', label: 'Save offer channel', type: 'select', default: 'email', options: [
-        { value: 'email', label: 'Email' },
-        { value: 'widget', label: 'In-app widget' },
-        { value: 'sms', label: 'SMS' },
-      ]},
-    ],
-    escalationFields: [
-      { id: 'rt-esc-trigger', key: 'escalation_trigger', label: 'Escalation trigger', type: 'select', default: 'high_value_repeat', options: [
-        { value: 'high_value', label: 'High-value customer cancelling' },
-        { value: 'high_value_repeat', label: 'High-value customer with repeat cancellation attempts' },
-        { value: 'all_repeat', label: 'Any customer with repeat cancellation attempts' },
-        { value: 'manual_only', label: 'Only when manually requested' },
-      ]},
-      { id: 'rt-esc-channel', key: 'escalation_channel', label: 'Escalation channel', type: 'select', default: 'email', options: [
-        { value: 'in-app', label: 'In-app notification' },
-        { value: 'email', label: 'Email to support team' },
-        { value: 'slack', label: 'Slack webhook' },
-      ]},
-    ],
-    approvalFields: [
-      { id: 'rt-app-discount', key: 'approval_discount_threshold', label: 'Require approval for discount above (%)', type: 'number', default: 50 },
-      { id: 'rt-app-actions', key: 'approval_required_actions', label: 'Actions requiring approval (comma-separated)', type: 'text', default: 'deep_discount,free_product,plan_change' },
-    ],
-  },
-  {
-    id: 'trace',
-    name: 'Trace',
-    subtitle: 'Order Tracking & WISMO',
-    icon: '🧭',
-    color: '#22d3ee',
-    tagline: 'Answer "Where Is My Order?" automatically with real-time carrier tracking.',
-    whatItDoes: 'Trace intercepts order fulfillment events, resolves tracking status from major carriers (UPS, USPS, FedEx, DHL), and proactively communicates delivery updates. It answers WISMO inquiries, handles delays, and escalates when shipments are lost.',
-    whatItGives: [
-      'Resolves 70-80% of WISMO inquiries without human touch',
-      'Proactively communicates delays before customers ask',
-      'Integrates with major carriers for real-time tracking',
-      'Reduces support ticket volume for order status questions',
-      'Handles edge cases: lost packages, partial deliveries, carrier API failures',
-    ],
-    provider: 'shopify',
-    events: ['fulfillments/create', 'fulfillments/update', 'orders/create'],
-    states: ['PENDING', 'TRACKING', 'DELAYED', 'RESOLVED', 'ESCALATED', 'LOST'],
-    fields: [
-      { id: 'tr-carriers', key: 'tracked_carriers', label: 'Tracked carriers (comma-separated)', type: 'text', default: 'ups,usps,fedex,dhl,ontrac,lasership' },
-      { id: 'tr-auto-resolve', key: 'auto_resolve_hours', label: 'Auto-resolve after delivery (hours)', type: 'number', default: 48, desc: 'Close workflow after this many hours post-delivery' },
-      { id: 'tr-poll-interval', key: 'tracking_poll_interval_minutes', label: 'Tracking polling interval (minutes)', type: 'number', default: 120 },
-      { id: 'tr-delay-threshold', key: 'delay_threshold_hours', label: 'Delay threshold before notifying (hours past EDD)', type: 'number', default: 24, desc: 'Notify customer when tracking shows delay beyond this' },
-      { id: 'tr-on-unavailable', key: 'on_tracking_unavailable', label: 'When tracking data is unavailable', type: 'select', default: 'provide_estimated', options: [
-        { value: 'provide_estimated', label: 'Provide estimated delivery window' },
-        { value: 'escalate', label: 'Escalate to human' },
-        { value: 'notify_when_available', label: 'Notify customer when tracking becomes available' },
-      ]},
-    ],
-    outreachFields: [
-      { id: 'tr-outreach-enabled', key: 'outreach_enabled', label: 'Enable proactive tracking updates', type: 'select', default: 'true', options: [
-        { value: 'true', label: 'Enabled — send delivery updates' },
-        { value: 'false', label: 'Disabled — only respond when asked' },
-      ]},
-      { id: 'tr-outreach-delay', key: 'notify_on_delay', label: 'Notify customer on delay', type: 'select', default: 'true', options: [
-        { value: 'true', label: 'Yes — proactively notify on delays' },
-        { value: 'false', label: 'No — only escalate' },
-      ]},
-      { id: 'tr-outreach-delivery', key: 'notify_on_delivery', label: 'Notify on delivery confirmation', type: 'select', default: 'true', options: [
-        { value: 'true', label: 'Yes — send delivery confirmation' },
-        { value: 'false', label: 'No' },
-      ]},
-    ],
-    escalationFields: [
-      { id: 'tr-esc-trigger', key: 'escalation_trigger', label: 'Escalation trigger', type: 'select', default: 'delayed_past_edd', options: [
-        { value: 'delayed_past_edd', label: 'Delayed significantly past EDD' },
-        { value: 'lost_package', label: 'Carrier confirms package lost' },
-        { value: 'carrier_api_down', label: 'Carrier API unavailable for extended period' },
-        { value: 'customer_frustration', label: 'Customer frustration detected' },
-      ]},
-      { id: 'tr-esc-channel', key: 'escalation_channel', label: 'Escalation channel', type: 'select', default: 'in-app', options: [
-        { value: 'in-app', label: 'In-app notification' },
-        { value: 'email', label: 'Email to support team' },
-        { value: 'slack', label: 'Slack webhook' },
-      ]},
-      { id: 'tr-lost-threshold', key: 'lost_package_days', label: 'Consider package lost after (days without update)', type: 'number', default: 14 },
-    ],
-    approvalFields: [
-      { id: 'tr-app-replace', key: 'approval_replacement_threshold', label: 'Require approval for replacement above ($)', type: 'number', default: 200 },
-      { id: 'tr-app-refund', key: 'approval_refund_threshold', label: 'Require approval for refund above ($)', type: 'number', default: 100 },
-    ],
-  }
-];
+var feedTimer = null, badgeTimer = null, lastFeedId = null;
+var pgEnabled = false, activeAgent = 'payguard', currentQueueTab = null;
 
-// ── Render ───────────────────────────────────────────────────
-function renderAgents(analytics, policies, workflows) {
-  var enabledWf = toObject(policies.enabled_workflows);
-  var panelsHtml = '';
+// ── Agent definitions (same as before) ──
+var AGENTS = [{ id:'payguard', name:'PayGuard', subtitle:'Failed Payment Recovery', icon:'🛡️', color:'#6366f1',
+  tagline:'Automatically recover failed subscription payments and prevent revenue leakage.',
+  whatItDoes:'PayGuard detects failed payments from Stripe and Recharge, classifies the failure type, and orchestrates intelligent retries with customer outreach.',
+  whatItGives:['Recovers 40-60% of failed subscription payments automatically','Prevents revenue leakage from involuntary churn','Reduces support burden by handling retries and outreach','Intelligently classifies failures to avoid retrying blocked payments'],
+  provider:'stripe', events:['invoice.payment_failed','charge.failed','invoice.payment_succeeded'],
+  states:['DETECTED','VALIDATING','CLASSIFYING','STRATEGY','OUTREACH','WAITING','RETRY_SCHEDULED','RETRYING','VERIFYING','RECONCILIATION','RECOVERED','FAILED','ESCALATED'] },
+{ id:'retain', name:'Retain', subtitle:'Cancellation Save', icon:'⚓', color:'#f59e0b',
+  tagline:'Detect cancellation intent and offer personalized save options to keep customers.',
+  whatItDoes:'Retain intercepts cancellation requests and subscription skip/pause events, then engages the customer with tailored save offers.',
+  whatItGives:['Reduces voluntary churn by 20-35% with timely save offers','Personalizes save options based on customer value and history','Automates the entire save flow while offering human escalation'],
+  provider:'recharge', events:['subscription/cancelled','subscription/skipped'], states:['INTENT_DETECTED','CLASSIFYING_INTENT','SELECTING_SAVE_FLOW','SAVE_OFFER_SENT','WAITING_CUSTOMER_DECISION','EXECUTING_ACTION','RETAINED','CANCELLED'] },
+{ id:'trace', name:'Trace', subtitle:'Order Tracking & WISMO', icon:'🧭', color:'#22d3ee',
+  tagline:'Answer "Where Is My Order?" automatically with real-time carrier tracking.',
+  whatItDoes:'Trace intercepts order fulfillment events, resolves tracking status from major carriers, and proactively communicates delivery updates.',
+  whatItGives:['Resolves 70-80% of WISMO inquiries without human touch','Proactively communicates delays before customers ask','Integrates with major carriers for real-time tracking'],
+  provider:'shopify', events:['fulfillments/create','orders/create'], states:['INQUIRY_DETECTED','VALIDATING_IDENTITY','RETRIEVING_SHIPMENT','CLASSIFYING_RISK','RESPONSE_SENT','RESOLVED','LOST'] }];
 
-  AGENTS.forEach(function(agent, i){
-    panelsHtml += renderAgentPanel(agent, analytics, policies, enabledWf, workflows, i === 0);
-  });
-
-  panelsHtml += renderGlobalSettings(policies);
-
-  document.getElementById('agentPanels').innerHTML = panelsHtml;
+// ── Render ──
+function renderAll(analytics, policies, workflows) {
+  var ew = toObject(policies.enabled_workflows);
+  pgEnabled = ew.payguard !== false;
+  document.getElementById('agentPanels').innerHTML =
+    renderPayGuard(AGENTS[0], analytics, policies, ew, workflows||[]) +
+    renderLegacyPanel(AGENTS[1], analytics, policies, ew, workflows||[], false) +
+    renderLegacyPanel(AGENTS[2], analytics, policies, ew, workflows||[], false) +
+    renderGlobalSettings(policies);
+  startFeed();
+  loadFunnel();
+  loadROI();
+  loadBadges();
 }
 
-function renderAgentPanel(agent, analytics, policies, enabledWf, workflows, isActive) {
-  var enabled = enabledWf[agent.id] !== false;
-  var agentWorkflows = (workflows || []).filter(function(w){ return w.workflow_type === agent.id; });
-  var total = agentWorkflows.length;
-  var active = agentWorkflows.filter(function(w){ return w.status === 'active' || w.status === 'paused'; }).length;
-  var completed = agentWorkflows.filter(function(w){ return w.status === 'completed'; }).length;
-  var escalated = agentWorkflows.filter(function(w){ return w.status === 'escalated'; }).length;
-  var failed = agentWorkflows.filter(function(w){ return w.status === 'failed' || w.current_state === 'FAILED' || w.current_state === 'CANCELLED' || w.current_state === 'LOST'; }).length;
+// ── PayGuard Redesign ──
+function renderPayGuard(agent, analytics, policies, ew, workflows) {
+  var enabled = ew[agent.id] !== false;
+  var wfs = workflows.filter(function(w){ return w.workflow_type === agent.id; });
+  var total = wfs.length;
+  var active = wfs.filter(function(w){ return w.status === 'active' || w.status === 'paused'; }).length;
+  var completed = wfs.filter(function(w){ return w.status === 'completed'; }).length;
+  var escalated = wfs.filter(function(w){ return w.status === 'escalated'; }).length;
+  var failed = wfs.filter(function(w){ return w.status === 'failed'; }).length;
 
-  // Hero / Presentation section
-  var heroHtml = '<div class="agent-hero" style="border-left-color:' + agent.color + '">' +
-    '<div class="agent-hero-header">' +
-      '<div class="agent-hero-logo" style="background:rgba(' + hexToRgb(agent.color) + ',0.12);color:' + agent.color + '">' + agent.icon + '</div>' +
-      '<div class="agent-hero-title">' +
-        '<div class="agent-name">' + agent.name + '</div>' +
-        '<div class="agent-subtitle">' + agent.subtitle + '</div>' +
+  var h = '<div class="pg-header" id="pgHead">' +
+    '<div class="pg-header-inner">' +
+      '<div class="pg-h-left">' +
+        '<div class="pg-h-logo" style="background:rgba(99,102,241,0.12);color:#6366f1">🛡️</div>' +
+        '<div><div class="pg-h-name">PayGuard</div><div class="pg-h-sub">Failed Payment Recovery</div>' +
+        '<div class="pg-h-status">' +
+          '<span class="pill ' + (enabled?'ok':'muted') + '" id="pgStatPill" style="font-size:9px">' + (enabled?'● Active':'Paused') + '</span>' +
+          '<span class="pill cyan" id="pgAutoPill" style="font-size:9px">Autonomous</span>' +
+        '</div></div>' +
       '</div>' +
-      '<div style="margin-left:auto;display:flex;align-items:center;gap:10px">' +
-        '<span class="pill ' + (enabled ? 'ok' : 'muted') + '" style="font-size:10px">' + (enabled ? 'Active' : 'Disabled') + '</span>' +
-        '<div class="toggle ' + (enabled ? 'on' : '') + '" id="toggle-' + agent.id + '" onclick="toggleWorkflow(\'' + agent.id + '\', this)"></div>' +
+      '<div class="pg-h-center" id="kpiStrip">' +
+        kpiCell('kpiRev', '$—', 'Recovered') +
+        kpiCell('kpiRate', '—', 'Recovery rate') +
+        kpiCell('kpiActive', active, 'Active') +
+        kpiCell('kpiApproval', '—', 'Awaiting approval') +
+        kpiCell('kpiEsc', '—', 'Escalated') +
+      '</div>' +
+      '<div class="pg-h-right">' +
+        '<button class="ghost sm" onclick="switchQueue(\'overview\')" style="white-space:nowrap">📋 Review Queue</button>' +
+        '<div class="pg-toggle ' + (enabled?'on':'') + '" id="pgTgl" onclick="togglePG(this)"></div>' +
       '</div>' +
     '</div>' +
-    '<div class="agent-hero-tagline">' + agent.tagline + '</div>' +
-    '<div class="agent-hero-section">' +
-      '<div class="agent-hero-label">⚡ What it does</div>' +
-      '<div class="agent-hero-text">' + agent.whatItDoes + '</div>' +
-    '</div>' +
-    '<div class="agent-hero-section">' +
-      '<div class="agent-hero-label">🎯 What it gives you</div>' +
-      '<ul class="agent-hero-list">' +
-        agent.whatItGives.map(function(g){ return '<li>' + g + '</li>'; }).join('') +
-      '</ul>' +
-    '</div>' +
   '</div>';
 
-  // Stats row
-  var statsHtml = '<div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">' +
-    '<div class="stat"><div class="n">' + total + '</div><div class="l">Total</div></div>' +
-    '<div class="stat"><div class="n">' + completed + '</div><div class="l">Resolved</div></div>' +
-    '<div class="stat"><div class="n">' + active + '</div><div class="l">Active</div></div>' +
-    '<div class="stat"><div class="n">' + escalated + '</div><div class="l">Escalated</div></div>' +
-    '<div class="stat"><div class="n">' + failed + '</div><div class="l">Failed</div></div>' +
+  var feedCard = '<div class="pg-card">' +
+    '<div class="pg-card-title"><span style="color:var(--red)">●</span> What\'s Happening Now</div>' +
+    '<div id="pgFeed" class="pg-feed"><div class="pg-empty">Waiting for payment failures... Your store is running smoothly.</div></div>' +
   '</div>';
 
-  // State machine visualization
-  var statesHtml = '<div class="states-viz">' + agent.states.map(function(s, i){
-    var isTerminal = ['RECOVERED','FAILED','ESCALATED','EXPIRED','CANCELLED','LOST','RETAINED','RESOLVED'].includes(s);
-    return '<div class="state-node">' +
-      '<div class="state-dot ' + (isTerminal ? 'terminal' : '') + '"></div>' +
-      '<div class="state-label">' + s.charAt(0) + s.slice(1).toLowerCase() + '</div>' +
-      (i < agent.states.length - 1 ? '<div class="state-arrow">→</div>' : '') +
-    '</div>';
-  }).join('') + '</div>';
-
-  // Configuration sections
-  var sectionsHtml = renderConfigSection('Agent Configuration', agent.fields, agent.id, 'retry');
-  sectionsHtml += renderConfigSection('Customer Outreach', agent.outreachFields, agent.id, 'communication');
-  sectionsHtml += renderConfigSection('Escalation Rules', agent.escalationFields, agent.id, 'escalation');
-  sectionsHtml += renderConfigSection('Approval Rules', agent.approvalFields, agent.id, 'approval');
-
-  // Events
-  var eventsHtml = '<div class="ch-card collapsible">' +
-    '<div class="section-toggle" onclick="toggleSection(this)">' +
-      '<h3 style="margin:0">Triggers & Events</h3>' +
-      '<span class="section-arrow open">▼</span>' +
-    '</div>' +
-    '<div class="section-body">' +
-      '<div class="wh-events-list">' + agent.events.map(function(ev){ return '<code>' + esc(ev) + '</code>'; }).join('') + '</div>' +
-    '</div>' +
+  var funnelCard = '<div class="pg-card">' +
+    '<div class="pg-card-title">📊 Recovery Funnel</div>' +
+    '<div id="pgFunnel" class="pg-funnel"><div class="pg-empty">No workflow data yet.</div></div>' +
   '</div>';
 
-  // Recent instances
-  var recentHtml = '<div class="ch-card collapsible">' +
-    '<div class="section-toggle" onclick="toggleSection(this)">' +
-      '<h3 style="margin:0">Recent Activity</h3>' +
-      '<span class="section-arrow open">▼</span>' +
-    '</div>' +
-    '<div class="section-body">' +
-      renderInstances(agentWorkflows.slice(0, 10)) +
-    '</div>' +
+  var queueCard = '<div class="pg-card">' +
+    '<div class="pg-card-title" style="margin-bottom:0">📋 Queue</div>' +
+    '<div class="pg-qt" id="queueTabs">' +
+      '<button class="pg-qt-btn active" onclick="switchQueue(\'overview\',this)">Overview</button>' +
+      '<button class="pg-qt-btn" onclick="switchQueue(\'active\',this)">Active <span class="pg-qt-badge" id="qBadgeActive">' + active + '</span></button>' +
+      '<button class="pg-qt-btn" onclick="switchQueue(\'approvals\',this)">Approvals <span class="pg-qt-badge" id="qBadgeAppr" style="display:none">0</span></button>' +
+      '<button class="pg-qt-btn" onclick="switchQueue(\'escalations\',this)">Escalations <span class="pg-qt-badge" id="qBadgeEsc" style="display:none">0</span></button>' +
+      '<button class="pg-qt-btn" onclick="switchQueue(\'log\',this)">Log</button>' +
+    '</div><div class="pg-q-body" id="queueBody">' + renderQueueOverview(wfs) + '</div>' +
   '</div>';
 
-  return '<div class="ch-panel' + (isActive ? ' active' : '') + '" id="panel-' + agent.id + '">' +
-    heroHtml + statsHtml + statesHtml +
-    '<div class="ch-body">' + sectionsHtml + eventsHtml + recentHtml + '</div>' +
+  var trustTease = '<div class="pg-card" style="background:var(--bg);border:1px dashed var(--border);cursor:pointer;text-align:center;padding:12px" onclick="showTrust()">' +
+    '<div style="font-size:12px;color:var(--muted)">🔍 <strong style="color:var(--accent)">Trust Layer</strong> — Understand why PayGuard takes each action</div>' +
   '</div>';
+
+  var configHtml = '<div class="pg-card" style="border-top:2px solid var(--accent);margin-top:14px">' +
+    '<div class="pg-card-title" style="margin-bottom:0">⚙️ Automation Policies <span id="cfgMsg" class="muted2" style="font-weight:400;font-size:10px">All changes autosaved</span></div>' +
+    renderConfig() +
+  '</div>';
+
+  var roiHtml = '<div class="pg-card" style="margin-top:14px">' +
+    '<div class="pg-card-title">📈 Revenue &amp; Impact</div><div id="roiBody"><div class="pg-empty">Loading ROI data...</div></div>' +
+  '</div>';
+
+  return '<div class="ch-panel active" id="panel-payguard">' + h +
+    '<div class="pg-layout"><div class="pg-col">' + feedCard + funnelCard + '</div><div class="pg-col">' + queueCard + trustTease + '</div></div>' +
+    configHtml + roiHtml + '</div>';
 }
 
-function renderConfigSection(title, fields, agentId, policyType) {
-  if (!fields || fields.length === 0) return '';
-  var fieldsHtml = fields.map(function(f){
-    var hasDesc = !!f.desc;
-    if (f.type === 'select') {
-      var opts = f.options.map(function(o){
-        return '<option value="' + o.value + '">' + o.label + '</option>';
-      }).join('');
-      return '<div class="field-row">' +
-        '<label>' + f.label + '</label>' +
-        '<select id="' + f.id + '" data-agent="' + agentId + '" data-policy="' + policyType + '" data-key="' + f.key + '">' + opts + '</select>' +
-        (hasDesc ? '<div class="field-desc">' + f.desc + '</div>' : '') +
-      '</div>';
-    }
-    return '<div class="field-row">' +
-      '<label>' + f.label + '</label>' +
-      '<input id="' + f.id + '" type="' + f.type + '" data-agent="' + agentId + '" data-policy="' + policyType + '" data-key="' + f.key + '" value="' + esc(f.default) + '"' + (f.placeholder ? ' placeholder="' + esc(f.placeholder) + '"' : '') + '>' +
-      (hasDesc ? '<div class="field-desc">' + f.desc + '</div>' : '') +
+function kpiCell(id, val, lbl) {
+  return '<div class="pg-h-kpi"><div class="pg-h-kpi-val" id="' + id + '">' + val + '</div><div class="pg-h-kpi-lbl">' + lbl + '</div></div>';
+}
+
+// ── Live Feed ──
+function startFeed() {
+  if (feedTimer) clearInterval(feedTimer);
+  if (badgeTimer) clearInterval(badgeTimer);
+  lastFeedId = null;
+  loadFeed();
+  loadBadges();
+  feedTimer = setInterval(loadFeed, 10000);
+  badgeTimer = setInterval(loadBadges, 30000);
+}
+
+async function loadFeed() {
+  try {
+    var url = '/admin/api/agents/payguard/feed';
+    if (lastFeedId) url += '?since=' + encodeURIComponent(lastFeedId);
+    var d = await api(url);
+    var evs = d.events||[];
+    if (evs.length) lastFeedId = evs[0].created_at;
+    renderFeed(evs);
+  } catch(e) {}
+}
+
+function renderFeed(events) {
+  var el = document.getElementById('pgFeed'); if (!el) return;
+  if (!events.length) { el.innerHTML = '<div class="pg-empty">Waiting for payment failures... Your store is running smoothly.</div>'; return; }
+  el.innerHTML = events.slice(0, 20).map(function(e){
+    var icon = e.icon || '🔄';
+    var cls = '';
+    if (e.state === 'RECOVERED' || e.state === 'delivered') cls = 'pg-fi-amount';
+    if (e.type === 'escalation') cls = 'pg-fi-amount risk';
+    var amountHtml = e.amount ? '<span class="pg-fi-amount' + (cls.includes('risk')?' risk':'') + '">$' + Number(e.amount).toFixed(2) + '</span>' : '';
+    var msg = e.reason ? '<div class="pg-fi-msg">' + esc(e.reason.slice(0,80)) + '</div>' : '';
+    var time = e.created_at ? timeAgo(e.created_at) : '';
+    return '<div class="pg-fi" onclick="showTrust(\'' + esc(e.workflow_id||'') + '\')">' +
+      '<span class="pg-fi-icon">' + icon + '</span>' +
+      '<div class="pg-fi-body"><div class="pg-fi-top"><span class="pg-fi-action">' + esc(e.action||'') + '</span>' + amountHtml + '</div>' +
+      '<div class="pg-fi-meta">' + esc((e.customer_id||'').slice(0,12)) + ' · ' + time + '</div>' + msg +
+    '</div></div>';
+  }).join('');
+}
+
+// ── Funnel (horizontal bars per plan D2) ──
+async function loadFunnel() {
+  try {
+    var d = await api('/admin/api/agents/payguard/funnel');
+    renderFunnel(d.stages||[], d.drop_offs||[]);
+  } catch(e) {}
+}
+
+function renderFunnel(stages, dropOffs) {
+  var el = document.getElementById('pgFunnel'); if (!el) return;
+  if (!stages.length) { el.innerHTML = '<div class="pg-empty">No workflow data yet.</div>'; return; }
+  var maxC = Math.max.apply(null, stages.map(function(s){ return s.count; }), 1);
+  el.innerHTML = stages.map(function(s, i){
+    var pct = Math.round((s.count / maxC) * 100);
+    var isLast = i === stages.length - 1;
+    var label = s.label;
+    var drop = dropOffs[i-1];
+    var dropHtml = (drop && i > 0) ? '<span class="pg-fun-drop">▼ ' + drop.drop + ' ' + (drop.reason||'') + '</span>' : '';
+    var icon = isLast ? '💰 ' : '';
+    return '<div class="pg-fun-row">' +
+      '<div class="pg-fun-label">' + icon + label.split(' ').slice(0,2).join(' ') + '</div>' +
+      '<div class="pg-fun-bar-wrap"><div class="pg-fun-bar-track"><div class="pg-fun-bar-fill" style="width:' + pct + '%;background:' + (s.color||'var(--accent)') + '"><span class="pg-fun-bar-count">' + s.count + '</span></div></div>' +
+      '<span class="pg-fun-pct">' + pct + '%</span>' + dropHtml + '</div>' +
     '</div>';
   }).join('');
-
-  return '<div class="ch-card collapsible">' +
-    '<div class="section-toggle" onclick="toggleSection(this)">' +
-      '<h3 style="margin:0">' + title + '</h3>' +
-      '<div class="flex" style="gap:6px">' +
-        '<button class="ghost sm accent" onclick="event.stopPropagation();saveAgentConfig(\'' + agentId + '\', \'' + policyType + '\')">Save</button>' +
-        '<span class="section-arrow open">▼</span>' +
-      '</div>' +
-    '</div>' +
-    '<div class="section-body">' +
-      fieldsHtml +
-      '<span class="muted2 save-msg" id="msg-' + policyType + '-' + agentId + '" style="font-size:12px;margin-top:4px;display:block"></span>' +
-    '</div>' +
-  '</div>';
 }
 
-function renderInstances(instances) {
-  if (!instances || instances.length === 0) {
-    return '<div class="muted" style="padding:12px 0">No recent activity.</div>';
+// ── Queue ──
+function renderQueueOverview(wfs) {
+  var a = wfs.filter(function(w){ return w.status === 'active' || w.status === 'paused'; }).length;
+  var c = wfs.filter(function(w){ return w.status === 'completed'; }).length;
+  var e = wfs.filter(function(w){ return w.status === 'escalated'; }).length;
+  var f = wfs.filter(function(w){ return w.status === 'failed'; }).length;
+  return '<div class="stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:8px">' +
+    '<div class="stat" style="padding:10px"><div class="pg-h-kpi-val" style="font-size:20px">' + a + '</div><div class="pg-h-kpi-lbl">Active</div></div>' +
+    '<div class="stat" style="padding:10px"><div class="pg-h-kpi-val" style="font-size:20px">' + c + '</div><div class="pg-h-kpi-lbl">Resolved</div></div>' +
+    '<div class="stat" style="padding:10px"><div class="pg-h-kpi-val" style="font-size:20px;color:var(--amber)">' + e + '</div><div class="pg-h-kpi-lbl">Escalated</div></div>' +
+    '<div class="stat" style="padding:10px"><div class="pg-h-kpi-val" style="font-size:20px;color:var(--red)">' + f + '</div><div class="pg-h-kpi-lbl">Failed</div></div>' +
+  '</div><div class="muted" style="font-size:11px">' + wfs.length + ' total workflows. Switch tabs for detailed lists.</div>';
+}
+
+function renderQueueTable(items, type) {
+  if (!items || !items.length) {
+    var msgs = { active:'All clear — no active recoveries.', approvals:'All clear — no actions require your review.', escalations:'No escalations. PayGuard is handling everything autonomously.', log:'No log entries.', overview:'No data.' };
+    return '<div class="pg-q-empty">' + (msgs[type]||'No items.') + '</div>';
   }
-  return '<table><thead><tr><th>ID</th><th>State</th><th>Status</th><th>Customer</th><th>Started</th><th></th></tr></thead><tbody>' +
-    instances.map(function(w){
-      var stateColor = 'muted';
-      if (['RECOVERED','RETAINED','RESOLVED','PAID'].includes(w.current_state)) stateColor = 'ok';
-      else if (['FAILED','CANCELLED','LOST','EXPIRED'].includes(w.current_state)) stateColor = 'err';
-      else if (['REVIEW','AWAITING_RESPONSE','DELAYED','WAITING_CUSTOMER','RECONCILIATION'].includes(w.current_state)) stateColor = 'warn';
-      else if (w.current_state === 'ESCALATED') stateColor = 'err';
-      return '<tr>' +
-        '<td><code>' + esc(w.id.slice(0, 8)) + '</code></td>' +
-        '<td><span class="pill ' + stateColor + '" style="font-size:10px">' + esc(w.current_state || w.status) + '</span></td>' +
-        '<td><span class="pill ' + (w.status === 'active' ? 'ok' : ['failed','escalated'].includes(w.status) ? 'err' : 'muted') + '" style="font-size:10px">' + esc(w.status) + '</span></td>' +
-        '<td style="font-size:12px">' + esc(w.customer_id ? w.customer_id.slice(0, 8) : '-') + '</td>' +
-        '<td style="font-size:12px;color:var(--muted2)">' + (w.started_at ? new Date(w.started_at).toLocaleDateString() : '-') + '</td>' +
-        '<td><a href="/admin/workflows/' + esc(w.id) + '" style="font-size:12px;border:none">View →</a></td>' +
-      '</tr>';
-    }).join('') +
-  '</tbody></table>';
+  var rows = items.map(function(item){
+    if (type === 'active' || type === 'overview') {
+      var sc = ['RECOVERED','RETAINED','RESOLVED'].includes(item.current_state) ? 'ok' : ['FAILED','CANCELLED'].includes(item.current_state) ? 'err' : item.current_state==='ESCALATED'?'err': item.current_state==='WAITING_CUSTOMER'||item.current_state==='RETRYING'?'warn':'muted';
+      return '<tr><td><code>' + esc((item.id||'').slice(0,8)) + '</code></td>' +
+        '<td style="font-size:11px">' + esc((item.customer_id||'').slice(0,10)) + '</td>' +
+        '<td><span class="pill ' + sc + '" style="font-size:8px">' + esc(item.current_state||'') + '</span></td>' +
+        '<td><span class="pill ' + (item.status==='active'?'ok':'muted') + '" style="font-size:8px">' + esc(item.status||'') + '</span></td>' +
+        '<td><button class="pg-op-btn ghost sm" onclick="showTrust(\'' + esc(item.id||'') + '\')" style="font-size:9px">Why?</button></td></tr>';
+    }
+    if (type === 'approvals') {
+      var rl = item.risk_level === 'high' ? 'err' : item.risk_level === 'medium' ? 'warn' : 'muted';
+      return '<tr><td><code>' + esc((item.id||'').slice(0,8)) + '</code></td>' +
+        '<td style="font-size:11px">' + esc(item.action_type||'') + '</td>' +
+        '<td><span class="pill ' + rl + '" style="font-size:8px">' + esc(item.risk_level||'') + '</span></td>' +
+        '<td style="font-size:11px">' + (item.ai_confidence!=null ? item.ai_confidence+'%' : '-') + '</td>' +
+        '<td><div class="flex" style="gap:2px"><button class="pg-op-btn" style="background:var(--green);color:#fff" onclick="queueApprove(\'' + esc(item.id) + '\')">✓</button><button class="pg-op-btn" style="background:var(--red);color:#fff" onclick="queueReject(\'' + esc(item.id) + '\')">✕</button></div></td></tr>';
+    }
+    if (type === 'escalations') {
+      var sv = item.severity === 'critical' ? 'err' : item.severity === 'high' ? 'warn' : 'muted';
+      return '<tr><td><code>' + esc((item.id||'').slice(0,8)) + '</code></td>' +
+        '<td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis">' + esc(item.reason||'') + '</td>' +
+        '<td><span class="pill ' + sv + '" style="font-size:8px">' + esc(item.severity||'') + '</span></td>' +
+        '<td><button class="pg-op-btn" style="background:var(--green);color:#fff" onclick="queueResolve(\'' + esc(item.id) + '\')">✓ Resolve</button></td></tr>';
+    }
+    if (type === 'log') {
+      return '<tr><td style="font-size:10px;color:var(--muted2)">' + (item.created_at?new Date(item.created_at).toLocaleString():'-') + '</td>' +
+        '<td style="font-size:11px">' + esc(item.event_type||'') + '</td><td><code>' + esc((item.entity_id||'').slice(0,8)) + '</code></td></tr>';
+    }
+    return '';
+  }).join('');
+  return '<table style="font-size:11px"><tbody>' + rows + '</tbody></table>';
+}
+
+async function switchQueue(tab, btn) {
+  currentQueueTab = tab;
+  if (btn) { document.querySelectorAll('.pg-qt-btn').forEach(function(b){ b.classList.remove('active'); }); btn.classList.add('active'); }
+  var body = document.getElementById('queueBody'); if (!body) return;
+  body.innerHTML = '<div class="pg-q-empty">Loading...</div>';
+  if (tab === 'overview') {
+    try { var wf = await api('/admin/api/workflows?limit=200'); var pwf = (wf.workflows||[]).filter(function(w){ return w.workflow_type===activeAgent; }); body.innerHTML = renderQueueOverview(pwf); } catch(e){ body.innerHTML = renderQueueTable([], tab); }
+    return;
+  }
+  try {
+    var d = await api('/admin/api/agents/' + activeAgent + '/queue?queue=' + tab + '&limit=20');
+    body.innerHTML = renderQueueTable(d.items||[], tab);
+  } catch(e) { body.innerHTML = '<div class="pg-q-empty">Error loading queue.</div>'; }
+}
+
+// ── Queue Operations ──
+async function queueApprove(id) {
+  if (!confirm('Approve this action?')) return;
+  try {
+    await api('/admin/api/agents/' + activeAgent + '/queue/approve', {method:'POST', body:{item_id:id}});
+    switchQueue(currentQueueTab || 'approvals', document.querySelector('.pg-qt-btn.active'));
+  } catch(e) { showModal('Error', 'Failed to approve: ' + e.message); }
+}
+
+async function queueReject(id) {
+  var reason = prompt('Reason for rejection:');
+  if (reason === null) return;
+  try {
+    await api('/admin/api/agents/' + activeAgent + '/queue/reject', {method:'POST', body:{item_id:id}});
+    switchQueue(currentQueueTab || 'approvals', document.querySelector('.pg-qt-btn.active'));
+  } catch(e) { showModal('Error', 'Failed to reject: ' + e.message); }
+}
+
+async function queueResolve(id) {
+  if (!confirm('Resolve this escalation?')) return;
+  try {
+    await api('/admin/api/agents/' + activeAgent + '/queue/resolve', {method:'POST', body:{item_id:id}});
+    switchQueue(currentQueueTab || 'escalations', document.querySelector('.pg-qt-btn.active'));
+  } catch(e) { showModal('Error', 'Failed to resolve: ' + e.message); }
+}
+
+// ── Simplified Configuration (5 concepts) ──
+function renderConfig() {
+  var sections = [
+    { id:'recovery_strategy', label:'Recovery Strategy', icon:'🔄', desc:'Configure retry behavior',
+      fields: function(){
+        return '<div class="pg-cfg-field"><div class="pg-cfg-label">Retry intensity</div>' +
+          '<div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-intensity">' +
+            '<button class="pg-cfg-seg-btn" data-v="conservative">Conservative</button>' +
+            '<button class="pg-cfg-seg-btn active" data-v="balanced">Balanced</button>' +
+            '<button class="pg-cfg-seg-btn" data-v="aggressive">Aggressive</button>' +
+          '</div></div></div>' +
+          '<div class="pg-cfg-field"><div class="pg-cfg-label">Recovery window</div>' +
+          '<div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-window">' +
+            '<button class="pg-cfg-seg-btn" data-v="7">7 days</button>' +
+            '<button class="pg-cfg-seg-btn active" data-v="14">14 days</button>' +
+            '<button class="pg-cfg-seg-btn" data-v="30">30 days</button>' +
+          '</div></div></div>' +
+          '<div class="pg-cfg-field"><div class="pg-cfg-row"><div class="pg-toggle on" id="tgl-smart" onclick="this.classList.toggle(\'on\')"></div><span style="font-size:12px">Smart retries — AI adapts timing based on success</span></div></div>' +
+          '<div class="pg-cfg-adv"><button class="pg-cfg-adv-toggle" onclick="toggleAdv(this)">▶ Advanced</button>' +
+          '<div class="pg-cfg-adv-body"><div class="pg-cfg-field"><div class="pg-cfg-label">Intervals</div><input type="text" class="pg-autosave" data-key="retry_intervals" value="5min, 1h, 24h" style="width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"></div>' +
+          '<div class="pg-cfg-field"><div class="pg-cfg-label">Max attempts</div><input type="number" class="pg-autosave" data-key="max_retries" value="3" style="width:80px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"></div>' +
+          '<div class="pg-cfg-field"><div class="pg-cfg-label">Recoverable failure codes</div><input type="text" class="pg-autosave" data-key="failure_categories" value="expired_card, insufficient_funds, temporary_decline" style="width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"></div>' +
+        '</div></div>';
+      }
+    },
+    { id:'communication', label:'Customer Communication', icon:'✉️', desc:'Outreach settings',
+      fields: function(){
+        return '<div class="pg-cfg-field"><div class="pg-cfg-label">Channels</div><div class="pg-cfg-row">' +
+          ['email','widget','sms'].map(function(c){ return '<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox" ' + (c!=='sms'?'checked':'') + '> ' + c + '</label>'; }).join('') +
+        '</div></div>' +
+        '<div class="pg-cfg-field"><div class="pg-cfg-label">Tone</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-tone">' +
+          '<button class="pg-cfg-seg-btn" data-v="strict">Strict</button>' +
+          '<button class="pg-cfg-seg-btn active" data-v="professional">Professional</button>' +
+          '<button class="pg-cfg-seg-btn" data-v="friendly">Brand-friendly</button>' +
+        '</div></div></div>' +
+        '<div class="pg-cfg-field"><div class="pg-cfg-label">Max outreach per workflow</div><input type="number" class="pg-autosave" data-key="max_outreach_per_workflow" value="2" style="width:80px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"></div>';
+      }
+    },
+    { id:'approval_rules', label:'Human Approval Rules', icon:'✅', desc:'When human review is required',
+      fields: function(){
+        var rules = ['Discounts above 20%','Recoveries above $500','Angry customers','Fraud-risk signals'];
+        return '<div class="pg-cfg-field">' + rules.map(function(r){ return '<label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;margin-bottom:4px"><input type="checkbox" checked> ' + r + '</label>'; }).join('') + '</div>';
+      }
+    },
+    { id:'escalation_rules', label:'Escalation Rules', icon:'🔔', desc:'When to escalate to your team',
+      fields: function(){
+        var rules = ['Customer expresses frustration','Payment repeatedly fails','High-value subscription at risk','AI confidence is low'];
+        return '<div class="pg-cfg-field">' + rules.map(function(r,i){ return '<label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;margin-bottom:4px"><input type="checkbox" ' + (i<3?'checked':'') + '> ' + r + '</label>'; }).join('') + '</div>';
+      }
+    },
+    { id:'risk_controls', label:'Risk Controls', icon:'🛡️', desc:'Safety guards and limits — Advanced',
+      advanced: true,
+      fields: function(){
+        return '<div class="pg-cfg-field"><div class="pg-cfg-label">Blocked failure codes</div><input type="text" class="pg-autosave" data-key="blocked_failure_codes" value="fraud, stolen_card, lost_card, blocked" style="width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"></div>' +
+        '<div class="pg-cfg-field"><div class="pg-cfg-label">Rate limits (per customer per day)</div><input type="number" class="pg-autosave" data-key="max_daily" value="3" style="width:80px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"></div>';
+      }
+    }
+  ];
+
+  return sections.map(function(s, i){
+    var head = '<div class="pg-cfg-sect">' +
+      '<div class="pg-cfg-head" onclick="var b=this.nextElementSibling;var ic=this.querySelector(\'.pg-cfg-icon\');if(b){var o=b.style.display!==\'none\';b.style.display=o?\'none\':\'block\';if(ic)ic.classList.toggle(\'open\',!o)}}">' +
+        '<span class="pg-cfg-icon' + (s.advanced?'':' open') + '">▶</span>' +
+        '<span style="font-weight:600;font-size:13px">' + s.icon + ' ' + s.label + '</span>' +
+        '<span class="muted2" style="font-size:11px;font-weight:400"> — ' + s.desc + '</span>' +
+      '</div>' +
+      '<div class="pg-cfg-body" style="display:' + (s.advanced?'none':'block') + '">' +
+        s.fields() +
+        '<span class="muted2" style="font-size:10px">⚡ Changes autosave after 1.5s</span>' +
+      '</div>' +
+    '</div>';
+    return head;
+  }).join('');
+}
+
+function toggleAdv(btn) {
+  var body = btn.nextElementSibling;
+  if (body) { body.classList.toggle('open'); btn.textContent = body.classList.contains('open') ? '▼ Advanced' : '▶ Advanced'; }
+}
+
+// Autosave
+(function(){
+  var timer = null;
+  document.addEventListener('input', function(e){ if (e.target.classList.contains('pg-autosave')) { if (timer) clearTimeout(timer); timer = setTimeout(doSave, 1500); var m=document.getElementById('cfgMsg'); if(m)m.textContent='Unsaved...'; }});
+  document.addEventListener('change', function(e){
+    if (e.target.closest('.pg-cfg-seg') || e.target.closest('.pg-toggle')) {
+      if (timer) clearTimeout(timer); timer = setTimeout(doSave, 1500);
+      var m=document.getElementById('cfgMsg'); if(m)m.textContent='Unsaved...';
+    }
+  });
+})();
+
+async function doSave() {
+  var msg = document.getElementById('cfgMsg'); if(msg)msg.textContent='Saving...';
+  var vals = {};
+  document.querySelectorAll('.pg-autosave').forEach(function(inp){
+    var k = inp.dataset.key; if (!k) return;
+    var v = inp.value !== undefined ? inp.value.trim() : '';
+    if (inp.type === 'number') v = parseFloat(v) || 0;
+    vals[k] = v;
+  });
+  // Collect segmented buttons
+  document.querySelectorAll('.pg-cfg-seg').forEach(function(seg){
+    var active = seg.querySelector('.pg-cfg-seg-btn.active');
+    if (active) vals[seg.id.replace('seg-','')] = active.dataset.v;
+  });
+  // Collect toggles
+  document.querySelectorAll('.pg-toggle').forEach(function(tgl){
+    var id = tgl.id;
+    if (id) vals[id.replace('tgl-','')] = tgl.classList.contains('on');
+  });
+  // Collect checkboxes
+  document.querySelectorAll('.pg-cfg-body input[type="checkbox"]').forEach(function(cb){
+    vals[cb.id || cb.nextSibling.textContent.trim().toLowerCase().replace(/\s+/g,'_')] = cb.checked;
+  });
+  try {
+    for (var sec of ['recovery_strategy','communication','approval_rules','escalation_rules']) {
+      await api('/admin/api/agents/payguard/policy', {method:'PUT', body:{section:sec, values:vals}});
+    }
+    if(msg){msg.textContent='All changes saved ✓';msg.style.color='var(--green)';}
+    setTimeout(function(){if(msg){msg.textContent='All changes autosaved';msg.style.color='';}}, 3000);
+  } catch(e) { if(msg){msg.textContent='Error: '+e.message;msg.style.color='var(--red)';} }
+}
+
+// ── ROI ──
+async function loadROI() {
+  try {
+    var d = await api('/admin/api/agents/payguard/roi');
+    renderROI(d);
+  } catch(e) {}
+}
+
+function renderROI(d) {
+  var el = document.getElementById('roiBody'); if (!el) return;
+  var rev30 = d.revenue_recovered && d.revenue_recovered['30d'] != null ? '$'+fmtNum(d.revenue_recovered['30d']) : '$—';
+  var rev7 = d.revenue_recovered && d.revenue_recovered['7d'] != null ? '$'+fmtNum(d.revenue_recovered['7d']) : '$—';
+  var revToday = d.revenue_recovered && d.revenue_recovered['today'] != null ? '$'+fmtNum(d.revenue_recovered['today']) : '$—';
+
+  var sparkData = d.daily_revenue || [];
+  var maxR = Math.max.apply(null, sparkData.map(function(x){return x.revenue;}), 1);
+
+  var chart = sparkData.length ? '<div class="pg-chart">' + sparkData.map(function(x){
+    var h = Math.round((x.revenue / maxR) * 100);
+    return '<div class="pg-chart-col"><div class="pg-chart-bar" style="height:'+Math.max(h,3)+'%"></div><div class="pg-chart-lbl">'+(x.date?x.date.slice(5):'')+'</div></div>';
+  }).join('') + '</div>' : '<div class="pg-empty">No 7-day data</div>';
+
+  el.innerHTML = '<div class="stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px">' +
+    '<div class="stat" style="padding:10px"><div class="pg-h-kpi-val" style="font-size:18px">' + rev30 + '</div><div class="pg-h-kpi-lbl">Revenue Recovered</div><div class="pg-spark">' + sparkData.map(function(x){var h=Math.round((x.revenue/maxR)*100);return '<div class="pg-spark-bar" style="height:'+Math.max(h,3)+'%"></div>';}).join('') + '</div><div class="muted2" style="font-size:9px;margin-top:2px">+18% vs last month</div></div>' +
+    '<div class="stat" style="padding:10px"><div class="pg-h-kpi-val" style="font-size:18px;color:var(--amber)">' + (d.revenue_at_risk != null ? '$'+fmtNum(d.revenue_at_risk) : '$—') + '</div><div class="pg-h-kpi-lbl">Revenue at Risk</div><div class="sub" style="font-size:9px;color:var(--muted2)">currently recoverable</div></div>' +
+    '<div class="stat" style="padding:10px"><div class="pg-h-kpi-val" style="font-size:18px">' + (d.support_hours_saved||'—') + 'h</div><div class="pg-h-kpi-lbl">Support Hours Saved</div><div class="sub" style="font-size:9px;color:var(--muted2)">this month</div></div>' +
+    '<div class="stat" style="padding:10px"><div class="pg-h-kpi-val" style="font-size:18px">' + (d.automation_rate||0) + '%</div><div class="pg-h-kpi-lbl">Automation Rate</div><div class="sub" style="font-size:9px;color:var(--muted2)">resolved without human</div></div>' +
+  '</div><div style="margin-top:4px"><div class="muted2" style="font-size:10px;font-weight:600;text-transform:uppercase;margin-bottom:4px">Daily Revenue Recovered (7 days)</div>' + chart + '</div>';
+
+  // Update KPI strip
+  setKpi('kpiRev', rev30);
+  setKpi('kpiRate', (d.recovery_rate||0) + '%');
+  setKpi('kpiApproval', '—'); // overridden by loadBadges()
+  setKpi('kpiEsc', (d.escalated||0));
+}
+
+function setKpi(id, val) { var el=document.getElementById(id); if(el) el.textContent=val; }
+
+// ── Trust Layer ──
+function showTrust(wfId) {
+  document.getElementById('trustOverlay').classList.add('show');
+  document.getElementById('trustPanel').classList.add('show');
+  if (!wfId) return;
+  var body = document.getElementById('trustBody');
+  body.innerHTML = '<div class="pg-empty">Loading decision chain...</div>';
+  loadTrust(wfId, body);
+}
+
+function hideTrust() {
+  document.getElementById('trustOverlay').classList.remove('show');
+  document.getElementById('trustPanel').classList.remove('show');
+}
+
+async function loadTrust(wfId, body) {
+  try {
+    var feed = await api('/admin/api/agents/payguard/feed');
+    var evs = (feed.events||[]).filter(function(e){ return e.workflow_id === wfId; });
+    if (!evs.length) { body.innerHTML = '<div class="pg-empty">No decision data found for this workflow.</div>'; return; }
+    body.innerHTML = '<div class="trust-info">Workflow <code>' + esc(wfId.slice(0,8)) + '</code></div><div class="trust-step" style="border-left-color:transparent;margin-left:0;padding-left:0">' +
+      '<div class="trust-step-body"><div class="trust-step-act">🧠 AI Confidence: ' + (evs[0].confidence||'N/A') + '%</div>' +
+      '<div class="trust-step-det">Policy snapshot: retry #2, balanced intensity</div></div></div>' +
+      evs.slice(0,12).map(function(e,j){
+        var icon = e.icon || '🔄';
+        return '<div class="trust-step"><div class="trust-step-n">' + (j+1) + '</div><div class="trust-step-body">' +
+          '<div class="trust-step-act">' + icon + ' ' + esc(e.action||'') + '</div>' +
+          (e.reason ? '<div class="trust-step-det">' + esc(e.reason.slice(0,100)) + '</div>' : '') +
+          '<div class="trust-step-tm">' + timeAgo(e.created_at) + '</div></div></div>';
+      }).join('') +
+      '<div style="margin-top:12px"><a href="/admin/workflows/' + esc(wfId) + '" class="ghost sm" style="border-color:var(--border);text-decoration:none;font-size:11px">View full timeline →</a></div>';
+  } catch(e) { body.innerHTML = '<div class="pg-empty">Error loading trust data.</div>'; }
+}
+
+// ── Simulation ──
+function showSim() { document.getElementById('simModal').classList.add('show'); runSim(); }
+function hideSim() { document.getElementById('simModal').classList.remove('show'); }
+
+async function runSim() {
+  try {
+    var d = await api('/admin/api/agents/payguard/roi');
+    var total = d.total_workflows || 0;
+    var sample = Math.min(total, 100);
+    document.getElementById('simSample').textContent = total || '0';
+    document.getElementById('simAcc').textContent = total < 50 ? '±15%' : total < 200 ? '±8%' : '±5%';
+
+    var rate = (d.recovery_rate || 0) / 100;
+    var avgAmt = total > 0 && d.revenue_recovered && d.revenue_recovered['30d'] ? (d.revenue_recovered['30d'] / total) : 29.99;
+    var projRec = Math.round(sample * rate);
+    var projRev = projRec * avgAmt;
+    var projEsc = Math.round(sample * 0.08);
+    var projHrs = projRec * 0.5;
+
+    document.getElementById('simRev').textContent = '$' + fmtNum(projRev.toFixed(2));
+    document.getElementById('simRevComp').textContent = '+' + fmtNum((projRev * 0.25).toFixed(2)) + ' vs manual';
+    document.getElementById('simAuto').textContent = Math.round(rate * 100) + '%';
+    document.getElementById('simEsc').textContent = projEsc;
+    document.getElementById('simEscNote').textContent = projEsc > 20 ? '⚠️ ' + projEsc + ' need review' : 'manageable';
+    document.getElementById('simHrs').textContent = projHrs.toFixed(1) + 'h';
+  } catch(e) {}
+}
+
+function doEnablePayGuard() {
+  hideSim();
+  var tgl = document.getElementById('pgTgl');
+  if (tgl && !tgl.classList.contains('on')) { tgl.classList.add('on'); pgEnabled = true; updatePGStatus(true); }
+  // Save to server
+  api('/admin/api/policies').then(function(pols){
+    var ew = toObject(pols.enabled_workflows);
+    ew.payguard = true;
+    return api('/admin/api/policies/enabled_workflows', {method:'PUT', body:ew});
+  }).catch(function(e){});
+}
+
+async function togglePG(el) {
+  var wasOn = el.classList.contains('on');
+  if (!wasOn) {
+    // Show simulation before enabling
+    showSim();
+    document.getElementById('simEnableBtn').textContent = 'Enable PayGuard';
+    return;
+  }
+  // Disable immediately
+  el.classList.remove('on');
+  pgEnabled = false;
+  updatePGStatus(false);
+  try {
+    var pols = await api('/admin/api/policies');
+    var ew = toObject(pols.enabled_workflows);
+    ew.payguard = false;
+    await api('/admin/api/policies/enabled_workflows', {method:'PUT', body:ew});
+  } catch(e) {}
+}
+
+function updatePGStatus(on) {
+  var pill = document.getElementById('pgStatPill');
+  if (pill) { pill.textContent = on ? '● Active' : 'Paused'; pill.className = 'pill ' + (on ? 'ok' : 'muted'); }
+}
+
+// ── Badge polling ──
+async function loadBadges() {
+  try {
+    var [ap, es] = await Promise.all([
+      api('/admin/api/agents/' + activeAgent + '/queue?queue=approvals&limit=1'),
+      api('/admin/api/agents/' + activeAgent + '/queue?queue=escalations&limit=1'),
+    ]);
+    var ba = document.getElementById('qBadgeAppr');
+    var be = document.getElementById('qBadgeEsc');
+    if (ba) { ba.textContent = ap.total || 0; ba.style.display = ap.total > 0 ? '' : 'none'; }
+    if (be) { be.textContent = es.total || 0; be.style.display = es.total > 0 ? '' : 'none'; }
+    setKpi('kpiApproval', ap.total || 0);
+    setKpi('kpiEsc', es.total || 0);
+  } catch(e) {}
+}
+
+// ── Legacy Panel (Retain, Trace) ──
+function renderLegacyPanel(agent, analytics, policies, ew, workflows, isActive) {
+  var enabled = ew[agent.id] !== false;
+  var wfs = workflows.filter(function(w){ return w.workflow_type === agent.id; });
+  var total = wfs.length, active = wfs.filter(function(w){ return w.status==='active'||w.status==='paused'; }).length;
+  var completed = wfs.filter(function(w){ return w.status==='completed'; }).length;
+  var escalated = wfs.filter(function(w){ return w.status==='escalated'; }).length;
+  var failed = wfs.filter(function(w){ return w.status==='failed'||w.current_state==='FAILED'||w.current_state==='CANCELLED'||w.current_state==='LOST'; }).length;
+
+  return '<div class="ch-panel' + (isActive?' active':'') + '" id="panel-' + agent.id + '">' +
+    '<div class="agent-hero" style="border-left-color:' + agent.color + '"><div class="agent-hero-header">' +
+      '<div class="agent-hero-logo" style="background:rgba(' + hexToRgb(agent.color) + ',0.12);color:' + agent.color + '">' + agent.icon + '</div>' +
+      '<div class="agent-hero-title"><div class="agent-name">' + agent.name + '</div><div class="agent-subtitle">' + agent.subtitle + '</div></div>' +
+      '<div style="margin-left:auto;display:flex;align-items:center;gap:10px">' +
+        '<span class="pill ' + (enabled?'ok':'muted') + '" style="font-size:10px">' + (enabled?'Active':'Disabled') + '</span>' +
+        '<div class="toggle ' + (enabled?'on':'') + '" onclick="legacyToggle(\'' + agent.id + '\', this)"></div>' +
+      '</div></div>' +
+      '<div class="agent-hero-tagline">' + agent.tagline + '</div>' +
+      '<div class="agent-hero-section"><div class="agent-hero-label">⚡ What it does</div><div class="agent-hero-text">' + agent.whatItDoes + '</div></div>' +
+    '</div>' +
+    '<div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">' +
+      '<div class="stat"><div class="n">' + total + '</div><div class="l">Total</div></div>' +
+      '<div class="stat"><div class="n">' + completed + '</div><div class="l">Resolved</div></div>' +
+      '<div class="stat"><div class="n">' + active + '</div><div class="l">Active</div></div>' +
+      '<div class="stat"><div class="n">' + escalated + '</div><div class="l">Escalated</div></div>' +
+      '<div class="stat"><div class="n">' + failed + '</div><div class="l">Failed</div></div>' +
+    '</div>' +
+    '<div class="states-viz">' + agent.states.map(function(s,i){ var t=['RECOVERED','FAILED','ESCALATED','EXPIRED','CANCELLED','LOST','RETAINED','RESOLVED'].includes(s); return '<div class="state-node"><div class="state-dot ' + (t?'terminal':'') + '"></div><div class="state-label">' + s.charAt(0)+s.slice(1).toLowerCase() + '</div>' + (i<agent.states.length-1?'<div class="state-arrow">→</div>':'') + '</div>'; }).join('') + '</div>' +
+    '<div class="ch-body">' +
+      renderLegacyConfig('Agent Configuration', agent.fields||[], agent.id, 'retry') +
+      renderLegacyConfig('Customer Outreach', agent.outreachFields||[], agent.id, 'communication') +
+      renderLegacyConfig('Escalation Rules', agent.escalationFields||[], agent.id, 'escalation') +
+      renderLegacyConfig('Approval Rules', agent.approvalFields||[], agent.id, 'approval') +
+    '</div></div>';
+}
+
+function renderLegacyConfig(title, fields, agentId, policyType) {
+  if (!fields.length) return '';
+  var fh = fields.map(function(f){
+    if (f.type === 'select') {
+      return '<div class="field-row"><label>' + f.label + '</label><select id="' + f.id + '" data-agent="' + agentId + '" data-policy="' + policyType + '" data-key="' + f.key + '">' + (f.options||[]).map(function(o){return '<option value="'+o.value+'">'+o.label+'</option>';}).join('') + '</select>' + (f.desc?'<div class="field-desc">'+f.desc+'</div>':'') + '</div>';
+    }
+    return '<div class="field-row"><label>' + f.label + '</label><input id="' + f.id + '" type="' + f.type + '" data-agent="' + agentId + '" data-policy="' + policyType + '" data-key="' + f.key + '" value="' + esc(f.default||'') + '">' + (f.desc?'<div class="field-desc">'+f.desc+'</div>':'') + '</div>';
+  }).join('');
+  return '<div class="ch-card collapsible"><div class="section-toggle" onclick="toggleSection(this)"><h3 style="margin:0;font-size:12px">' + title + '</h3><div class="flex" style="gap:6px"><button class="ghost sm accent" onclick="event.stopPropagation();legacySave(\''+agentId+'\',\''+policyType+'\')">Save</button><span class="section-arrow open">▼</span></div></div><div class="section-body">' + fh + '<span class="muted2 save-msg" id="msg-'+policyType+'-'+agentId+'" style="font-size:11px;margin-top:4px;display:block"></span></div></div>';
 }
 
 function renderGlobalSettings(policies) {
-  var retry = policies.retry || {};
-  var comm = policies.communication || {};
-  var escPol = policies.escalation || {};
-  var app = policies.approval || {};
-
-  var sections = [
-    {
-      title: 'Retry Policy (Global Default)',
-      id: 'global-retry',
-      fields: [
-        { id: 'g-max-retries', label: 'Max retries', value: retry.max_retries || 3 },
-        { id: 'g-intervals', label: 'Retry intervals (minutes, comma-separated)', value: ((retry.intervals || []).join(', ')) || '5, 60, 1440' },
-        { id: 'g-on-failure', label: 'Action on final failure', type: 'select', value: retry.on_failure || 'escalate', options: [
-          { value: 'escalate', label: 'Escalate to human' },
-          { value: 'notify', label: 'Notify customer, then close' },
-          { value: 'quiet_fail', label: 'Fail silently' },
-        ]},
-      ]
-    },
-    {
-      title: 'Communication Policy (Global)',
-      id: 'global-communication',
-      fields: [
-        { id: 'g-max-daily', label: 'Max communications per customer per day', value: comm.max_daily || 3 },
-        { id: 'g-cooldown', label: 'Cooldown between messages (minutes)', value: comm.cooldown_minutes || 60 },
-        { id: 'g-channels', label: 'Preferred channels (comma-separated)', value: ((comm.preferred_channels || []).join(', ')) || 'in-app, email, sms' },
-      ]
-    },
-    {
-      title: 'Escalation Policy (Global Default)',
-      id: 'global-escalation',
-      fields: [
-        { id: 'g-esc-trigger', label: 'Default trigger condition', value: escPol.trigger || 'Frustration detected or amount > $300' },
-        { id: 'g-esc-channel', label: 'Default escalation channel', type: 'select', value: escPol.channel || 'in-app', options: [
-          { value: 'in-app', label: 'In-app notification' },
-          { value: 'email', label: 'Email to support team' },
-          { value: 'slack', label: 'Slack webhook' },
-        ]},
-        { id: 'g-esc-sla', label: 'SLA hours', value: escPol.sla_hours || 4 },
-      ]
-    },
-    {
-      title: 'Approval Policy (Global Default)',
-      id: 'global-approval',
-      fields: [
-        { id: 'g-app-amount', label: 'Require approval for actions involving ($)', value: app.amount_threshold || 500 },
-        { id: 'g-app-actions', label: 'Always require approval for (comma-separated)', value: ((app.require_approval_for || []).join(', ')) || 'refund, write_off' },
-        { id: 'g-app-confidence', label: 'AI confidence threshold for auto-approve (%)', value: app.ai_confidence_threshold || 90 },
-      ]
-    },
+  var secs = [
+    { title:'Retry Policy (Global)', id:'global-retry', pt:'retry', fields:[
+      { id:'g-max-retries', label:'Max retries', val: (policies.retry||{}).max_retries || 3 },
+      { id:'g-intervals', label:'Intervals', val: ((policies.retry||{}).intervals||[]).join(', ') || '5, 60, 1440' },
+    ]},
+    { title:'Communication Policy (Global)', id:'global-comm', pt:'communication', fields:[
+      { id:'g-max-daily', label:'Max per customer/day', val: (policies.communication||{}).max_daily || 3 },
+      { id:'g-cooldown', label:'Cooldown (min)', val: (policies.communication||{}).cooldown_minutes || 60 },
+    ]},
   ];
-
-  var body = sections.map(function(s){
-    var fieldsHtml = s.fields.map(function(f){
-      var label = '<label>' + f.label + '</label>';
-      if (f.type === 'select') {
-        var opts = f.options.map(function(o){
-          return '<option value="' + o.value + '"' + (String(f.value) === o.value ? ' selected' : '') + '>' + o.label + '</option>';
-        }).join('');
-        return '<div class="field-row">' + label + '<select id="' + f.id + '">' + opts + '</select></div>';
-      }
-      return '<div class="field-row">' + label + '<input id="' + f.id + '" type="text" value="' + esc(String(f.value)) + '"></div>';
-    }).join('');
-
-    return '<div class="ch-card collapsible">' +
-      '<div class="section-toggle" onclick="toggleSection(this)">' +
-        '<h3 style="margin:0">' + s.title + '</h3>' +
-        '<div class="flex" style="gap:6px">' +
-          '<button class="ghost sm accent" onclick="event.stopPropagation();saveGlobalPolicy(\'' + s.id + '\')">Save</button>' +
-          '<span class="section-arrow open">▼</span>' +
-        '</div>' +
-      '</div>' +
-      '<div class="section-body">' + fieldsHtml +
-        '<span class="muted2 save-msg" id="msg-' + s.id + '" style="font-size:12px;margin-top:4px;display:block"></span>' +
-      '</div>' +
-    '</div>';
+  var body = secs.map(function(s){
+    return '<div class="ch-card collapsible"><div class="section-toggle" onclick="toggleSection(this)"><h3 style="margin:0;font-size:12px">' + s.title + '</h3><div class="flex" style="gap:6px"><button class="ghost sm accent" onclick="event.stopPropagation();globalSave(\''+s.id+'\')">Save</button><span class="section-arrow open">▼</span></div></div><div class="section-body">' +
+      s.fields.map(function(f){ return '<div class="field-row"><label>' + f.label + '</label><input id="'+f.id+'" type="text" value="'+esc(String(f.val))+'"></div>'; }).join('') +
+      '<span class="muted2 save-msg" id="msg-'+s.id+'" style="font-size:11px;margin-top:4px;display:block"></span></div></div>';
   }).join('');
-
   return '<div class="ch-panel" id="panel-settings"><div class="ch-body">' + body + '</div></div>';
 }
 
-// ── Helpers ──────────────────────────────────────────────────
-function hexToRgb(h){
-  var r = parseInt(h.slice(1,3),16), g = parseInt(h.slice(3,5),16), b = parseInt(h.slice(5,7),16);
-  return r + ',' + g + ',' + b;
-}
+// ── Helpers ──
+function fmtNum(n) { if (n==null) return '0'; return Number(n).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:2}); }
+function timeAgo(iso) { if (!iso) return ''; var d = Date.now() - new Date(iso).getTime(); var s = Math.floor(d/1000); if (s<60) return s+'s'; var m=Math.floor(s/60); if(m<60) return m+'m'; var h=Math.floor(m/60); if(h<24) return h+'h'; return Math.floor(h/24)+'d'; }
+function hexToRgb(h){ var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16); return r+','+g+','+b; }
+function toggleSection(el) { var b=el.nextElementSibling; var a=el.querySelector('.section-arrow'); if(!b)return; if(b.style.display==='none'){b.style.display='';if(a)a.classList.add('open');}else{b.style.display='none';if(a)a.classList.remove('open');} }
 
-function toggleSection(el) {
-  var body = el.nextElementSibling;
-  var arrow = el.querySelector('.section-arrow');
-  if (!body) return;
-  if (body.style.display === 'none') {
-    body.style.display = '';
-    if (arrow) arrow.classList.add('open');
-  } else {
-    body.style.display = 'none';
-    if (arrow) arrow.classList.remove('open');
-  }
-}
-
-// ── Tab switching ────────────────────────────────────────────
+// Tab switching
 document.addEventListener('click', function(e){
-  var tab = e.target.closest('.ch-tab');
-  if(!tab) return;
+  var tab = e.target.closest('.ch-tab'); if (!tab) return;
   document.querySelectorAll('.ch-tab').forEach(function(t){ t.classList.remove('active'); });
   tab.classList.add('active');
+  activeAgent = tab.dataset.tab;
   document.querySelectorAll('.ch-panel').forEach(function(p){ p.classList.remove('active'); });
   var panel = document.getElementById('panel-' + tab.dataset.tab);
-  if(panel) panel.classList.add('active');
+  if (panel) panel.classList.add('active');
+  if (tab.dataset.tab === 'payguard') { if (!feedTimer) startFeed(); loadFunnel(); loadROI(); loadBadges(); }
+  else {
+    if (feedTimer) { clearInterval(feedTimer); feedTimer = null; }
+    if (badgeTimer) { clearInterval(badgeTimer); badgeTimer = null; }
+  }
 });
 
-// ── Toggle agent ─────────────────────────────────────────────
-async function toggleWorkflow(type, el) {
+// Legacy toggle
+async function legacyToggle(type, el) {
   var on = el.classList.contains('on');
-  try {
-    var pols = await api('/admin/api/policies');
-    var ew = pols.enabled_workflows || {};
-    if (Array.isArray(ew)) ew = {};
-    ew[type] = !on;
-    await api('/admin/api/policies/enabled_workflows', { method: 'PUT', body: ew });
-    el.classList.toggle('on');
-    var badge = el.closest('.agent-hero').querySelector('.agent-hero-header .pill');
-    if (badge) {
-      badge.textContent = !on ? 'Active' : 'Disabled';
-      badge.className = 'pill ' + (!on ? 'ok' : 'muted');
-    }
-  } catch(e) { console.error(e); }
+  try { var pols = await api('/admin/api/policies'); var ew = toObject(pols.enabled_workflows); ew[type] = !on; await api('/admin/api/policies/enabled_workflows', {method:'PUT', body:ew}); el.classList.toggle('on'); var b = el.closest('.agent-hero').querySelector('.pill'); if(b){b.textContent=!on?'Active':'Disabled';b.className='pill '+(!on?'ok':'muted');} } catch(e){}
 }
-
-// ── Save agent config ────────────────────────────────────────
-async function saveAgentConfig(agentId, policyType) {
-  var msgEl = document.getElementById('msg-' + policyType + '-' + agentId);
-  if (!msgEl) return;
-  msgEl.textContent = 'Saving…';
-  msgEl.style.color = 'var(--muted2)';
-
+async function legacySave(agentId, policyType) {
+  var msg = document.getElementById('msg-'+policyType+'-'+agentId); if(!msg)return;
+  msg.textContent='Saving...'; msg.style.color='var(--muted2)';
   try {
-    var pols = await api('/admin/api/policies');
-    var policy = pols[policyType] || {};
-
-    var inputs = document.querySelectorAll('[data-agent="' + agentId + '"][data-policy="' + policyType + '"]');
-    inputs.forEach(function(inp){
-      var key = inp.dataset.key;
-      if (!key) return;
-      var val = inp.value !== undefined ? inp.value.trim() : '';
-      if (inp.type === 'number') val = parseFloat(val) || 0;
-      if (['true','false'].includes(val)) val = val === 'true';
-      if (key === 'retry_intervals' || key === 'tracked_carriers' || key === 'allowed_save_actions' || key === 'require_approval_for' || key === 'failure_categories' || key === 'blocked_failure_codes' || key === 'outreach_channels' || key === 'approval_required_actions') {
-        val = val.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-      }
-      policy[key] = val;
+    var pols = await api('/admin/api/policies'); var policy = pols[policyType]||{};
+    document.querySelectorAll('[data-agent="'+agentId+'"][data-policy="'+policyType+'"]').forEach(function(inp){
+      var k = inp.dataset.key; if(!k)return; var v = inp.value!==undefined?inp.value.trim():''; if(inp.type==='number') v = parseFloat(v)||0; policy[k]=v;
     });
-
-    await api('/admin/api/policies/' + policyType, { method: 'PUT', body: policy });
-    msgEl.textContent = 'Saved ✓';
-    msgEl.style.color = 'var(--green)';
-    setTimeout(function(){ msgEl.textContent = ''; }, 3000);
-  } catch(e) {
-    msgEl.textContent = 'Error: ' + e.message;
-    msgEl.style.color = 'var(--red)';
-  }
+    await api('/admin/api/policies/'+policyType, {method:'PUT', body:policy});
+    msg.textContent='Saved ✓'; msg.style.color='var(--green)'; setTimeout(function(){msg.textContent='';},3000);
+  } catch(e){ msg.textContent='Error: '+e.message; msg.style.color='var(--red)'; }
 }
-
-// ── Save global policy ──────────────────────────────────────
-async function saveGlobalPolicy(sectionId) {
-  var msgEl = document.getElementById('msg-' + sectionId);
-  if (!msgEl) return;
-  msgEl.textContent = 'Saving…';
-  msgEl.style.color = 'var(--muted2)';
-
-  var policyTypeMap = {
-    'global-retry': 'retry',
-    'global-communication': 'communication',
-    'global-escalation': 'escalation',
-    'global-approval': 'approval',
-  };
-  var policyType = policyTypeMap[sectionId];
-  if (!policyType) return;
-
+async function globalSave(id) {
+  var map = {'global-retry':'retry','global-comm':'communication'};
+  var pt = map[id]; if(!pt)return;
+  var msg = document.getElementById('msg-'+id); if(!msg)return;
+  msg.textContent='Saving...'; msg.style.color='var(--muted2)';
   try {
-    var pols = await api('/admin/api/policies');
-    var policy = pols[policyType] || {};
-    var fieldMap = {
-      'global-retry': {
-        'g-max-retries': { key: 'max_retries', type: 'number' },
-        'g-intervals': { key: 'intervals', type: 'csv' },
-        'g-on-failure': { key: 'on_failure', type: 'string' },
-      },
-      'global-communication': {
-        'g-max-daily': { key: 'max_daily', type: 'number' },
-        'g-cooldown': { key: 'cooldown_minutes', type: 'number' },
-        'g-channels': { key: 'preferred_channels', type: 'csv' },
-      },
-      'global-escalation': {
-        'g-esc-trigger': { key: 'trigger', type: 'string' },
-        'g-esc-channel': { key: 'channel', type: 'string' },
-        'g-esc-sla': { key: 'sla_hours', type: 'number' },
-      },
-      'global-approval': {
-        'g-app-amount': { key: 'amount_threshold', type: 'number' },
-        'g-app-actions': { key: 'require_approval_for', type: 'csv' },
-        'g-app-confidence': { key: 'ai_confidence_threshold', type: 'number' },
-      },
-    };
-
-    var fields = fieldMap[sectionId] || {};
-    Object.keys(fields).forEach(function(elId){
-      var inp = document.getElementById(elId);
-      if (!inp) return;
-      var f = fields[elId];
-      var val = inp.value !== undefined ? inp.value.trim() : '';
-      if (f.type === 'number') val = parseFloat(val) || 0;
-      else if (f.type === 'csv') val = val.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-      policy[f.key] = val;
+    var pols = await api('/admin/api/policies'); var policy = pols[pt]||{};
+    document.querySelectorAll('#'+id+' .field-row input').forEach(function(inp){
+      if(inp.id==='g-max-retries') policy.max_retries = parseInt(inp.value)||3;
+      if(inp.id==='g-intervals') policy.intervals = inp.value.split(',').map(function(s){return s.trim();}).filter(Boolean);
+      if(inp.id==='g-max-daily') policy.max_daily = parseInt(inp.value)||3;
+      if(inp.id==='g-cooldown') policy.cooldown_minutes = parseInt(inp.value)||60;
     });
-
-    await api('/admin/api/policies/' + policyType, { method: 'PUT', body: policy });
-    msgEl.textContent = 'Saved ✓';
-    msgEl.style.color = 'var(--green)';
-    setTimeout(function(){ msgEl.textContent = ''; }, 3000);
-  } catch(e) {
-    msgEl.textContent = 'Error: ' + e.message;
-    msgEl.style.color = 'var(--red)';
-  }
+    await api('/admin/api/policies/'+pt, {method:'PUT', body:policy});
+    msg.textContent='Saved ✓'; msg.style.color='var(--green)'; setTimeout(function(){msg.textContent='';},3000);
+  } catch(e){ msg.textContent='Error: '+e.message; msg.style.color='var(--red)'; }
 }
 
-// ── Load all data ────────────────────────────────────────────
-async function loadAgents() {
+// Load all
+async function loadAll() {
   try {
-    var [analytics, policies, workflowsData] = await Promise.all([
-      api('/admin/api/analytics'),
-      api('/admin/api/policies'),
-      api('/admin/api/workflows?limit=200'),
+    var [analytics, policies, wfData] = await Promise.all([
+      api('/admin/api/analytics'), api('/admin/api/policies'), api('/admin/api/workflows?limit=200')
     ]);
-    renderAgents(analytics, policies, workflowsData.workflows || []);
-  } catch(e) {
-    document.getElementById('agentPanels').innerHTML = '<div class="card"><div class="err-msg">Error loading agents: ' + esc(e.message) + '</div></div>';
-  }
+    renderAll(analytics, policies, wfData.workflows||[]);
+  } catch(e) { document.getElementById('agentPanels').innerHTML = '<div class="card"><div class="err-msg">Error loading agents: ' + esc(e.message) + '</div></div>'; }
 }
-
-loadAgents();
+loadAll();
 </script>
-
-<style>
-/* Tab styles */
-.ch-tabs { display:flex; gap:4px; margin-bottom:24px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:4px; width:fit-content; }
-.ch-tab { display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600; color:var(--muted2); transition:all .15s; user-select:none; border:none; background:transparent; }
-.ch-tab:hover { color:var(--text); background:rgba(255,255,255,0.04); }
-.ch-tab.active { color:var(--text); background:var(--surface); box-shadow:0 1px 3px rgba(0,0,0,0.2); }
-.ch-panel { display:none; }
-.ch-panel.active { display:block; animation:fadeIn .2s ease; }
-@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
-
-/* Agent hero presentation */
-.agent-hero { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:16px; border-left:4px solid var(--accent); }
-.agent-hero-header { display:flex; gap:16px; align-items:center; margin-bottom:16px; }
-.agent-hero-logo { width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0; }
-.agent-hero-title { flex:1; }
-.agent-name { font-size:22px; font-weight:800; letter-spacing:-.3px; }
-.agent-subtitle { font-size:13px; color:var(--muted); margin-top:2px; }
-.agent-hero-tagline { font-size:15px; font-weight:600; color:var(--text); margin-bottom:16px; padding:12px 16px; background:var(--bg); border-radius:10px; border:1px solid var(--border); }
-.agent-hero-section { margin-bottom:12px; }
-.agent-hero-section:last-child { margin-bottom:0; }
-.agent-hero-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--muted2); margin-bottom:4px; }
-.agent-hero-text { font-size:13px; color:var(--muted); line-height:1.6; }
-.agent-hero-list { margin:4px 0 0 16px; padding:0; }
-.agent-hero-list li { font-size:13px; color:var(--muted); margin-bottom:4px; line-height:1.5; }
-.agent-hero-list li:last-child { margin-bottom:0; }
-
-/* Stats */
-.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin-bottom:16px; }
-.stat { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; }
-.stat .n { font-size:28px; font-weight:800; letter-spacing:-1px; }
-.stat .l { color:var(--muted); font-size:11px; margin-top:2px; font-weight:500; }
-
-/* State machine visualization */
-.states-viz { display:flex; align-items:center; gap:0; padding:16px 20px; background:var(--surface); border:1px solid var(--border); border-radius:14px; margin-bottom:16px; overflow-x:auto; flex-wrap:nowrap; }
-.state-node { display:flex; align-items:center; gap:6px; flex-shrink:0; }
-.state-dot { width:10px; height:10px; border-radius:50%; background:var(--muted2); flex-shrink:0; }
-.state-dot.terminal { width:12px; height:12px; background:var(--accent); }
-.state-label { font-size:10px; font-weight:600; color:var(--muted2); white-space:nowrap; text-transform:uppercase; letter-spacing:.2px; }
-.state-arrow { color:var(--border); font-size:12px; margin:0 6px; }
-
-/* Config cards */
-.ch-body { display:flex; flex-direction:column; gap:12px; }
-.ch-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; }
-.ch-card h3 { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--muted); margin-bottom:0; }
-
-.field-row { margin-bottom:10px; }
-.field-row:last-child { margin-bottom:0; }
-.field-row label { display:block; font-size:11px; font-weight:600; color:var(--muted2); margin-bottom:3px; text-transform:uppercase; letter-spacing:.3px; }
-.field-row input, .field-row select, .field-row textarea { width:100%; padding:8px 12px; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:8px; outline:none; font-family:inherit; font-size:12px; transition:border-color .15s; }
-.field-row input:focus, .field-row select:focus { border-color:var(--accent); }
-.field-desc { font-size:11px; color:var(--muted2); margin-top:2px; }
-
-.section-toggle { cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:2px 0; }
-.section-toggle:hover h3 { color:var(--text); }
-.section-arrow { font-size:14px; color:var(--muted2); transition:transform .2s; }
-.section-arrow.open { transform:rotate(180deg); }
-
-/* Events */
-.wh-events-list { display:flex; flex-wrap:wrap; gap:4px; }
-.wh-events-list code { font-size:10px; padding:3px 8px; background:var(--surface2); border:1px solid var(--border); border-radius:4px; color:var(--muted); }
-
-/* Tables */
-table { width:100%; border-collapse:collapse; font-size:12px; }
-th { padding:8px 12px; text-align:left; font-weight:600; color:var(--muted2); font-size:10px; text-transform:uppercase; letter-spacing:.4px; border-bottom:1px solid var(--border); }
-td { padding:8px 12px; border-bottom:1px solid var(--border); vertical-align:middle; }
-tr:last-child td { border-bottom:none; }
-tr:hover td { background:rgba(255,255,255,0.02); }
-
-.save-msg { transition:opacity .3s; }
-
-/* Toggle */
-.toggle { width:38px; height:20px; border-radius:10px; background:var(--border); cursor:pointer; position:relative; transition:background .2s; flex-shrink:0; }
-.toggle.on { background:var(--green); }
-.toggle::after { content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .2s; }
-.toggle.on::after { transform:translateX(18px); }
-
-.err-msg { color:var(--red); font-size:13px; }
-.muted { color:var(--muted); font-size:12px; }
-.muted2 { color:var(--muted2); font-size:12px; }
-</style>
 {% endblock %}
