@@ -335,23 +335,23 @@
 <p class="page-desc">Intelligent agents that automate customer lifecycle workflows. Each agent handles a specific scenario end-to-end.</p>
 
 <div class="ch-tabs" id="agentTabs">
-<button class="ch-tab active" data-tab="payguard"> PayGuard</button>
-<button class="ch-tab" data-tab="retain"> Retain</button>
-<button class="ch-tab" data-tab="trace"> Trace</button>
+<button class="ch-tab active" data-tab="payguard">PayGuard</button>
+<button class="ch-tab" data-tab="retain">Retain</button>
+<button class="ch-tab" data-tab="trace">Trace</button>
 <button class="ch-tab" data-tab="settings"><svg class="ch-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</button>
 </div>
 
 <!-- Trust Panel slide-out -->
 <div class="trust-overlay" id="trustOverlay" onclick="hideTrust()"></div>
 <div class="trust-panel" id="trustPanel">
-<div class="trust-head"><h3>Why PayGuard Took This Action</h3><button class="ghost sm trust-close" onclick="hideTrust()"></button></div>
+<div class="trust-head"><h3>Why PayGuard Took This Action</h3><button class="ghost sm trust-close" onclick="hideTrust()">Close</button></div>
   <div class="trust-body" id="trustBody"><div class="pg-empty"><div>Select a workflow row or feed event to see the decision chain.</div></div></div>
 </div>
 
 <!-- Simulation modal -->
 <div class="modal-overlay" id="simModal">
 <div class="modal sim-modal">
- <div class="modal-header"><h2>Simulation: Preview PayGuard Before Enabling</h2><button class="ghost sm sim-close" onclick="hideSim()"></button></div>
+ <div class="modal-header"><h2>Simulation: Preview PayGuard Before Enabling</h2><button class="ghost sm sim-close" onclick="hideSim()">Close</button></div>
  <div id="simBody">
  <p class="muted sim-desc">Based on your last 30 days of payment failures:</p>
  <div class="stats sim-stats">
@@ -427,7 +427,7 @@ function renderPayGuard(agent, analytics, policies, ew, workflows) {
   var h = '<div class="pg-header" id="pgHead">' +
   '<div class="pg-header-inner">' +
   '<div class="pg-h-left">' +
-  '<div class="pg-h-logo"></div>' +
+  '<div class="pg-h-logo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>' +
   '<div><div class="pg-h-name">PayGuard</div><div class="pg-h-sub">Failed Payment Recovery</div>' +
   '<div class="pg-h-status">' +
   '<span class="pill ' + (enabled?'ok':'muted') + '" id="pgStatPill">' + (enabled?'Active':'Paused') + '</span>' +
@@ -552,7 +552,7 @@ function feedItem(e) {
  var confHtml = e.confidence != null ? '<span class="pg-fi-conf">' + e.confidence + '% conf</span>' : '';
  var time = e.created_at ? timeAgo(e.created_at) : '';
  var msg = e.reason ? '<div class="pg-fi-msg">' + esc(e.reason.slice(0,60)) + '</div>' : '';
- return '<div class="pg-fi" onclick="showTrust(\ esc(e.workflow_id||'') + '\')">' +
+ return '<div class="pg-fi" onclick="showTrust(\'' + esc(e.workflow_id||'') + '\')">' +
  '<span class="pg-fi-icon">' + icon + '</span>' +
  '<div class="pg-fi-body"><div class="pg-fi-top"><span class="pg-fi-action">' + esc(e.action||'') + '</span><div class="pg-fi-meta-right">' + amountHtml + confHtml + '</div></div>' +
  '<div class="pg-fi-meta">' + esc((e.customer_id||'').slice(0,14)) + ' · ' + time + '</div>' + msg +
@@ -609,7 +609,7 @@ function renderQueueTable(items, type) {
  var sc = ['RECOVERED','RETAINED','RESOLVED'].includes(item.current_state) ? 'ok' : ['FAILED','CANCELLED'].includes(item.current_state) ? 'err' : item.current_state==='ESCALATED'?'err': item.current_state==='WAITING_CUSTOMER'||item.current_state==='RETRYING'?'warn':'muted';
  var rl = item.risk_level === 'high' ? 'err' : item.risk_level === 'medium' ? 'warn' : 'muted';
  var next = item.current_state === 'OUTREACH_SENT' ? 'Awaiting response' : item.current_state === 'RETRY_SCHEDULED' ? 'Retry pending' : item.current_state === 'WAITING_CUSTOMER' ? 'Customer action' : item.current_state === 'CLASSIFYING_FAILURE' ? 'Classifying...' : item.current_state === 'DETECTED' ? 'Starting...' : item.current_state === 'VERIFYING_RESULT' ? 'Verifying...' : item.current_state === 'PAUSED_RECONCILIATION' ? 'Review needed' : item.current_state || item.status;
- return '<tr onclick="showTrust(\ esc(item.id||'') + '\')">' +
+ return '<tr onclick="showTrust(\'' + esc(item.id||'') + '\')">' +
  '<td class="q-cell-main">' + esc((item.customer_id||'').slice(0,12)) + '</td>' +
  '<td class="q-cell-bold">' + (item.amount_due ? '$'+Number(item.amount_due).toFixed(2) : '-') + '</td>' +
  '<td><span class="pill ' + sc + '">' + esc(item.current_state||'') + '</span></td>' +
@@ -622,14 +622,14 @@ function renderQueueTable(items, type) {
  '<td class="q-cell">' + esc(item.action_type||'') + '</td>' +
  '<td><span class="pill ' + rl + '">' + esc(item.risk_level||'') + '</span></td>' +
  '<td class="q-cell">' + (item.ai_confidence!=null ? item.ai_confidence+'%' : '-') + '</td>' +
- '<td><div class="q-actions"><button class="pg-op-btn approve" onclick="queueApprove(\ esc(item.id) + '\')"></button><button class="pg-op-btn reject" onclick="queueReject(\ esc(item.id) + '\')"></button></div></td></tr>';
+ '<td><div class="q-actions"><button class="pg-op-btn approve" onclick="queueApprove(\\' + esc(item.id) + '\')"></button><button class="pg-op-btn reject" onclick="queueReject(\\' + esc(item.id) + '\')"></button></div></td></tr>';
  }
  if (type === 'escalations') {
  var sv = item.severity === 'critical' ? 'err' : item.severity === 'high' ? 'warn' : 'muted';
  return '<tr><td><code>' + esc((item.id||'').slice(0,8)) + '</code></td>' +
  '<td class="q-cell-reason">' + esc(item.reason||'') + '</td>' +
  '<td><span class="pill ' + sv + '">' + esc(item.severity||'') + '</span></td>' +
- '<td><button class="pg-op-btn resolve" onclick="queueResolve(\ esc(item.id) + '\')"> Resolve</button></td></tr>';
+ '<td><button class="pg-op-btn resolve" onclick="queueResolve(\\' + esc(item.id) + '\')"> Resolve</button></td></tr>';
  }
  if (type === 'log') {
  return '<tr><td class="q-cell-time">' + (item.created_at?new Date(item.created_at).toLocaleString():'-') + '</td>' +
@@ -1000,7 +1000,7 @@ function renderLegacyPanel(agent, analytics, policies, ew, workflows, isActive) 
  '<div class="agent-hero-title"><div class="agent-name">' + agent.name + '</div><div class="agent-subtitle">' + agent.subtitle + '</div></div>' +
  '<div style="margin-left:auto;display:flex;align-items:center;gap:10px">' +
  '<span class="pill ' + (enabled?'ok':'muted') + '" style="font-size:10px">' + (enabled?'Active':'Disabled') + '</span>' +
- '<div class="toggle ' + (enabled?'on':'') + '" onclick="legacyToggle(\ agent.id + '\', this)"></div>' +
+ '<div class="toggle ' + (enabled?'on':'') + '" onclick="legacyToggle(\'' + agent.id + '\', this)"></div>' +
  '</div></div>' +
  '<div class="agent-hero-tagline">' + agent.tagline + '</div>' +
  '<div class="agent-hero-section"><div class="agent-hero-label"> What it does</div><div class="agent-hero-text">' + agent.whatItDoes + '</div></div>' +
@@ -1029,7 +1029,7 @@ function renderLegacyConfig(title, fields, agentId, policyType) {
  }
  return '<div class="field-row"><label>' + f.label + '</label><input id="' + f.id + '" type="' + f.type + '" data-agent="' + agentId + '" data-policy="' + policyType + '" data-key="' + f.key + '" value="' + esc(f.default||'') + '">' + (f.desc?'<div class="field-desc">'+f.desc+'</div>':'') + '</div>';
  }).join('');
- return '<div class="ch-card collapsible"><div class="section-toggle" onclick="toggleSection(this)"><h3 style="margin:0;font-size:12px">' + title + '</h3><div class="flex" style="gap:6px"><button class="ghost sm accent" onclick="event.stopPropagation();legacySave(\agentId+'\',\policyType+'\')">Save</button><span class="section-arrow open"></span></div></div><div class="section-body">' + fh + '<span class="muted2 save-msg" id="msg-'+policyType+'-'+agentId+'" style="font-size:11px;margin-top:4px;display:block"></span></div></div>';
+ return '<div class="ch-card collapsible"><div class="section-toggle" onclick="toggleSection(this)"><h3 style="margin:0;font-size:12px">' + title + '</h3><div class="flex" style="gap:6px"><button class="ghost sm accent" onclick="event.stopPropagation();legacySave(\''+agentId+'\',\''+policyType+'\')">Save</button><span class="section-arrow open"></span></div></div><div class="section-body">' + fh + '<span class="muted2 save-msg" id="msg-'+policyType+'-'+agentId+'" style="font-size:11px;margin-top:4px;display:block"></span></div></div>';
 }
 
 function renderGlobalSettings(policies) {
@@ -1044,7 +1044,7 @@ function renderGlobalSettings(policies) {
  ]},
  ];
  var body = secs.map(function(s){
- return '<div class="ch-card collapsible"><div class="section-toggle" onclick="toggleSection(this)"><h3 style="margin:0;font-size:12px">' + s.title + '</h3><div class="flex" style="gap:6px"><button class="ghost sm accent" onclick="event.stopPropagation();globalSave(\s.id+'\')">Save</button><span class="section-arrow open"></span></div></div><div class="section-body">' +
+ return '<div class="ch-card collapsible"><div class="section-toggle" onclick="toggleSection(this)"><h3 style="margin:0;font-size:12px">' + s.title + '</h3><div class="flex" style="gap:6px"><button class="ghost sm accent" onclick="event.stopPropagation();globalSave(\''+s.id+'\')">Save</button><span class="section-arrow open"></span></div></div><div class="section-body">' +
  s.fields.map(function(f){ return '<div class="field-row"><label>' + f.label + '</label><input id="'+f.id+'" type="text" value="'+esc(String(f.val))+'"></div>'; }).join('') +
  '<span class="muted2 save-msg" id="msg-'+s.id+'" style="font-size:11px;margin-top:4px;display:block"></span></div></div>';
  }).join('');
