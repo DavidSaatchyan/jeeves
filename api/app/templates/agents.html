@@ -1,121 +1,123 @@
 {% extends "base.html" %}
 {% block body %}
 <style>
-/* ═════════════════════════════════════════════
-   PayGuard — Design System Tokens
-   ═════════════════════════════════════════════ */
+/* 
+ PayGuard — Design System Tokens
+ */
 :root {
-  /* Colors */
-  --pg-bg:        #08080f;
-  --pg-surface:   #10101a;
-  --pg-border:    rgba(255,255,255,0.07);
-  --pg-text:      #e8e8f0;
-  --pg-muted:     #6868a0;
-  --pg-muted2:    #484870;
-  --pg-accent:    #6366f1;
-  --pg-accent-bg: rgba(99,102,241,0.10);
-  --pg-success:   #22c55e;
-  --pg-warning:   #f59e0b;
-  --pg-error:     #ef4444;
-  --pg-info:      #3b82f6;
+ /* Colors */
+ --pg-bg: #08080f;
+ --pg-surface: #10101a;
+ --pg-border: rgba(255,255,255,0.07);
+ --pg-text: #e8e8f0;
+ --pg-muted: #6868a0;
+ --pg-muted2: #484870;
+ --pg-accent: #6366f1;
+ --pg-accent-bg: rgba(99,102,241,0.10);
+ --pg-success: #22c55e;
+ --pg-warning: #f59e0b;
+ --pg-error: #ef4444;
+ --pg-info: #3b82f6;
 
-  /* Typography */
-  --fs-h1:   24px;
-  --fs-h2:   20px;
-  --fs-h3:   16px;
-  --fs-body: 14px;
-  --fs-label:12px;
-  --fs-small:11px;
+ /* Typography */
+ --fs-h1: 24px;
+ --fs-h2: 20px;
+ --fs-h3: 16px;
+ --fs-body: 14px;
+ --fs-label:12px;
+ --fs-small:11px;
 
-  /* Spacing */
-  --sp-xs: 4px;
-  --sp-sm: 8px;
-  --sp-md: 16px;
-  --sp-lg: 24px;
-  --sp-xl: 32px;
+ /* Spacing */
+ --sp-xs: 4px;
+ --sp-sm: 8px;
+ --sp-md: 16px;
+ --sp-lg: 24px;
+ --sp-xl: 32px;
 
-  /* Radii */
-  --r-sm: 6px;
-  --r-md: 8px;
-  --r-lg: 12px;
+ /* Radii */
+ --r-sm: 6px;
+ --r-md: 8px;
+ --r-lg: 12px;
 }
 
-/* ── Sticky header ── */
+/* Sticky header */
 .pg-header {
-  position: sticky; top: 0; z-index: 100;
-  background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-lg);
-  margin-bottom: 0; padding: 0;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+ position: sticky; top: 0; z-index: 100;
+ background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-lg);
+ margin-bottom: var(--sp-lg); padding: 0;
+ box-shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
 .pg-header-inner { display: flex; align-items: stretch; gap: 0; }
 .pg-h-left {
-  display: flex; align-items: center; gap: var(--sp-md);
-  padding: var(--sp-md) 20px; flex: 0 0 auto; min-width: 220px;
-  border-right: 1px solid var(--pg-border);
+ display: flex; align-items: center; gap: 20px;
+ padding: 20px 24px; flex: 0 0 auto; min-width: 240px;
+ border-right: 1px solid var(--pg-border);
 }
 .pg-h-logo {
-  width: 48px; height: 48px; border-radius: var(--r-lg);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 26px; flex-shrink: 0; background: var(--pg-accent-bg);
-  color: var(--pg-accent);
+ width: 56px; height: 56px; border-radius: var(--r-lg);
+ display: flex; align-items: center; justify-content: center;
+ flex-shrink: 0; background: var(--pg-accent-bg);
+ color: var(--pg-accent);
 }
-.pg-h-name { font-size: var(--fs-h3); font-weight: 800; letter-spacing: -.3px; line-height: 1.2; }
-.pg-h-sub { font-size: var(--fs-label); color: var(--pg-muted); line-height: 1.3; }
-.pg-h-status { display: flex; gap: var(--sp-xs); margin-top: var(--sp-xs); flex-wrap: wrap; }
+.pg-h-name { font-size: 20px; font-weight: 800; letter-spacing: -.4px; line-height: 1.2; }
+.pg-h-sub { font-size: var(--fs-body); color: var(--pg-muted); line-height: 1.3; }
+.pg-h-status { display: flex; gap: var(--sp-xs); margin-top: var(--sp-sm); flex-wrap: wrap; }
 
 .pg-h-center {
-  flex: 1; display: flex; gap: 0; padding: 10px 12px;
-  border-right: 1px solid var(--pg-border); min-width: 0; align-items: center;
+ flex: 1; display: flex; gap: 0; padding: 16px 20px;
+ border-right: 1px solid var(--pg-border); min-width: 0; align-items: center;
 }
-.pg-h-kpi { flex: 1; text-align: center; padding: 0 var(--sp-xs); min-width: 0; }
-.pg-h-kpi-val { font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -.3px; line-height: 1.2; }
-.pg-h-kpi-lbl { font-size: var(--fs-label); color: var(--pg-muted); text-transform: uppercase; letter-spacing: .3px; margin-top: 2px; font-weight: 600; }
+.pg-h-kpi { flex: 1; text-align: center; padding: 0 var(--sp-sm); min-width: 0; }
+.pg-h-kpi-val { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -.3px; line-height: 1.2; }
+.pg-h-kpi-lbl { font-size: var(--fs-label); color: var(--pg-muted); text-transform: uppercase; letter-spacing: .3px; margin-top: 4px; font-weight: 600; }
 
-.pg-h-right { display: flex; align-items: center; gap: var(--sp-sm); padding: var(--sp-md); flex-shrink: 0; }
+.pg-h-right { display: flex; align-items: center; gap: var(--sp-md); padding: 20px 24px; flex-shrink: 0; }
 .pg-h-btn { padding: 8px 18px; border-radius: var(--r-md); font-size: 13px; font-weight: 700; border: none; cursor: pointer; transition: all .15s; white-space: nowrap; }
 .pg-h-btn.primary { background: var(--pg-accent); color: #fff; }
 .pg-h-btn.primary:hover { filter: brightness(1.15); }
 .pg-h-btn.ghost { background: transparent; color: var(--pg-muted); border: 1px solid var(--pg-border); }
 .pg-h-btn.ghost:hover { color: var(--pg-text); border-color: var(--pg-muted); }
 
-/* ── Operational Status Ribbon ── */
+/* Operational Status Ribbon */
 .pg-status {
-  display: flex; align-items: center; gap: var(--sp-md);
-  padding: var(--sp-sm) 20px 10px; border-top: 1px solid var(--pg-border);
-  font-size: var(--fs-label); flex-wrap: wrap;
+ display: flex; align-items: center; gap: var(--sp-lg);
+ padding: var(--sp-sm) 24px; border-top: 1px solid var(--pg-border);
+ font-size: var(--fs-label); flex-wrap: wrap;
 }
-.pg-status-item { display: flex; align-items: center; gap: 5px; }
-.pg-status-ai { color: var(--pg-muted); font-size: var(--fs-small); }
+.pg-status-item { display: flex; align-items: center; gap: 6px; }
+.pg-status-main { color: var(--pg-success); font-weight: 600; }
+.pg-status-ai { color: var(--pg-muted); font-size: var(--fs-small); display: flex; align-items: center; gap: var(--sp-xs); }
 .pg-status-spacer { flex: 1; }
 .pg-status-time { font-size: var(--fs-small); }
-.pg-status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.pg-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .pg-status-dot.ok { background: var(--pg-success); }
 .pg-status-dot.warn { background: var(--pg-warning); }
 .pg-status-dot.muted { background: var(--pg-muted); }
 
 /* Section headings */
-.pg-section { margin-bottom: var(--sp-lg); }
+.pg-section { margin-bottom: var(--sp-xl); }
 .pg-section h2 {
-  font-size: var(--fs-h2); font-weight: 800; margin: 0 0 var(--sp-sm);
-  letter-spacing: -.4px; color: var(--pg-text);
+ font-size: var(--fs-h2); font-weight: 800; margin: 0 0 var(--sp-md);
+ letter-spacing: -.4px; color: var(--pg-text); display: flex; align-items: center; gap: var(--sp-sm);
 }
+/* .pg-section h2 svg removed per design */
 
 /* Policy grid */
 .pg-policy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-md); }
-.pg-policy-card { background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-lg); padding: var(--sp-md); }
-.pg-policy-card h3 { font-size: var(--fs-body); font-weight: 700; margin: 0 0 var(--sp-sm); display: flex; align-items: center; gap: 6px; }
-.pg-policy-card h3 .icon { font-size: var(--fs-h3); }
+.pg-policy-card { background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-lg); padding: 20px; }
+.pg-policy-card h3 { font-size: var(--fs-h3); font-weight: 700; margin: 0 0 var(--sp-md); display: flex; align-items: center; gap: var(--sp-sm); }
+
 
 /* Cards */
-.pg-card { background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-lg); padding: var(--sp-md); }
+.pg-card { background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-lg); padding: 20px; }
 .pg-card + .pg-card { margin-top: var(--sp-sm); }
-.pg-card-title { font-size: var(--fs-label); font-weight: 700; letter-spacing: .2px; color: var(--pg-muted); margin-bottom: var(--sp-sm); display: flex; align-items: center; justify-content: space-between; }
+.pg-card-title { font-size: var(--fs-label); font-weight: 700; letter-spacing: .2px; color: var(--pg-muted); margin-bottom: var(--sp-md); display: flex; align-items: center; gap: var(--sp-sm); justify-content: space-between; }
 
 /* Feed */
 .pg-feed { max-height: 320px; overflow-y: auto; }
-.pg-fi { display: flex; gap: var(--sp-sm); padding: var(--sp-sm) 0; border-bottom: 1px solid var(--pg-border); cursor: pointer; align-items: flex-start; }
+.pg-fi { display: flex; gap: var(--sp-md); padding: 10px 0; border-bottom: 1px solid var(--pg-border); cursor: pointer; align-items: flex-start; }
 .pg-fi:last-child { border-bottom: none; }
-.pg-fi:hover { background: rgba(255,255,255,0.02); }
+.pg-fi:hover { background: rgba(255,255,255,0.02); margin: 0 -8px; padding: 10px 8px; border-radius: var(--r-sm); }
 .pg-fi-icon { font-size: var(--fs-body); flex-shrink: 0; margin-top: 2px; }
 .pg-fi-body { flex: 1; min-width: 0; }
 .pg-fi-top { display: flex; justify-content: space-between; align-items: center; }
@@ -127,31 +129,31 @@
 .pg-fi-conf { font-size: var(--fs-small); color: var(--pg-muted); }
 .pg-fi-meta-right { display: flex; gap: var(--sp-xs); align-items: center; }
 .pg-fi-group {
-  font-size: var(--fs-small); font-weight: 700; text-transform: uppercase;
-  letter-spacing: .3px; padding: var(--sp-sm) 0 var(--sp-xs);
-  border-top: 1px solid var(--pg-border); margin-top: var(--sp-xs);
+ font-size: var(--fs-small); font-weight: 700; text-transform: uppercase;
+ letter-spacing: .3px; padding: var(--sp-sm) 0 var(--sp-xs);
+ border-top: 1px solid var(--pg-border); margin-top: var(--sp-xs);
 }
 .pg-fi-group:first-child { border-top: none; margin-top: 0; }
 
 /* Funnel */
-.pg-funnel { display: flex; flex-direction: column; gap: var(--sp-sm); }
-.pg-fun-row { display: flex; align-items: center; gap: 10px; }
-.pg-fun-label { width: 80px; font-size: var(--fs-small); font-weight: 600; color: var(--pg-muted); flex-shrink: 0; text-align: right; }
+.pg-funnel { display: flex; flex-direction: column; gap: var(--sp-md); }
+.pg-fun-row { display: flex; align-items: center; gap: var(--sp-md); }
+.pg-fun-label { width: 80px; font-size: var(--fs-label); font-weight: 600; color: var(--pg-muted); flex-shrink: 0; text-align: right; }
 .pg-fun-bar-wrap { flex: 1; display: flex; align-items: center; gap: var(--sp-sm); }
-.pg-fun-bar-track { flex: 1; height: 28px; background: var(--pg-bg); border-radius: var(--r-sm); overflow: hidden; }
-.pg-fun-bar-fill { height: 100%; border-radius: var(--r-sm); transition: width .4s ease; display: flex; align-items: center; padding-left: var(--sp-sm); }
+.pg-fun-bar-track { flex: 1; height: 32px; background: var(--pg-bg); border-radius: var(--r-sm); overflow: hidden; }
+.pg-fun-bar-fill { height: 100%; border-radius: var(--r-sm); transition: width .4s ease; display: flex; align-items: center; padding-left: var(--sp-md); }
 .pg-fun-bar-count { font-size: var(--fs-body); font-weight: 800; color: #fff; }
 .pg-fun-pct { font-size: var(--fs-small); color: var(--pg-muted); width: 35px; text-align: right; }
-.pg-fun-drop { font-size: var(--fs-small); color: var(--pg-muted); margin-left: auto; white-space: nowrap; }
+.pg-fun-drop { font-size: var(--fs-small); color: var(--pg-muted); white-space: nowrap; }
 .pg-fun-icon { font-size: var(--fs-h3); }
 
 /* Queue tabs */
 .pg-qt { display: flex; gap: 0; margin: 0 0 var(--sp-sm); border-bottom: 1px solid var(--pg-border); }
-.pg-qt-btn { padding: 6px 12px; font-size: var(--fs-label); font-weight: 600; color: var(--pg-muted); cursor: pointer; border: none; background: transparent; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+.pg-qt-btn { padding: 8px 16px; font-size: var(--fs-label); font-weight: 600; color: var(--pg-muted); cursor: pointer; border: none; background: transparent; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .pg-qt-btn:hover { color: var(--pg-text); }
 .pg-qt-btn.active { color: var(--pg-accent); border-bottom-color: var(--pg-accent); }
-.pg-qt-badge { font-size: 10px; padding: 0 5px; border-radius: 5px; background: var(--pg-accent); color: #fff; font-weight: 700; line-height: 1.4; min-width: 16px; text-align: center; }
-.pg-q-body { max-height: 300px; overflow-y: auto; }
+.pg-qt-badge { font-size: 10px; padding: 1px 6px; border-radius: 5px; background: var(--pg-accent); color: #fff; font-weight: 700; line-height: 1.5; min-width: 18px; text-align: center; }
+.pg-q-body { max-height: 360px; overflow-y: auto; }
 .pg-q-empty { text-align: center; padding: var(--sp-lg) var(--sp-md); color: var(--pg-muted); font-size: var(--fs-label); }
 
 /* Config */
@@ -161,13 +163,13 @@
 .pg-cfg-head:hover { color: var(--pg-text); }
 .pg-cfg-icon { font-size: var(--fs-label); color: var(--pg-muted); transition: transform .2s; }
 .pg-cfg-icon.open { transform: rotate(90deg); }
-.pg-cfg-body { padding: 0 0 10px 18px; }
-.pg-cfg-field { margin-bottom: var(--sp-sm); }
-.pg-cfg-label { font-size: var(--fs-small); font-weight: 600; color: var(--pg-muted); margin-bottom: 2px; text-transform: uppercase; letter-spacing: .2px; }
+.pg-cfg-body { padding: 0 0 12px 18px; }
+.pg-cfg-field { margin-bottom: var(--sp-md); }
+.pg-cfg-label { font-size: var(--fs-small); font-weight: 600; color: var(--pg-muted); margin-bottom: var(--sp-xs); text-transform: uppercase; letter-spacing: .2px; }
 .pg-cfg-desc { font-size: var(--fs-small); color: var(--pg-muted); margin-top: 1px; }
-.pg-cfg-row { display: flex; gap: var(--sp-xs); align-items: center; flex-wrap: wrap; }
-.pg-cfg-seg { display: flex; gap: 1px; background: var(--pg-bg); border-radius: var(--r-sm); padding: 2px; }
-.pg-cfg-seg-btn { padding: 5px 12px; font-size: var(--fs-label); font-weight: 600; border: none; background: transparent; color: var(--pg-muted); cursor: pointer; border-radius: var(--r-sm); transition: all .1s; }
+.pg-cfg-row { display: flex; gap: var(--sp-sm); align-items: center; flex-wrap: wrap; }
+.pg-cfg-seg { display: flex; gap: 1px; background: var(--pg-bg); border-radius: var(--r-sm); padding: 3px; }
+.pg-cfg-seg-btn { padding: 6px 14px; font-size: var(--fs-label); font-weight: 600; border: none; background: transparent; color: var(--pg-muted); cursor: pointer; border-radius: var(--r-sm); transition: all .1s; }
 .pg-cfg-seg-btn.active { background: var(--pg-surface); color: var(--pg-text); box-shadow: 0 1px 3px rgba(0,0,0,.3); }
 .pg-cfg-seg-btn:hover:not(.active) { color: var(--pg-text); }
 .pg-cfg-adv { margin-top: var(--sp-xs); }
@@ -179,14 +181,16 @@
 .pg-cfg-rule-box { background: var(--pg-bg); padding: 10px; border-radius: var(--r-sm); border: 1px solid var(--pg-border); }
 .pg-cfg-rule-row { margin-bottom: var(--sp-xs); }
 .pg-cfg-rule-hint { color: var(--pg-muted); font-size: var(--fs-small); }
-.pg-cfg-select { padding: 4px 8px; background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-sm); color: var(--pg-text); font-size: var(--fs-label); }
-.pg-cfg-input-wide { width: 100%; padding: var(--sp-xs) var(--sp-sm); background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-sm); color: var(--pg-text); font-size: var(--fs-label); }
-.pg-cfg-input-narrow { width: 60px; padding: var(--sp-xs) var(--sp-sm); background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-sm); color: var(--pg-text); font-size: var(--fs-label); }
-.pg-cfg-chk-label { display: flex; align-items: center; gap: 4px; font-size: var(--fs-label); cursor: pointer; margin-bottom: 3px; }
-.pg-cfg-chk-inline { gap: 3px; font-size: var(--fs-label); cursor: pointer; }
-.pg-cfg-profile-btn { flex: 1; text-align: center; padding: var(--sp-sm) var(--sp-xs); line-height: 1.3; border-radius: var(--r-sm); cursor: pointer; }
-.pg-cfg-profile-name { font-weight: 700; font-size: var(--fs-label); }
-.pg-cfg-profile-desc { font-size: var(--fs-small); color: var(--pg-muted); }
+.pg-cfg-select { padding: 6px 10px; background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-sm); color: var(--pg-text); font-size: var(--fs-body); }
+.pg-cfg-input-wide { width: 100%; padding: 8px 10px; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-sm); color: var(--pg-text); font-size: var(--fs-body); }
+.pg-cfg-input-narrow { width: 70px; padding: 8px 10px; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-sm); color: var(--pg-text); font-size: var(--fs-body); }
+.pg-cfg-chk-label { display: flex; align-items: center; gap: var(--sp-sm); font-size: var(--fs-body); cursor: pointer; margin-bottom: var(--sp-sm); padding: 4px 0; }
+.pg-cfg-chk-label input { width: 16px; height: 16px; accent-color: var(--pg-accent); }
+.pg-cfg-chk-inline { gap: var(--sp-sm); font-size: var(--fs-body); cursor: pointer; padding: 4px 0; }
+.pg-cfg-profile-btn { flex: 1; text-align: center; padding: 12px 8px; line-height: 1.4; border-radius: var(--r-sm); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 52px; justify-content: center; }
+.pg-cfg-profile-btn.active { background: var(--pg-accent-bg); border: 1px solid rgba(99,102,241,0.2); }
+.pg-cfg-profile-name { font-weight: 700; font-size: var(--fs-body); color: var(--pg-text); }
+.pg-cfg-profile-desc { font-size: var(--fs-small); color: var(--pg-muted); white-space: nowrap; }
 .pg-cfg-toggle-label { font-size: var(--fs-label); }
 .pg-cfg-autosave-hint { font-size: var(--fs-small); color: var(--pg-muted); }
 
@@ -203,10 +207,10 @@
 .trust-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; }
 .trust-overlay.show { display: block; }
 .trust-panel {
-  position: fixed; top: 0; right: -420px; width: 400px; max-width: 90vw;
-  height: 100vh; background: var(--pg-surface); border-left: 1px solid var(--pg-border);
-  z-index: 201; transition: right .3s ease; display: flex; flex-direction: column;
-  box-shadow: -4px 0 20px rgba(0,0,0,.4);
+ position: fixed; top: 0; right: -420px; width: 400px; max-width: 90vw;
+ height: 100vh; background: var(--pg-surface); border-left: 1px solid var(--pg-border);
+ z-index: 201; transition: right .3s ease; display: flex; flex-direction: column;
+ box-shadow: -4px 0 20px rgba(0,0,0,.4);
 }
 .trust-panel.show { right: 0; }
 .trust-head { display: flex; justify-content: space-between; align-items: center; padding: var(--sp-md) 18px; border-bottom: 1px solid var(--pg-border); }
@@ -229,10 +233,10 @@
 .tab-icon { font-size: 16px; line-height: 1; }
 .trust-step { display: flex; gap: 10px; padding: var(--sp-sm) 0; }
 .trust-step-n {
-  width: 24px; height: 24px; border-radius: 50%; background: var(--pg-bg);
-  border: 2px solid var(--pg-border); display: flex; align-items: center;
-  justify-content: center; font-size: var(--fs-small); font-weight: 700;
-  color: var(--pg-muted); flex-shrink: 0; margin-top: 2px;
+ width: 24px; height: 24px; border-radius: 50%; background: var(--pg-bg);
+ border: 2px solid var(--pg-border); display: flex; align-items: center;
+ justify-content: center; font-size: var(--fs-small); font-weight: 700;
+ color: var(--pg-muted); flex-shrink: 0; margin-top: 2px;
 }
 .trust-step-body { flex: 1; }
 .trust-step-act { font-size: var(--fs-label); font-weight: 600; }
@@ -250,17 +254,17 @@
 .pg-chart-lbl { font-size: var(--fs-small); color: var(--pg-muted); }
 
 /* ROI grid stats */
-.roi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-sm); margin-bottom: var(--sp-sm); }
-.roi-stat { padding: var(--sp-sm); }
-.roi-val { font-size: var(--fs-h3); font-weight: 800; color: #fff; letter-spacing: -.3px; line-height: 1.2; }
-.roi-sub { font-size: var(--fs-small); color: var(--pg-muted); margin-top: 1px; }
-.roi-chart-wrap { margin-top: var(--sp-xs); }
-.roi-chart-label { font-size: var(--fs-small); font-weight: 600; letter-spacing: .2px; color: var(--pg-muted); margin-bottom: 2px; }
+.roi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-md); margin-bottom: var(--sp-sm); }
+.roi-stat { padding: var(--sp-md); }
+.roi-val { font-size: var(--fs-h3); font-weight: 800; color: #fff; letter-spacing: -.3px; line-height: 1.2; margin-bottom: var(--sp-xs); }
+.roi-sub { font-size: var(--fs-small); color: var(--pg-muted); margin-top: var(--sp-xs); }
+.roi-chart-wrap { margin-top: var(--sp-md); padding: 0 var(--sp-sm); }
+.roi-chart-label { font-size: var(--fs-small); font-weight: 600; letter-spacing: .2px; color: var(--pg-muted); margin-bottom: var(--sp-sm); }
 
 /* Queue table */
 .q-table { font-size: var(--fs-label); width: 100%; border-collapse: collapse; }
-.q-table th { font-size: var(--fs-small); color: var(--pg-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .2px; padding: var(--sp-xs) var(--sp-sm); text-align: left; border-bottom: 1px solid var(--pg-border); }
-.q-table td { padding: var(--sp-xs) var(--sp-sm); border-bottom: 1px solid var(--pg-border); }
+.q-table th { font-size: var(--fs-small); color: var(--pg-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .2px; padding: var(--sp-sm) var(--sp-md); text-align: left; border-bottom: 1px solid var(--pg-border); }
+.q-table td { padding: 10px var(--sp-md); border-bottom: 1px solid var(--pg-border); }
 .q-table tr:last-child td { border-bottom: none; }
 .q-table tr { cursor: pointer; transition: background .1s; }
 .q-table tr:hover { background: rgba(255,255,255,0.02); }
@@ -281,45 +285,49 @@
 
 /* Empty states with icon */
 .pg-empty { text-align: center; padding: var(--sp-xl) var(--sp-md); color: var(--pg-muted); font-size: var(--fs-body); }
-.pg-empty .pg-empty-icon { font-size: 28px; margin-bottom: var(--sp-sm); opacity: .5; }
+.pg-empty> div { margin-top: var(--sp-xs); }
 .pg-empty.big { font-size: var(--fs-h3); padding: 48px; }
 
 /* Skeleton loading */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+ 0% { background-position: -200% 0; }
+ 100% { background-position: 200% 0; }
 }
 .pg-skeleton {
-  background: linear-gradient(90deg, var(--pg-border) 25%, rgba(255,255,255,0.04) 50%, var(--pg-border) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: var(--r-sm);
+ background: linear-gradient(90deg, var(--pg-border) 25%, rgba(255,255,255,0.04) 50%, var(--pg-border) 75%);
+ background-size: 200% 100%;
+ animation: shimmer 1.5s infinite;
+ border-radius: var(--r-sm);
 }
 
 /* Responsive */
 @media (max-width:1024px) {
-  .trust-panel { width: 360px; }
-  .pg-policy-grid { grid-template-columns: 1fr 1fr; }
+ .trust-panel { width: 360px; }
+ .pg-policy-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width:900px) {
-  .pg-header-inner { flex-wrap: wrap; }
-  .pg-h-left { min-width: 160px; padding: 10px 14px; border-right: none; border-bottom: 1px solid var(--pg-border); width: 100%; }
-  .pg-h-center { flex-wrap: wrap; gap: var(--sp-xs); padding: var(--sp-xs) 10px; border-right: none; }
-  .pg-h-kpi { min-width: 50px; }
-  .pg-h-kpi-val { font-size: 18px; }
-  .pg-h-right { padding: var(--sp-sm) 12px; }
-  .trust-panel { width: 100%; max-width: 100vw; }
-  .pg-policy-grid { grid-template-columns: 1fr; }
+ .pg-header-inner { flex-wrap: wrap; }
+ .pg-h-left { min-width: 160px; padding: 14px 16px; border-right: none; border-bottom: 1px solid var(--pg-border); width: 100%; }
+ .pg-h-logo { width: 44px; height: 44px; }
+ .pg-h-name { font-size: var(--fs-h3); }
+ .pg-h-center { flex-wrap: wrap; gap: var(--sp-xs); padding: 12px 16px; border-right: none; }
+ .pg-h-kpi { min-width: 50px; }
+ .pg-h-kpi-val { font-size: 18px; }
+ .pg-h-right { padding: 12px 16px; }
+ .pg-status { padding: var(--sp-xs) 16px; }
+ .trust-panel { width: 100%; max-width: 100vw; }
+ .pg-policy-grid { grid-template-columns: 1fr; }
+ .pg-section h2 { font-size: var(--fs-h3); }
 }
 @media (max-width:600px) {
-  .pg-h-left { flex-direction: column; align-items: flex-start; gap: var(--sp-xs); }
-  .pg-h-center { gap: var(--sp-xs); }
-  .pg-h-kpi { min-width: 40%; }
-  .pg-h-kpi-val { font-size: 16px; }
-  .pg-h-right { width: 100%; justify-content: flex-end; }
-  .pg-policy-grid { grid-template-columns: 1fr; }
-  .pg-fun-row { flex-wrap: wrap; }
-  .pg-fun-label { width: 100%; text-align: left; font-size: var(--fs-label); }
+ .pg-h-left { flex-direction: column; align-items: flex-start; gap: var(--sp-xs); }
+ .pg-h-center { gap: var(--sp-xs); }
+ .pg-h-kpi { min-width: 40%; }
+ .pg-h-kpi-val { font-size: 16px; }
+ .pg-h-right { width: 100%; justify-content: flex-end; }
+ .pg-policy-grid { grid-template-columns: 1fr; }
+ .pg-fun-row { flex-wrap: wrap; }
+ .pg-fun-label { width: 100%; text-align: left; font-size: var(--fs-label); }
 }
 </style>
 
@@ -327,41 +335,41 @@
 <p class="page-desc">Intelligent agents that automate customer lifecycle workflows. Each agent handles a specific scenario end-to-end.</p>
 
 <div class="ch-tabs" id="agentTabs">
-  <button class="ch-tab active" data-tab="payguard"><span class="tab-icon">🛡️</span> PayGuard</button>
-  <button class="ch-tab" data-tab="retain"><span class="tab-icon">⚓</span> Retain</button>
-  <button class="ch-tab" data-tab="trace"><span class="tab-icon">🧭</span> Trace</button>
-  <button class="ch-tab" data-tab="settings"><svg class="ch-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</button>
+<button class="ch-tab active" data-tab="payguard"> PayGuard</button>
+<button class="ch-tab" data-tab="retain"> Retain</button>
+<button class="ch-tab" data-tab="trace"> Trace</button>
+<button class="ch-tab" data-tab="settings"><svg class="ch-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</button>
 </div>
 
 <!-- Trust Panel slide-out -->
 <div class="trust-overlay" id="trustOverlay" onclick="hideTrust()"></div>
 <div class="trust-panel" id="trustPanel">
-  <div class="trust-head"><h3>Why PayGuard Took This Action</h3><button class="ghost sm trust-close" onclick="hideTrust()">✕</button></div>
-  <div class="trust-body" id="trustBody"><div class="pg-empty">Select a workflow row or feed event to see the decision chain.</div></div>
+<div class="trust-head"><h3>Why PayGuard Took This Action</h3><button class="ghost sm trust-close" onclick="hideTrust()"></button></div>
+  <div class="trust-body" id="trustBody"><div class="pg-empty"><div>Select a workflow row or feed event to see the decision chain.</div></div></div>
 </div>
 
 <!-- Simulation modal -->
 <div class="modal-overlay" id="simModal">
-  <div class="modal sim-modal">
-    <div class="modal-header"><h2>🧪 Simulation: Preview PayGuard Before Enabling</h2><button class="ghost sm sim-close" onclick="hideSim()">✕</button></div>
-    <div id="simBody">
-      <p class="muted sim-desc">Based on your last 30 days of payment failures:</p>
-      <div class="stats sim-stats">
-        <div class="stat"><div class="n" id="simRev">—</div><div class="l">Recovered revenue</div><div class="sub" id="simRevComp"></div></div>
-        <div class="stat"><div class="n" id="simAuto">—</div><div class="l">Automation rate</div><div class="sub">vs 0% currently</div></div>
-        <div class="stat"><div class="n" id="simEsc">—</div><div class="l">Escalations</div><div class="sub" id="simEscNote"></div></div>
-        <div class="stat"><div class="n" id="simHrs">—</div><div class="l">Support hours saved</div></div>
-      </div>
-      <div class="help sim-help">
-        <h3>Confidence</h3>
-        <p>Based on <strong id="simSample">0</strong> historical payment failures analyzed. Simulation accuracy: <strong id="simAcc">±8%</strong></p>
-      </div>
-      <div class="ch-actions sim-actions">
-        <button class="ghost" onclick="hideSim()">Adjust Policy First</button>
-        <button class="accent" id="simEnableBtn" onclick="doEnablePayGuard()">Enable PayGuard</button>
-      </div>
-    </div>
-  </div>
+<div class="modal sim-modal">
+ <div class="modal-header"><h2>Simulation: Preview PayGuard Before Enabling</h2><button class="ghost sm sim-close" onclick="hideSim()"></button></div>
+ <div id="simBody">
+ <p class="muted sim-desc">Based on your last 30 days of payment failures:</p>
+ <div class="stats sim-stats">
+ <div class="stat"><div class="n" id="simRev">—</div><div class="l">Recovered revenue</div><div class="sub" id="simRevComp"></div></div>
+ <div class="stat"><div class="n" id="simAuto">—</div><div class="l">Automation rate</div><div class="sub">vs 0% currently</div></div>
+ <div class="stat"><div class="n" id="simEsc">—</div><div class="l">Escalations</div><div class="sub" id="simEscNote"></div></div>
+ <div class="stat"><div class="n" id="simHrs">—</div><div class="l">Support hours saved</div></div>
+ </div>
+ <div class="help sim-help">
+ <h3>Confidence</h3>
+ <p>Based on<strong id="simSample">0</strong> historical payment failures analyzed. Simulation accuracy:<strong id="simAcc">±8%</strong></p>
+ </div>
+ <div class="ch-actions sim-actions">
+ <button class="ghost" onclick="hideSim()">Adjust Policy First</button>
+ <button class="accent" id="simEnableBtn" onclick="doEnablePayGuard()">Enable PayGuard</button>
+ </div>
+ </div>
+</div>
 </div>
 
 <div id="agentPanels"></div>
@@ -375,40 +383,39 @@ function toObject(arr){ return (arr && typeof arr === 'object' && !Array.isArray
 var feedTimer = null, badgeTimer = null, lastFeedId = null;
 var pgEnabled = false, activeAgent = 'payguard', currentQueueTab = null;
 
-// ── Agent definitions (same as before) ──
-var AGENTS = [{ id:'payguard', name:'PayGuard', subtitle:'Failed Payment Recovery', icon:'🛡️', color:'#6366f1',
-  tagline:'Automatically recover failed subscription payments and prevent revenue leakage.',
-  whatItDoes:'PayGuard detects failed payments from Stripe and Recharge, classifies the failure type, and orchestrates intelligent retries with customer outreach.',
-  whatItGives:['Recovers 40-60% of failed subscription payments automatically','Prevents revenue leakage from involuntary churn','Reduces support burden by handling retries and outreach','Intelligently classifies failures to avoid retrying blocked payments'],
-  provider:'stripe', events:['invoice.payment_failed','charge.failed','invoice.payment_succeeded'],
-  states:['DETECTED','VALIDATING','CLASSIFYING','STRATEGY','OUTREACH','WAITING','RETRY_SCHEDULED','RETRYING','VERIFYING','RECONCILIATION','RECOVERED','FAILED','ESCALATED'] },
-{ id:'retain', name:'Retain', subtitle:'Cancellation Save', icon:'⚓', color:'#f59e0b',
-  tagline:'Detect cancellation intent and offer personalized save options to keep customers.',
-  whatItDoes:'Retain intercepts cancellation requests and subscription skip/pause events, then engages the customer with tailored save offers.',
-  whatItGives:['Reduces voluntary churn by 20-35% with timely save offers','Personalizes save options based on customer value and history','Automates the entire save flow while offering human escalation'],
-  provider:'recharge', events:['subscription/cancelled','subscription/skipped'], states:['INTENT_DETECTED','CLASSIFYING_INTENT','SELECTING_SAVE_FLOW','SAVE_OFFER_SENT','WAITING_CUSTOMER_DECISION','EXECUTING_ACTION','RETAINED','CANCELLED'] },
-{ id:'trace', name:'Trace', subtitle:'Order Tracking & WISMO', icon:'🧭', color:'#22d3ee',
-  tagline:'Answer "Where Is My Order?" automatically with real-time carrier tracking.',
-  whatItDoes:'Trace intercepts order fulfillment events, resolves tracking status from major carriers, and proactively communicates delivery updates.',
-  whatItGives:['Resolves 70-80% of WISMO inquiries without human touch','Proactively communicates delays before customers ask','Integrates with major carriers for real-time tracking'],
-  provider:'shopify', events:['fulfillments/create','orders/create'], states:['INQUIRY_DETECTED','VALIDATING_IDENTITY','RETRIEVING_SHIPMENT','CLASSIFYING_RISK','RESPONSE_SENT','RESOLVED','LOST'] }];
+// Agent definitions (same as before) 
+var AGENTS = [{ id:'payguard', name:'PayGuard', subtitle:'Failed Payment Recovery', icon:'', color:'#6366f1',
+ tagline:'Automatically recover failed subscription payments and prevent revenue leakage.',
+ whatItDoes:'PayGuard detects failed payments from Stripe and Recharge, classifies the failure type, and orchestrates intelligent retries with customer outreach.',
+ whatItGives:['Recovers 40-60% of failed subscription payments automatically','Prevents revenue leakage from involuntary churn','Reduces support burden by handling retries and outreach','Intelligently classifies failures to avoid retrying blocked payments'],
+ provider:'stripe', events:['invoice.payment_failed','charge.failed','invoice.payment_succeeded'],
+ states:['DETECTED','VALIDATING','CLASSIFYING','STRATEGY','OUTREACH','WAITING','RETRY_SCHEDULED','RETRYING','VERIFYING','RECONCILIATION','RECOVERED','FAILED','ESCALATED'] },
+{ id:'retain', name:'Retain', subtitle:'Cancellation Save', icon:'', color:'#f59e0b',
+ tagline:'Detect cancellation intent and offer personalized save options to keep customers.',
+ whatItDoes:'Retain intercepts cancellation requests and subscription skip/pause events, then engages the customer with tailored save offers.',
+ whatItGives:['Reduces voluntary churn by 20-35% with timely save offers','Personalizes save options based on customer value and history','Automates the entire save flow while offering human escalation'],
+ provider:'recharge', events:['subscription/cancelled','subscription/skipped'], states:['INTENT_DETECTED','CLASSIFYING_INTENT','SELECTING_SAVE_FLOW','SAVE_OFFER_SENT','WAITING_CUSTOMER_DECISION','EXECUTING_ACTION','RETAINED','CANCELLED'] },
+{ id:'trace', name:'Trace', subtitle:'Order Tracking & WISMO', icon:'', color:'#22d3ee',
+ tagline:'Answer "Where Is My Order?" automatically with real-time carrier tracking.',
+ whatItDoes:'Trace intercepts order fulfillment events, resolves tracking status from major carriers, and proactively communicates delivery updates.',
+ whatItGives:['Resolves 70-80% of WISMO inquiries without human touch','Proactively communicates delays before customers ask','Integrates with major carriers for real-time tracking'],
+ provider:'shopify', events:['fulfillments/create','orders/create'], states:['INQUIRY_DETECTED','VALIDATING_IDENTITY','RETRIEVING_SHIPMENT','CLASSIFYING_RISK','RESPONSE_SENT','RESOLVED','LOST'] }];
 
-// ── Render ──
+// Render 
 function renderAll(analytics, policies, workflows) {
-  var ew = toObject(policies.enabled_workflows);
-  pgEnabled = ew.payguard !== false;
-  document.getElementById('agentPanels').innerHTML =
-    renderPayGuard(AGENTS[0], analytics, policies, ew, workflows||[]) +
-    renderLegacyPanel(AGENTS[1], analytics, policies, ew, workflows||[], false) +
-    renderLegacyPanel(AGENTS[2], analytics, policies, ew, workflows||[], false) +
-    renderGlobalSettings(policies);
-  startFeed();
-  loadFunnel();
-  loadROI();
-  loadBadges();
+ var ew = toObject(policies.enabled_workflows);
+ pgEnabled = ew.payguard !== false;
+ document.getElementById('agentPanels').innerHTML =
+ renderPayGuard(AGENTS[0], analytics, policies, ew, workflows||[]) +
+ renderLegacyPanel(AGENTS[1], analytics, policies, ew, workflows||[], false) +
+ renderLegacyPanel(AGENTS[2], analytics, policies, ew, workflows||[], false) +
+ renderGlobalSettings(policies);
+ startFeed();
+ loadFunnel();
+ loadROI();
+ loadBadges();
 }
 
-// ── PayGuard Redesign ──
 function renderPayGuard(agent, analytics, policies, ew, workflows) {
   var enabled = ew[agent.id] !== false;
   var wfs = workflows.filter(function(w){ return w.workflow_type === agent.id; });
@@ -418,634 +425,633 @@ function renderPayGuard(agent, analytics, policies, ew, workflows) {
   var escalated = wfs.filter(function(w){ return w.status === 'escalated'; }).length;
 
   var h = '<div class="pg-header" id="pgHead">' +
-    '<div class="pg-header-inner">' +
-      '<div class="pg-h-left">' +
-        '<div class="pg-h-logo">🛡️</div>' +
-        '<div><div class="pg-h-name">PayGuard</div><div class="pg-h-sub">Failed Payment Recovery</div>' +
-        '<div class="pg-h-status">' +
-          '<span class="pill ' + (enabled?'ok':'muted') + '" id="pgStatPill">' + (enabled?'● Active':'Paused') + '</span>' +
-          '<span class="pill cyan" id="pgAutoPill">Autonomous</span>' +
-        '</div></div>' +
-      '</div>' +
-      '<div class="pg-h-center" id="kpiStrip">' +
-        kpiCell('kpiRev', '$—', 'Recovered Revenue') +
-        kpiCell('kpiRate', '—', 'Recovery Rate') +
-        kpiCell('kpiCustomers', '—', 'Recovered Customers') +
-        kpiCell('kpiAtRisk', '$—', 'At Risk') +
-        kpiCell('kpiApproval', '—', 'Awaiting Review') +
-      '</div>' +
-      '<div class="pg-h-right">' +
-        '<button class="pg-h-btn primary" onclick="switchQueue(\'active\')">📋 Review Queue</button>' +
-        '<button class="pg-h-btn ghost" onclick="togglePG(this)">' + (enabled?'⏸ Pause':'▶ Resume') + '</button>' +
-      '</div>' +
-    '</div>' +
-    '<div class="pg-status" id="pgStatusBar">' +
-      '<span class="pg-status-item"><span class="pg-status-dot ok"></span>Running normally</span>' +
-      '<span class="pg-status-item" id="pgStatusReview"><span class="pg-status-dot warn"></span>0 awaiting review</span>' +
-      '<span class="pg-status-item" id="pgStatusCritical"><span class="pg-status-dot muted"></span>No critical issues</span>' +
-      '<span class="pg-status-spacer"></span>' +
-      '<span class="pg-status-item pg-status-ai" id="pgStatusAI">🤖 Monitoring active</span>' +
-    '</div>' +
+  '<div class="pg-header-inner">' +
+  '<div class="pg-h-left">' +
+  '<div class="pg-h-logo"></div>' +
+  '<div><div class="pg-h-name">PayGuard</div><div class="pg-h-sub">Failed Payment Recovery</div>' +
+  '<div class="pg-h-status">' +
+  '<span class="pill ' + (enabled?'ok':'muted') + '" id="pgStatPill">' + (enabled?'Active':'Paused') + '</span>' +
+  '</div></div>' +
+  '</div>' +
+  '<div class="pg-h-center" id="kpiStrip">' +
+  kpiCell('kpiRev', '$—', 'Recovered Revenue') +
+  kpiCell('kpiRate', '—', 'Recovery Rate') +
+  kpiCell('kpiCustomers', '—', 'Recovered Customers') +
+  kpiCell('kpiAtRisk', '$—', 'At Risk') +
+  kpiCell('kpiApproval', '—', 'Awaiting Review') +
+  '</div>' +
+  '<div class="pg-h-right">' +
+  '<button class="pg-h-btn ghost" onclick="togglePG(this)">' + (enabled?'Pause':'Resume') + '</button>' +
+  '</div>' +
+  '</div>' +
+  '<div class="pg-status" id="pgStatusBar">' +
+  '<span class="pg-status-item pg-status-main"><span class="pg-status-dot ok"></span>Running normally</span>' +
+  '<span class="pg-status-spacer"></span>' +
+  '<span class="pg-status-item" id="pgStatusReview"><span class="pg-status-dot warn"></span><span id="reviewCount">0</span> awaiting review</span>' +
+  '<span class="pg-status-item pg-status-ai" id="pgStatusAI">Monitoring active</span>' +
+  '</div>' +
   '</div>';
 
-  var queueCard = '<div class="pg-section"><h2>📋 Queue &amp; Decisions</h2><div class="pg-card">' +
-    '<div class="pg-qt" id="queueTabs">' +
-      '<button class="pg-qt-btn active" onclick="switchQueue(\'active\',this)">All</button>' +
-      '<button class="pg-qt-btn" onclick="switchQueue(\'active\',this)">Active <span class="pg-qt-badge" id="qBadgeActive">' + active + '</span></button>' +
-      '<button class="pg-qt-btn" onclick="switchQueue(\'approvals\',this)">Review <span class="pg-qt-badge" id="qBadgeAppr" style="display:none">0</span></button>' +
-      '<button class="pg-qt-btn" onclick="switchQueue(\'escalations\',this)">Escalated <span class="pg-qt-badge" id="qBadgeEsc" style="display:none">0</span></button>' +
-      '<button class="pg-qt-btn" onclick="switchQueue(\'log\',this)">History</button>' +
-    '</div><div class="pg-q-body" id="queueBody">' + renderQueueTable(wfs.slice(0,5), 'active') + '</div>' +
+  var queueCard = '<div class="pg-section"><h2>Queue</h2><div class="pg-card">' +
+  '<div class="pg-qt" id="queueTabs">' +
+  '<button class="pg-qt-btn active" onclick="switchQueue(\'active\',this)">All</button>' +
+  '<button class="pg-qt-btn" onclick="switchQueue(\'active\',this)">Active<span class="pg-qt-badge" id="qBadgeActive">' + active + '</span></button>' +
+  '<button class="pg-qt-btn" onclick="switchQueue(\'approvals\',this)">Review<span class="pg-qt-badge" id="qBadgeAppr" style="display:none">0</span></button>' +
+  '<button class="pg-qt-btn" onclick="switchQueue(\'escalations\',this)">Escalated<span class="pg-qt-badge" id="qBadgeEsc" style="display:none">0</span></button>' +
+  '<button class="pg-qt-btn" onclick="switchQueue(\'log\',this)">History</button>' +
+  '</div><div class="pg-q-body" id="queueBody">' + renderQueueTable(wfs.slice(0,5), 'active') + '</div>' +
   '</div></div>';
 
-  var funnelCard = '<div class="pg-section"><h2>📊 Recovery Pipeline</h2><div class="pg-card">' +
-    '<div id="pgFunnel" class="pg-funnel"><div class="pg-empty"><div class="pg-empty-icon">📈</div>No workflow data yet. Run your first transaction to see conversion data.</div></div>' +
+  var funnelCard = '<div class="pg-section"><h2>Recovery Pipeline</h2><div class="pg-card">' +
+  '<div id="pgFunnel" class="pg-funnel"><div class="pg-empty"><div>No workflow data yet. Run your first transaction to see conversion data.</div></div></div>' +
   '</div></div>';
 
-  var feedCard = '<div class="pg-section"><h2>🔔 Workflow Activity</h2><div class="pg-card">' +
-    '<div id="pgFeed" class="pg-feed"><div class="pg-empty"><div class="pg-empty-icon">✅</div>All systems operational. No recent events.</div></div>' +
+  var feedCard = '<div class="pg-section"><h2>Workflow Activity</h2><div class="pg-card">' +
+  '<div id="pgFeed" class="pg-feed"><div class="pg-empty"><div>All systems operational. No recent events.</div></div></div>' +
   '</div></div>';
 
-  var roiHtml = '<div class="pg-section"><h2>💰 Revenue &amp; Impact</h2><div class="pg-card">' +
-    '<div id="roiBody"><div class="pg-empty"><div class="pg-empty-icon">📊</div>Loading...</div></div></div></div>';
+  var roiHtml = '<div class="pg-section"><h2>Revenue &amp; Impact</h2><div class="pg-card">' +
+  '<div id="roiBody"><div class="pg-empty"><div>Loading...</div></div></div></div></div>';
 
-  var configHtml = '<div class="pg-section"><h2>⚙️ Policies</h2>' +
-    '<div class="pg-policy-grid" id="policyGrid">' +
-      renderConfig() +
-    '</div>' +
-    '<div class="pg-card pg-risk-card" id="riskCard">' +
-      '<div class="pg-card-title">🛡️ Risk Controls</div><div id="riskBody">' + renderRiskControls() + '</div>' +
-    '</div></div>';
+  var configHtml = '<div class="pg-section"><h2>Policies</h2>' +
+  '<div class="pg-policy-grid" id="policyGrid">' +
+  renderConfig() +
+  '</div>' +
+  '<div class="pg-card pg-risk-card" id="riskCard">' +
+  '<div class="pg-card-title">Risk Controls</div><div id="riskBody">' + renderRiskControls() + '</div>' +
+  '</div></div>';
 
   return '<div class="ch-panel active" id="panel-payguard">' + h +
-    queueCard + funnelCard + feedCard + roiHtml + configHtml + '</div>';
+  queueCard + funnelCard + feedCard + roiHtml + configHtml + '</div>';
 }
 
 function kpiCell(id, val, lbl) {
-  return '<div class="pg-h-kpi"><div class="pg-h-kpi-val" id="' + id + '">' + val + '</div><div class="pg-h-kpi-lbl">' + lbl + '</div></div>';
+ return '<div class="pg-h-kpi"><div class="pg-h-kpi-val" id="' + id + '">' + val + '</div><div class="pg-h-kpi-lbl">' + lbl + '</div></div>';
 }
 
-// ── Live Feed ──
+// Live Feed 
 function startFeed() {
-  if (feedTimer) clearInterval(feedTimer);
-  if (badgeTimer) clearInterval(badgeTimer);
-  lastFeedId = null;
-  loadFeed();
-  loadBadges();
-  feedTimer = setInterval(loadFeed, 10000);
-  badgeTimer = setInterval(loadBadges, 30000);
+ if (feedTimer) clearInterval(feedTimer);
+ if (badgeTimer) clearInterval(badgeTimer);
+ lastFeedId = null;
+ loadFeed();
+ loadBadges();
+ feedTimer = setInterval(loadFeed, 10000);
+ badgeTimer = setInterval(loadBadges, 30000);
 }
 
 async function loadFeed() {
-  try {
-    var url = '/admin/api/agents/payguard/feed';
-    if (lastFeedId) url += '?since=' + encodeURIComponent(lastFeedId);
-    var d = await api(url);
-    var evs = d.events||[];
-    if (evs.length) lastFeedId = evs[0].created_at;
-    renderFeed(evs);
-  } catch(e) {}
+ try {
+ var url = '/admin/api/agents/payguard/feed';
+ if (lastFeedId) url += '?since=' + encodeURIComponent(lastFeedId);
+ var d = await api(url);
+ var evs = d.events||[];
+ if (evs.length) lastFeedId = evs[0].created_at;
+ renderFeed(evs);
+ } catch(e) {}
 }
 
 function renderFeed(events) {
-  var el = document.getElementById('pgFeed'); if (!el) return;
-  if (!events.length) { el.innerHTML = '<div class="pg-empty"><div class="pg-empty-icon">✅</div>All systems operational. No recent events.</div>'; return; }
-  var groups = { recoveries:[], waiting:[], escalations:[], review:[] };
-  events.slice(0,30).forEach(function(e){
-    if (e.state === 'RECOVERED' || e.state === 'RETAINED' || e.state === 'RESOLVED') groups.recoveries.push(e);
-    else if (e.type === 'escalation') groups.escalations.push(e);
-    else if (e.type === 'approval' || e.needs_human) groups.review.push(e);
-    else groups.waiting.push(e);
-  });
-  var sections = [];
-  if (groups.recoveries.length) sections.push(
-    '<div class="pg-fi-group" style="color:var(--pg-success)">Recoveries</div>' +
-    groups.recoveries.map(feedItem).join('')
-  );
-  if (groups.waiting.length) sections.push(
-    '<div class="pg-fi-group" style="color:var(--pg-warning)">Waiting</div>' +
-    groups.waiting.map(feedItem).join('')
-  );
-  if (groups.escalations.length) sections.push(
-    '<div class="pg-fi-group" style="color:var(--pg-error)">Escalations</div>' +
-    groups.escalations.map(feedItem).join('')
-  );
-  if (groups.review.length) sections.push(
-    '<div class="pg-fi-group" style="color:var(--pg-accent)">Human Review</div>' +
-    groups.review.map(feedItem).join('')
-  );
-  el.innerHTML = sections.join('') || '<div class="pg-empty"><div class="pg-empty-icon">✅</div>No recent activity.</div>';
+ var el = document.getElementById('pgFeed'); if (!el) return;
+ if (!events.length) { el.innerHTML = '<div class="pg-empty">' + '<div>All systems operational. No recent events.</div></div>'; return; }
+ var groups = { recoveries:[], waiting:[], escalations:[], review:[] };
+ events.slice(0,30).forEach(function(e){
+ if (e.state === 'RECOVERED' || e.state === 'RETAINED' || e.state === 'RESOLVED') groups.recoveries.push(e);
+ else if (e.type === 'escalation') groups.escalations.push(e);
+ else if (e.type === 'approval' || e.needs_human) groups.review.push(e);
+ else groups.waiting.push(e);
+ });
+ var sections = [];
+ if (groups.recoveries.length) sections.push(
+ '<div class="pg-fi-group" style="color:var(--pg-success)"> Recoveries</div>' +
+ groups.recoveries.map(feedItem).join('')
+ );
+ if (groups.waiting.length) sections.push(
+ '<div class="pg-fi-group" style="color:var(--pg-warning)"> Waiting</div>' +
+ groups.waiting.map(feedItem).join('')
+ );
+ if (groups.escalations.length) sections.push(
+ '<div class="pg-fi-group" style="color:var(--pg-error)"> Escalations</div>' +
+ groups.escalations.map(feedItem).join('')
+ );
+ if (groups.review.length) sections.push(
+ '<div class="pg-fi-group" style="color:var(--pg-accent)"> Human Review</div>' +
+ groups.review.map(feedItem).join('')
+ );
+ el.innerHTML = sections.join('') || '<div class="pg-empty">' + '<div>No recent activity.</div></div>';
 }
 
 function feedItem(e) {
-  var icon = e.icon || '🔄';
-  var sc = 'color:var(--pg-muted)';
-  if (e.state === 'RECOVERED' || e.state === 'RETAINED' || e.state === 'RESOLVED') sc = 'color:var(--pg-success)';
-  else if (e.type === 'escalation') sc = 'color:var(--pg-error)';
-  else if (e.state === 'RETRYING' || e.state === 'WAITING_CUSTOMER') sc = 'color:var(--pg-warning)';
-  var amountHtml = e.amount ? '<span class="pg-fi-amount" style="' + sc + '">$' + Number(e.amount).toFixed(2) + '</span>' : '';
-  var confHtml = e.confidence != null ? '<span class="pg-fi-conf">' + e.confidence + '% conf</span>' : '';
-  var time = e.created_at ? timeAgo(e.created_at) : '';
-  var msg = e.reason ? '<div class="pg-fi-msg">' + esc(e.reason.slice(0,60)) + '</div>' : '';
-  return '<div class="pg-fi" onclick="showTrust(\'' + esc(e.workflow_id||'') + '\')">' +
-    '<span class="pg-fi-icon">' + icon + '</span>' +
-    '<div class="pg-fi-body"><div class="pg-fi-top"><span class="pg-fi-action">' + esc(e.action||'') + '</span><div class="pg-fi-meta-right">' + amountHtml + confHtml + '</div></div>' +
-    '<div class="pg-fi-meta">' + esc((e.customer_id||'').slice(0,14)) + ' · ' + time + '</div>' + msg +
-  '</div></div>';
+ var icon = e.icon || '';
+ var isRecovered = e.state === 'RECOVERED' || e.state === 'RETAINED' || e.state === 'RESOLVED';
+ var isEscalated = e.type === 'escalation';
+ var isWaiting = e.state === 'RETRYING' || e.state === 'WAITING_CUSTOMER';
+ var amountCol = isRecovered ? 'var(--pg-success)' : isEscalated ? 'var(--pg-error)' : isWaiting ? 'var(--pg-warning)' : 'var(--pg-muted)';
+ var amtCls = isRecovered ? '' : ' risk';
+ var amountHtml = e.amount ? '<span class="pg-fi-amount' + amtCls + '" style="color:' + amountCol + '">$' + Number(e.amount).toFixed(2) + '</span>' : '';
+ var confHtml = e.confidence != null ? '<span class="pg-fi-conf">' + e.confidence + '% conf</span>' : '';
+ var time = e.created_at ? timeAgo(e.created_at) : '';
+ var msg = e.reason ? '<div class="pg-fi-msg">' + esc(e.reason.slice(0,60)) + '</div>' : '';
+ return '<div class="pg-fi" onclick="showTrust(\ esc(e.workflow_id||'') + '\')">' +
+ '<span class="pg-fi-icon">' + icon + '</span>' +
+ '<div class="pg-fi-body"><div class="pg-fi-top"><span class="pg-fi-action">' + esc(e.action||'') + '</span><div class="pg-fi-meta-right">' + amountHtml + confHtml + '</div></div>' +
+ '<div class="pg-fi-meta">' + esc((e.customer_id||'').slice(0,14)) + ' · ' + time + '</div>' + msg +
+ '</div></div>';
 }
 
-// ── Funnel (horizontal bars per plan D2) ──
+// Funnel (horizontal bars per plan D2) 
 async function loadFunnel() {
-  try {
-    var d = await api('/admin/api/agents/payguard/funnel');
-    renderFunnel(d.stages||[], d.drop_offs||[]);
-  } catch(e) {}
+ try {
+ var d = await api('/admin/api/agents/payguard/funnel');
+ renderFunnel(d.stages||[], d.drop_offs||[]);
+ } catch(e) {}
 }
 
 function renderFunnel(stages, dropOffs) {
-  var el = document.getElementById('pgFunnel'); if (!el) return;
-  if (!stages.length) { el.innerHTML = '<div class="pg-empty"><div class="pg-empty-icon">📈</div>No workflow data yet. Run your first transaction to see conversion data.</div>'; return; }
-  var maxC = Math.max.apply(null, stages.map(function(s){ return s.count; }), 1);
-  el.innerHTML = stages.map(function(s, i){
-    var pct = Math.round((s.count / maxC) * 100);
-    var isLast = i === stages.length - 1;
-    var isDrop = s.state === 'Failed' || s.state === 'Escalated' || s.state === 'Expired';
-    var bg;
-    if (isLast) bg = 'var(--pg-success)';
-    else if (isDrop) bg = 'var(--pg-error)';
-    else if (i === 0) bg = 'var(--pg-accent)';
-    else bg = 'var(--pg-warning)';
-    var drop = dropOffs[i-1];
-    var dropHtml = (drop && i > 0 && drop.drop > 0) ? '<span class="pg-fun-drop">↓ ' + drop.drop + ' ' + (drop.reason||'') + '</span>' : '';
-    return '<div class="pg-fun-row">' +
-      '<div class="pg-fun-label">' + s.label.split(' ').slice(0,2).join(' ') + '</div>' +
-      '<div class="pg-fun-bar-wrap">' +
-        '<div class="pg-fun-bar-track">' +
-          '<div class="pg-fun-bar-fill" style="width:' + pct + '%;background:' + bg + '">' +
-            '<span class="pg-fun-bar-count">' + s.count + '</span>' +
-          '</div>' +
-        '</div>' +
-        dropHtml +
-      '</div>' +
-    '</div>';
-  }).join('');
+ var el = document.getElementById('pgFunnel'); if (!el) return;
+ if (!stages.length) { el.innerHTML = '<div class="pg-empty">' + '<div>No workflow data yet. Run your first transaction to see conversion data.</div></div>'; return; }
+ var maxC = Math.max.apply(null, stages.map(function(s){ return s.count; }), 0);
+ if (!maxC) { el.innerHTML = '<div class="pg-empty">' + '<div>No workflow data yet. Run your first transaction to see conversion data.</div></div>'; return; }
+ el.innerHTML = stages.map(function(s, i){
+ var pct = Math.round((s.count / maxC) * 100);
+ var isLast = i === stages.length - 1;
+ var isDrop = s.state === 'Failed' || s.state === 'Escalated' || s.state === 'Expired';
+ var bg;
+ if (isLast) bg = 'var(--pg-success)';
+ else if (isDrop) bg = 'var(--pg-error)';
+ else if (i === 0) bg = 'var(--pg-accent)';
+ else bg = 'var(--pg-warning)';
+ var drop = dropOffs[i-1];
+ var dropHtml = (drop && i> 0 && drop.drop> 0) ? '<span class="pg-fun-drop">↓ ' + drop.drop + ' ' + (drop.reason||'') + '</span>' : '';
+ return '<div class="pg-fun-row">' +
+ '<div class="pg-fun-label">' + s.label.split(' ').slice(0,2).join(' ') + '</div>' +
+ '<div class="pg-fun-bar-wrap">' +
+ '<div class="pg-fun-bar-track">' +
+ '<div class="pg-fun-bar-fill" style="width:' + pct + '%;background:' + bg + '">' +
+ '<span class="pg-fun-bar-count">' + s.count + '</span>' +
+ '</div>' +
+ '</div>' +
+ dropHtml +
+ '</div>' +
+ '</div>';
+ }).join('');
 }
 
-// ── Queue ──
+// Queue 
 function renderQueueTable(items, type) {
-  if (!items || !items.length) {
-    var msgs = { active:'All clear — no active recoveries.', approvals:'All clear — no actions require your review.', escalations:'No escalations. PayGuard is handling everything autonomously.', log:'No log entries.', overview:'No data.' };
-    return '<div class="pg-q-empty">' + (msgs[type]||'No items.') + '</div>';
-  }
-  var heads = { active:'<tr><th>Customer</th><th>Amount</th><th>State</th><th>Risk</th><th>Next Step</th></tr>', approvals:'<tr><th>ID</th><th>Action</th><th>Risk</th><th>Confidence</th><th></th></tr>', escalations:'<tr><th>ID</th><th>Reason</th><th>Severity</th><th></th></tr>', log:'<tr><th>Time</th><th>Event</th><th>Entity</th></tr>' };
-  var rows = items.map(function(item){
-    if (type === 'active' || type === 'overview' || type === 'all') {
-      var sc = ['RECOVERED','RETAINED','RESOLVED'].includes(item.current_state) ? 'ok' : ['FAILED','CANCELLED'].includes(item.current_state) ? 'err' : item.current_state==='ESCALATED'?'err': item.current_state==='WAITING_CUSTOMER'||item.current_state==='RETRYING'?'warn':'muted';
-      var rl = item.risk_level === 'high' ? 'err' : item.risk_level === 'medium' ? 'warn' : 'muted';
-      var next = item.current_state === 'OUTREACH_SENT' ? 'Awaiting response' : item.current_state === 'RETRY_SCHEDULED' ? 'Retry pending' : item.current_state === 'WAITING_CUSTOMER' ? 'Customer action' : item.current_state === 'CLASSIFYING_FAILURE' ? 'Classifying...' : item.current_state === 'DETECTED' ? 'Starting...' : item.current_state === 'VERIFYING_RESULT' ? 'Verifying...' : item.current_state === 'PAUSED_RECONCILIATION' ? 'Review needed' : item.current_state || item.status;
-      return '<tr onclick="showTrust(\'' + esc(item.id||'') + '\')">' +
-        '<td class="q-cell-main">' + esc((item.customer_id||'').slice(0,12)) + '</td>' +
-        '<td class="q-cell-bold">' + (item.amount_due ? '$'+Number(item.amount_due).toFixed(2) : '-') + '</td>' +
-        '<td><span class="pill ' + sc + '">' + esc(item.current_state||'') + '</span></td>' +
-        '<td><span class="pill ' + rl + '">' + esc(item.risk_level||'med') + '</span></td>' +
-        '<td class="q-cell-muted">' + next + '</td></tr>';
-    }
-    if (type === 'approvals') {
-      var rl = item.risk_level === 'high' ? 'err' : item.risk_level === 'medium' ? 'warn' : 'muted';
-      return '<tr><td><code>' + esc((item.id||'').slice(0,8)) + '</code></td>' +
-        '<td class="q-cell">' + esc(item.action_type||'') + '</td>' +
-        '<td><span class="pill ' + rl + '">' + esc(item.risk_level||'') + '</span></td>' +
-        '<td class="q-cell">' + (item.ai_confidence!=null ? item.ai_confidence+'%' : '-') + '</td>' +
-        '<td><div class="q-actions"><button class="pg-op-btn approve" onclick="queueApprove(\'' + esc(item.id) + '\')">✓</button><button class="pg-op-btn reject" onclick="queueReject(\'' + esc(item.id) + '\')">✕</button></div></td></tr>';
-    }
-    if (type === 'escalations') {
-      var sv = item.severity === 'critical' ? 'err' : item.severity === 'high' ? 'warn' : 'muted';
-      return '<tr><td><code>' + esc((item.id||'').slice(0,8)) + '</code></td>' +
-        '<td class="q-cell-reason">' + esc(item.reason||'') + '</td>' +
-        '<td><span class="pill ' + sv + '">' + esc(item.severity||'') + '</span></td>' +
-        '<td><button class="pg-op-btn resolve" onclick="queueResolve(\'' + esc(item.id) + '\')">✓ Resolve</button></td></tr>';
-    }
-    if (type === 'log') {
-      return '<tr><td class="q-cell-time">' + (item.created_at?new Date(item.created_at).toLocaleString():'-') + '</td>' +
-        '<td class="q-cell">' + esc(item.event_type||'') + '</td><td><code>' + esc((item.entity_id||'').slice(0,8)) + '</code></td></tr>';
-    }
-    return '';
-  }).join('');
-  return '<table class="q-table"><thead>' + (heads[type]||'') + '</thead><tbody>' + rows + '</tbody></table>';
+ if (!items || !items.length) {
+ var msgs = { active:'All clear — no active recoveries.', approvals:'All clear — no actions require your review.', escalations:'No escalations. PayGuard is handling everything autonomously.', log:'No log entries.', overview:'No data.' };
+ return '<div class="pg-q-empty">' + (msgs[type]||'No items.') + '</div>';
+ }
+ var heads = { active:'<tr><th>Customer</th><th>Amount</th><th>State</th><th>Risk</th><th>Next Step</th></tr>', approvals:'<tr><th>ID</th><th>Action</th><th>Risk</th><th>Confidence</th><th></th></tr>', escalations:'<tr><th>ID</th><th>Reason</th><th>Severity</th><th></th></tr>', log:'<tr><th>Time</th><th>Event</th><th>Entity</th></tr>' };
+ var rows = items.map(function(item){
+ if (type === 'active' || type === 'overview' || type === 'all') {
+ var sc = ['RECOVERED','RETAINED','RESOLVED'].includes(item.current_state) ? 'ok' : ['FAILED','CANCELLED'].includes(item.current_state) ? 'err' : item.current_state==='ESCALATED'?'err': item.current_state==='WAITING_CUSTOMER'||item.current_state==='RETRYING'?'warn':'muted';
+ var rl = item.risk_level === 'high' ? 'err' : item.risk_level === 'medium' ? 'warn' : 'muted';
+ var next = item.current_state === 'OUTREACH_SENT' ? 'Awaiting response' : item.current_state === 'RETRY_SCHEDULED' ? 'Retry pending' : item.current_state === 'WAITING_CUSTOMER' ? 'Customer action' : item.current_state === 'CLASSIFYING_FAILURE' ? 'Classifying...' : item.current_state === 'DETECTED' ? 'Starting...' : item.current_state === 'VERIFYING_RESULT' ? 'Verifying...' : item.current_state === 'PAUSED_RECONCILIATION' ? 'Review needed' : item.current_state || item.status;
+ return '<tr onclick="showTrust(\ esc(item.id||'') + '\')">' +
+ '<td class="q-cell-main">' + esc((item.customer_id||'').slice(0,12)) + '</td>' +
+ '<td class="q-cell-bold">' + (item.amount_due ? '$'+Number(item.amount_due).toFixed(2) : '-') + '</td>' +
+ '<td><span class="pill ' + sc + '">' + esc(item.current_state||'') + '</span></td>' +
+ '<td><span class="pill ' + rl + '">' + esc(item.risk_level||'med') + '</span></td>' +
+ '<td class="q-cell-muted">' + next + '</td></tr>';
+ }
+ if (type === 'approvals') {
+ var rl = item.risk_level === 'high' ? 'err' : item.risk_level === 'medium' ? 'warn' : 'muted';
+ return '<tr><td><code>' + esc((item.id||'').slice(0,8)) + '</code></td>' +
+ '<td class="q-cell">' + esc(item.action_type||'') + '</td>' +
+ '<td><span class="pill ' + rl + '">' + esc(item.risk_level||'') + '</span></td>' +
+ '<td class="q-cell">' + (item.ai_confidence!=null ? item.ai_confidence+'%' : '-') + '</td>' +
+ '<td><div class="q-actions"><button class="pg-op-btn approve" onclick="queueApprove(\ esc(item.id) + '\')"></button><button class="pg-op-btn reject" onclick="queueReject(\ esc(item.id) + '\')"></button></div></td></tr>';
+ }
+ if (type === 'escalations') {
+ var sv = item.severity === 'critical' ? 'err' : item.severity === 'high' ? 'warn' : 'muted';
+ return '<tr><td><code>' + esc((item.id||'').slice(0,8)) + '</code></td>' +
+ '<td class="q-cell-reason">' + esc(item.reason||'') + '</td>' +
+ '<td><span class="pill ' + sv + '">' + esc(item.severity||'') + '</span></td>' +
+ '<td><button class="pg-op-btn resolve" onclick="queueResolve(\ esc(item.id) + '\')"> Resolve</button></td></tr>';
+ }
+ if (type === 'log') {
+ return '<tr><td class="q-cell-time">' + (item.created_at?new Date(item.created_at).toLocaleString():'-') + '</td>' +
+ '<td class="q-cell">' + esc(item.event_type||'') + '</td><td><code>' + esc((item.entity_id||'').slice(0,8)) + '</code></td></tr>';
+ }
+ return '';
+ }).join('');
+ return '<table class="q-table"><thead>' + (heads[type]||'') + '</thead><tbody>' + rows + '</tbody></table>';
 }
 
 async function switchQueue(tab, btn) {
-  currentQueueTab = tab;
-  if (btn) { document.querySelectorAll('.pg-qt-btn').forEach(function(b){ b.classList.remove('active'); }); btn.classList.add('active'); }
-  var body = document.getElementById('queueBody'); if (!body) return;
-  body.innerHTML = '<div class="pg-q-empty">Loading...</div>';
-  if (tab === 'overview' || tab === 'all') {
-    try { var wf = await api('/admin/api/workflows?limit=200'); var pwf = (wf.workflows||[]).filter(function(w){ return w.workflow_type===activeAgent; }); body.innerHTML = renderQueueTable(pwf.slice(0,20), 'active'); } catch(e){ body.innerHTML = renderQueueTable([], 'active'); }
-    return;
-  }
-  try {
-    var d = await api('/admin/api/agents/' + activeAgent + '/queue?queue=' + tab + '&limit=20');
-    body.innerHTML = renderQueueTable(d.items||[], tab);
-  } catch(e) { body.innerHTML = '<div class="pg-q-empty">Error loading queue.</div>'; }
+ currentQueueTab = tab;
+ if (btn) { document.querySelectorAll('.pg-qt-btn').forEach(function(b){ b.classList.remove('active'); }); btn.classList.add('active'); }
+ var body = document.getElementById('queueBody'); if (!body) return;
+ body.innerHTML = '<div class="pg-q-empty">Loading queue...</div>';
+ if (tab === 'overview' || tab === 'all') {
+ try { var wf = await api('/admin/api/workflows?limit=200'); var pwf = (wf.workflows||[]).filter(function(w){ return w.workflow_type===activeAgent; }); body.innerHTML = renderQueueTable(pwf.slice(0,20), 'active'); } catch(e){ body.innerHTML = renderQueueTable([], 'active'); }
+ return;
+ }
+ try {
+ var d = await api('/admin/api/agents/' + activeAgent + '/queue?queue=' + tab + '&limit=20');
+ body.innerHTML = renderQueueTable(d.items||[], tab);
+ } catch(e) { body.innerHTML = '<div class="pg-q-empty">Error loading queue.</div>'; }
 }
 
-// ── Queue Operations ──
+// Queue Operations 
 async function queueApprove(id) {
-  if (!confirm('Approve this action?')) return;
-  try {
-    await api('/admin/api/agents/' + activeAgent + '/queue/approve', {method:'POST', body:{item_id:id}});
-    switchQueue(currentQueueTab || 'approvals', document.querySelector('.pg-qt-btn.active'));
-  } catch(e) { showModal('Error', 'Failed to approve: ' + e.message); }
+ if (!confirm('Approve this action?')) return;
+ try {
+ await api('/admin/api/agents/' + activeAgent + '/queue/approve', {method:'POST', body:{item_id:id}});
+ switchQueue(currentQueueTab || 'approvals', document.querySelector('.pg-qt-btn.active'));
+ } catch(e) { showModal('Error', 'Failed to approve: ' + e.message); }
 }
 
 async function queueReject(id) {
-  var reason = prompt('Reason for rejection:');
-  if (reason === null) return;
-  try {
-    await api('/admin/api/agents/' + activeAgent + '/queue/reject', {method:'POST', body:{item_id:id}});
-    switchQueue(currentQueueTab || 'approvals', document.querySelector('.pg-qt-btn.active'));
-  } catch(e) { showModal('Error', 'Failed to reject: ' + e.message); }
+ var reason = prompt('Reason for rejection:');
+ if (reason === null) return;
+ try {
+ await api('/admin/api/agents/' + activeAgent + '/queue/reject', {method:'POST', body:{item_id:id}});
+ switchQueue(currentQueueTab || 'approvals', document.querySelector('.pg-qt-btn.active'));
+ } catch(e) { showModal('Error', 'Failed to reject: ' + e.message); }
 }
 
 async function queueResolve(id) {
-  if (!confirm('Resolve this escalation?')) return;
-  try {
-    await api('/admin/api/agents/' + activeAgent + '/queue/resolve', {method:'POST', body:{item_id:id}});
-    switchQueue(currentQueueTab || 'escalations', document.querySelector('.pg-qt-btn.active'));
-  } catch(e) { showModal('Error', 'Failed to resolve: ' + e.message); }
+ if (!confirm('Resolve this escalation?')) return;
+ try {
+ await api('/admin/api/agents/' + activeAgent + '/queue/resolve', {method:'POST', body:{item_id:id}});
+ switchQueue(currentQueueTab || 'escalations', document.querySelector('.pg-qt-btn.active'));
+ } catch(e) { showModal('Error', 'Failed to resolve: ' + e.message); }
 }
 
-// ── Simplified Configuration (5 concepts as cards) ──
+// Simplified Configuration (5 concepts as cards) 
 function renderConfig() {
-  var cards = [
-    { id:'recovery_strategy', icon:'🔄', label:'Recovery Strategy',
-      body: function(){
-        return '<div class="pg-cfg-field"><div class="pg-cfg-label">Profile</div><div class="pg-cfg-row">' +
-          ['Conservative','Balanced','Aggressive'].map(function(p,i){
-            var descs = ['40% recovery, low pressure','62% recovery, moderate','78% recovery, higher risk'];
-            return '<div class="pg-cfg-seg-btn pg-cfg-profile-btn ' + (i===1?'active':'') + '" data-v="' + p.toLowerCase() + '">' +
-              '<div class="pg-cfg-profile-name">' + p + '</div><div class="pg-cfg-profile-desc">' + descs[i] + '</div></div>';
-          }).join('') + '</div></div>' +
-          '<div class="pg-cfg-field"><div class="pg-cfg-label">Recovery window</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-window">' +
-            '<button class="pg-cfg-seg-btn active" data-v="14">14 days</button>' +
-            '<button class="pg-cfg-seg-btn" data-v="30">30 days</button>' +
-            '<button class="pg-cfg-seg-btn" data-v="7">7 days</button>' +
-          '</div></div></div>' +
-          '<div class="pg-cfg-field"><div class="pg-cfg-row"><div class="pg-toggle on" id="tgl-smart"></div><span class="pg-cfg-toggle-label">AI adapts timing based on success</span></div></div>' +
-          '<div class="pg-cfg-adv"><button class="pg-cfg-adv-toggle" onclick="toggleAdv(this)">▶ Advanced</button>' +
-          '<div class="pg-cfg-adv-body"><input type="text" class="pg-autosave pg-cfg-input-wide" data-key="retry_intervals" value="5min, 1h, 24h">' +
-          ' <input type="number" class="pg-autosave pg-cfg-input-narrow" data-key="max_retries" value="3"> max attempts' +
-          '</div></div><span class="pg-cfg-autosave-hint">⚡ Autosaves after 1.5s</span>';
-      }
-    },
-    { id:'communication', icon:'✉️', label:'Customer Communication',
-      body: function(){
-        return '<div class="pg-cfg-field"><div class="pg-cfg-label">Channels</div><div class="pg-cfg-row">' +
-          ['email','widget','sms'].map(function(c,i){ return '<label class="pg-cfg-chk-label pg-cfg-chk-inline"><input type="checkbox" ' + (i<2?'checked':'') + '> ' + c + '</label>'; }).join('') +
-        '</div></div>' +
-        '<div class="pg-cfg-field"><div class="pg-cfg-label">Tone</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-tone">' +
-          '<button class="pg-cfg-seg-btn" data-v="strict">Strict</button>' +
-          '<button class="pg-cfg-seg-btn active" data-v="professional">Professional</button>' +
-          '<button class="pg-cfg-seg-btn" data-v="friendly">Friendly</button>' +
-        '</div></div></div>' +
-        '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Example message</div><div class="pg-cfg-msg-preview">"Hi {{name}}, your payment of ${{amount}} didn\'t go through. Update your card to keep your subscription active."</div></div>';
-      }
-    },
-    { id:'approval_rules', icon:'✅', label:'Approval Rules',
-      body: function(){
-        return '<div class="pg-cfg-field"><div class="pg-cfg-label">Require approval when</div>' +
-          '<div class="pg-cfg-rule-box">' +
-            '<div class="pg-cfg-rule-row"><select class="pg-autosave pg-cfg-select" data-key="approval_condition">' +
-              '<option value="amount">Amount &gt;</option><option value="risk">Risk level</option><option value="sentiment">Customer sentiment</option></select>' +
-            ' <input type="number" class="pg-autosave pg-cfg-input-narrow" data-key="approval_threshold" value="500"></div>' +
-            '<div class="pg-cfg-rule-hint">OR when customer sentiment = negative</div>' +
-          '</div></div>';
-      }
-    },
-    { id:'escalation_rules', icon:'🔔', label:'Escalation Rules',
-      body: function(){
-        return '<div class="pg-cfg-field"><div class="pg-cfg-label">Severity</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-escalation">' +
-          '<button class="pg-cfg-seg-btn active" data-v="low">Low</button>' +
-          '<button class="pg-cfg-seg-btn" data-v="medium">Medium</button>' +
-          '<button class="pg-cfg-seg-btn" data-v="critical">Critical</button>' +
-        '</div></div></div>' +
-        '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Triggers</div>' +
-          ['Frustration detected','Payment repeatedly fails','High-value at risk','AI confidence low'].map(function(r,i){ return '<label class="pg-cfg-chk-label"><input type="checkbox" ' + (i<3?'checked':'') + '> ' + r + '</label>'; }).join('') +
-        '</div>';
-      }
-    },
-  ];
-  return cards.map(function(c){
-    return '<div class="pg-policy-card">' +
-      '<h3><span class="icon">' + c.icon + '</span>' + c.label + '</h3>' + c.body() + '</div>';
-  }).join('');
+ var cards = [
+ { id:'recovery_strategy', icon:'', label:'Recovery Strategy',
+ body: function(){
+ return '<div class="pg-cfg-field"><div class="pg-cfg-label">Profile</div><div class="pg-cfg-row">' +
+ ['Conservative','Balanced','Aggressive'].map(function(p,i){
+ var descs = ['40% recovery, low pressure','62% recovery, moderate','78% recovery, higher risk'];
+ return '<div class="pg-cfg-seg-btn pg-cfg-profile-btn ' + (i===1?'active':'') + '" data-v="' + p.toLowerCase() + '">' +
+ '<div class="pg-cfg-profile-name">' + p + '</div><div class="pg-cfg-profile-desc">' + descs[i] + '</div></div>';
+ }).join('') + '</div></div>' +
+ '<div class="pg-cfg-field"><div class="pg-cfg-label">Recovery window</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-window">' +
+ '<button class="pg-cfg-seg-btn active" data-v="14">14 days</button>' +
+ '<button class="pg-cfg-seg-btn" data-v="30">30 days</button>' +
+ '<button class="pg-cfg-seg-btn" data-v="7">7 days</button>' +
+ '</div></div></div>' +
+ '<div class="pg-cfg-field"><div class="pg-cfg-row"><div class="pg-toggle on" id="tgl-smart"></div><span class="pg-cfg-toggle-label">AI adapts timing based on success</span></div></div>' +
+ '<div class="pg-cfg-adv"><button class="pg-cfg-adv-toggle" onclick="toggleAdv(this)"> Advanced</button>' +
+ '<div class="pg-cfg-adv-body"><input type="text" class="pg-autosave pg-cfg-input-wide" data-key="retry_intervals" value="5min, 1h, 24h">' +
+ '<input type="number" class="pg-autosave pg-cfg-input-narrow" data-key="max_retries" value="3"> max attempts' +
+ '</div></div><span class="pg-cfg-autosave-hint">' + ' Autosaves after 1.5s</span>';
+ }
+ },
+ { id:'communication', icon:'', label:'Customer Communication',
+ body: function(){
+ return '<div class="pg-cfg-field"><div class="pg-cfg-label">Channels</div><div class="pg-cfg-row">' +
+ ['email','widget','sms'].map(function(c,i){ return '<label class="pg-cfg-chk-label pg-cfg-chk-inline"><input type="checkbox" ' + (i<2?'checked':'') + '> ' + c + '</label>'; }).join('') +
+ '</div></div>' +
+ '<div class="pg-cfg-field"><div class="pg-cfg-label">Tone</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-tone">' +
+ '<button class="pg-cfg-seg-btn" data-v="strict">Strict</button>' +
+ '<button class="pg-cfg-seg-btn active" data-v="professional">Professional</button>' +
+ '<button class="pg-cfg-seg-btn" data-v="friendly">Friendly</button>' +
+ '</div></div></div>' +
+ '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Example message</div><div class="pg-cfg-msg-preview">"Hi {{name}}, your payment of ${{amount}} didn\'t go through. Update your card to keep your subscription active."</div></div>';
+ }
+ },
+ { id:'approval_rules', icon:'', label:'Approval Rules',
+ body: function(){
+ return '<div class="pg-cfg-field"><div class="pg-cfg-label">Require approval when</div>' +
+ '<div class="pg-cfg-rule-box">' +
+ '<div class="pg-cfg-rule-row"><select class="pg-autosave pg-cfg-select" data-key="approval_condition">' +
+ '<option value="amount">Amount &gt;</option><option value="risk">Risk level</option><option value="sentiment">Customer sentiment</option></select>' +
+ '<input type="number" class="pg-autosave pg-cfg-input-narrow" data-key="approval_threshold" value="500"></div>' +
+ '<div class="pg-cfg-rule-hint">OR when customer sentiment = negative</div>' +
+ '</div></div>';
+ }
+ },
+ { id:'escalation_rules', icon:'', label:'Escalation Rules',
+ body: function(){
+ return '<div class="pg-cfg-field"><div class="pg-cfg-label">Severity</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-escalation">' +
+ '<button class="pg-cfg-seg-btn active" data-v="low">Low</button>' +
+ '<button class="pg-cfg-seg-btn" data-v="medium">Medium</button>' +
+ '<button class="pg-cfg-seg-btn" data-v="critical">Critical</button>' +
+ '</div></div></div>' +
+ '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Triggers</div>' +
+ ['Frustration detected','Payment repeatedly fails','High-value at risk','AI confidence low'].map(function(r,i){ return '<label class="pg-cfg-chk-label"><input type="checkbox" ' + (i<3?'checked':'') + '> ' + r + '</label>'; }).join('') +
+ '</div>';
+ }
+ },
+ ];
+ return cards.map(function(c){
+ return '<div class="pg-policy-card">' +
+ '<h3><span class="icon">' + c.icon + '</span>' + c.label + '</h3>' + c.body() + '</div>';
+ }).join('');
 }
 
 function renderRiskControls() {
-  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Blocked failure codes</div><input type="text" class="pg-autosave pg-cfg-input-wide" data-key="blocked_failure_codes" value="fraud, stolen_card, lost_card, blocked"></div>' +
-    '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Rate limits</div><input type="number" class="pg-autosave pg-cfg-input-narrow" data-key="max_daily" value="3"> per customer per day</div>';
+ return '<div class="pg-cfg-field"><div class="pg-cfg-label">Blocked failure codes</div><input type="text" class="pg-autosave pg-cfg-input-wide" data-key="blocked_failure_codes" value="fraud, stolen_card, lost_card, blocked"></div>' +
+ '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Rate limits</div><input type="number" class="pg-autosave pg-cfg-input-narrow" data-key="max_daily" value="3"> per customer per day</div>';
 }
 
 function toggleAdv(btn) {
-  var body = btn.nextElementSibling;
-  if (body) { body.classList.toggle('open'); btn.textContent = body.classList.contains('open') ? '▼ Advanced' : '▶ Advanced'; }
+ var body = btn.nextElementSibling;
+ if (body) { body.classList.toggle('open'); btn.textContent = body.classList.contains('open') ? '\u25BC Advanced' : '\u25B6 Advanced'; }
 }
 
 // Autosave
 (function(){
-  var timer = null;
-  document.addEventListener('input', function(e){ if (e.target.classList.contains('pg-autosave')) { if (timer) clearTimeout(timer); timer = setTimeout(doSave, 1500); var m=document.getElementById('cfgMsg'); if(m)m.textContent='Unsaved...'; }});
-  document.addEventListener('change', function(e){
-    if (e.target.closest('.pg-cfg-seg') || e.target.closest('.pg-toggle')) {
-      if (timer) clearTimeout(timer); timer = setTimeout(doSave, 1500);
-      var m=document.getElementById('cfgMsg'); if(m)m.textContent='Unsaved...';
-    }
-  });
+ var timer = null;
+ document.addEventListener('input', function(e){ if (e.target.classList.contains('pg-autosave')) { if (timer) clearTimeout(timer); timer = setTimeout(doSave, 1500); var m=document.getElementById('cfgMsg'); if(m)m.textContent='Unsaved...'; }});
+ document.addEventListener('change', function(e){
+ if (e.target.closest('.pg-cfg-seg') || e.target.closest('.pg-toggle')) {
+ if (timer) clearTimeout(timer); timer = setTimeout(doSave, 1500);
+ var m=document.getElementById('cfgMsg'); if(m)m.textContent='Unsaved...';
+ }
+ });
 })();
 
 async function doSave() {
-  var msg = document.getElementById('cfgMsg'); if(msg)msg.textContent='Saving...';
-  var vals = {};
-  document.querySelectorAll('.pg-autosave').forEach(function(inp){
-    var k = inp.dataset.key; if (!k) return;
-    var v = inp.value !== undefined ? inp.value.trim() : '';
-    if (inp.type === 'number') v = parseFloat(v) || 0;
-    vals[k] = v;
-  });
-  // Collect segmented buttons
-  document.querySelectorAll('.pg-cfg-seg').forEach(function(seg){
-    var active = seg.querySelector('.pg-cfg-seg-btn.active');
-    if (active) vals[seg.id.replace('seg-','')] = active.dataset.v;
-  });
-  // Collect toggles
-  document.querySelectorAll('.pg-toggle').forEach(function(tgl){
-    var id = tgl.id;
-    if (id) vals[id.replace('tgl-','')] = tgl.classList.contains('on');
-  });
-  // Collect checkboxes
-  document.querySelectorAll('.pg-cfg-body input[type="checkbox"]').forEach(function(cb){
-    vals[cb.id || cb.nextSibling.textContent.trim().toLowerCase().replace(/\s+/g,'_')] = cb.checked;
-  });
-  try {
-    for (var sec of ['recovery_strategy','communication','approval_rules','escalation_rules']) {
-      await api('/admin/api/agents/payguard/policy', {method:'PUT', body:{section:sec, values:vals}});
-    }
-    if(msg){msg.textContent='All changes saved ✓';msg.style.color='var(--green)';}
-    setTimeout(function(){if(msg){msg.textContent='All changes autosaved';msg.style.color='';}}, 3000);
-  } catch(e) { if(msg){msg.textContent='Error: '+e.message;msg.style.color='var(--red)';} }
+ var msg = document.getElementById('cfgMsg'); if(msg)msg.textContent='Saving...';
+ var vals = {};
+ document.querySelectorAll('.pg-autosave').forEach(function(inp){
+ var k = inp.dataset.key; if (!k) return;
+ var v = inp.value !== undefined ? inp.value.trim() : '';
+ if (inp.type === 'number') v = parseFloat(v) || 0;
+ vals[k] = v;
+ });
+ // Collect segmented buttons
+ document.querySelectorAll('.pg-cfg-seg').forEach(function(seg){
+ var active = seg.querySelector('.pg-cfg-seg-btn.active');
+ if (active) vals[seg.id.replace('seg-','')] = active.dataset.v;
+ });
+ // Collect toggles
+ document.querySelectorAll('.pg-toggle').forEach(function(tgl){
+ var id = tgl.id;
+ if (id) vals[id.replace('tgl-','')] = tgl.classList.contains('on');
+ });
+ // Collect checkboxes
+ document.querySelectorAll('.pg-cfg-body input[type="checkbox"]').forEach(function(cb){
+ vals[cb.id || cb.nextSibling.textContent.trim().toLowerCase().replace(/\s+/g,'_')] = cb.checked;
+ });
+ try {
+ for (var sec of ['recovery_strategy','communication','approval_rules','escalation_rules']) {
+ await api('/admin/api/agents/payguard/policy', {method:'PUT', body:{section:sec, values:vals}});
+ }
+ if(msg){msg.textContent='All changes saved ' ;msg.style.color='var(--pg-success)';}
+ setTimeout(function(){if(msg){msg.textContent='All changes autosaved';msg.style.color='';}}, 3000);
+ } catch(e) { if(msg){msg.textContent='Error: '+e.message;msg.style.color='var(--red)';} }
 }
 
-// ── ROI ──
+// ROI 
 async function loadROI() {
-  try {
-    var d = await api('/admin/api/agents/payguard/roi');
-    renderROI(d);
-  } catch(e) {}
+ try {
+ var d = await api('/admin/api/agents/payguard/roi');
+ renderROI(d);
+ } catch(e) {}
 }
 
 function renderROI(d) {
-  var el = document.getElementById('roiBody'); if (!el) return;
-  var rev30 = d.revenue_recovered && d.revenue_recovered['30d'] != null ? '$'+fmtNum(d.revenue_recovered['30d']) : '$—';
-  var rev7 = d.revenue_recovered && d.revenue_recovered['7d'] != null ? '$'+fmtNum(d.revenue_recovered['7d']) : '$—';
-  var revToday = d.revenue_recovered && d.revenue_recovered['today'] != null ? '$'+fmtNum(d.revenue_recovered['today']) : '$—';
+ var el = document.getElementById('roiBody'); if (!el) return;
+ var rev30 = d.revenue_recovered && d.revenue_recovered['30d'] != null ? '$'+fmtNum(d.revenue_recovered['30d']) : '$—';
+ var rev7 = d.revenue_recovered && d.revenue_recovered['7d'] != null ? '$'+fmtNum(d.revenue_recovered['7d']) : '$—';
+ var revToday = d.revenue_recovered && d.revenue_recovered['today'] != null ? '$'+fmtNum(d.revenue_recovered['today']) : '$—';
 
-  var sparkData = d.daily_revenue || [];
-  var maxR = Math.max.apply(null, sparkData.map(function(x){return x.revenue;}), 1);
+ var sparkData = d.daily_revenue || [];
+ var maxR = Math.max.apply(null, sparkData.map(function(x){return x.revenue;}), 1);
 
-  var chart = sparkData.length ? '<div class="pg-chart">' + sparkData.map(function(x){
-    var h = Math.round((x.revenue / maxR) * 100);
-    return '<div class="pg-chart-col"><div class="pg-chart-bar" style="height:'+Math.max(h,3)+'%"></div><div class="pg-chart-lbl">'+(x.date?x.date.slice(5):'')+'</div></div>';
-  }).join('') + '</div>' : '<div class="pg-empty">No 7-day data</div>';
+ var chart = sparkData.length ? '<div class="pg-chart">' + sparkData.map(function(x){
+ var h = Math.round((x.revenue / maxR) * 100);
+ return '<div class="pg-chart-col"><div class="pg-chart-bar" style="height:'+Math.max(h,3)+'%"></div><div class="pg-chart-lbl">'+(x.date?x.date.slice(5):'')+'</div></div>';
+ }).join('') + '</div>' : '<div class="pg-empty">' + '<div>No 7-day data</div></div>';
 
-  var bench = (d.recovery_rate||0) >= 60 ? 'above' : (d.recovery_rate||0) >= 40 ? 'at' : 'below';
-  var benchLabel = bench === 'above' ? '📈 Above industry average (42%)' : bench === 'at' ? '📊 At industry average (42%)' : '📉 Below industry average (42%)';
+ var bench = (d.recovery_rate||0)>= 60 ? 'above' : (d.recovery_rate||0)>= 40 ? 'at' : 'below';
+ var benchLabel = bench === 'above' ? 'Above industry average (42%)' : bench === 'at' ? 'At industry average (42%)' : 'Below industry average (42%)';
 
-  el.innerHTML = '<div class="roi-grid">' +
-    '<div class="roi-stat"><div class="roi-val">' + rev30 + '</div><div class="pg-h-kpi-lbl">Recovered</div><div class="pg-spark" style="height:24px">' + sparkData.map(function(x){var h=Math.round((x.revenue/maxR)*100);return '<div class="pg-spark-bar" style="height:'+Math.max(h,3)+'%"></div>';}).join('') + '</div><div class="roi-sub">' + (d.recovery_rate||0) + '% rate</div></div>' +
-    '<div class="roi-stat"><div class="roi-val" style="color:var(--pg-warning)">' + (d.revenue_at_risk != null ? '$'+fmtNum(d.revenue_at_risk) : '$—') + '</div><div class="pg-h-kpi-lbl">At Risk</div><div class="roi-sub">' + (d.active_at_risk||0) + ' active</div></div>' +
-    '<div class="roi-stat"><div class="roi-val">' + (d.support_hours_saved||'—') + 'h</div><div class="pg-h-kpi-lbl">Hours Saved</div><div class="roi-sub">this month</div></div>' +
-    '<div class="roi-stat"><div class="roi-val">' + (d.automation_rate||0) + '%</div><div class="pg-h-kpi-lbl">Auto Rate</div><div class="roi-sub"><span class="pill ' + (bench==='above'?'ok':bench==='at'?'warn':'muted') + '">' + benchLabel + '</span></div></div>' +
-  '</div><div class="roi-chart-wrap"><div class="roi-chart-label">Daily (7d)</div>' + chart + '</div>';
+ el.innerHTML = '<div class="roi-grid">' +
+ '<div class="roi-stat"><div class="roi-val">' + rev30 + '</div><div class="pg-h-kpi-lbl">Recovered</div><div class="pg-spark" style="height:24px">' + sparkData.map(function(x){var h=Math.round((x.revenue/maxR)*100);return '<div class="pg-spark-bar" style="height:'+Math.max(h,3)+'%"></div>';}).join('') + '</div><div class="roi-sub">' + (d.recovery_rate||0) + '% rate</div></div>' +
+ '<div class="roi-stat"><div class="roi-val" style="color:var(--pg-warning)">' + (d.revenue_at_risk != null ? '$'+fmtNum(d.revenue_at_risk) : '$—') + '</div><div class="pg-h-kpi-lbl">At Risk</div><div class="roi-sub">' + (d.active_at_risk||0) + ' active</div></div>' +
+ '<div class="roi-stat"><div class="roi-val">' + (d.support_hours_saved||'—') + 'h</div><div class="pg-h-kpi-lbl">Hours Saved</div><div class="roi-sub">this month</div></div>' +
+ '<div class="roi-stat"><div class="roi-val">' + (d.automation_rate||0) + '%</div><div class="pg-h-kpi-lbl">Auto Rate</div><div class="roi-sub"><span class="pill ' + (bench==='above'?'ok':bench==='at'?'warn':'muted') + '">' + benchLabel + '</span></div></div>' +
+ '</div><div class="roi-chart-wrap"><div class="roi-chart-label">Daily (7d)</div>' + chart + '</div>';
 
-  // Update KPI strip
-  setKpi('kpiRev', rev30);
-  setKpi('kpiRate', (d.recovery_rate||0) + '%');
-  setKpi('kpiCustomers', d.recovered_customers || '—');
-  setKpi('kpiAtRisk', d.revenue_at_risk != null ? '$'+fmtNum(d.revenue_at_risk) : '$—');
+ // Update KPI strip
+ setKpi('kpiRev', rev30);
+ setKpi('kpiRate', (d.recovery_rate||0) + '%');
+ setKpi('kpiCustomers', d.recovered_customers || '—');
+ setKpi('kpiAtRisk', d.revenue_at_risk != null ? '$'+fmtNum(d.revenue_at_risk) : '$—');
 }
 
 function setKpi(id, val) { var el=document.getElementById(id); if(el) el.textContent=val; }
 
-// ── Trust Layer ──
+// Trust Layer 
 function showTrust(wfId) {
-  document.getElementById('trustOverlay').classList.add('show');
-  document.getElementById('trustPanel').classList.add('show');
-  if (!wfId) return;
-  var body = document.getElementById('trustBody');
-  body.innerHTML = '<div class="pg-empty">Loading decision chain...</div>';
-  loadTrust(wfId, body);
+ document.getElementById('trustOverlay').classList.add('show');
+ document.getElementById('trustPanel').classList.add('show');
+ if (!wfId) return;
+ var body = document.getElementById('trustBody');
+ body.innerHTML = '<div class="pg-empty"><div>Loading decision chain...</div></div>';
+ loadTrust(wfId, body);
 }
 
 function hideTrust() {
-  document.getElementById('trustOverlay').classList.remove('show');
-  document.getElementById('trustPanel').classList.remove('show');
+ document.getElementById('trustOverlay').classList.remove('show');
+ document.getElementById('trustPanel').classList.remove('show');
 }
 
 async function loadTrust(wfId, body) {
-  try {
-    var feed = await api('/admin/api/agents/payguard/feed');
-    var evs = (feed.events||[]).filter(function(e){ return e.workflow_id === wfId; });
-    if (!evs.length) { body.innerHTML = '<div class="pg-empty">No decision data found for this workflow.</div>'; return; }
-    var first = evs[0];
-    var pol = first.type === 'transition' ? 'Policy: retry #2, balanced intensity' :
-              first.type === 'approval' ? 'Policy: requires human approval above $500' :
-              first.type === 'escalation' ? 'Policy: escalated due to risk threshold' : 'Policy: standard recovery flow';
-    var dataSrc = first.type === 'transition' ? 'Stripe invoice events, Recharge subscription status' :
-                  'Workflow events, AI classifier, Commerce domain';
-    body.innerHTML = '<div class="trust-info">' +
-      '<div class="trust-info-header">' +
-        '<span>Workflow <code>' + esc(wfId.slice(0,8)) + '</code></span>' +
-        '<span class="pill ' + (first.confidence>=80?'ok':first.confidence>=50?'warn':'err') + '">' + (first.confidence||'N/A') + '% confidence</span>' +
-      '</div>' +
-      '<div class="trust-info-box">' +
-        '<div><strong>Reasoning:</strong> ' + esc((first.reason||'AI classified this payment failure as recoverable').slice(0,120)) + '</div>' +
-        '<div class="trust-info-row"><strong>Policy:</strong> ' + pol + '</div>' +
-        '<div class="trust-info-row"><strong>Data:</strong> ' + dataSrc + '</div>' +
-      '</div>' +
-    '</div>' +
-    evs.slice(0,10).map(function(e,j){
-      var icon = e.icon || '🔄';
-      var polRef = e.type === 'approval' ? '<div class="trust-policy-ref">Approval rationale: ' + esc((e.reason||'policy match') + (e.confidence?' · '+e.confidence+'% conf':'')) + '</div>' :
-                   e.type === 'escalation' ? '<div class="trust-policy-ref">Escalation rationale: ' + esc((e.reason||'threshold triggered')) + '</div>' : '';
-      return '<div class="trust-step"><div class="trust-step-n">' + (j+1) + '</div><div class="trust-step-body">' +
-        '<div class="trust-step-act">' + icon + ' ' + esc(e.action||'') + '</div>' +
-        (e.reason && e.type !== 'approval' && e.type !== 'escalation' ? '<div class="trust-step-det">' + esc(e.reason.slice(0,80)) + '</div>' : '') +
-        polRef +
-        '<div class="trust-step-tm">' + timeAgo(e.created_at) + '</div></div></div>';
-    }).join('') +
-    '<div class="trust-cta"><a href="/admin/workflows/' + esc(wfId) + '" class="ghost sm">View full timeline →</a></div>';
-  } catch(e) { body.innerHTML = '<div class="pg-empty">Error loading trust data.</div>'; }
+ try {
+ var feed = await api('/admin/api/agents/payguard/feed');
+ var evs = (feed.events||[]).filter(function(e){ return e.workflow_id === wfId; });
+ if (!evs.length) { body.innerHTML = '<div class="pg-empty"><div>No decision data found for this workflow.</div></div>'; return; }
+ var first = evs[0];
+ var pol = first.type === 'transition' ? 'Policy: retry #2, balanced intensity' :
+ first.type === 'approval' ? 'Policy: requires human approval above $500' :
+ first.type === 'escalation' ? 'Policy: escalated due to risk threshold' : 'Policy: standard recovery flow';
+ var dataSrc = first.type === 'transition' ? 'Stripe invoice events, Recharge subscription status' :
+ 'Workflow events, AI classifier, Commerce domain';
+ body.innerHTML = '<div class="trust-info">' +
+ '<div class="trust-info-header">' +
+ '<span>Workflow<code>' + esc(wfId.slice(0,8)) + '</code></span>' +
+ '<span class="pill ' + (first.confidence>=80?'ok':first.confidence>=50?'warn':'err') + '">' + (first.confidence||'N/A') + '% confidence</span>' +
+ '</div>' +
+ '<div class="trust-info-box">' +
+ '<div><strong>Reasoning:</strong> ' + esc((first.reason||'AI classified this payment failure as recoverable').slice(0,120)) + '</div>' +
+ '<div class="trust-info-row"><strong>Policy:</strong> ' + pol + '</div>' +
+ '<div class="trust-info-row"><strong>Data:</strong> ' + dataSrc + '</div>' +
+ '</div>' +
+ '</div>' +
+ evs.slice(0,10).map(function(e,j){
+ var icon = e.icon || '';
+ var polRef = e.type === 'approval' ? '<div class="trust-policy-ref">Approval rationale: ' + esc((e.reason||'policy match') + (e.confidence?' · '+e.confidence+'% conf':'')) + '</div>' :
+ e.type === 'escalation' ? '<div class="trust-policy-ref">Escalation rationale: ' + esc((e.reason||'threshold triggered')) + '</div>' : '';
+ return '<div class="trust-step"><div class="trust-step-n">' + (j+1) + '</div><div class="trust-step-body">' +
+ '<div class="trust-step-act">' + icon + ' ' + esc(e.action||'') + '</div>' +
+ (e.reason && e.type !== 'approval' && e.type !== 'escalation' ? '<div class="trust-step-det">' + esc(e.reason.slice(0,80)) + '</div>' : '') +
+ polRef +
+ '<div class="trust-step-tm">' + timeAgo(e.created_at) + '</div></div></div>';
+ }).join('') +
+ '<div class="trust-cta"><a href="/admin/workflows/' + esc(wfId) + '" class="ghost sm">View full timeline →</a></div>';
+ } catch(e) { body.innerHTML = '<div class="pg-empty"><div>Error loading trust data.</div></div>'; }
 }
 
-// ── Simulation ──
+// Simulation 
 function showSim() { document.getElementById('simModal').classList.add('show'); runSim(); }
 function hideSim() { document.getElementById('simModal').classList.remove('show'); }
 
 async function runSim() {
-  try {
-    var d = await api('/admin/api/agents/payguard/roi');
-    var total = d.total_workflows || 0;
-    var sample = Math.min(total, 100);
-    document.getElementById('simSample').textContent = total || '0';
-    document.getElementById('simAcc').textContent = total < 50 ? '±15%' : total < 200 ? '±8%' : '±5%';
+ try {
+ var d = await api('/admin/api/agents/payguard/roi');
+ var total = d.total_workflows || 0;
+ var sample = Math.min(total, 100);
+ document.getElementById('simSample').textContent = total || '0';
+ document.getElementById('simAcc').textContent = total< 50 ? '±15%' : total< 200 ? '±8%' : '±5%';
 
-    var rate = (d.recovery_rate || 0) / 100;
-    var avgAmt = total > 0 && d.revenue_recovered && d.revenue_recovered['30d'] ? (d.revenue_recovered['30d'] / total) : 29.99;
-    var projRec = Math.round(sample * rate);
-    var projRev = projRec * avgAmt;
-    var projEsc = Math.round(sample * 0.08);
-    var projHrs = projRec * 0.5;
+ var rate = (d.recovery_rate || 0) / 100;
+ var avgAmt = total> 0 && d.revenue_recovered && d.revenue_recovered['30d'] ? (d.revenue_recovered['30d'] / total) : 29.99;
+ var projRec = Math.round(sample * rate);
+ var projRev = projRec * avgAmt;
+ var projEsc = Math.round(sample * 0.08);
+ var projHrs = projRec * 0.5;
 
-    document.getElementById('simRev').textContent = '$' + fmtNum(projRev.toFixed(2));
-    document.getElementById('simRevComp').textContent = '+' + fmtNum((projRev * 0.25).toFixed(2)) + ' vs manual';
-    document.getElementById('simAuto').textContent = Math.round(rate * 100) + '%';
-    document.getElementById('simEsc').textContent = projEsc;
-    document.getElementById('simEscNote').textContent = projEsc > 20 ? '⚠️ ' + projEsc + ' need review' : 'manageable';
-    document.getElementById('simHrs').textContent = projHrs.toFixed(1) + 'h';
-  } catch(e) {}
+ document.getElementById('simRev').textContent = '$' + fmtNum(projRev.toFixed(2));
+ document.getElementById('simRevComp').textContent = '+' + fmtNum((projRev * 0.25).toFixed(2)) + ' vs manual';
+ document.getElementById('simAuto').textContent = Math.round(rate * 100) + '%';
+ document.getElementById('simEsc').textContent = projEsc;
+ document.getElementById('simEscNote').textContent = projEsc> 20 ? ' ' + projEsc + ' need review' : 'manageable';
+ document.getElementById('simHrs').textContent = projHrs.toFixed(1) + 'h';
+ } catch(e) {}
 }
 
 function doEnablePayGuard() {
-  hideSim();
-  pgEnabled = true;
-  updatePGStatus(true);
-  var btns = document.querySelectorAll('.pg-h-btn.ghost');
-  btns.forEach(function(b){ if (b.textContent.includes('Resume')) b.textContent = '⏸ Pause'; });
-  api('/admin/api/policies').then(function(pols){
-    var ew = toObject(pols.enabled_workflows);
-    ew.payguard = true;
-    return api('/admin/api/policies/enabled_workflows', {method:'PUT', body:ew});
-  }).catch(function(e){});
+ hideSim();
+ pgEnabled = true;
+ updatePGStatus(true);
+ var btns = document.querySelectorAll('.pg-h-btn.ghost');
+ btns.forEach(function(b){ if (b.textContent.includes('Resume')) b.textContent = '⏸ Pause'; });
+ api('/admin/api/policies').then(function(pols){
+ var ew = toObject(pols.enabled_workflows);
+ ew.payguard = true;
+ return api('/admin/api/policies/enabled_workflows', {method:'PUT', body:ew});
+ }).catch(function(e){});
 }
 
 async function togglePG(btn) {
-  if (!pgEnabled) {
-    showSim();
-    document.getElementById('simEnableBtn').textContent = 'Enable PayGuard';
-    return;
-  }
-  pgEnabled = false;
-  updatePGStatus(false);
-  if (btn) { btn.textContent = '▶ Resume'; }
-  try {
-    var pols = await api('/admin/api/policies');
-    var ew = toObject(pols.enabled_workflows);
-    ew.payguard = false;
-    await api('/admin/api/policies/enabled_workflows', {method:'PUT', body:ew});
-  } catch(e) {}
+ if (!pgEnabled) {
+ showSim();
+ document.getElementById('simEnableBtn').textContent = 'Enable PayGuard';
+ return;
+ }
+ pgEnabled = false;
+ updatePGStatus(false);
+ if (btn) { btn.textContent = ' Resume'; }
+ try {
+ var pols = await api('/admin/api/policies');
+ var ew = toObject(pols.enabled_workflows);
+ ew.payguard = false;
+ await api('/admin/api/policies/enabled_workflows', {method:'PUT', body:ew});
+ } catch(e) {}
 }
 
 function updatePGStatus(on) {
-  var pill = document.getElementById('pgStatPill');
-  if (pill) { pill.textContent = on ? '● Active' : 'Paused'; pill.className = 'pill ' + (on ? 'ok' : 'muted'); }
+ var pill = document.getElementById('pgStatPill');
+ if (pill) { pill.textContent = on ? 'Active' : 'Paused'; pill.className = 'pill ' + (on ? 'ok' : 'muted'); }
 }
 
-// ── Badge polling ──
+// Badge polling 
 async function loadBadges() {
-  try {
-    var [ap, es] = await Promise.all([
-      api('/admin/api/agents/' + activeAgent + '/queue?queue=approvals&limit=1'),
-      api('/admin/api/agents/' + activeAgent + '/queue?queue=escalations&limit=1'),
-    ]);
-    var ba = document.getElementById('qBadgeAppr');
-    var be = document.getElementById('qBadgeEsc');
-    if (ba) { ba.textContent = ap.total || 0; ba.style.display = ap.total > 0 ? '' : 'none'; }
-    if (be) { be.textContent = es.total || 0; be.style.display = es.total > 0 ? '' : 'none'; }
-    setKpi('kpiApproval', ap.total || 0);
-    // Status ribbon
-    var sr = document.getElementById('pgStatusReview');
-    if (sr) {
-      var n = (ap.total||0) + (es.total||0);
-      sr.innerHTML = '<span class="pg-status-dot ' + (n>0?'warn':'ok') + '"></span>' + (n>0 ? n + ' items needing attention' : 'All clear');
-    }
-    var sc = document.getElementById('pgStatusCritical');
-    if (sc) {
-      sc.innerHTML = '<span class="pg-status-dot muted"></span>' + (es.total > 0 ? es.total + ' open escalations' : 'No critical issues');
-    }
-    var ai = document.getElementById('pgStatusAI');
-    if (ai) {
-      ai.innerHTML = '🤖 Monitoring active · <span class="pg-status-time">Last check ' + (new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})) + '</span>';
-    }
-  } catch(e) {}
+ try {
+ var [ap, es] = await Promise.all([
+ api('/admin/api/agents/' + activeAgent + '/queue?queue=approvals&limit=1'),
+ api('/admin/api/agents/' + activeAgent + '/queue?queue=escalations&limit=1'),
+ ]);
+ var ba = document.getElementById('qBadgeAppr');
+ var be = document.getElementById('qBadgeEsc');
+ if (ba) { ba.textContent = ap.total || 0; ba.style.display = ap.total> 0 ? '' : 'none'; }
+ if (be) { be.textContent = es.total || 0; be.style.display = es.total> 0 ? '' : 'none'; }
+ setKpi('kpiApproval', ap.total || 0);
+ // Status ribbon
+ var sr = document.getElementById('pgStatusReview');
+ if (sr) {
+ var n = (ap.total||0) + (es.total||0);
+ sr.innerHTML = '<span class="pg-status-dot ' + (n>0?'warn':'ok') + '"></span>' + (n>0 ? n + ' items needing attention' : 'All clear');
+ }
+ var sc = document.getElementById('pgStatusCritical');
+ if (sc) {
+ sc.innerHTML = '<span class="pg-status-dot muted"></span>' + (es.total> 0 ? es.total + ' open escalations' : 'No critical issues');
+ }
+ var ai = document.getElementById('pgStatusAI');
+ if (ai) {
+ ai.innerHTML = ' Monitoring active ·<span class="pg-status-time">Last check ' + (new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})) + '</span>';
+ }
+ } catch(e) {}
 }
 
-// ── Legacy Panel (Retain, Trace) ──
+// Legacy Panel (Retain, Trace) 
 function renderLegacyPanel(agent, analytics, policies, ew, workflows, isActive) {
-  var enabled = ew[agent.id] !== false;
-  var wfs = workflows.filter(function(w){ return w.workflow_type === agent.id; });
-  var total = wfs.length, active = wfs.filter(function(w){ return w.status==='active'||w.status==='paused'; }).length;
-  var completed = wfs.filter(function(w){ return w.status==='completed'; }).length;
-  var escalated = wfs.filter(function(w){ return w.status==='escalated'; }).length;
-  var failed = wfs.filter(function(w){ return w.status==='failed'||w.current_state==='FAILED'||w.current_state==='CANCELLED'||w.current_state==='LOST'; }).length;
+ var enabled = ew[agent.id] !== false;
+ var wfs = workflows.filter(function(w){ return w.workflow_type === agent.id; });
+ var total = wfs.length, active = wfs.filter(function(w){ return w.status==='active'||w.status==='paused'; }).length;
+ var completed = wfs.filter(function(w){ return w.status==='completed'; }).length;
+ var escalated = wfs.filter(function(w){ return w.status==='escalated'; }).length;
+ var failed = wfs.filter(function(w){ return w.status==='failed'||w.current_state==='FAILED'||w.current_state==='CANCELLED'||w.current_state==='LOST'; }).length;
 
-  return '<div class="ch-panel' + (isActive?' active':'') + '" id="panel-' + agent.id + '">' +
-    '<div class="agent-hero" style="border-left-color:' + agent.color + '"><div class="agent-hero-header">' +
-      '<div class="agent-hero-logo" style="background:rgba(' + hexToRgb(agent.color) + ',0.12);color:' + agent.color + '">' + agent.icon + '</div>' +
-      '<div class="agent-hero-title"><div class="agent-name">' + agent.name + '</div><div class="agent-subtitle">' + agent.subtitle + '</div></div>' +
-      '<div style="margin-left:auto;display:flex;align-items:center;gap:10px">' +
-        '<span class="pill ' + (enabled?'ok':'muted') + '" style="font-size:10px">' + (enabled?'Active':'Disabled') + '</span>' +
-        '<div class="toggle ' + (enabled?'on':'') + '" onclick="legacyToggle(\'' + agent.id + '\', this)"></div>' +
-      '</div></div>' +
-      '<div class="agent-hero-tagline">' + agent.tagline + '</div>' +
-      '<div class="agent-hero-section"><div class="agent-hero-label">⚡ What it does</div><div class="agent-hero-text">' + agent.whatItDoes + '</div></div>' +
-    '</div>' +
-    '<div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">' +
-      '<div class="stat"><div class="n">' + total + '</div><div class="l">Total</div></div>' +
-      '<div class="stat"><div class="n">' + completed + '</div><div class="l">Resolved</div></div>' +
-      '<div class="stat"><div class="n">' + active + '</div><div class="l">Active</div></div>' +
-      '<div class="stat"><div class="n">' + escalated + '</div><div class="l">Escalated</div></div>' +
-      '<div class="stat"><div class="n">' + failed + '</div><div class="l">Failed</div></div>' +
-    '</div>' +
-    '<div class="states-viz">' + agent.states.map(function(s,i){ var t=['RECOVERED','FAILED','ESCALATED','EXPIRED','CANCELLED','LOST','RETAINED','RESOLVED'].includes(s); return '<div class="state-node"><div class="state-dot ' + (t?'terminal':'') + '"></div><div class="state-label">' + s.charAt(0)+s.slice(1).toLowerCase() + '</div>' + (i<agent.states.length-1?'<div class="state-arrow">→</div>':'') + '</div>'; }).join('') + '</div>' +
-    '<div class="ch-body">' +
-      renderLegacyConfig('Agent Configuration', agent.fields||[], agent.id, 'retry') +
-      renderLegacyConfig('Customer Outreach', agent.outreachFields||[], agent.id, 'communication') +
-      renderLegacyConfig('Escalation Rules', agent.escalationFields||[], agent.id, 'escalation') +
-      renderLegacyConfig('Approval Rules', agent.approvalFields||[], agent.id, 'approval') +
-    '</div></div>';
+ return '<div class="ch-panel' + (isActive?' active':'') + '" id="panel-' + agent.id + '">' +
+ '<div class="agent-hero" style="border-left-color:' + agent.color + '"><div class="agent-hero-header">' +
+ '<div class="agent-hero-logo" style="background:rgba(' + hexToRgb(agent.color) + ',0.12);color:' + agent.color + '">' + agent.icon + '</div>' +
+ '<div class="agent-hero-title"><div class="agent-name">' + agent.name + '</div><div class="agent-subtitle">' + agent.subtitle + '</div></div>' +
+ '<div style="margin-left:auto;display:flex;align-items:center;gap:10px">' +
+ '<span class="pill ' + (enabled?'ok':'muted') + '" style="font-size:10px">' + (enabled?'Active':'Disabled') + '</span>' +
+ '<div class="toggle ' + (enabled?'on':'') + '" onclick="legacyToggle(\ agent.id + '\', this)"></div>' +
+ '</div></div>' +
+ '<div class="agent-hero-tagline">' + agent.tagline + '</div>' +
+ '<div class="agent-hero-section"><div class="agent-hero-label"> What it does</div><div class="agent-hero-text">' + agent.whatItDoes + '</div></div>' +
+ '</div>' +
+ '<div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">' +
+ '<div class="stat"><div class="n">' + total + '</div><div class="l">Total</div></div>' +
+ '<div class="stat"><div class="n">' + completed + '</div><div class="l">Resolved</div></div>' +
+ '<div class="stat"><div class="n">' + active + '</div><div class="l">Active</div></div>' +
+ '<div class="stat"><div class="n">' + escalated + '</div><div class="l">Escalated</div></div>' +
+ '<div class="stat"><div class="n">' + failed + '</div><div class="l">Failed</div></div>' +
+ '</div>' +
+ '<div class="states-viz">' + agent.states.map(function(s,i){ var t=['RECOVERED','FAILED','ESCALATED','EXPIRED','CANCELLED','LOST','RETAINED','RESOLVED'].includes(s); return '<div class="state-node"><div class="state-dot ' + (t?'terminal':'') + '"></div><div class="state-label">' + s.charAt(0)+s.slice(1).toLowerCase() + '</div>' + (i<agent.states.length-1?'<div class="state-arrow">→</div>':'') + '</div>'; }).join('') + '</div>' +
+ '<div class="ch-body">' +
+ renderLegacyConfig('Agent Configuration', agent.fields||[], agent.id, 'retry') +
+ renderLegacyConfig('Customer Outreach', agent.outreachFields||[], agent.id, 'communication') +
+ renderLegacyConfig('Escalation Rules', agent.escalationFields||[], agent.id, 'escalation') +
+ renderLegacyConfig('Approval Rules', agent.approvalFields||[], agent.id, 'approval') +
+ '</div></div>';
 }
 
 function renderLegacyConfig(title, fields, agentId, policyType) {
-  if (!fields.length) return '';
-  var fh = fields.map(function(f){
-    if (f.type === 'select') {
-      return '<div class="field-row"><label>' + f.label + '</label><select id="' + f.id + '" data-agent="' + agentId + '" data-policy="' + policyType + '" data-key="' + f.key + '">' + (f.options||[]).map(function(o){return '<option value="'+o.value+'">'+o.label+'</option>';}).join('') + '</select>' + (f.desc?'<div class="field-desc">'+f.desc+'</div>':'') + '</div>';
-    }
-    return '<div class="field-row"><label>' + f.label + '</label><input id="' + f.id + '" type="' + f.type + '" data-agent="' + agentId + '" data-policy="' + policyType + '" data-key="' + f.key + '" value="' + esc(f.default||'') + '">' + (f.desc?'<div class="field-desc">'+f.desc+'</div>':'') + '</div>';
-  }).join('');
-  return '<div class="ch-card collapsible"><div class="section-toggle" onclick="toggleSection(this)"><h3 style="margin:0;font-size:12px">' + title + '</h3><div class="flex" style="gap:6px"><button class="ghost sm accent" onclick="event.stopPropagation();legacySave(\''+agentId+'\',\''+policyType+'\')">Save</button><span class="section-arrow open">▼</span></div></div><div class="section-body">' + fh + '<span class="muted2 save-msg" id="msg-'+policyType+'-'+agentId+'" style="font-size:11px;margin-top:4px;display:block"></span></div></div>';
+ if (!fields.length) return '';
+ var fh = fields.map(function(f){
+ if (f.type === 'select') {
+ return '<div class="field-row"><label>' + f.label + '</label><select id="' + f.id + '" data-agent="' + agentId + '" data-policy="' + policyType + '" data-key="' + f.key + '">' + (f.options||[]).map(function(o){return '<option value="'+o.value+'">'+o.label+'</option>';}).join('') + '</select>' + (f.desc?'<div class="field-desc">'+f.desc+'</div>':'') + '</div>';
+ }
+ return '<div class="field-row"><label>' + f.label + '</label><input id="' + f.id + '" type="' + f.type + '" data-agent="' + agentId + '" data-policy="' + policyType + '" data-key="' + f.key + '" value="' + esc(f.default||'') + '">' + (f.desc?'<div class="field-desc">'+f.desc+'</div>':'') + '</div>';
+ }).join('');
+ return '<div class="ch-card collapsible"><div class="section-toggle" onclick="toggleSection(this)"><h3 style="margin:0;font-size:12px">' + title + '</h3><div class="flex" style="gap:6px"><button class="ghost sm accent" onclick="event.stopPropagation();legacySave(\agentId+'\',\policyType+'\')">Save</button><span class="section-arrow open"></span></div></div><div class="section-body">' + fh + '<span class="muted2 save-msg" id="msg-'+policyType+'-'+agentId+'" style="font-size:11px;margin-top:4px;display:block"></span></div></div>';
 }
 
 function renderGlobalSettings(policies) {
-  var secs = [
-    { title:'Retry Policy (Global)', id:'global-retry', pt:'retry', fields:[
-      { id:'g-max-retries', label:'Max retries', val: (policies.retry||{}).max_retries || 3 },
-      { id:'g-intervals', label:'Intervals', val: ((policies.retry||{}).intervals||[]).join(', ') || '5, 60, 1440' },
-    ]},
-    { title:'Communication Policy (Global)', id:'global-comm', pt:'communication', fields:[
-      { id:'g-max-daily', label:'Max per customer/day', val: (policies.communication||{}).max_daily || 3 },
-      { id:'g-cooldown', label:'Cooldown (min)', val: (policies.communication||{}).cooldown_minutes || 60 },
-    ]},
-  ];
-  var body = secs.map(function(s){
-    return '<div class="ch-card collapsible"><div class="section-toggle" onclick="toggleSection(this)"><h3 style="margin:0;font-size:12px">' + s.title + '</h3><div class="flex" style="gap:6px"><button class="ghost sm accent" onclick="event.stopPropagation();globalSave(\''+s.id+'\')">Save</button><span class="section-arrow open">▼</span></div></div><div class="section-body">' +
-      s.fields.map(function(f){ return '<div class="field-row"><label>' + f.label + '</label><input id="'+f.id+'" type="text" value="'+esc(String(f.val))+'"></div>'; }).join('') +
-      '<span class="muted2 save-msg" id="msg-'+s.id+'" style="font-size:11px;margin-top:4px;display:block"></span></div></div>';
-  }).join('');
-  return '<div class="ch-panel" id="panel-settings"><div class="ch-body">' + body + '</div></div>';
+ var secs = [
+ { title:'Retry Policy (Global)', id:'global-retry', pt:'retry', fields:[
+ { id:'g-max-retries', label:'Max retries', val: (policies.retry||{}).max_retries || 3 },
+ { id:'g-intervals', label:'Intervals', val: ((policies.retry||{}).intervals||[]).join(', ') || '5, 60, 1440' },
+ ]},
+ { title:'Communication Policy (Global)', id:'global-comm', pt:'communication', fields:[
+ { id:'g-max-daily', label:'Max per customer/day', val: (policies.communication||{}).max_daily || 3 },
+ { id:'g-cooldown', label:'Cooldown (min)', val: (policies.communication||{}).cooldown_minutes || 60 },
+ ]},
+ ];
+ var body = secs.map(function(s){
+ return '<div class="ch-card collapsible"><div class="section-toggle" onclick="toggleSection(this)"><h3 style="margin:0;font-size:12px">' + s.title + '</h3><div class="flex" style="gap:6px"><button class="ghost sm accent" onclick="event.stopPropagation();globalSave(\s.id+'\')">Save</button><span class="section-arrow open"></span></div></div><div class="section-body">' +
+ s.fields.map(function(f){ return '<div class="field-row"><label>' + f.label + '</label><input id="'+f.id+'" type="text" value="'+esc(String(f.val))+'"></div>'; }).join('') +
+ '<span class="muted2 save-msg" id="msg-'+s.id+'" style="font-size:11px;margin-top:4px;display:block"></span></div></div>';
+ }).join('');
+ return '<div class="ch-panel" id="panel-settings"><div class="ch-body">' + body + '</div></div>';
 }
 
-// ── Helpers ──
+// Helpers 
 function fmtNum(n) { if (n==null) return '0'; return Number(n).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:2}); }
 function timeAgo(iso) { if (!iso) return ''; var d = Date.now() - new Date(iso).getTime(); var s = Math.floor(d/1000); if (s<60) return s+'s'; var m=Math.floor(s/60); if(m<60) return m+'m'; var h=Math.floor(m/60); if(h<24) return h+'h'; return Math.floor(h/24)+'d'; }
 function hexToRgb(h){ var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16); return r+','+g+','+b; }
@@ -1053,63 +1059,63 @@ function toggleSection(el) { var b=el.nextElementSibling; var a=el.querySelector
 
 // Tab switching
 document.addEventListener('click', function(e){
-  var tab = e.target.closest('.ch-tab'); if (!tab) return;
-  document.querySelectorAll('.ch-tab').forEach(function(t){ t.classList.remove('active'); });
-  tab.classList.add('active');
-  activeAgent = tab.dataset.tab;
-  document.querySelectorAll('.ch-panel').forEach(function(p){ p.classList.remove('active'); });
-  var panel = document.getElementById('panel-' + tab.dataset.tab);
-  if (panel) panel.classList.add('active');
-  if (tab.dataset.tab === 'payguard') { if (!feedTimer) startFeed(); loadFunnel(); loadROI(); loadBadges(); }
-  else {
-    if (feedTimer) { clearInterval(feedTimer); feedTimer = null; }
-    if (badgeTimer) { clearInterval(badgeTimer); badgeTimer = null; }
-  }
+ var tab = e.target.closest('.ch-tab'); if (!tab) return;
+ document.querySelectorAll('.ch-tab').forEach(function(t){ t.classList.remove('active'); });
+ tab.classList.add('active');
+ activeAgent = tab.dataset.tab;
+ document.querySelectorAll('.ch-panel').forEach(function(p){ p.classList.remove('active'); });
+ var panel = document.getElementById('panel-' + tab.dataset.tab);
+ if (panel) panel.classList.add('active');
+ if (tab.dataset.tab === 'payguard') { if (!feedTimer) startFeed(); loadFunnel(); loadROI(); loadBadges(); }
+ else {
+ if (feedTimer) { clearInterval(feedTimer); feedTimer = null; }
+ if (badgeTimer) { clearInterval(badgeTimer); badgeTimer = null; }
+ }
 });
 
 // Legacy toggle
 async function legacyToggle(type, el) {
-  var on = el.classList.contains('on');
-  try { var pols = await api('/admin/api/policies'); var ew = toObject(pols.enabled_workflows); ew[type] = !on; await api('/admin/api/policies/enabled_workflows', {method:'PUT', body:ew}); el.classList.toggle('on'); var b = el.closest('.agent-hero').querySelector('.pill'); if(b){b.textContent=!on?'Active':'Disabled';b.className='pill '+(!on?'ok':'muted');} } catch(e){}
+ var on = el.classList.contains('on');
+ try { var pols = await api('/admin/api/policies'); var ew = toObject(pols.enabled_workflows); ew[type] = !on; await api('/admin/api/policies/enabled_workflows', {method:'PUT', body:ew}); el.classList.toggle('on'); var b = el.closest('.agent-hero').querySelector('.pill'); if(b){b.textContent=!on?'Active':'Disabled';b.className='pill '+(!on?'ok':'muted');} } catch(e){}
 }
 async function legacySave(agentId, policyType) {
-  var msg = document.getElementById('msg-'+policyType+'-'+agentId); if(!msg)return;
-  msg.textContent='Saving...'; msg.style.color='var(--muted2)';
-  try {
-    var pols = await api('/admin/api/policies'); var policy = pols[policyType]||{};
-    document.querySelectorAll('[data-agent="'+agentId+'"][data-policy="'+policyType+'"]').forEach(function(inp){
-      var k = inp.dataset.key; if(!k)return; var v = inp.value!==undefined?inp.value.trim():''; if(inp.type==='number') v = parseFloat(v)||0; policy[k]=v;
-    });
-    await api('/admin/api/policies/'+policyType, {method:'PUT', body:policy});
-    msg.textContent='Saved ✓'; msg.style.color='var(--green)'; setTimeout(function(){msg.textContent='';},3000);
-  } catch(e){ msg.textContent='Error: '+e.message; msg.style.color='var(--red)'; }
+ var msg = document.getElementById('msg-'+policyType+'-'+agentId); if(!msg)return;
+ msg.textContent='Saving...'; msg.style.color='var(--muted2)';
+ try {
+ var pols = await api('/admin/api/policies'); var policy = pols[policyType]||{};
+ document.querySelectorAll('[data-agent="'+agentId+'"][data-policy="'+policyType+'"]').forEach(function(inp){
+ var k = inp.dataset.key; if(!k)return; var v = inp.value!==undefined?inp.value.trim():''; if(inp.type==='number') v = parseFloat(v)||0; policy[k]=v;
+ });
+ await api('/admin/api/policies/'+policyType, {method:'PUT', body:policy});
+ msg.textContent='Saved '; msg.style.color='var(--pg-success)'; setTimeout(function(){msg.textContent='';},3000);
+ } catch(e){ msg.textContent='Error: '+e.message; msg.style.color='var(--red)'; }
 }
 async function globalSave(id) {
-  var map = {'global-retry':'retry','global-comm':'communication'};
-  var pt = map[id]; if(!pt)return;
-  var msg = document.getElementById('msg-'+id); if(!msg)return;
-  msg.textContent='Saving...'; msg.style.color='var(--muted2)';
-  try {
-    var pols = await api('/admin/api/policies'); var policy = pols[pt]||{};
-    document.querySelectorAll('#'+id+' .field-row input').forEach(function(inp){
-      if(inp.id==='g-max-retries') policy.max_retries = parseInt(inp.value)||3;
-      if(inp.id==='g-intervals') policy.intervals = inp.value.split(',').map(function(s){return s.trim();}).filter(Boolean);
-      if(inp.id==='g-max-daily') policy.max_daily = parseInt(inp.value)||3;
-      if(inp.id==='g-cooldown') policy.cooldown_minutes = parseInt(inp.value)||60;
-    });
-    await api('/admin/api/policies/'+pt, {method:'PUT', body:policy});
-    msg.textContent='Saved ✓'; msg.style.color='var(--green)'; setTimeout(function(){msg.textContent='';},3000);
-  } catch(e){ msg.textContent='Error: '+e.message; msg.style.color='var(--red)'; }
+ var map = {'global-retry':'retry','global-comm':'communication'};
+ var pt = map[id]; if(!pt)return;
+ var msg = document.getElementById('msg-'+id); if(!msg)return;
+ msg.textContent='Saving...'; msg.style.color='var(--muted2)';
+ try {
+ var pols = await api('/admin/api/policies'); var policy = pols[pt]||{};
+ document.querySelectorAll('#'+id+' .field-row input').forEach(function(inp){
+ if(inp.id==='g-max-retries') policy.max_retries = parseInt(inp.value)||3;
+ if(inp.id==='g-intervals') policy.intervals = inp.value.split(',').map(function(s){return s.trim();}).filter(Boolean);
+ if(inp.id==='g-max-daily') policy.max_daily = parseInt(inp.value)||3;
+ if(inp.id==='g-cooldown') policy.cooldown_minutes = parseInt(inp.value)||60;
+ });
+ await api('/admin/api/policies/'+pt, {method:'PUT', body:policy});
+ msg.textContent='Saved '; msg.style.color='var(--pg-success)'; setTimeout(function(){msg.textContent='';},3000);
+ } catch(e){ msg.textContent='Error: '+e.message; msg.style.color='var(--red)'; }
 }
 
 // Load all
 async function loadAll() {
-  try {
-    var [analytics, policies, wfData] = await Promise.all([
-      api('/admin/api/analytics'), api('/admin/api/policies'), api('/admin/api/workflows?limit=200')
-    ]);
-    renderAll(analytics, policies, wfData.workflows||[]);
-  } catch(e) { document.getElementById('agentPanels').innerHTML = '<div class="card"><div class="err-msg">Error loading agents: ' + esc(e.message) + '</div></div>'; }
+ try {
+ var [analytics, policies, wfData] = await Promise.all([
+ api('/admin/api/analytics'), api('/admin/api/policies'), api('/admin/api/workflows?limit=200')
+ ]);
+ renderAll(analytics, policies, wfData.workflows||[]);
+ } catch(e) { document.getElementById('agentPanels').innerHTML = '<div class="card"><div class="err-msg">Error loading agents: ' + esc(e.message) + '</div></div>'; }
 }
 loadAll();
 </script>
