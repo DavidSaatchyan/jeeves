@@ -12,6 +12,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
 
 from . import admin, auth, dashboard_api, integrations_routes, knowledge, routes_chat
+from .integrations import webhooks as webhooks_router
 from .channels import widget as widget_channel
 from .config import get_settings
 from .db import engine
@@ -212,3 +213,4 @@ app.include_router(dashboard_api.router)
 app.include_router(widget_channel.router)
 app.include_router(admin.router)
 app.include_router(integrations_routes.router)
+app.include_router(webhooks_router.router)

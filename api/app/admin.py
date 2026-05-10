@@ -239,21 +239,39 @@ def _admin_api_dep(
 
 @router.get("/api/integrations")
 def api_integrations(
+    request: Request,
     tenant: Tenant = Depends(get_admin_tenant),
     db: Session = Depends(get_db),
 ):
+    ctx = _ctx(request)
+    base = ctx.get("public_base_url", "").rstrip("/")
+    webhook_base = f"{base}/integrations/webhooks" if base else None
+
+    PROVIDER_WEBHOOK_EVENTS = {
+        "shopify": ["orders/create", "orders/updated", "fulfillments/create", "fulfillments/update", "customers/create", "customers/update"],
+        "recharge": ["subscription/cancelled", "charge/failed", "charge/success", "subscription/skipped"],
+        "stripe": ["invoice.payment_failed", "invoice.payment_succeeded", "customer.subscription.updated", "customer.subscription.deleted"],
+    }
+
     connectors = db.query(NativeConnector).filter(NativeConnector.tenant_id == tenant.id).all()
+    conn_map = {c.provider: c for c in connectors}
+
+    result = []
+    for provider in ("shopify", "recharge", "stripe"):
+        c = conn_map.get(provider)
+        result.append({
+            "provider": provider,
+            "status": c.status if c else "disconnected",
+            "has_webhook_secret": bool((c.meta or {}).get("webhook_secret")) if c else False,
+            "webhook_url": f"{webhook_base}/{provider}" if webhook_base else None,
+            "webhook_events": PROVIDER_WEBHOOK_EVENTS.get(provider, []),
+            "created_at": c.created_at.isoformat() if c and c.created_at else None,
+            "updated_at": c.updated_at.isoformat() if c and c.updated_at else None,
+        })
+
     return {
-        "native_connectors": [
-            {
-                "id": str(c.id),
-                "provider": c.provider,
-                "status": c.status,
-                "created_at": c.created_at.isoformat() if c.created_at else None,
-                "updated_at": c.updated_at.isoformat() if c.updated_at else None,
-            }
-            for c in connectors
-        ]
+        "native_connectors": result,
+        "webhook_base_url": webhook_base,
     }
 
 

@@ -78,17 +78,26 @@ def connect_native(
     ).first()
 
     encrypted = encrypt(json.dumps(credentials))
+    webhook_secret = body.get("webhook_secret", "")
 
     if existing:
         existing.credentials = encrypted
         existing.status = "connected"
         existing.updated_at = datetime.utcnow()
+        meta = dict(existing.meta or {})
+        if webhook_secret:
+            meta["webhook_secret"] = webhook_secret
+        existing.meta = meta
     else:
+        meta = {}
+        if webhook_secret:
+            meta["webhook_secret"] = webhook_secret
         existing = NativeConnector(
             tenant_id=tenant.id,
             provider=provider,
             status="connected",
             credentials=encrypted,
+            meta=meta,
         )
         db.add(existing)
 
