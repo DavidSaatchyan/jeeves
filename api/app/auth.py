@@ -115,12 +115,18 @@ def decode_token(token: str) -> dict:
 
 
 def get_current_tenant(
+    request: Request,
     authorization: Optional[str] = Header(default=None),
     db: Session = Depends(get_db),
 ) -> Tenant:
-    if not authorization or not authorization.lower().startswith("bearer "):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing bearer token")
-    token = authorization.split(" ", 1)[1]
+    raw: Optional[str] = None
+    if authorization and authorization.lower().startswith("bearer "):
+        raw = authorization.split(" ", 1)[1]
+    if not raw:
+        raw = request.cookies.get(_SESSION_COOKIE)
+    if not raw:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing bearer token or session")
+    token = raw
 
     # API key path: starts with "sk_"
     if token.startswith("sk_"):
@@ -213,26 +219,6 @@ def revoke(body: dict):
 
 
 @router.post("/login", response_model=AuthOut)
-def login(body: LoginIn, request: Request, response: Response, db: Session = Depends(get_db)):
-    ip = _get_client_ip(request)
-    if not check_rate_limit("login", ip):
-        raise HTTPException(429, "Too many login attempts. Try again later.")
-    tenant = db.query(Tenant).filter(Tenant.email == body.email).first()
-    if not tenant or not pwd_ctx.verify(_prepare_password(body.password), tenant.hashed_password):
-        raise HTTPException(401, "Invalid credentials")
-    access, refresh = issue_tokens(tenant.id)
-
-    response.set_cookie(
-        key=_SESSION_COOKIE,
-        value=access,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=900,
-        path="/admin",
-    )
-
-    return AuthOut(tenant_id=tenant.id, access_token=access, refresh_token=refresh)
 def login(body: LoginIn, request: Request, response: Response, db: Session = Depends(get_db)):
     ip = _get_client_ip(request)
     if not check_rate_limit("login", ip):

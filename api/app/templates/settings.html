@@ -111,16 +111,15 @@ document.querySelectorAll('#settingsTabs .st-tab').forEach(function(tab){
 
 async function loadSettings() {
   try {
-    var [s, pols, conns, billing] = await Promise.allSettled([
+    var [s, pols, conns] = await Promise.allSettled([
       api('/admin/api/settings'),
       api('/admin/api/policies'),
       api('/admin/api/integrations'),
-      api('/dashboard/billing'),
     ]);
     var settings = s.value || {};
     var policies = pols.value || {};
     var integrations = conns.value || {};
-    var bill = billing.value || {};
+    var bill = settings.billing || {};
 
     // Connections
     var connectors = integrations.native_connectors || [];

@@ -17,10 +17,12 @@ from sqlalchemy import func, text, Integer, and_
 from sqlalchemy.orm import Session
 
 from .auth import decode_token, get_current_tenant, issue_tokens
+from . import billing
 from .config import get_settings
 from .db import get_db
 from .models import (
     AIInteraction,
+    ApiKey,
     ApprovalRequest,
     ChatLog,
     Communication,
@@ -1145,6 +1147,7 @@ def api_settings(
             "workflow_failure_alerts": True,
             "daily_summary": False,
         },
+        "billing": billing.usage(tenant),
     }
 
 
