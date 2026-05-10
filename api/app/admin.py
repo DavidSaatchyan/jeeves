@@ -124,54 +124,42 @@ def admin_logout():
     return response
 
 
-@router.get("/knowledge", response_class=HTMLResponse)
-def knowledge(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "knowledge.html", context=_ctx(request))
+# ─── Redirects from old pages to new simplified navigation ──────
 
+_REDIRECT_MAP = {
+    "/workflows": "",
+    "/escalations": "",
+    "/approvals": "",
+    "/inbox": "/customers",
+    "/analytics": "",
+    "/timeline": "",
+    "/logs": "",
+    "/proactive": "",
+    "/tools": "",
+    "/knowledge": "/settings",
+    "/billing": "/settings",
+    "/integrations": "/settings",
+    "/channels": "/settings",
+    "/policies": "/settings",
+    "/api": "/settings",
+    "/crm": "/settings",
+    "/widget-preview": "/settings",
+}
 
-@router.get("/integrations", response_class=HTMLResponse)
-def integrations_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "integrations.html", context=_ctx(request))
+for _old_path, _suffix in _REDIRECT_MAP.items():
+    _target = f"/admin{_suffix}"
 
+    def _mk_redir(path: str = _target):
+        return RedirectResponse(url=path, status_code=status.HTTP_302_FOUND)
 
-@router.get("/logs", response_class=HTMLResponse)
-def logs_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "logs.html", context=_ctx(request))
+    router.get(_old_path, response_class=HTMLResponse)(_mk_redir)
 
+for _old_path, _new_path in _OLD_PAGE_REDIRECTS.items():
 
-@router.get("/channels", response_class=HTMLResponse)
-def channels_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "channels.html", context=_ctx(request))
+    def _make_redirect(path: str = _new_path):
+        return RedirectResponse(url=path, status_code=status.HTTP_302_FOUND)
 
-
-@router.get("/widget-preview", response_class=HTMLResponse)
-def widget_preview(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "widget_preview.html", context=_ctx(request))
-
-
-@router.get("/proactive", response_class=HTMLResponse)
-def proactive_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "proactive.html", context=_ctx(request))
-
-
-@router.get("/billing", response_class=HTMLResponse)
-def billing_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "billing.html", context=_ctx(request))
-
-
-@router.get("/tools", response_class=HTMLResponse)
-def tools_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "tools.html", context=_ctx(request))
-
-
-@router.get("/api", response_class=HTMLResponse)
-def api_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "api_docs.html", context=_ctx(request))
-
-
-@router.get("/crm", response_class=HTMLResponse)
-def crm_redirect(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return RedirectResponse("/admin/integrations")
+    router.get(_old_path, response_class=HTMLResponse)(_make_redirect)
 
 
 @router.get("/customers", response_class=HTMLResponse)
@@ -197,32 +185,9 @@ def customer_detail_page(
     return templates.TemplateResponse(request, "customer_detail.html", context={**_ctx(request), "customer_id": customer_id})
 
 
-@router.get("/inbox", response_class=HTMLResponse)
-def inbox_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "inbox.html", context=_ctx(request))
-
-
 @router.get("/settings", response_class=HTMLResponse)
 def settings_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
     return templates.TemplateResponse(request, "settings.html", context=_ctx(request))
-
-
-@router.get("/approvals", response_class=HTMLResponse)
-def approvals_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "approvals.html", context=_ctx(request))
-
-
-# ─── Admin pages ──────────────────────────────────────────────────────
-
-
-@router.get("/analytics", response_class=HTMLResponse)
-def analytics_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "analytics.html", context=_ctx(request))
-
-
-@router.get("/workflows", response_class=HTMLResponse)
-def workflows_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "workflows.html", context=_ctx(request))
 
 
 @router.get("/workflows/{workflow_id}", response_class=HTMLResponse)
@@ -251,21 +216,6 @@ def workflow_detail_page(
         "workflow_detail.html",
         context={**_ctx(request), "workflow": wf, "transitions": transitions},
     )
-
-
-@router.get("/escalations", response_class=HTMLResponse)
-def escalations_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "escalations.html", context=_ctx(request))
-
-
-@router.get("/policies", response_class=HTMLResponse)
-def policies_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "policies.html", context=_ctx(request))
-
-
-@router.get("/timeline", response_class=HTMLResponse)
-def timeline_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "timeline.html", context=_ctx(request))
 
 
 # ─── /admin/api/ JSON endpoints ────────────────────────────────────────

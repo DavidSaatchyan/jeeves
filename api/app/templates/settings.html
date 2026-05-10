@@ -1,85 +1,107 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>Settings</h1>
-<p class="page-desc">System-level configuration for workspace, integrations, channels, security, and notifications.</p>
+<p class="page-desc">Configure how Jeeves works — connections, automations, knowledge, channels, account.</p>
 
-<div class="ch-tabs" id="settingsTabs">
-  <button class="ch-tab active" data-tab="workspace">Workspace</button>
-  <button class="ch-tab" data-tab="integrations">Integrations</button>
-  <button class="ch-tab" data-tab="channels">Channels</button>
-  <button class="ch-tab" data-tab="security">Security</button>
-  <button class="ch-tab" data-tab="notifications">Notifications</button>
+<div class="st-tabs" id="settingsTabs">
+  <button class="st-tab active" data-tab="connections">Connections</button>
+  <button class="st-tab" data-tab="automations">Automations</button>
+  <button class="st-tab" data-tab="knowledge">Knowledge</button>
+  <button class="st-tab" data-tab="channels">Channels</button>
+  <button class="st-tab" data-tab="account">Account</button>
 </div>
 
-<div id="tabWorkspace" class="tab-panel">
+<!-- Connections -->
+<div id="tabConnections" class="tab-panel">
   <div class="card">
-    <h2>Organization</h2>
-    <div id="workspaceInfo" class="muted" style="padding:12px 0">Loading...</div>
+    <h2>Connections</h2>
+    <p class="muted" style="font-size:12px;margin-bottom:16px">Connected platforms and data sources.</p>
+    <div id="connectionsList" style="font-size:13px">Loading...</div>
   </div>
 </div>
 
-<div id="tabIntegrations" class="tab-panel" style="display:none">
+<!-- Automations -->
+<div id="tabAutomations" class="tab-panel" style="display:none">
+  <div class="card" style="margin-bottom:12px">
+    <h2>Workflow toggles</h2>
+    <div id="wfToggles" style="font-size:13px">Loading...</div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <h2>Retry policy</h2>
+    <div id="retryPolicy" style="font-size:13px">Loading...</div>
+  </div>
   <div class="card">
-    <h2>Integrations</h2>
-    <p class="muted" style="margin-bottom:16px">Manage connected platforms and data sources.</p>
-    <a href="/admin/integrations" class="btn">Manage integrations</a>
+    <h2>Escalation policy</h2>
+    <div id="escPolicy" style="font-size:13px">Loading...</div>
   </div>
 </div>
 
+<!-- Knowledge -->
+<div id="tabKnowledge" class="tab-panel" style="display:none">
+  <div class="card" style="margin-bottom:12px">
+    <h2>Files</h2>
+    <p class="muted" style="font-size:12px;margin-bottom:12px">Upload PDF, TXT, or MD files that the AI reads to answer customer questions.</p>
+    <div id="drop" class="drop" style="cursor:pointer">
+      <div style="font-size:13px;font-weight:600">Drop files here or <span style="color:var(--accent);text-decoration:underline">browse</span></div>
+      <div class="muted" style="font-size:11px">.pdf, .txt, .md · Max 50 MB</div>
+      <input id="file" type="file" accept=".pdf,.txt,.md" multiple style="display:none"/>
+    </div>
+    <div id="kbStatus" class="muted" style="font-size:12px;margin-top:12px"></div>
+  </div>
+  <div class="card">
+    <h2>Uploaded files</h2>
+    <div id="kbFiles" style="font-size:13px">Loading...</div>
+  </div>
+</div>
+
+<!-- Channels -->
 <div id="tabChannels" class="tab-panel" style="display:none">
   <div class="card">
     <h2>Channels</h2>
-    <p class="muted" style="margin-bottom:16px">Configure communication channels for AI interactions.</p>
-    <a href="/admin/channels" class="btn">Manage channels</a>
+    <p class="muted" style="font-size:12px;margin-bottom:16px">Where the AI interacts with customers.</p>
+    <div id="channelsList" style="font-size:13px">Loading...</div>
   </div>
 </div>
 
-<div id="tabSecurity" class="tab-panel" style="display:none">
-  <div class="card">
+<!-- Account -->
+<div id="tabAccount" class="tab-panel" style="display:none">
+  <div class="card" style="margin-bottom:12px">
+    <h2>Workspace</h2>
+    <div id="workspaceInfo" style="font-size:13px">Loading...</div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
     <div class="card-header">
       <h2>API keys</h2>
-      <button class="btn ghost sm" onclick="showCreateKeyForm()">+ New key</button>
+      <button class="btn ghost sm" onclick="showKeyForm()">+ New</button>
     </div>
-    <div id="apiKeysList" class="muted" style="padding:8px 0">Loading...</div>
-  </div>
-
-  <!-- Create key form -->
-  <div id="createKeyForm" class="card" style="display:none;margin-top:12px">
-    <h3>Create API key</h3>
-    <div class="form-row" style="margin-bottom:12px">
-      <label class="muted" style="display:block;margin-bottom:4px">Key name</label>
-      <input type="text" id="newKeyName" placeholder="e.g. Production" style="width:100%">
+    <div id="apiKeysList" style="font-size:13px">Loading...</div>
+    <div id="keyForm" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <input type="text" id="newKeyName" placeholder="Key name (e.g. Production)" style="width:100%;margin-bottom:8px">
+      <div class="flex gap-sm">
+        <button class="btn sm" onclick="createKey()">Create</button>
+        <button class="ghost sm" onclick="hideKeyForm()">Cancel</button>
+      </div>
     </div>
-    <div class="flex" style="gap:8px">
-      <button class="btn sm" onclick="createApiKey()">Create</button>
-      <button class="ghost sm" onclick="hideCreateKeyForm()">Cancel</button>
+    <div id="keyReveal" style="display:none;margin-top:12px;padding:12px;background:rgba(245,158,11,0.08);border-radius:6px">
+      <div class="muted" style="font-size:11px;margin-bottom:4px">Copy this key now — it won't be shown again.</div>
+      <div id="rawKey" style="font-family:monospace;font-size:12px;word-break:break-all;margin-bottom:8px"></div>
+      <button class="btn sm" onclick="navigator.clipboard.writeText(rawKeyValue);alert('Copied!')">Copy</button>
+      <button class="ghost sm" onclick="hideReveal()">Done</button>
     </div>
   </div>
-
-  <!-- Key created reveal -->
-  <div id="keyReveal" class="card" style="display:none;margin-top:12px;border-color:var(--amber)">
-    <h3>API key created</h3>
-    <p class="muted" style="font-size:12px;margin-bottom:8px">Copy this key now. You won't be able to see it again.</p>
-    <div id="rawKeyDisplay" style="background:var(--bg);padding:12px;border-radius:6px;font-family:monospace;font-size:13px;word-break:break-all;margin-bottom:12px"></div>
-    <button class="btn sm" onclick="copyRawKey()">Copy</button>
-    <button class="ghost sm" onclick="hideKeyReveal()">Done</button>
-  </div>
-</div>
-
-<div id="tabNotifications" class="tab-panel" style="display:none">
   <div class="card">
-    <h2>Notification preferences</h2>
-    <div id="notifPrefs" class="muted" style="padding:12px 0">Loading...</div>
+    <h2>Billing</h2>
+    <div id="billingInfo" style="font-size:13px">Loading...</div>
   </div>
 </div>
 
 <script>
-var currentTab = 'workspace';
 var rawKeyValue = '';
+var currentTab = 'connections';
 
-document.querySelectorAll('#settingsTabs .ch-tab').forEach(function(tab){
+document.querySelectorAll('#settingsTabs .st-tab').forEach(function(tab){
   tab.addEventListener('click', function(){
-    document.querySelectorAll('#settingsTabs .ch-tab').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('#settingsTabs .st-tab').forEach(function(t){ t.classList.remove('active'); });
     tab.classList.add('active');
     document.querySelectorAll('.tab-panel').forEach(function(p){ p.style.display = 'none'; });
     document.getElementById('tab' + tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1)).style.display = '';
@@ -89,103 +111,166 @@ document.querySelectorAll('#settingsTabs .ch-tab').forEach(function(tab){
 
 async function loadSettings() {
   try {
-    var data = await api('/admin/api/settings');
-    var ws = data.workspace || {};
+    var [s, pols, conns, billing] = await Promise.allSettled([
+      api('/admin/api/settings'),
+      api('/admin/api/policies'),
+      api('/admin/api/integrations'),
+      api('/dashboard/billing'),
+    ]);
+    var settings = s.value || {};
+    var policies = pols.value || {};
+    var integrations = conns.value || {};
+    var bill = billing.value || {};
 
-    // Workspace
+    // Connections
+    var connectors = integrations.native_connectors || [];
+    document.getElementById('connectionsList').innerHTML = ['shopify', 'stripe', 'recharge'].map(function(p){
+      var c = connectors.find(function(nc){ return nc.provider === p; });
+      var ok = c && c.status === 'connected';
+      return '<div class="tl-row"><span>' + (ok ? '✅' : '🔌') + '</span><span style="flex:1;font-weight:600;text-transform:capitalize">' + p + '</span><span class="pill ' + (ok ? 'ok' : 'muted') + '" style="font-size:10px">' + (ok ? 'Connected' : 'Not connected') + '</span></div>';
+    }).join('') || '<div class="muted">No connections.</div>';
+
+    // Automations - workflow toggles
+    var ew = policies.enabled_workflows || {};
+    document.getElementById('wfToggles').innerHTML = [
+      { k: 'payment_recovery', l: 'Payment Recovery' },
+      { k: 'cancellation_save', l: 'Cancellation Save' },
+      { k: 'wismo', l: 'WISMO' },
+    ].map(function(w){
+      var checked = ew[w.k] !== false;
+      return '<div class="tl-row" style="justify-content:space-between"><span style="font-weight:500">' + w.l + '</span><label class="switch"><input type="checkbox" ' + (checked ? 'checked' : '') + ' onchange="toggleWorkflow(\'' + w.k + '\', this.checked)"><span class="slider"></span></label></div>';
+    }).join('');
+
+    // Retry policy
+    var rp = policies.retry || {};
+    document.getElementById('retryPolicy').innerHTML =
+      '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Max retries</span><span style="font-weight:600">' + (rp.max_retries || 3) + '</span></div>' +
+      '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Retry intervals</span><span style="font-weight:600">' + ((rp.intervals||[]).join(', ') || '5min, 1h, 24h') + '</span></div>' +
+      '<div class="flex" style="justify-content:space-between"><span class="muted2">Action on failure</span><span style="font-weight:600;text-transform:capitalize">' + (rp.on_failure || 'escalate') + '</span></div>';
+
+    // Escalation policy
+    var ep = policies.escalation || {};
+    document.getElementById('escPolicy').innerHTML =
+      '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Trigger</span><span style="font-weight:600">' + (ep.trigger || 'frustration or amount > $300') + '</span></div>' +
+      '<div class="flex" style="justify-content:space-between"><span class="muted2">Channel</span><span style="font-weight:600">' + (ep.channel || 'in-app') + '</span></div>';
+
+    // Knowledge
+    try {
+      var kbf = await api('/knowledge/files');
+      var ready = kbf.filter(function(r){ return r.status === 'ready'; });
+      document.getElementById('kbStatus').textContent = ready.length + ' file' + (ready.length !== 1 ? 's' : '') + ' ready (' + kbf.length + ' total)';
+      document.getElementById('kbFiles').innerHTML = kbf.length
+        ? kbf.map(function(r){ return '<div class="tl-row"><span style="flex:1;font-size:12px">' + esc(r.filename) + '</span><span class="pill ' + (r.status === 'ready' ? 'ok' : r.status === 'failed' ? 'err' : 'warn') + '" style="font-size:9px">' + r.status + '</span><button class="ghost sm" style="color:var(--red)" onclick="deleteFile(\'' + r.id + '\')">✕</button></div>'; }).join('')
+        : '<div class="muted">No files uploaded.</div>';
+    } catch(e) { document.getElementById('kbFiles').innerHTML = '<div class="muted">Error loading files.</div>'; }
+
+    // Channels
+    document.getElementById('channelsList').innerHTML =
+      '<div class="tl-row"><span>💬</span><span style="flex:1;font-weight:500">Website Widget</span><span class="pill ok" style="font-size:10px">Active</span></div>' +
+      '<div class="tl-row"><span>📧</span><span style="flex:1;font-weight:500">Email</span><span class="pill ' + (settings.notifications ? 'ok' : 'muted') + '" style="font-size:10px">' + (settings.notifications ? 'Configured' : 'Not set up') + '</span></div>';
+
+    // Account
+    var ws = settings.workspace || {};
     document.getElementById('workspaceInfo').innerHTML =
-      '<div class="flex" style="justify-content:space-between;margin-bottom:8px"><span class="muted">Organization</span><span style="font-weight:600">' + esc(ws.name || '—') + '</span></div>' +
-      '<div class="flex" style="justify-content:space-between;margin-bottom:8px"><span class="muted">Email</span><span>' + esc(ws.email || '—') + '</span></div>' +
-      '<div class="flex" style="justify-content:space-between;margin-bottom:8px"><span class="muted">Plan</span><span class="pill muted" style="text-transform:capitalize">' + esc(ws.plan || 'free') + '</span></div>' +
-      '<div class="flex" style="justify-content:space-between"><span class="muted">Trial ends</span><span>' + (ws.trial_ends ? ws.trial_ends.slice(0, 10) : '—') + '</span></div>';
+      '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Organization</span><span style="font-weight:600">' + esc(ws.name || '—') + '</span></div>' +
+      '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Email</span><span>' + esc(ws.email || '—') + '</span></div>' +
+      '<div class="flex" style="justify-content:space-between"><span class="muted2">Plan</span><span class="pill muted" style="text-transform:capitalize;font-size:10px">' + esc(ws.plan || 'free') + '</span></div>';
 
-    // API Keys
-    var keys = data.api_keys || [];
+    // API keys
+    var keys = settings.api_keys || [];
     document.getElementById('apiKeysList').innerHTML = keys.length
       ? keys.map(function(k){
-          return '<div class="tl-row"><div style="flex:1"><div style="font-weight:600;font-size:13px">' + esc(k.name) + '</div><div class="muted" style="font-size:11px;font-family:monospace">' + esc(k.prefix) + '...</div></div><span class="muted2" style="font-size:10px">' + (k.last_used_at ? 'Last used ' + k.last_used_at.slice(0, 10) : 'Never used') + '</span><button class="ghost sm" style="color:var(--red)" onclick="revokeKey(\'' + k.id + '\')">Revoke</button></div>';
+          return '<div class="tl-row"><span style="flex:1;font-size:12px"><strong>' + esc(k.name) + '</strong> <span class="muted2" style="font-size:11px;font-family:monospace">' + esc(k.prefix) + '...</span></span><span class="muted2" style="font-size:10px">' + (k.last_used_at ? k.last_used_at.slice(0,10) : 'Never') + '</span><button class="ghost sm" style="color:var(--red)" onclick="revokeKey(\'' + k.id + '\')">Revoke</button></div>';
         }).join('')
-      : '<div class="muted" style="text-align:center;padding:16px">No API keys created.</div>';
+      : '<div class="muted">No API keys.</div>';
 
-    // Notifications
-    var n = data.notifications || {};
-    document.getElementById('notifPrefs').innerHTML = [
-      { key: 'escalation_alerts', label: 'Escalation alerts', desc: 'Notify when workflows are escalated' },
-      { key: 'approval_alerts', label: 'Approval alerts', desc: 'Notify when human approval is needed' },
-      { key: 'workflow_failure_alerts', label: 'Workflow failure alerts', desc: 'Notify when workflows fail' },
-      { key: 'daily_summary', label: 'Daily summary', desc: 'Receive a daily operational summary' },
-    ].map(function(toggle){
-      var checked = n[toggle.key] ? 'checked' : '';
-      return '<div class="tl-row" style="justify-content:space-between"><div><div style="font-weight:600;font-size:13px">' + toggle.label + '</div><div class="muted" style="font-size:11px">' + toggle.desc + '</div></div><label class="switch"><input type="checkbox" ' + checked + ' onchange="toggleNotif(\'' + toggle.key + '\', this.checked)"><span class="slider"></span></label></div>';
-    }).join('');
+    // Billing
+    document.getElementById('billingInfo').innerHTML =
+      '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Resolved this period</span><span style="font-weight:600">' + (bill.resolved || 0) + '</span></div>' +
+      '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Plan limit</span><span style="font-weight:600">' + (bill.dialogs_limit || 0) + '</span></div>' +
+      '<div class="flex" style="justify-content:space-between"><span class="muted2">Overage</span><span style="font-weight:600">' + (bill.overage_charge_usd ? '$' + bill.overage_charge_usd.toFixed(2) : '$0') + '</span></div>';
+
   } catch(e) { console.error('settings error:', e); }
 }
 
-async function toggleNotif(key, value) {
+async function toggleWorkflow(type, enabled) {
   try {
-    var body = {};
-    body[key] = value;
-    await api('/admin/api/settings', { method: 'PUT', body: { notifications: body } });
-  } catch(e) { console.error('toggle error:', e); }
+    var pols = await api('/admin/api/policies');
+    var ew = pols.enabled_workflows || {};
+    ew[type] = enabled;
+    await api('/admin/api/policies/enabled_workflows', { method: 'PUT', body: ew });
+  } catch(e) { console.error(e); }
 }
 
-function showCreateKeyForm() {
-  document.getElementById('createKeyForm').style.display = '';
-  document.getElementById('newKeyName').value = '';
-  document.getElementById('newKeyName').focus();
-}
+function showKeyForm() { document.getElementById('keyForm').style.display = ''; document.getElementById('newKeyName').focus(); }
+function hideKeyForm() { document.getElementById('keyForm').style.display = 'none'; }
+function hideReveal() { document.getElementById('keyReveal').style.display = 'none'; rawKeyValue = ''; }
 
-function hideCreateKeyForm() {
-  document.getElementById('createKeyForm').style.display = 'none';
-}
-
-async function createApiKey() {
+async function createKey() {
   var name = document.getElementById('newKeyName').value.trim() || 'default';
   try {
     var data = await api('/admin/api/settings/api-keys', { method: 'POST', body: { name: name } });
     rawKeyValue = data.raw_key || '';
-    document.getElementById('rawKeyDisplay').textContent = rawKeyValue;
+    document.getElementById('rawKey').textContent = rawKeyValue;
     document.getElementById('keyReveal').style.display = '';
-    hideCreateKeyForm();
+    hideKeyForm();
     loadSettings();
   } catch(e) { alert('Error: ' + e.message); }
-}
-
-function hideKeyReveal() {
-  document.getElementById('keyReveal').style.display = 'none';
-  rawKeyValue = '';
-}
-
-function copyRawKey() {
-  if (rawKeyValue) {
-    navigator.clipboard.writeText(rawKeyValue).then(function(){ alert('Copied!'); });
-  }
 }
 
 async function revokeKey(id) {
-  if (!confirm('Revoke this API key? This action cannot be undone.')) return;
-  try {
-    await api('/admin/api/settings/api-keys/' + id, { method: 'DELETE' });
-    loadSettings();
-  } catch(e) { alert('Error: ' + e.message); }
+  if (!confirm('Revoke this key?')) return;
+  try { await api('/admin/api/settings/api-keys/' + id, { method: 'DELETE' }); loadSettings(); }
+  catch(e) { alert('Error: ' + e.message); }
+}
+
+async function deleteFile(id) {
+  if (!confirm('Delete this file?')) return;
+  try { await fetch('/knowledge/files/' + id, { method: 'DELETE', headers: {'Authorization': 'Bearer ' + token()}}); loadSettings(); }
+  catch(e) { alert('Error: ' + e.message); }
+}
+
+// Upload
+document.addEventListener('DOMContentLoaded', function(){
+  var drop = document.getElementById('drop');
+  if (drop) {
+    drop.addEventListener('click', function(){ document.getElementById('file').click(); });
+    drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.classList.add('hot'); });
+    drop.addEventListener('dragleave', function(){ drop.classList.remove('hot'); });
+    drop.addEventListener('drop', function(e){ e.preventDefault(); drop.classList.remove('hot'); if(e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files); });
+    document.getElementById('file').addEventListener('change', function(e){ if(e.target.files.length) uploadFiles(e.target.files); });
+  }
+});
+
+async function uploadFiles(files) {
+  for(var i = 0; i < files.length; i++){
+    try {
+      var fd = new FormData(); fd.append('file', files[i]);
+      await api('/knowledge/files', { method: 'POST', body: fd });
+    } catch(e) { alert(files[i].name + ': ' + e.message); }
+  }
+  loadSettings();
 }
 
 loadSettings();
 </script>
 
 <style>
-.ch-tabs { display:flex; gap:4px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:0; }
-.ch-tab { padding:8px 16px; border:none; background:transparent; color:var(--muted2); font-size:13px; font-weight:500; cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
-.ch-tab:hover { color:var(--fg); }
-.ch-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.st-tabs { display:flex; gap:2px; margin-bottom:20px; border-bottom:1px solid var(--border); }
+.st-tab { padding:8px 14px; border:none; background:transparent; color:var(--muted2); font-size:13px; font-weight:500; cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
+.st-tab:hover { color:var(--fg); }
+.st-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
 .tab-panel { animation:fadeIn .2s ease; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
-.switch { position:relative; display:inline-block; width:36px; height:20px; flex-shrink:0; }
+.tl-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); }
+.tl-row:last-child { border-bottom:none; }
+.switch { position:relative; display:inline-block; width:34px; height:18px; flex-shrink:0; }
 .switch input { opacity:0; width:0; height:0; }
-.slider { position:absolute; cursor:pointer; inset:0; background:var(--border); border-radius:20px; transition:.2s; }
-.slider:before { content:""; position:absolute; height:14px; width:14px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.2s; }
+.slider { position:absolute; cursor:pointer; inset:0; background:var(--border); border-radius:18px; transition:.2s; }
+.slider:before { content:""; position:absolute; height:12px; width:12px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.2s; }
 input:checked + .slider { background:var(--accent); }
 input:checked + .slider:before { transform:translateX(16px); }
-.form-row label { font-size:12px; }
+.drop { padding:24px; text-align:center; border:1px dashed var(--border); border-radius:8px; transition:all .15s; }
+.drop.hot { border-color:var(--accent); background:rgba(129,140,248,0.05); }
 </style>
 {% endblock %}
