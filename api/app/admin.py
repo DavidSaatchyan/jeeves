@@ -21,9 +21,13 @@ from .config import get_settings
 from .db import get_db
 from .models import (
     AIInteraction,
+    ApprovalRequest,
+    ChatLog,
     Communication,
+    Customer,
     Escalation,
     NativeConnector,
+    NotificationPreferences,
     PolicySet,
     TimelineEvent,
     Workflow,
@@ -615,3 +619,514 @@ def api_analytics(
         "escalations": esc_count,
         "communications_sent": comms_count,
     }
+
+
+# ─── Customer API ──────────────────────────────────────────────────────
+
+
+@router.get("/api/customers")
+def api_customers(
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+    search: str | None = Query(None),
+    risk: str | None = Query(None),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+):
+    q = db.query(Customer).filter(Customer.tenant_id == tenant.id)
+    if search:
+        like = f"%{search}%"
+        q = q.filter(Customer.email.ilike(like) | Customer.phone.ilike(like))
+    if risk:
+        q = q.filter(Customer.risk_level == risk)
+    total = q.count()
+    rows = q.order_by(Customer.last_seen_at.desc().nullslast()).offset(offset).limit(limit).all()
+    return {
+        "customers": [
+            {
+                "id": str(c.id),
+                "email": c.email,
+                "phone": c.phone,
+                "risk_level": c.risk_level,
+                "sentiment_state": c.sentiment_state,
+                "frustration_score": c.frustration_score,
+                "first_seen_at": c.first_seen_at.isoformat() if c.first_seen_at else None,
+                "last_seen_at": c.last_seen_at.isoformat() if c.last_seen_at else None,
+                "created_at": c.created_at.isoformat() if c.created_at else None,
+            }
+            for c in rows
+        ],
+        "total": total,
+        "offset": offset,
+        "limit": limit,
+    }
+
+
+@router.get("/api/customers/{customer_id}")
+def api_customer_detail(
+    customer_id: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    try:
+        cid = uuid.UUID(customer_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Invalid customer ID")
+    c = db.query(Customer).filter(Customer.id == cid, Customer.tenant_id == tenant.id).first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return {
+        "id": str(c.id),
+        "email": c.email,
+        "phone": c.phone,
+        "shopify_customer_id": c.shopify_customer_id,
+        "stripe_customer_id": c.stripe_customer_id,
+        "recharge_customer_id": c.recharge_customer_id,
+        "risk_level": c.risk_level,
+        "sentiment_state": c.sentiment_state,
+        "frustration_score": c.frustration_score,
+        "first_seen_at": c.first_seen_at.isoformat() if c.first_seen_at else None,
+        "last_seen_at": c.last_seen_at.isoformat() if c.last_seen_at else None,
+        "created_at": c.created_at.isoformat() if c.created_at else None,
+    }
+
+
+@router.get("/api/customers/{customer_id}/timeline")
+def api_customer_timeline(
+    customer_id: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+    limit: int = Query(50, ge=1, le=200),
+):
+    events = (
+        db.query(TimelineEvent)
+        .filter(TimelineEvent.tenant_id == tenant.id, TimelineEvent.entity_id == customer_id)
+        .order_by(TimelineEvent.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return {
+        "events": [
+            {
+                "id": str(e.id),
+                "event_type": e.event_type,
+                "entity_type": e.entity_type,
+                "event_source": e.event_source,
+                "payload": e.payload,
+                "created_at": e.created_at.isoformat() if e.created_at else None,
+            }
+            for e in events
+        ]
+    }
+
+
+@router.get("/api/customers/{customer_id}/context")
+def api_customer_context(
+    customer_id: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    """AI context panel data — risk, sentiment, recent activity, recommended actions."""
+    try:
+        cid = uuid.UUID(customer_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Invalid customer ID")
+    c = db.query(Customer).filter(Customer.id == cid, Customer.tenant_id == tenant.id).first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    active_workflows = (
+        db.query(Workflow)
+        .filter(Workflow.tenant_id == tenant.id, Workflow.customer_id == customer_id, Workflow.status.in_(["active", "paused"]))
+        .count()
+    )
+    open_escalations = (
+        db.query(Escalation)
+        .filter(Escalation.tenant_id == tenant.id, Escalation.customer_id == cid, Escalation.status == "OPEN")
+        .count()
+    )
+    recent_chats = (
+        db.query(ChatLog)
+        .filter(ChatLog.tenant_id == tenant.id, ChatLog.user_id == customer_id)
+        .order_by(ChatLog.created_at.desc())
+        .limit(5)
+        .all()
+    )
+
+    return {
+        "customer_id": str(c.id),
+        "risk_level": c.risk_level,
+        "sentiment_state": c.sentiment_state,
+        "frustration_score": c.frustration_score,
+        "active_workflows": active_workflows,
+        "open_escalations": open_escalations,
+        "recent_activity": [
+            {
+                "id": str(ch.id),
+                "message": (ch.message or "")[:150],
+                "channel": ch.channel,
+                "resolution": ch.resolution,
+                "created_at": ch.created_at.isoformat() if ch.created_at else None,
+            }
+            for ch in recent_chats
+        ],
+        "recommended_actions": [],
+    }
+
+
+# ─── Inbox API ─────────────────────────────────────────────────────────
+
+
+@router.get("/api/inbox")
+def api_inbox(
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+    channel: str | None = Query(None),
+    resolution: str | None = Query(None),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+):
+    """Conversation list grouped by session_id."""
+    subq = (
+        db.query(
+            ChatLog.session_id,
+            func.max(ChatLog.created_at).label("last_at"),
+            func.count(ChatLog.id).label("turns"),
+        )
+        .filter(ChatLog.tenant_id == tenant.id, ChatLog.session_id.isnot(None))
+    )
+    if channel:
+        subq = subq.filter(ChatLog.channel == channel)
+    subq = subq.group_by(ChatLog.session_id).subquery()
+
+    q = (
+        db.query(
+            subq.c.session_id,
+            subq.c.last_at,
+            subq.c.turns,
+            ChatLog.message,
+            ChatLog.response,
+            ChatLog.resolution,
+            ChatLog.channel,
+            ChatLog.user_id,
+        )
+        .select_from(subq)
+        .outerjoin(ChatLog, ChatLog.session_id == subq.c.session_id)
+    )
+    if resolution:
+        q = q.filter(ChatLog.resolution == resolution)
+    q = q.order_by(subq.c.last_at.desc()).offset(offset).limit(limit)
+    rows = q.all()
+
+    total = db.query(subq).count()
+
+    seen = set()
+    result = []
+    for r in rows:
+        sid = r.session_id
+        if sid in seen:
+            continue
+        seen.add(sid)
+        result.append({
+            "session_id": str(sid),
+            "user_id": r.user_id,
+            "channel": r.channel,
+            "resolution": r.resolution,
+            "turns": r.turns,
+            "last_message": (r.message or "")[:200],
+            "last_response": (r.response or "")[:200],
+            "last_at": r.last_at.isoformat() if r.last_at else None,
+        })
+
+    return {"conversations": result, "total": total, "offset": offset, "limit": limit}
+
+
+@router.get("/api/inbox/{session_id}")
+def api_inbox_thread(
+    session_id: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    """Full conversation thread for a session."""
+    messages = (
+        db.query(ChatLog)
+        .filter(ChatLog.tenant_id == tenant.id, ChatLog.session_id == session_id)
+        .order_by(ChatLog.created_at.asc())
+        .all()
+    )
+    return {
+        "session_id": session_id,
+        "messages": [
+            {
+                "id": str(m.id),
+                "direction": m.direction,
+                "message": m.message,
+                "response": m.response,
+                "resolution": m.resolution,
+                "channel": m.channel,
+                "user_id": m.user_id,
+                "created_at": m.created_at.isoformat() if m.created_at else None,
+            }
+            for m in messages
+        ],
+    }
+
+
+@router.post("/api/inbox/{session_id}/takeover")
+def api_inbox_takeover(
+    session_id: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    """Mark a conversation as human takeover."""
+    messages = (
+        db.query(ChatLog)
+        .filter(ChatLog.tenant_id == tenant.id, ChatLog.session_id == session_id)
+        .all()
+    )
+    if not messages:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    for m in messages:
+        m.resolution = "escalated"
+    db.commit()
+    return {"ok": True, "message": "Conversation taken over"}
+
+
+@router.post("/api/inbox/{session_id}/suggest")
+def api_inbox_suggest(
+    session_id: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    """AI assist — generate reply suggestion (stub, returns placeholder)."""
+    messages = (
+        db.query(ChatLog)
+        .filter(ChatLog.tenant_id == tenant.id, ChatLog.session_id == session_id)
+        .order_by(ChatLog.created_at.desc())
+        .limit(5)
+        .all()
+    )
+    if not messages:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    context = "\n".join(
+        f"{'Customer' if m.direction == 'incoming' else 'AI'}: {m.message or m.response or ''}"
+        for m in reversed(messages)
+    )
+
+    return {
+        "ok": True,
+        "suggestion": "I understand your concern. Let me check on this for you right away.",
+        "context": context[:500],
+        "confidence": 85,
+    }
+
+
+# ─── Approval API ──────────────────────────────────────────────────────
+
+
+@router.get("/api/approvals")
+def api_approvals(
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+    status: str | None = Query(None),
+    risk: str | None = Query(None),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+):
+    q = db.query(ApprovalRequest).filter(ApprovalRequest.tenant_id == tenant.id)
+    if status:
+        q = q.filter(ApprovalRequest.status == status)
+    if risk:
+        q = q.filter(ApprovalRequest.risk_level == risk)
+    total = q.count()
+    rows = q.order_by(ApprovalRequest.created_at.desc()).offset(offset).limit(limit).all()
+    return {
+        "approvals": [
+            {
+                "id": str(a.id),
+                "workflow_id": str(a.workflow_id) if a.workflow_id else None,
+                "customer_id": str(a.customer_id) if a.customer_id else None,
+                "action_type": a.action_type,
+                "action_value": a.action_value,
+                "reason": a.reason,
+                "expected_outcome": a.expected_outcome,
+                "risk_level": a.risk_level,
+                "ai_confidence": a.ai_confidence,
+                "status": a.status,
+                "reviewed_by": a.reviewed_by,
+                "reviewed_at": a.reviewed_at.isoformat() if a.reviewed_at else None,
+                "policy_reference": a.policy_reference,
+                "simulation_result": a.simulation_result,
+                "created_at": a.created_at.isoformat() if a.created_at else None,
+                "updated_at": a.updated_at.isoformat() if a.updated_at else None,
+            }
+            for a in rows
+        ],
+        "total": total,
+        "offset": offset,
+        "limit": limit,
+    }
+
+
+@router.get("/api/approvals/{approval_id}")
+def api_approval_detail(
+    approval_id: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    try:
+        aid = uuid.UUID(approval_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Invalid approval ID")
+    a = db.query(ApprovalRequest).filter(ApprovalRequest.id == aid, ApprovalRequest.tenant_id == tenant.id).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="Approval not found")
+    return {
+        "id": str(a.id),
+        "workflow_id": str(a.workflow_id) if a.workflow_id else None,
+        "customer_id": str(a.customer_id) if a.customer_id else None,
+        "action_type": a.action_type,
+        "action_value": a.action_value,
+        "reason": a.reason,
+        "expected_outcome": a.expected_outcome,
+        "risk_level": a.risk_level,
+        "ai_confidence": a.ai_confidence,
+        "status": a.status,
+        "reviewed_by": a.reviewed_by,
+        "reviewed_at": a.reviewed_at.isoformat() if a.reviewed_at else None,
+        "policy_reference": a.policy_reference,
+        "simulation_result": a.simulation_result,
+        "created_at": a.created_at.isoformat() if a.created_at else None,
+        "updated_at": a.updated_at.isoformat() if a.updated_at else None,
+    }
+
+
+@router.post("/api/approvals/{approval_id}/approve")
+def api_approval_approve(
+    approval_id: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    try:
+        aid = uuid.UUID(approval_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Invalid approval ID")
+    a = db.query(ApprovalRequest).filter(ApprovalRequest.id == aid, ApprovalRequest.tenant_id == tenant.id).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="Approval not found")
+    a.status = "APPROVED"
+    a.reviewed_by = str(tenant.id)
+    a.reviewed_at = datetime.utcnow()
+    a.updated_at = datetime.utcnow()
+    db.commit()
+    return {"ok": True, "message": "Approved", "status": a.status}
+
+
+@router.post("/api/approvals/{approval_id}/always")
+def api_approval_always(
+    approval_id: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    try:
+        aid = uuid.UUID(approval_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Invalid approval ID")
+    a = db.query(ApprovalRequest).filter(ApprovalRequest.id == aid, ApprovalRequest.tenant_id == tenant.id).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="Approval not found")
+    a.status = "ALWAYS_ALLOW"
+    a.reviewed_by = str(tenant.id)
+    a.reviewed_at = datetime.utcnow()
+    a.updated_at = datetime.utcnow()
+    db.commit()
+    return {"ok": True, "message": "Always allowed under policy", "status": a.status}
+
+
+@router.post("/api/approvals/{approval_id}/reject")
+def api_approval_reject(
+    approval_id: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    try:
+        aid = uuid.UUID(approval_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Invalid approval ID")
+    a = db.query(ApprovalRequest).filter(ApprovalRequest.id == aid, ApprovalRequest.tenant_id == tenant.id).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="Approval not found")
+    a.status = "REJECTED"
+    a.reviewed_by = str(tenant.id)
+    a.reviewed_at = datetime.utcnow()
+    a.updated_at = datetime.utcnow()
+    db.commit()
+    return {"ok": True, "message": "Rejected", "status": a.status}
+
+
+@router.post("/api/approvals/{approval_id}/escalate")
+def api_approval_escalate(
+    approval_id: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    try:
+        aid = uuid.UUID(approval_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Invalid approval ID")
+    a = db.query(ApprovalRequest).filter(ApprovalRequest.id == aid, ApprovalRequest.tenant_id == tenant.id).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="Approval not found")
+    a.status = "ESCALATED"
+    a.updated_at = datetime.utcnow()
+    db.commit()
+    return {"ok": True, "message": "Escalated", "status": a.status}
+
+
+# ─── Settings API ──────────────────────────────────────────────────────
+
+
+@router.get("/api/settings")
+def api_settings(
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    prefs = db.query(NotificationPreferences).filter(NotificationPreferences.tenant_id == tenant.id).first()
+    return {
+        "notifications": {
+            "escalation_alerts": prefs.escalation_alerts if prefs else True,
+            "approval_alerts": prefs.approval_alerts if prefs else True,
+            "workflow_failure_alerts": prefs.workflow_failure_alerts if prefs else True,
+            "daily_summary": prefs.daily_summary if prefs else False,
+        } if prefs else {
+            "escalation_alerts": True,
+            "approval_alerts": True,
+            "workflow_failure_alerts": True,
+            "daily_summary": False,
+        },
+    }
+
+
+@router.put("/api/settings")
+def api_settings_update(
+    body: dict,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    prefs = db.query(NotificationPreferences).filter(NotificationPreferences.tenant_id == tenant.id).first()
+    if not prefs:
+        prefs = NotificationPreferences(tenant_id=tenant.id)
+        db.add(prefs)
+    notifications = body.get("notifications", {})
+    if "escalation_alerts" in notifications:
+        prefs.escalation_alerts = bool(notifications["escalation_alerts"])
+    if "approval_alerts" in notifications:
+        prefs.approval_alerts = bool(notifications["approval_alerts"])
+    if "workflow_failure_alerts" in notifications:
+        prefs.workflow_failure_alerts = bool(notifications["workflow_failure_alerts"])
+    if "daily_summary" in notifications:
+        prefs.daily_summary = bool(notifications["daily_summary"])
+    prefs.updated_at = datetime.utcnow()
+    db.commit()
+    return {"ok": True, "message": "Settings updated"}
