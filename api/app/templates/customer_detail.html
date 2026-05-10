@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Customer detail</h1>
+<p class="page-desc" id="customerName">Loading...</p>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Profile</h2>
+    <div id="customerProfile" class="muted" style="padding:12px 0">Loading...</div>
+  </div>
+  <div class="card">
+    <h2>AI Context</h2>
+    <div id="customerContext" class="muted" style="padding:12px 0">Loading...</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Timeline</h2>
+  <div id="customerTimeline" class="muted" style="padding:12px 0">Loading...</div>
+</div>
+
+<script>
+async function loadCustomer() {
+  var cid = '{{ customer_id }}';
+  try {
+    var [detail, timeline, context] = await Promise.allSettled([
+      api('/admin/api/customers/' + cid),
+      api('/admin/api/customers/' + cid + '/timeline'),
+      api('/admin/api/customers/' + cid + '/context'),
+    ]);
+
+    var d = detail.value || {};
+    var tl = timeline.value || {events:[]};
+    var ctx = context.value || {};
+
+    document.getElementById('customerName').textContent = d.name || 'Customer ' + cid.slice(0, 8);
+
+    // Profile
+    var riskColor = d.risk_level === 'high' ? 'var(--red)' : (d.risk_level === 'medium' ? 'var(--amber)' : 'var(--muted2)');
+    document.getElementById('customerProfile').innerHTML =
+      '<div class="flex" style="justify-content:space-between;margin-bottom:8px"><span class="muted">Email</span><span>' + esc(d.email || '—') + '</span></div>' +
+      '<div class="flex" style="justify-content:space-between;margin-bottom:8px"><span class="muted">Risk</span><span class="pill ' + (d.risk_level === 'high' ? 'err' : d.risk_level === 'medium' ? 'warn' : 'muted') + '" style="text-transform:capitalize">' + esc(d.risk_level || 'unknown') + '</span></div>' +
+      '<div class="flex" style="justify-content:space-between;margin-bottom:8px"><span class="muted">Total orders</span><span>' + (d.total_orders || 0) + '</span></div>' +
+      '<div class="flex" style="justify-content:space-between;margin-bottom:8px"><span class="muted">Subscription</span><span>' + esc(d.subscription_state || '—') + '</span></div>' +
+      '<div class="flex" style="justify-content:space-between;margin-bottom:8px"><span class="muted">Workflows</span><span>' + (d.total_workflows || 0) + '</span></div>' +
+      '<div class="flex" style="justify-content:space-between;margin-bottom:8px"><span class="muted">Escalations</span><span>' + (d.total_escalations || 0) + '</span></div>' +
+      '<div class="flex" style="justify-content:space-between"><span class="muted">Last seen</span><span>' + (d.last_seen ? d.last_seen.slice(0, 10) : '—') + '</span></div>';
+
+    // AI Context
+    var html = '';
+    if (ctx.churn_risk != null) {
+      html += '<div class="flex" style="justify-content:space-between;margin-bottom:8px"><span class="muted">Churn risk</span><span class="pill ' + (ctx.churn_risk > 0.5 ? 'err' : ctx.churn_risk > 0.2 ? 'warn' : 'ok') + '">' + Math.round(ctx.churn_risk * 100) + '%</span></div>';
+    }
+    if (ctx.summary) {
+      html += '<div style="margin-bottom:12px;padding:10px;background:rgba(255,255,255,0.03);border-radius:6px;font-size:13px;line-height:1.5">' + esc(ctx.summary) + '</div>';
+    }
+    var anomalies = ctx.anomalies || [];
+    if (anomalies.length) {
+      html += '<div style="margin-bottom:8px"><span class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:0.3px">Anomalies</span></div>';
+      html += anomalies.map(function(a){ return '<div class="tl-row"><span class="tl-dot" style="background:var(--red)"></span><span style="font-size:12px">' + esc(a) + '</span></div>'; }).join('');
+    }
+    var recs = ctx.recommended_actions || [];
+    if (recs.length) {
+      html += '<div style="margin-top:12px;margin-bottom:8px"><span class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:0.3px">Recommended actions</span></div>';
+      html += recs.map(function(r){ return '<div class="tl-row"><span style="font-size:12px;color:var(--accent)">→ ' + esc(r) + '</span></div>'; }).join('');
+    }
+    document.getElementById('customerContext').innerHTML = html || '<div class="muted" style="text-align:center;padding:16px">No context available.</div>';
+
+    // Timeline
+    var events = tl.events || [];
+    document.getElementById('customerTimeline').innerHTML = events.length
+      ? events.map(function(e){
+          var dotColor = 'var(--muted2)';
+          if ((e.event_type || '').indexOf('recovered') >= 0 || (e.event_type || '').indexOf('success') >= 0) dotColor = 'var(--green)';
+          else if ((e.event_type || '').indexOf('escalation') >= 0 || (e.event_type || '').indexOf('failed') >= 0) dotColor = 'var(--red)';
+          else if ((e.event_type || '').indexOf('approval') >= 0) dotColor = 'var(--amber)';
+          var time = e.created_at ? e.created_at.slice(0, 19).replace('T', ' ') : '';
+          return '<div class="tl-row"><span class="tl-dot" style="background:' + dotColor + '"></span><span class="muted2" style="min-width:120px;font-size:11px;font-family:monospace">' + time + '</span><span class="pill ' + (dotColor === 'var(--green)' ? 'ok' : dotColor === 'var(--red)' ? 'err' : 'muted') + '" style="font-size:10px">' + esc(e.event_type || '') + '</span><span class="muted" style="font-size:12px">' + esc((e.description || e.event_type || '')).slice(0, 80) + '</span></div>';
+        }).join('')
+      : '<div class="muted" style="text-align:center;padding:16px">No timeline events found.</div>';
+
+  } catch(e) { console.error('customer detail error:', e); }
+}
+
+loadCustomer();
+</script>
+{% endblock %}

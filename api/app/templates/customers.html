@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Customers</h1>
+<p class="page-desc">Search and manage customers across all channels.</p>
+
+<div class="card">
+  <div class="card-header" style="flex-wrap:wrap;gap:8px">
+    <input type="text" id="customerSearch" placeholder="Search by name, email, or phone..." style="flex:1;min-width:200px" oninput="debounceSearch()">
+    <select id="riskFilter" onchange="loadCustomers()" style="width:auto">
+      <option value="">All risk levels</option>
+      <option value="high">High risk</option>
+      <option value="medium">Medium risk</option>
+      <option value="low">Low risk</option>
+    </select>
+  </div>
+  <table class="table" id="customerTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Risk</th>
+        <th>Workflows</th>
+        <th>Escalations</th>
+        <th>Last seen</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="customerBody"></tbody>
+  </table>
+  <div id="customerPagination" class="flex" style="justify-content:center;margin-top:16px;gap:8px"></div>
+</div>
+
+<script>
+var customerPage = 0;
+var customerSearchTimer;
+
+function debounceSearch() {
+  clearTimeout(customerSearchTimer);
+  customerSearchTimer = setTimeout(loadCustomers, 300);
+}
+
+async function loadCustomers() {
+  var q = document.getElementById('customerSearch').value;
+  var risk = document.getElementById('riskFilter').value;
+  var params = '?skip=' + (customerPage * 20) + '&limit=20';
+  if (q) params += '&q=' + encodeURIComponent(q);
+  if (risk) params += '&risk_level=' + risk;
+
+  try {
+    var data = await api('/admin/api/customers' + params);
+    var customers = data.customers || [];
+    var total = data.total || 0;
+
+    document.getElementById('customerBody').innerHTML = customers.length
+      ? customers.map(function(c){
+          var riskColor = c.risk_level === 'high' ? 'var(--red)' : (c.risk_level === 'medium' ? 'var(--amber)' : 'var(--muted2)');
+          var riskLabel = c.risk_level || 'unknown';
+          return '<tr>' +
+            '<td><a href="/admin/customers/' + c.id + '" style="color:var(--accent);text-decoration:none">' + esc(c.name || '') + '</a></td>' +
+            '<td class="muted" style="font-size:12px">' + esc(c.email || '') + '</td>' +
+            '<td><span class="pill ' + (c.risk_level === 'high' ? 'err' : c.risk_level === 'medium' ? 'warn' : 'muted') + '" style="font-size:10px;text-transform:capitalize">' + riskLabel + '</span></td>' +
+            '<td class="muted" style="font-size:12px">' + (c.total_workflows || 0) + '</td>' +
+            '<td class="muted" style="font-size:12px">' + (c.total_escalations || 0) + '</td>' +
+            '<td class="muted" style="font-size:12px">' + (c.last_seen ? c.last_seen.slice(0, 10) : '—') + '</td>' +
+            '<td><a href="/admin/customers/' + c.id + '" class="btn ghost sm">View</a></td>' +
+            '</tr>';
+        }).join('')
+      : '<tr><td colspan="7" class="muted" style="text-align:center;padding:24px">No customers found.</td></tr>';
+
+    var pages = Math.ceil(total / 20);
+    var pag = document.getElementById('customerPagination');
+    if (pages > 1) {
+      pag.innerHTML = (customerPage > 0 ? '<button class="btn ghost sm" onclick="customerPage--;loadCustomers()">Prev</button>' : '') +
+        '<span class="muted" style="font-size:12px">' + (customerPage + 1) + ' / ' + pages + '</span>' +
+        (customerPage < pages - 1 ? '<button class="btn ghost sm" onclick="customerPage++;loadCustomers()">Next</button>' : '');
+    } else { pag.innerHTML = ''; }
+  } catch(e) { console.error('customers error:', e); }
+}
+
+loadCustomers();
+</script>
+{% endblock %}

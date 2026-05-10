@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Overview</h1>
+<p class="page-desc">AI Operational Control Center — real-time status, attention items, and workflow health.</p>
+
+<!-- Onboarding Banner -->
+<div id="onboardingBanner" class="ob-banner" style="display:none">
+  <div class="ob-banner-body">
+    <strong>Welcome to Jeeves</strong> &mdash; Connect your stack to start automating.
+  </div>
+  <div class="ob-banner-actions">
+    <a href="/admin/integrations" class="btn sm">Get started</a>
+    <button class="ghost sm" onclick="dismissOnboarding()">Dismiss</button>
+  </div>
+</div>
+
+<!-- AI Status Hero -->
+<div class="ai-hero" id="aiHero">
+  <div class="ai-hero-status">
+    <span class="ai-status-dot" id="aiStatusDot"></span>
+    <span class="ai-status-label" id="aiStatusLabel">Loading...</span>
+  </div>
+  <div class="ai-hero-stats">
+    <div class="ai-hero-stat">
+      <span class="ai-hero-stat-value" id="aiInterventions">0</span>
+      <span class="ai-hero-stat-label">Interventions (24h)</span>
+    </div>
+    <div class="ai-hero-stat">
+      <span class="ai-hero-stat-value" id="aiSessionsActive">0</span>
+      <span class="ai-hero-stat-label">Active sessions</span>
+    </div>
+    <div class="ai-hero-stat">
+      <span class="ai-hero-stat-value" id="aiEscalationsOpen">0</span>
+      <span class="ai-hero-stat-label">Open escalations</span>
+    </div>
+    <div class="ai-hero-stat">
+      <span class="ai-hero-stat-value" id="aiPendingApprovals">0</span>
+      <span class="ai-hero-stat-label">Pending approvals</span>
+    </div>
+  </div>
+</div>
+
+<!-- Revenue Impact KPIs -->
+<div class="stats" id="kpiStats">
+  <div class="stat">
+    <div class="n" id="kpiRevRecovered">$0</div>
+    <div class="l">Revenue recovered</div>
+    <div class="sub">MRR saved by automation</div>
+  </div>
+  <div class="stat">
+    <div class="n" id="kpiSaveRate">0%</div>
+    <div class="l">Save rate</div>
+    <div class="sub">Cancellation retention</div>
+  </div>
+  <div class="stat">
+    <div class="n" id="kpiRecoveryRate">0%</div>
+    <div class="l">Recovery rate</div>
+    <div class="sub">Failed payment recovery</div>
+  </div>
+  <div class="stat">
+    <div class="n" id="kpiTotalActive">0</div>
+    <div class="l">Active workflows</div>
+    <div class="sub" id="kpiActiveBreakdown"></div>
+  </div>
+</div>
+
+<!-- Grid: Attention Queue + Live Feed -->
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-header">
+      <h2>Attention queue</h2>
+      <a href="/admin/approvals" class="btn ghost sm">View all</a>
+    </div>
+    <div id="attentionQueue" class="muted" style="padding:16px 0">Loading...</div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h2>Live feed</h2>
+    </div>
+    <div id="liveFeed" class="muted" style="padding:16px 0">Loading...</div>
+  </div>
+</div>
+
+<!-- Grid: Workflow Health + Recent Escalations -->
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-header">
+      <h2>Workflow health</h2>
+    </div>
+    <div id="wfHealth" class="muted" style="padding:16px 0">Loading...</div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h2>Recent escalations</h2>
+      <a href="/admin/escalations" class="btn ghost sm">View all</a>
+    </div>
+    <div id="recentEscalations" class="muted" style="padding:16px 0">Loading...</div>
+  </div>
+</div>
+
+<script>
+var OBS_DISMISSED = localStorage.getItem('jeeves_ob_dismiss');
+
+async function loadOverview() {
+  try {
+    var [stats, analytics, wfData, escData, tlData, approvalsData] = await Promise.allSettled([
+      api('/dashboard/stats').catch(function(){ return {}; }),
+      api('/admin/api/analytics').catch(function(){ return {}; }),
+      api('/admin/api/workflows').catch(function(){ return {workflows:[]}; }),
+      api('/admin/api/escalations').catch(function(){ return {escalations:[]}; }),
+      api('/admin/api/timeline?limit=12').catch(function(){ return {events:[]}; }),
+      api('/admin/api/approvals?status=PENDING').catch(function(){ return {approvals:[], total:0}; }),
+    ]);
+
+    var s = stats.value || {};
+    var a = analytics.value || {};
+    var wf = wfData.value || {workflows:[]};
+    var esc = escData.value || {escalations:[]};
+    var tl = tlData.value || {events:[]};
+    var ap = approvalsData.value || {approvals:[], total:0};
+
+    var workflows = wf.workflows || [];
+    var active = workflows.filter(function(w){ return w.status === 'active' || w.status === 'paused'; });
+    var failed = workflows.filter(function(w){ return w.current_state === 'FAILED'; });
+    var recovered = workflows.filter(function(w){ return w.current_state === 'RECOVERED'; });
+
+    // AI Status Hero
+    var openEsc = (esc.escalations || []).filter(function(e){ return e.status === 'OPEN'; }).length;
+    var aiStatus = openEsc > 3 ? 'warning' : (openEsc > 0 ? 'attention' : 'healthy');
+    var dot = document.getElementById('aiStatusDot');
+    var label = document.getElementById('aiStatusLabel');
+    dot.className = 'ai-status-dot ' + aiStatus;
+    label.textContent = aiStatus === 'healthy' ? 'All systems operational' : (aiStatus === 'attention' ? 'Attention needed' : 'Warning — high escalations');
+
+    document.getElementById('aiInterventions').textContent = recovered.length + failed.length;
+    document.getElementById('aiSessionsActive').textContent = active.length;
+    document.getElementById('aiEscalationsOpen').textContent = openEsc;
+    document.getElementById('aiPendingApprovals').textContent = ap.total || 0;
+
+    // KPI Stats
+    document.getElementById('kpiRevRecovered').textContent = '$' + ((a.recovered_revenue || 0)).toLocaleString();
+    document.getElementById('kpiSaveRate').textContent = (a.save_rate || 0) + '%';
+
+    var total = recovered.length + failed.length;
+    var recoveryRate = total > 0 ? Math.round((recovered.length / total) * 100) + '%' : '—';
+    document.getElementById('kpiRecoveryRate').textContent = recoveryRate;
+    document.getElementById('kpiTotalActive').textContent = active.length;
+
+    var byType = {};
+    active.forEach(function(w){ byType[w.workflow_type] = (byType[w.workflow_type] || 0) + 1; });
+    document.getElementById('kpiActiveBreakdown').textContent = Object.entries(byType).map(function(e){ return e[1] + ' ' + e[0].replace('_', ' '); }).join(', ');
+
+    // Attention Queue
+    var queueItems = [];
+    (ap.approvals || []).slice(0, 5).forEach(function(appr){
+      queueItems.push({ type: 'approval', label: 'Approval: ' + (appr.action_type || 'action'), time: appr.created_at, id: appr.id, severity: appr.risk_level === 'high' ? 'err' : 'warn' });
+    });
+    (esc.escalations || []).filter(function(e){ return e.status === 'OPEN'; }).slice(0, 5).forEach(function(e){
+      queueItems.push({ type: 'escalation', label: 'Escalation: ' + (e.reason || '').slice(0, 50), time: e.created_at, id: e.id, severity: e.sla_breached ? 'err' : (e.sla_hours_left && e.sla_hours_left < 6 ? 'warn' : 'muted') });
+    });
+    queueItems.sort(function(a, b){ return (a.time || '') < (b.time || '') ? 1 : -1; });
+    queueItems = queueItems.slice(0, 8);
+
+    document.getElementById('attentionQueue').innerHTML = queueItems.length
+      ? queueItems.map(function(q){
+          var icon = q.type === 'approval' ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+          var href = q.type === 'approval' ? '/admin/approvals' : '/admin/escalations';
+          return '<a href="' + href + '" class="tl-row" style="text-decoration:none;color:inherit"><span class="tl-dot" style="background:' + (q.severity === 'err' ? 'var(--red)' : q.severity === 'warn' ? 'var(--amber)' : 'var(--muted2)') + '">' + icon + '</span><span class="muted" style="flex:1;font-size:12px">' + esc(q.label) + '</span><span class="pill ' + q.severity + '" style="font-size:10px">' + q.type + '</span></a>';
+        }).join('')
+      : '<div class="muted" style="text-align:center;padding:16px">No items requiring attention.</div>';
+
+    // Live Feed
+    var events = (tl.events || []).slice(0, 10);
+    document.getElementById('liveFeed').innerHTML = events.length
+      ? events.map(function(e){
+          var dotColor = e.event_type && e.event_type.indexOf('recovered') >= 0 ? 'var(--green)' : (e.event_type && e.event_type.indexOf('escalation') >= 0 ? 'var(--red)' : 'var(--muted2)');
+          var time = e.created_at ? e.created_at.slice(11, 19) : '';
+          return '<div class="tl-row"><span class="tl-dot" style="background:' + dotColor + '"></span><span class="muted2" style="min-width:50px;font-size:11px">' + time + '</span><span class="pill ' + (e.event_type && e.event_type.indexOf('recovered') >= 0 ? 'ok' : (e.event_type && e.event_type.indexOf('escalation') >= 0 ? 'err' : 'muted')) + '" style="font-size:10px">' + esc(e.event_type || '') + '</span><span class="muted" style="font-size:12px">' + (e.entity_type || '') + ' ' + ((e.entity_id||'').slice(0,8)) + '</span></div>';
+        }).join('')
+      : '<div class="muted" style="text-align:center;padding:16px">No activity yet. Activity appears once workflows start running.</div>';
+
+    // Workflow Health
+    var recoveredCount = recovered.length;
+    var failedCount = failed.length;
+    var activeCount = active.length;
+    var totalWf = workflows.length || 1;
+    document.getElementById('wfHealth').innerHTML =
+      '<div style="display:flex;gap:8px;height:24px;border-radius:6px;overflow:hidden;margin-bottom:16px">' +
+      (recoveredCount > 0 ? '<div style="flex:' + recoveredCount + ';background:var(--green);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">' + recoveredCount + '</div>' : '') +
+      (failedCount > 0 ? '<div style="flex:' + failedCount + ';background:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">' + failedCount + '</div>' : '') +
+      (activeCount > 0 ? '<div style="flex:' + activeCount + ';background:rgba(129,140,248,0.5);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">' + activeCount + '</div>' : '') +
+      '</div>' +
+      '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
+      '<span class="flex gap-sm"><span style="width:10px;height:10px;border-radius:3px;background:var(--green);display:inline-block"></span><span class="muted" style="font-size:11px">Recovered (' + recoveredCount + ')</span></span>' +
+      '<span class="flex gap-sm"><span style="width:10px;height:10px;border-radius:3px;background:var(--red);display:inline-block"></span><span class="muted" style="font-size:11px">Failed (' + failedCount + ')</span></span>' +
+      '<span class="flex gap-sm"><span style="width:10px;height:10px;border-radius:3px;background:rgba(129,140,248,0.5);display:inline-block"></span><span class="muted" style="font-size:11px">Active (' + activeCount + ')</span></span>' +
+      '</div>' +
+      '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">' +
+      '<div class="flex" style="justify-content:space-between;margin-bottom:8px"><span class="muted" style="font-size:12px">By type</span></div>' +
+      Object.entries(byType).map(function(e){
+        return '<div class="flex" style="justify-content:space-between;margin-bottom:4px"><span class="muted" style="font-size:11px;text-transform:capitalize">' + e[0].replace('_', ' ') + '</span><span style="font-weight:600;font-size:13px">' + e[1] + '</span></div>';
+      }).join('') +
+      '</div>';
+
+    // Recent Escalations
+    var escalations = (esc.escalations || []).slice(0, 5);
+    document.getElementById('recentEscalations').innerHTML = escalations.length
+      ? escalations.map(function(e){
+          var slaColor = e.sla_breached ? 'err' : (e.sla_hours_left && e.sla_hours_left < 6 ? 'warn' : 'muted');
+          return '<div class="tl-row"><span class="tl-dot" style="background:' + (e.status === 'OPEN' ? 'var(--red)' : 'var(--amber)') + '"></span><span class="muted" style="flex:1;font-size:12px">' + esc(e.reason || '').slice(0, 40) + '</span><span class="pill ' + slaColor + '" style="font-size:10px">' + esc(e.status || '') + '</span></div>';
+        }).join('')
+      : '<div class="muted" style="text-align:center;padding:16px">No open escalations.</div>';
+
+  } catch(e) { console.error('overview error:', e); }
+}
+
+// Onboarding
+async function checkOnboarding() {
+  if (OBS_DISMISSED) return;
+  try {
+    var connectors = await api('/admin/api/integrations');
+    var c = {};
+    (connectors.native_connectors||[]).forEach(function(nc){ c[nc.provider] = nc.status === 'connected'; });
+    if (c.shopify && c.stripe) return;
+    document.getElementById('onboardingBanner').style.display = 'flex';
+  } catch(e) {}
+}
+
+function dismissOnboarding() {
+  document.getElementById('onboardingBanner').style.display = 'none';
+  localStorage.setItem('jeeves_ob_dismiss', '1');
+}
+
+Promise.allSettled([
+  checkOnboarding(),
+  loadOverview(),
+]);
+</script>
+
+<style>
+.ai-hero {
+  display:flex; align-items:center; gap:24px;
+  background:rgba(129,140,248,0.06); border:1px solid rgba(129,140,248,0.12);
+  border-radius:12px; padding:20px 24px; margin-bottom:24px;
+}
+.ai-hero-status { display:flex; align-items:center; gap:10px; min-width:180px; }
+.ai-status-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+.ai-status-dot.healthy { background:var(--green); box-shadow:0 0 8px rgba(16,185,129,0.4); }
+.ai-status-dot.attention { background:var(--amber); box-shadow:0 0 8px rgba(245,158,11,0.4); }
+.ai-status-dot.warning { background:var(--red); box-shadow:0 0 8px rgba(239,68,68,0.4); }
+.ai-status-label { font-size:13px; font-weight:600; white-space:nowrap; }
+.ai-hero-stats { display:flex; gap:20px; flex:1; justify-content:flex-end; }
+.ai-hero-stat { text-align:center; }
+.ai-hero-stat-value { display:block; font-size:22px; font-weight:700; color:var(--fg); }
+.ai-hero-stat-label { font-size:10px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.3px; }
+.tl-row { display:flex; align-items:center; gap:8px; padding:6px 0; }
+.tl-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.pill { padding:1px 8px; border-radius:4px; font-weight:600; white-space:nowrap; }
+.pill.ok { background:rgba(16,185,129,0.15); color:var(--green); }
+.pill.err { background:rgba(239,68,68,0.15); color:var(--red); }
+.pill.warn { background:rgba(245,158,11,0.15); color:var(--amber); }
+.pill.muted { background:rgba(255,255,255,0.04); color:var(--muted2); }
+
+.ob-banner {
+  display:flex; align-items:center; justify-content:space-between;
+  background:rgba(129,140,248,0.08); border:1px solid rgba(129,140,248,0.15);
+  border-radius:10px; padding:12px 20px; margin-bottom:20px; gap:12px;
+}
+.ob-banner-body { font-size:13px; }
+.ob-banner-actions { display:flex; gap:8px; flex-shrink:0; }
+</style>
+{% endblock %}

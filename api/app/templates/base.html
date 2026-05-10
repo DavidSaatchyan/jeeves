@@ -35,6 +35,8 @@
     aside nav { padding: 10px 8px; flex: 1; }
     aside .nav-group { margin-bottom: 14px; }
     aside .nav-label { font-size: 9px; font-weight: 700; color: var(--muted2); text-transform: uppercase; letter-spacing: 1.2px; padding: 0 10px; margin-bottom: 4px; }
+    aside .nav-group-header { font-size: 9px; font-weight: 700; color: var(--muted2); text-transform: uppercase; letter-spacing: 1.2px; padding: 0 10px 2px; margin-bottom: 2px; display: block; text-decoration: none; }
+    aside .nav-group-header:hover { color: var(--fg); }
     aside .nav-link { display: flex; align-items: center; padding: 7px 10px; color: var(--muted); text-decoration: none; font-size: 12.5px; font-weight: 500; border-radius: 6px; transition: all .15s; gap: 8px; }
     aside .nav-link:hover { background: rgba(255,255,255,0.04); color: var(--text); }
     aside .nav-link.active { background: rgba(255,255,255,0.06); color: #fff; font-weight: 600; }
@@ -231,6 +233,10 @@
     .status-bar .sb-segment { height: 4px; border-radius: 2px; flex: 1; background: var(--border); }
     .status-bar .sb-segment.done { background: var(--green); }
 
+    /* ── NAV BADGE ── */
+    .nav-badge { margin-left:auto; background:var(--red); color:#fff; font-size:9px; font-weight:700; padding:1px 6px; border-radius:10px; line-height:1.4; min-width:18px; text-align:center; }
+    .nav-link .nav-badge { opacity:0.9; }
+
     /* ── ACTIVE STATES ── */
     .active-states{display:flex;gap:6px;flex-wrap:wrap}
   </style>
@@ -247,23 +253,7 @@
       <div class="nav-label">Overview</div>
       <a href="/admin" class="nav-link" data-path="/admin">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-        Dashboard
-      </a>
-    </div>
-
-    <div class="nav-group">
-      <div class="nav-label">Connect</div>
-      <a href="/admin/integrations" class="nav-link" data-path="/admin/integrations">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-        Integrations
-      </a>
-    </div>
-
-    <div class="nav-group">
-      <div class="nav-label">Channels</div>
-      <a href="/admin/channels" class="nav-link" data-path="/admin/channels">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        Channels
+        Overview
       </a>
     </div>
 
@@ -277,14 +267,39 @@
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         Escalations
       </a>
-      <a href="/admin/policies" class="nav-link" data-path="/admin/policies">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        Policies
+    </div>
+
+    <div class="nav-group">
+      <a href="/admin/customers" class="nav-link" data-path="/admin/customers">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Customers
       </a>
     </div>
 
     <div class="nav-group">
-      <div class="nav-label">Analytics</div>
+      <a href="/admin/inbox" class="nav-link" data-path="/admin/inbox">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+        Inbox
+        <span class="nav-badge" id="inboxBadge" style="display:none">0</span>
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <a href="/admin/approvals" class="nav-link" data-path="/admin/approvals">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Approvals
+        <span class="nav-badge" id="approvalBadge" style="display:none">0</span>
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <a href="/admin/knowledge" class="nav-link" data-path="/admin/knowledge">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Knowledge
+      </a>
+    </div>
+
+    <div class="nav-group">
       <a href="/admin/analytics" class="nav-link" data-path="/admin/analytics">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Analytics
@@ -292,26 +307,29 @@
     </div>
 
     <div class="nav-group">
-      <div class="nav-label">Activity</div>
-      <a href="/admin/timeline" class="nav-link" data-path="/admin/timeline">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Timeline
+      <a href="/admin/billing" class="nav-link" data-path="/admin/billing">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Billing
       </a>
     </div>
 
     <div class="nav-group">
-      <div class="nav-label">Developer</div>
+      <a href="/admin/settings" class="nav-link nav-group-header" data-path="/admin/settings">Settings</a>
+      <a href="/admin/integrations" class="nav-link" data-path="/admin/integrations">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        Integrations
+      </a>
+      <a href="/admin/channels" class="nav-link" data-path="/admin/channels">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Channels
+      </a>
+      <a href="/admin/policies" class="nav-link" data-path="/admin/policies">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Policies
+      </a>
       <a href="/admin/api" class="nav-link" data-path="/admin/api">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
         API
-      </a>
-      <a href="/admin/knowledge" class="nav-link" data-path="/admin/knowledge">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-        Knowledge
-      </a>
-      <a href="/admin/billing" class="nav-link" data-path="/admin/billing">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-        Billing
       </a>
     </div>
   </nav>
@@ -355,6 +373,18 @@ async function api(path, opts={}){
 }
 function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 if(!token() && !location.pathname.endsWith('/login')){ location.href='/admin/login'; }
+
+// Badge counters
+(async function loadBadges(){
+  try {
+    var [a, i] = await Promise.allSettled([
+      api('/admin/api/approvals?status=PENDING&limit=1'),
+      api('/admin/api/inbox?resolution=escalated&limit=1'),
+    ]);
+    var av = a.value; if(av && av.total > 0){ var el=document.getElementById('approvalBadge'); if(el){ el.textContent=av.total; el.style.display=''; } }
+    var iv = i.value; if(iv && iv.total > 0){ var el=document.getElementById('inboxBadge'); if(el){ el.textContent=iv.total; el.style.display=''; } }
+  } catch(e){}
+})();
 </script>
 {% block tail %}{% endblock %}
 </body>

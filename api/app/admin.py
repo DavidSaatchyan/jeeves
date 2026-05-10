@@ -76,7 +76,7 @@ def _ctx(request: Request) -> dict:
 @router.get("", response_class=HTMLResponse)
 @router.get("/", response_class=HTMLResponse)
 def home(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "dashboard.html", context=_ctx(request))
+    return templates.TemplateResponse(request, "overview.html", context=_ctx(request))
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -174,7 +174,45 @@ def crm_redirect(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
     return RedirectResponse("/admin/integrations")
 
 
-# ─── Missing page routes ──────────────────────────────────────────────
+@router.get("/customers", response_class=HTMLResponse)
+def customers_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
+    return templates.TemplateResponse(request, "customers.html", context=_ctx(request))
+
+
+@router.get("/customers/{customer_id}", response_class=HTMLResponse)
+def customer_detail_page(
+    request: Request,
+    customer_id: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    import uuid
+    try:
+        cid = uuid.UUID(customer_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Invalid customer ID")
+    cust = db.query(Customer).filter(Customer.id == cid, Customer.tenant_id == tenant.id).first()
+    if not cust:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return templates.TemplateResponse(request, "customer_detail.html", context={**_ctx(request), "customer_id": customer_id})
+
+
+@router.get("/inbox", response_class=HTMLResponse)
+def inbox_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
+    return templates.TemplateResponse(request, "inbox.html", context=_ctx(request))
+
+
+@router.get("/settings", response_class=HTMLResponse)
+def settings_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
+    return templates.TemplateResponse(request, "settings.html", context=_ctx(request))
+
+
+@router.get("/approvals", response_class=HTMLResponse)
+def approvals_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
+    return templates.TemplateResponse(request, "approvals.html", context=_ctx(request))
+
+
+# ─── Admin pages ──────────────────────────────────────────────────────
 
 
 @router.get("/analytics", response_class=HTMLResponse)
@@ -607,6 +645,25 @@ def api_analytics(
         or 0
     )
 
+    approval_total = (
+        db.query(func.count(ApprovalRequest.id))
+        .filter(ApprovalRequest.tenant_id == tenant.id, ApprovalRequest.created_at >= thirty_days_ago)
+        .scalar()
+        or 0
+    )
+    approval_approved = (
+        db.query(func.count(ApprovalRequest.id))
+        .filter(ApprovalRequest.tenant_id == tenant.id, ApprovalRequest.status == "APPROVED", ApprovalRequest.created_at >= thirty_days_ago)
+        .scalar()
+        or 0
+    )
+    policy_overrides = (
+        db.query(func.count(ApprovalRequest.id))
+        .filter(ApprovalRequest.tenant_id == tenant.id, ApprovalRequest.status == "ALWAYS_ALLOW", ApprovalRequest.created_at >= thirty_days_ago)
+        .scalar()
+        or 0
+    )
+
     return {
         "recovered_revenue": round(recovered_revenue, 2),
         "save_rate": round((recovered / total * 100) if total > 0 else 0, 1),
@@ -618,6 +675,11 @@ def api_analytics(
         "failed": failed,
         "escalations": esc_count,
         "communications_sent": comms_count,
+        "avg_response_time": "-",
+        "total_approvals": approval_total,
+        "approved_approvals": approval_approved,
+        "escalation_accuracy": "-",
+        "policy_overrides": policy_overrides,
     }
 
 
@@ -827,9 +889,18 @@ def api_inbox(
         if sid in seen:
             continue
         seen.add(sid)
+        customer_name = None
+        if r.user_id:
+            try:
+                cust = db.query(Customer).filter(Customer.email == r.user_id, Customer.tenant_id == tenant.id).first()
+                if cust and cust.name:
+                    customer_name = cust.name
+            except Exception:
+                pass
         result.append({
             "session_id": str(sid),
             "user_id": r.user_id,
+            "customer_name": customer_name,
             "channel": r.channel,
             "resolution": r.resolution,
             "turns": r.turns,
@@ -1093,7 +1164,26 @@ def api_settings(
     db: Session = Depends(get_db),
 ):
     prefs = db.query(NotificationPreferences).filter(NotificationPreferences.tenant_id == tenant.id).first()
+    keys = db.query(ApiKey).filter(ApiKey.tenant_id == tenant.id).order_by(ApiKey.created_at.desc()).all()
     return {
+        "workspace": {
+            "name": tenant.name,
+            "email": tenant.email,
+            "plan": "free",
+            "trial_ends": tenant.trial_ends.isoformat() if tenant.trial_ends else None,
+            "is_active": tenant.is_active,
+        },
+        "api_keys": [
+            {
+                "id": str(k.id),
+                "name": k.name,
+                "prefix": k.prefix,
+                "created_at": k.created_at.isoformat() if k.created_at else None,
+                "last_used_at": k.last_used_at.isoformat() if k.last_used_at else None,
+                "expires_at": k.expires_at.isoformat() if k.expires_at else None,
+            }
+            for k in keys
+        ],
         "notifications": {
             "escalation_alerts": prefs.escalation_alerts if prefs else True,
             "approval_alerts": prefs.approval_alerts if prefs else True,
@@ -1130,3 +1220,38 @@ def api_settings_update(
     prefs.updated_at = datetime.utcnow()
     db.commit()
     return {"ok": True, "message": "Settings updated"}
+
+
+@router.post("/api/settings/api-keys")
+def api_settings_create_key(
+    body: dict,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    import hashlib, secrets
+    name = body.get("name", "default")
+    raw = "jev_sk_" + secrets.token_hex(24)
+    hashed = hashlib.sha256(raw.encode()).hexdigest()
+    prefix = raw[:12]
+    key = ApiKey(tenant_id=tenant.id, name=name, key_hash=hashed, prefix=prefix)
+    db.add(key)
+    db.commit()
+    return {"ok": True, "raw_key": raw, "prefix": prefix, "name": name}
+
+
+@router.delete("/api/settings/api-keys/{key_id}")
+def api_settings_delete_key(
+    key_id: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    try:
+        kid = uuid.UUID(key_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Invalid key ID")
+    key = db.query(ApiKey).filter(ApiKey.id == kid, ApiKey.tenant_id == tenant.id).first()
+    if not key:
+        raise HTTPException(status_code=404, detail="API key not found")
+    db.delete(key)
+    db.commit()
+    return {"ok": True, "message": "API key revoked"}

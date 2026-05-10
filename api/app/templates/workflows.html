@@ -3,16 +3,33 @@
 <h1>Workflows</h1>
 <p class="page-desc">Active and recent workflow instances across all types.</p>
 
+<div class="ch-tabs" id="wfTabs">
+  <button class="ch-tab active" data-type="">All types</button>
+  <button class="ch-tab" data-type="payment_recovery">Payment Recovery</button>
+  <button class="ch-tab" data-type="cancellation_save">Cancellation Save</button>
+  <button class="ch-tab" data-type="wismo">WISMO</button>
+</div>
+
+<!-- Type summary cards -->
+<div class="grid grid-3" id="wfSummaryCards" style="margin-bottom:20px">
+  <div class="stat" style="border:none;padding:12px;background:transparent">
+    <div class="n" id="wfTypeCount">0</div>
+    <div class="l">Active instances</div>
+  </div>
+  <div class="stat" style="border:none;padding:12px;background:transparent">
+    <div class="n" id="wfTypeSuccessRate">0%</div>
+    <div class="l">Success rate</div>
+  </div>
+  <div class="stat" style="border:none;padding:12px;background:transparent">
+    <div class="n" id="wfTypeRevenue">$0</div>
+    <div class="l">Revenue impact</div>
+  </div>
+</div>
+
 <div class="card">
   <div class="card-header">
-    <h2>All workflows</h2>
+    <h2>Instances</h2>
     <div class="flex" style="gap:8px">
-      <select id="wfTypeFilter" onchange="loadWorkflows()" style="width:auto">
-        <option value="">All types</option>
-        <option value="payment_recovery">Payment Recovery</option>
-        <option value="cancellation_save">Cancellation Save</option>
-        <option value="wismo">WISMO</option>
-      </select>
       <select id="wfStatusFilter" onchange="loadWorkflows()" style="width:auto">
         <option value="">All statuses</option>
         <option value="active">Active</option>
@@ -27,7 +44,6 @@
     <thead>
       <tr>
         <th>ID</th>
-        <th>Type</th>
         <th>Customer</th>
         <th>State</th>
         <th>Status</th>
@@ -43,30 +59,53 @@
 <script>
 var wfOffset = 0;
 var wfTotal = 0;
+var wfType = '';
+
+document.querySelectorAll('#wfTabs .ch-tab').forEach(function(tab){
+  tab.addEventListener('click', function(){
+    document.querySelectorAll('#wfTabs .ch-tab').forEach(function(t){ t.classList.remove('active'); });
+    tab.classList.add('active');
+    wfType = tab.dataset.type;
+    wfOffset = 0;
+    loadWorkflows();
+  });
+});
 
 async function loadWorkflows() {
-  const type = document.getElementById('wfTypeFilter').value;
-  const status = document.getElementById('wfStatusFilter').value;
   const params = new URLSearchParams();
-  if (type) params.set('type', type);
+  if (wfType) params.set('type', wfType);
+  const status = document.getElementById('wfStatusFilter').value;
   if (status) params.set('status', status);
   params.set('offset', wfOffset);
   params.set('limit', 50);
   const r = await fetch('/admin/api/workflows?' + params.toString());
   const data = await r.json();
   wfTotal = data.total || 0;
+
+  var workflows = data.workflows || [];
+  var active = workflows.filter(function(w){ return w.status === 'active' || w.status === 'paused'; });
+  var recovered = workflows.filter(function(w){ return w.current_state === 'RECOVERED' || w.current_state === 'RETAINED' || w.current_state === 'RESOLVED'; });
+  var failed = workflows.filter(function(w){ return w.current_state === 'FAILED' || w.current_state === 'CANCELLED'; });
+  var total = recovered.length + failed.length;
+
+  // Summary cards
+  document.getElementById('wfTypeCount').textContent = active.length;
+  document.getElementById('wfTypeSuccessRate').textContent = total > 0 ? Math.round((recovered.length / total) * 100) + '%' : '—';
+  document.getElementById('wfTypeRevenue').textContent = '$' + (recovered.length * 29.99).toLocaleString();
+
+  // Table
   const tbody = document.getElementById('wfBody');
-  tbody.innerHTML = (data.workflows || []).map(w => `
-    <tr>
-      <td><code>${(w.id||'').slice(0,8)}</code></td>
-      <td>${esc(w.workflow_type)}</td>
-      <td>${w.customer_id ? esc(w.customer_id.slice(0,8)) : '-'}</td>
-      <td><span class="pill ${(w.current_state||'').toLowerCase()}">${esc(w.current_state)}</span></td>
-      <td><span class="pill ${w.status}">${esc(w.status)}</span></td>
-      <td>${w.started_at ? new Date(w.started_at).toLocaleDateString() : '-'}</td>
-      <td><a href="/admin/workflows/${w.id}" class="btn sm ghost">Detail</a></td>
-    </tr>
-  `).join('') || '<tr><td colspan="7" class="empty-state">No workflows found.</td></tr>';
+  tbody.innerHTML = workflows.map(function(w) {
+    return '<tr>' +
+      '<td><code>' + (w.id||'').slice(0,8) + '</code></td>' +
+      '<td>' + esc(w.customer_id ? w.customer_id.slice(0,8) : '-') + '</td>' +
+      '<td><span class="pill ' + (w.current_state||'').toLowerCase() + '">' + esc(w.current_state) + '</span></td>' +
+      '<td><span class="pill ' + w.status + '">' + esc(w.status) + '</span></td>' +
+      '<td>' + (w.started_at ? new Date(w.started_at).toLocaleDateString() : '-') + '</td>' +
+      '<td><a href="/admin/workflows/' + w.id + '" class="btn sm ghost">Detail</a></td>' +
+      '</tr>';
+  }).join('') || '<tr><td colspan="6" class="empty-state">No workflows found.</td></tr>';
+
   renderPagination();
 }
 
@@ -84,6 +123,12 @@ loadWorkflows();
 </script>
 
 <style>
+.ch-tabs { display:flex; gap:4px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:0; }
+.ch-tab { padding:8px 16px; border:none; background:transparent; color:var(--muted2); font-size:13px; font-weight:500; cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
+.ch-tab:hover { color:var(--fg); }
+.ch-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+@media (max-width:800px) { .grid-3 { grid-template-columns:1fr; } }
 .pill { display:inline-block; padding:2px 10px; border-radius:20px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.3px; }
 .pill.active { background:rgba(16,185,129,0.12); color:var(--green); }
 .pill.paused { background:rgba(245,158,11,0.12); color:var(--amber); }

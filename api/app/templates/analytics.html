@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>Analytics</h1>
-<p class="page-desc">Workflow performance and revenue metrics over the last 30 days.</p>
+<p class="page-desc">Revenue impact, operations efficiency, and AI performance metrics.</p>
 
 <div class="stats">
   <div class="stat">
@@ -28,7 +28,7 @@
 
 <div class="grid grid-2">
   <div class="card">
-    <h2>Outcome breakdown</h2>
+    <h2>Revenue breakdown</h2>
     <div id="outcomeChart" class="chart-placeholder">Loading...</div>
   </div>
   <div class="card">
@@ -54,10 +54,56 @@
   </div>
 </div>
 
+<!-- Operations Metrics -->
+<div class="card">
+  <h2>Operations</h2>
+  <div class="grid grid-3" id="opsMetrics">
+    <div class="stat" style="border:none;padding:12px;background:transparent">
+      <div class="n" id="statAutomationRate">0%</div>
+      <div class="l">Automation rate</div>
+      <div class="sub">Workflows handled without human intervention</div>
+    </div>
+    <div class="stat" style="border:none;padding:12px;background:transparent">
+      <div class="n" id="statTicketsAvoided">0</div>
+      <div class="l">Tickets avoided</div>
+      <div class="sub">Estimated support tickets prevented</div>
+    </div>
+    <div class="stat" style="border:none;padding:12px;background:transparent">
+      <div class="n" id="statAvgResponseTime">—</div>
+      <div class="l">Avg response time</div>
+      <div class="sub">AI response to customer inquiries</div>
+    </div>
+  </div>
+</div>
+
+<!-- AI Performance Metrics -->
+<div class="card">
+  <h2>AI Performance</h2>
+  <div class="grid grid-3" id="aiPerfMetrics">
+    <div class="stat" style="border:none;padding:12px;background:transparent">
+      <div class="n" id="statApprovalRate">0%</div>
+      <div class="l">Approval rate</div>
+      <div class="sub">AI actions approved by humans</div>
+    </div>
+    <div class="stat" style="border:none;padding:12px;background:transparent">
+      <div class="n" id="statEscalationAccuracy">—</div>
+      <div class="l">Escalation accuracy</div>
+      <div class="sub">Correct escalation decisions</div>
+    </div>
+    <div class="stat" style="border:none;padding:12px;background:transparent">
+      <div class="n" id="statPolicyOverrides">0</div>
+      <div class="l">Policy overrides</div>
+      <div class="sub">Times human overrode AI policy</div>
+    </div>
+  </div>
+</div>
+
 <script>
 async function loadAnalytics() {
   const r = await fetch('/admin/api/analytics');
   const data = await r.json();
+
+  // Revenue KPIs
   document.getElementById('statRecoveredRevenue').textContent = '$' + (data.recovered_revenue || 0).toLocaleString();
   document.getElementById('statSaveRate').textContent = (data.save_rate || 0) + '%';
   document.getElementById('statRecovered').textContent = data.recovered || 0;
@@ -67,6 +113,7 @@ async function loadAnalytics() {
   document.getElementById('statComms').textContent = data.communications_sent || 0;
   document.getElementById('statFailed').textContent = data.failed || 0;
 
+  // Outcome chart
   var recovered = data.recovered || 0;
   var failed = data.failed || 0;
   var total = data.total_workflows || 1;
@@ -88,11 +135,27 @@ async function loadAnalytics() {
     '<span class="flex gap-sm"><span style="width:10px;height:10px;border-radius:3px;background:var(--red);display:inline-block"></span><span class="muted" style="font-size:11px">Failed (' + failed + ')</span></span>' +
     '<span class="flex gap-sm"><span style="width:10px;height:10px;border-radius:3px;background:rgba(129,140,248,0.5);display:inline-block"></span><span class="muted" style="font-size:11px">Active (' + active + ')</span></span>' +
     '</div>';
+
+  // Operations metrics
+  var totalWf = data.total_workflows || 0;
+  var autoRate = totalWf > 0 ? Math.round(((totalWf - (data.escalations || 0)) / totalWf) * 100) : 0;
+  document.getElementById('statAutomationRate').textContent = autoRate + '%';
+  document.getElementById('statTicketsAvoided').textContent = data.recovered || 0;
+  document.getElementById('statAvgResponseTime').textContent = data.avg_response_time || '—';
+
+  // AI Performance
+  var approvals = data.total_approvals || 0;
+  var approved = data.approved_approvals || 0;
+  document.getElementById('statApprovalRate').textContent = approvals > 0 ? Math.round((approved / approvals) * 100) + '%' : '—';
+  document.getElementById('statEscalationAccuracy').textContent = data.escalation_accuracy || '—';
+  document.getElementById('statPolicyOverrides').textContent = data.policy_overrides || 0;
 }
 loadAnalytics();
 </script>
 
 <style>
 .chart-placeholder { min-height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted2); font-size:13px; }
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+@media (max-width:800px) { .grid-3 { grid-template-columns:1fr; } }
 </style>
 {% endblock %}

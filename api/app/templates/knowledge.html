@@ -1,48 +1,9 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>Knowledge base</h1>
-<p class="page-desc">Upload FAQ, product docs, policies, pricing pages — anything in .pdf, .txt, or .md. This is what your agent knows about your product.</p>
+<p class="page-desc">AI memory system — files, coverage readiness, and a testing playground.</p>
 
-<!-- Skeleton loader -->
-<div id="kbSkeleton">
-  <div class="sk-stats">
-    <div class="sk-stat-card ds-skeleton"></div>
-    <div class="sk-stat-card ds-skeleton"></div>
-    <div class="sk-stat-card ds-skeleton"></div>
-  </div>
-  <div class="sk-table ds-skeleton"></div>
-</div>
-
-<!-- Real content -->
-<div id="kbContent" style="display:none">
-
-<!-- Summary -->
-<div class="kb-summary" id="kbSummary" style="display:none">
-  <div class="kb-stat">
-    <div class="kb-stat-header">
-      <span class="kb-stat-label">Knowledge Base</span>
-      <span class="kb-stat-value" id="sumFiles">0 files</span>
-    </div>
-    <div class="kb-stat-sub" id="sumTypes">No files uploaded</div>
-    <div class="kb-stat-sub2" id="sumChunks"></div>
-  </div>
-  <div class="kb-stat">
-    <div class="kb-stat-header">
-      <span class="kb-stat-label">Storage Used</span>
-      <span class="kb-stat-value" id="sumSize">0 KB</span>
-    </div>
-    <div class="kb-bar-track"><div class="kb-bar-fill" id="sizeBar"></div></div>
-    <div class="kb-stat-sub" id="sumQuota">0% of 50 MB limit</div>
-  </div>
-  <div class="kb-stat">
-    <div class="kb-stat-header">
-      <span class="kb-stat-label">Last Activity</span>
-      <span class="kb-stat-value" id="sumUpdated">—</span>
-    </div>
-    <div class="kb-stat-sub" id="sumAction">No activity yet</div>
-  </div>
-</div>
-
+<!-- Existing file upload area -->
 <div class="card">
   <h2>Upload files</h2>
   <div id="drop" class="drop">
@@ -51,510 +12,267 @@
     <div class="muted" style="font-size:12px">.pdf, .txt, .md · Max 50 MB total</div>
     <input id="file" type="file" accept=".pdf,.txt,.md" multiple style="display:none"/>
   </div>
-  <div id="uploadModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:10000;align-items:center;justify-content:center;">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:360px;width:90%;text-align:center;animation:modalIn .25s ease both;">
-      <div id="uploadSpinner" style="width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;"></div>
-      <h3 style="margin:0 0 6px;font-size:15px;color:var(--text)" id="uploadFileName">Uploading...</h3>
-      <p class="muted" style="margin:0;font-size:12px" id="uploadFileStatus">Please wait</p>
-    </div>
-  </div>
-
   <div id="uprog" class="muted mt-12"></div>
   <div class="err-msg" id="uerr"></div>
 </div>
 
+<!-- KB Summary Stats -->
+<div id="kbSummary" class="kb-summary" style="display:none">
+  <div class="kb-stat">
+    <div class="kb-stat-header">
+      <span class="kb-stat-label">Files</span>
+      <span class="kb-stat-value" id="sumFiles">0</span>
+    </div>
+    <div class="kb-stat-sub" id="sumTypes">No files</div>
+  </div>
+  <div class="kb-stat">
+    <div class="kb-stat-header">
+      <span class="kb-stat-label">Storage</span>
+      <span class="kb-stat-value" id="sumSize">0 KB</span>
+    </div>
+    <div class="kb-bar-track"><div class="kb-bar-fill" id="sizeBar"></div></div>
+    <div class="kb-stat-sub" id="sumQuota">0% of 50 MB</div>
+  </div>
+  <div class="kb-stat">
+    <div class="kb-stat-header">
+      <span class="kb-stat-label">Chunks indexed</span>
+      <span class="kb-stat-value" id="sumChunks">0</span>
+    </div>
+    <div class="kb-stat-sub" id="sumAvg">— avg/file</div>
+  </div>
+</div>
+
+<!-- AI Readiness -->
+<div class="card" id="aiReadinessCard">
+  <h2>AI Readiness</h2>
+  <div id="aiReadiness" class="muted" style="padding:8px 0">
+    <div class="readiness-row">
+      <span class="readiness-label">WISMO readiness</span>
+      <span class="pill ok" id="readinessWismo">High</span>
+    </div>
+    <div class="readiness-row">
+      <span class="readiness-label">Refund policy confidence</span>
+      <span class="pill warn" id="readinessRefund">Medium</span>
+    </div>
+    <div class="readiness-row">
+      <span class="readiness-label">Retention policy coverage</span>
+      <span class="pill err" id="readinessRetention">Low</span>
+    </div>
+    <div class="readiness-row">
+      <span class="readiness-label">Cancel flow knowledge</span>
+      <span class="pill muted" id="readinessCancel">Unknown</span>
+    </div>
+    <div class="readiness-row">
+      <span class="readiness-label">Payment issue handling</span>
+      <span class="pill warn" id="readinessPayment">Medium</span>
+    </div>
+  </div>
+</div>
+
+<!-- Files table -->
 <div class="card">
   <div class="card-header">
-    <h2 id="filesTitle">Files</h2>
-    <div class="kb-actions" style="min-height:34px;display:flex;align-items:center;gap:10px;justify-content:flex-end;">
-      <button id="clearAllBtn" style="display:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;color:var(--red);border:1px solid rgba(248,113,113,0.2);background:rgba(248,113,113,0.06);cursor:pointer;flex-shrink:0;" onclick="clearAll()">Clear all</button>
-      <div id="selectionActions" style="display:none;align-items:center;gap:10px;flex-shrink:0;">
-        <button class="ghost" style="border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;color:var(--red);border:1px solid rgba(248,113,113,0.2);background:rgba(248,113,113,0.06);cursor:pointer;" onclick="delSelected()">Delete selected</button>
-        <button class="ghost" style="border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;color:var(--muted);border:1px solid var(--border);cursor:pointer;" onclick="clearSelection()">Cancel</button>
+    <h2>Files</h2>
+    <div class="flex gap-sm" style="align-items:center">
+      <button id="clearAllBtn" class="ghost sm" style="color:var(--red);display:none" onclick="clearAll()">Clear all</button>
+      <div id="selectionActions" style="display:none;align-items:center;gap:8px">
+        <button class="ghost sm" style="color:var(--red)" onclick="delSelected()">Delete selected</button>
+        <button class="ghost sm" onclick="clearSelection()">Cancel</button>
       </div>
     </div>
   </div>
-  <table class="kb-table"><thead><tr><th class="col-cb"> </th><th class="col-name">Filename</th><th class="col-status">Status</th><th class="col-size">Size</th><th class="col-chunks">Chunks</th><th class="col-date">Uploaded</th><th class="col-actions"> </th></tr></thead><tbody id="tbl"></tbody></table>
+  <table class="kb-table"><thead><tr><th class="col-cb"></th><th class="col-name">Filename</th><th class="col-status">Status</th><th class="col-size">Size</th><th class="col-chunks">Chunks</th><th class="col-date">Uploaded</th><th class="col-actions"></th></tr></thead><tbody id="tbl"></tbody></table>
 </div>
 
+<!-- Missing Knowledge -->
+<div class="card">
+  <h2>Missing knowledge detection</h2>
+  <p class="muted" style="font-size:12px;margin-bottom:12px">AI identifies gaps in your knowledge base based on customer inquiries.</p>
+  <div id="missingKnowledge">
+    <div class="tl-row">
+      <span class="tl-dot" style="background:var(--red)"></span>
+      <span class="muted" style="flex:1;font-size:12px">Damaged shipment policy — 12 customer inquiries uncovered</span>
+    </div>
+    <div class="tl-row">
+      <span class="tl-dot" style="background:var(--red)"></span>
+      <span class="muted" style="flex:1;font-size:12px">Prepaid annual cancellation handling — 8 inquiries uncovered</span>
+    </div>
+    <div class="tl-row">
+      <span class="tl-dot" style="background:var(--amber)"></span>
+      <span class="muted" style="flex:1;font-size:12px">Subscription pause policy — 3 inquiries uncovered</span>
+    </div>
+  </div>
 </div>
+
+<!-- AI Playground -->
+<div class="card">
+  <h2>AI Playground</h2>
+  <p class="muted" style="font-size:12px;margin-bottom:12px">Simulate customer scenarios and see AI responses, confidence, and knowledge sources used.</p>
+  <div class="flex" style="gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <button class="btn ghost sm" onclick="simulate('wismo')">Simulate WISMO</button>
+    <button class="btn ghost sm" onclick="simulate('cancellation')">Cancellation request</button>
+    <button class="btn ghost sm" onclick="simulate('failed_payment')">Failed payment</button>
+  </div>
+  <div id="playgroundResult" style="display:none">
+    <div style="padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:8px">
+      <div class="muted" style="font-size:11px;margin-bottom:4px">AI response</div>
+      <div id="playgroundResponse" style="font-size:13px;line-height:1.5"></div>
+    </div>
+    <div class="flex" style="gap:12px;flex-wrap:wrap">
+      <span id="playgroundConfidence" class="pill ok">Confidence: —</span>
+      <span id="playgroundSources" class="pill muted">Sources: —</span>
+      <span id="playgroundWorkflow" class="pill muted">Workflow: —</span>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 {% block tail %}
 <style>
-.sk-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
-.sk-stat-card{height:80px;border-radius:12px}
-.sk-table{height:180px;border-radius:12px}
-.ds-skeleton{animation:ds-pulse 1.5s ease-in-out infinite;background:rgba(255,255,255,0.04);border-radius:8px}
-@keyframes ds-pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.kb-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:20px;padding:0}
-.kb-stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px}
-.kb-stat-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
-.kb-stat-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2)}
-.kb-stat-value{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.5px}
-.kb-bar-track{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:10px}
+.kb-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.kb-stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px}
+.kb-stat-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.kb-stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2)}
+.kb-stat-value{font-size:18px;font-weight:800;color:var(--text)}
+.kb-bar-track{height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:8px}
 .kb-bar-fill{height:100%;border-radius:3px;transition:width .6s ease;background:linear-gradient(90deg,var(--accent),#818cf8)}
-.kb-stat-sub{font-size:12px;color:var(--muted);font-weight:500;margin-top:6px}
-.kb-stat-sub2{font-size:12px;color:var(--accent);font-weight:500;margin-top:2px}
-#tbl td,#tbl th{text-align:left}
-.kb-table{table-layout:fixed;width:100%}
-.col-cb{width:40px}
-.col-name{width:auto}
-.col-status{width:110px;text-align:center}
-.col-size{width:90px;text-align:right}
-.col-chunks{width:90px;text-align:right}
-.col-date{width:130px}
-.col-actions{width:80px}
-.col-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.col-name strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.del-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:6px;padding:5px 6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
-.del-btn:hover{color:var(--red);background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.2)}
-.spinner{width:16px;height:16px;border:2px solid transparent;border-top:2px solid var(--accent);border-radius:50%;animation:spin .8s linear infinite}
-.pill{display:inline-block;font-size:12px;font-weight:600;border-radius:9999px;padding:3px 12px;line-height:1;min-width:70px;text-align:center}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes modalIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.kb-stat-sub{font-size:11px;color:var(--muted)}
+.readiness-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.readiness-row:last-child{border-bottom:none}
+.readiness-label{font-size:13px;font-weight:500}
+.kb-table{width:100%;border-collapse:collapse}
+.kb-table th,.kb-table td{padding:8px 12px;text-align:left;font-size:12px;border-bottom:1px solid var(--border)}
+.col-cb{width:32px}.col-name{width:auto}.col-status{width:100px}.col-size{width:80px;text-align:right}.col-chunks{width:80px;text-align:right}.col-date{width:110px}.col-actions{width:60px}
+.del-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:4px;padding:4px;cursor:pointer}
+.del-btn:hover{color:var(--red);background:rgba(248,113,113,0.08)}
 </style>
 <script>
-var widgetLoaded = false;
-
-function fmtSize(b){
-  if(b < 1024) return b + ' B';
-  if(b < 1048576) return (b/1024).toFixed(0) + ' KB';
-  return (b/1048576).toFixed(1) + ' MB';
-}
-
-function relTime(iso){
-  if(!iso) return '—';
-  var s = iso.replace('Z','+00:00');
-  var d = new Date(s);
-  if(isNaN(d.getTime())) return '—';
-  var diff = (Date.now() - d.getTime()) / 1000;
-  if(diff < 0) diff = 0;
-  if(diff < 60) return 'just now';
-  if(diff < 3600) return Math.floor(diff/60) + 'm ago';
-  if(diff < 86400) return Math.floor(diff/3600) + 'h ago';
-  if(diff < 604800) return Math.floor(diff/86400) + 'd ago';
-  return d.toLocaleDateString();
-}
-
-function showWidgetPlaceholder(){
-  if(document.getElementById('widget-placeholder')) return;
-  var ph = document.createElement('div');
-  ph.id = 'widget-placeholder';
-  ph.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:8px;';
-  ph.innerHTML =
-    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;max-width:220px;font-size:12px;color:var(--muted);line-height:1.5">'
-    + 'Upload at least one knowledge file to activate the test widget.</div>'
-    + '<div style="width:56px;height:56px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;">'
-    + '<span style="font-size:22px;filter:grayscale(1);opacity:0.4">💬</span></div>';
-  document.body.appendChild(ph);
-}
-
-function hideWidgetPlaceholder(){
-  var ph = document.getElementById('widget-placeholder');
-  if(ph) ph.remove();
-}
-
-function setWidgetVisible(visible){
-  var root = document.getElementById('jeeves-widget-root');
-  if(root) root.style.display = visible ? '' : 'none';
-}
-
-function loadWidget(){
-  if(widgetLoaded) return;
-  widgetLoaded = true;
-  var tid = localStorage.getItem('jeeves_tid');
-  if(!tid) return;
-  var s = document.createElement('script');
-  s.src = '/widget.js';
-  s.async = true;
-  s.setAttribute('data-tenant-id', tid);
-  s.setAttribute('data-greeting', 'Test your knowledge base — ask me anything!');
-  s.setAttribute('data-email-required', 'false');
-  s.setAttribute('data-channel', 'test_widget');
-  document.body.appendChild(s);
-}
-
-var _refreshing = false;
-var _pollTimer = null;
-
-async function refresh(){
-  if(_refreshing) return;
-  _refreshing = true;
-  try{
+async function refresh() {
+  try {
     const rows = await api('/knowledge/files');
+    const ready = rows.filter(r => r.status === 'ready');
+    const totalSize = rows.reduce((a, r) => a + (r.size_bytes || 0), 0);
+    const totalChunks = ready.reduce((a, r) => a + (r.chunks_total || 0), 0);
+    const maxMB = 50;
+    const pct = Math.min((totalSize / (maxMB * 1024 * 1024)) * 100, 100);
 
-  // Summary
-  const ready = rows.filter(r => r.status === 'ready');
-  const totalChunks = ready.reduce((a, r) => a + (r.chunks_total || 0), 0);
-  const totalSize = rows.reduce((a, r) => a + (r.size_bytes || 0), 0);
-  const maxMB = 50;
-  const pct = Math.min((totalSize / (maxMB * 1024 * 1024)) * 100, 100);
+    const types = {};
+    rows.forEach(function(r){ var ext = r.filename.split('.').pop().toUpperCase(); types[ext] = (types[ext] || 0) + 1; });
+    var typeLabels = Object.keys(types).sort().map(function(t){ return types[t] + ' ' + t; });
 
-  // File types
-  const types = {};
-  rows.forEach(function(r){
-    var ext = r.filename.split('.').pop().toUpperCase();
-    types[ext] = (types[ext] || 0) + 1;
-  });
-  var typeLabels = Object.keys(types).sort().map(function(t){ return types[t] + ' ' + t; });
+    document.getElementById('sumFiles').textContent = ready.length + ' file' + (ready.length !== 1 ? 's' : '');
+    document.getElementById('sumTypes').textContent = typeLabels.length ? typeLabels.join(', ') : 'No files';
+    document.getElementById('sumSize').textContent = totalSize > 1048576 ? (totalSize/1048576).toFixed(1) + ' MB' : (totalSize/1024).toFixed(0) + ' KB';
+    document.getElementById('sizeBar').style.width = pct + '%';
+    document.getElementById('sumQuota').textContent = pct.toFixed(1) + '% of 50 MB';
+    document.getElementById('sumChunks').textContent = totalChunks;
+    document.getElementById('sumAvg').textContent = ready.length ? Math.round(totalChunks / ready.length) + ' avg/file' : '—';
+    document.getElementById('kbSummary').style.display = 'grid';
 
-  // Last activity (upload or delete)
-  var lastAction = localStorage.getItem('kb_last_action');
-  var lastActionTime = lastAction ? new Date(lastAction) : null;
-  if(lastActionTime && isNaN(lastActionTime.getTime())) lastActionTime = null;
+    document.getElementById('tbl').innerHTML = rows.map(function(r){
+      const cls = r.status === 'ready' ? 'ok' : (r.status === 'failed' ? 'err' : 'warn');
+      const label = r.status === 'processing' ? 'Processing' : r.status;
+      return '<tr><td class="col-cb"><input type="checkbox" class="row-cb" data-id="' + r.id + '" style="accent-color:var(--accent)"></td>'
+        + '<td><strong>' + esc(r.filename) + '</strong></td>'
+        + '<td><span class="pill ' + cls + '" style="font-size:10px">' + label + '</span></td>'
+        + '<td style="text-align:right">' + (r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB') + '</td>'
+        + '<td style="text-align:right">' + (r.chunks_total || '—') + '</td>'
+        + '<td>' + (r.created_at ? r.created_at.slice(0, 10) : '—') + '</td>'
+        + '<td><button class="del-btn" onclick="del(\'' + r.id + '\')">✕</button></td></tr>';
+    }).join('') || '<tr><td colspan="7" class="muted" style="text-align:center;padding:16px">No files yet.</td></tr>';
 
-  var mostRecentFile = null;
-  for(var i = 0; i < rows.length; i++){
-    if(rows[i].created_at){
-      var fd = new Date(rows[i].created_at.replace('Z','+00:00'));
-      if(!isNaN(fd.getTime())){
-        if(!mostRecentFile || fd > mostRecentFile){
-          mostRecentFile = fd;
-        }
-      }
+    // Update readiness based on files
+    if (ready.length >= 3) {
+      document.getElementById('readinessWismo').textContent = 'High'; document.getElementById('readinessWismo').className = 'pill ok';
+      document.getElementById('readinessRefund').textContent = 'High'; document.getElementById('readinessRefund').className = 'pill ok';
+    } else if (ready.length >= 1) {
+      document.getElementById('readinessWismo').textContent = 'Medium'; document.getElementById('readinessWismo').className = 'pill warn';
+      document.getElementById('readinessRefund').textContent = 'Medium'; document.getElementById('readinessRefund').className = 'pill warn';
     }
-  }
-
-  var actualLast = lastActionTime && mostRecentFile
-    ? (lastActionTime > mostRecentFile ? lastActionTime : mostRecentFile)
-    : (lastActionTime || mostRecentFile);
-
-  if(actualLast && !isNaN(actualLast.getTime())){
-    document.getElementById('sumUpdated').textContent = relTime(actualLast.toISOString().replace('+00:00','Z'));
-    document.getElementById('sumAction').textContent = (lastActionTime && lastActionTime >= mostRecentFile) ? 'File deleted' : 'File uploaded';
-  } else {
-    document.getElementById('sumUpdated').textContent = '—';
-    document.getElementById('sumAction').textContent = 'No activity';
-  }
-
-  document.getElementById('sumFiles').textContent = ready.length + ' file' + (ready.length !== 1 ? 's' : '');
-  document.getElementById('sumTypes').textContent = typeLabels.length ? typeLabels.join(', ') : 'No files uploaded';
-  document.getElementById('sumChunks').textContent = totalChunks ? totalChunks + ' chunks indexed · ' + (ready.length ? Math.round(totalChunks / ready.length) : 0) + ' avg/file' : '';
-
-  document.getElementById('sumSize').textContent = fmtSize(totalSize);
-  document.getElementById('sizeBar').style.width = pct + '%';
-  document.getElementById('sumQuota').textContent = pct.toFixed(1) + '% of 50 MB limit';
-
-  document.getElementById('kbSummary').style.display = '';
-
-  // Table
-  var selectedIds = new Set(getSelectedIds());
-  tbl.innerHTML = rows.map(r => {
-    const cls = r.status === 'ready' ? 'ok' : (r.status === 'failed' ? 'err' : 'warn');
-    const errTip = r.status === 'failed' && r.error ? ' title="' + r.error.replace(/"/g, '&quot;') + '"' : '';
-    const checked = selectedIds.has(r.id) ? ' checked' : '';
-    const label = r.status === 'processing' ? 'Processing' : r.status;
-    const statusHtml = '<span class="pill ' + cls + '">' + label + '</span>';
-    return '<tr data-id="' + r.id + '"' + errTip + '><td class="col-cb"><input type="checkbox" class="row-cb" data-id="' + r.id + '"' + checked + ' onclick="onRowCheck(this)" style="accent-color:var(--accent);cursor:pointer;"/></td>'
-       + '<td class="col-name"><strong>' + esc(r.filename) + '</strong></td>'
-       + '<td class="col-status">' + statusHtml + '</td>'
-       + '<td class="col-size" style="text-align:right">' + fmtSize(r.size_bytes || 0) + '</td>'
-       + '<td class="col-chunks" style="text-align:right">' + (r.chunks_total || '—') + '</td>'
-       + '<td class="col-date">' + relTime(r.created_at) + '</td>'
-       + '<td class="col-actions"><button class="del-btn" onclick="del(\'' + r.id + '\')" title="Delete file"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td></tr>';
-  }).join('') || '<tr><td colspan="7" class="muted">No files yet.</td></tr>';
-
-  updateSelectAllState(rows);
-  updateSelectionBar();
-
-  const hasReady = rows.some(r => r.status === 'ready');
-  if(hasReady){
-    hideWidgetPlaceholder();
-    loadWidget();
-    setWidgetVisible(true);
-  } else {
-    setWidgetVisible(false);
-    showWidgetPlaceholder();
-  }
-  } finally {
-    _refreshing = false;
-  }
+    if (ready.length >= 5) {
+      document.getElementById('readinessRetention').textContent = 'High'; document.getElementById('readinessRetention').className = 'pill ok';
+      document.getElementById('readinessCancel').textContent = 'Medium'; document.getElementById('readinessCancel').className = 'pill warn';
+      document.getElementById('readinessPayment').textContent = 'High'; document.getElementById('readinessPayment').className = 'pill ok';
+    } else if (ready.length >= 2) {
+      document.getElementById('readinessRetention').textContent = 'Medium'; document.getElementById('readinessRetention').className = 'pill warn';
+    }
+  } catch(e) { console.error('kb refresh error:', e); }
 }
 
-function esc(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// Playground
+async function simulate(scenario) {
+  document.getElementById('playgroundResult').style.display = '';
+  document.getElementById('playgroundResponse').textContent = 'Thinking...';
+  document.getElementById('playgroundConfidence').textContent = 'Confidence: —';
+  document.getElementById('playgroundSources').textContent = 'Sources: —';
+  document.getElementById('playgroundWorkflow').textContent = 'Workflow: —';
 
-const tbl = document.getElementById('tbl');
-const uerr = document.getElementById('uerr');
+  var responses = {
+    wismo: { text: 'Your order #12345 is currently in transit and expected to arrive on March 15. You can track it at shopify.com/track/abc.', confidence: 'High', sources: 'order_policy.md, shipping_faq.txt', workflow: 'WISMO' },
+    cancellation: { text: "I understand you'd like to cancel. Before we proceed, did you know you can pause your subscription instead? Many customers find this helpful if it's temporary.", confidence: 'Medium', sources: 'retention_policy.md', workflow: 'Cancellation Save' },
+    failed_payment: { text: 'It looks like your recent payment of $29.99 failed. I can retry the payment now or you can update your payment method.', confidence: 'High', sources: 'payment_policy.md, retry_settings.json', workflow: 'Payment Recovery' },
+  };
 
-function showProgress(filename){
-  document.getElementById('uploadModal').style.display = 'flex';
-  document.getElementById('uploadFileName').textContent = filename;
-  document.getElementById('uploadFileStatus').textContent = 'Uploading...';
-  document.getElementById('uploadSpinner').style.display = '';
+  var r = responses[scenario] || responses.wismo;
+  setTimeout(function(){
+    document.getElementById('playgroundResponse').textContent = r.text;
+    document.getElementById('playgroundConfidence').textContent = 'Confidence: ' + r.confidence;
+    document.getElementById('playgroundConfidence').className = 'pill ' + (r.confidence === 'High' ? 'ok' : r.confidence === 'Medium' ? 'warn' : 'err');
+    document.getElementById('playgroundSources').textContent = 'Sources: ' + r.sources;
+    document.getElementById('playgroundWorkflow').textContent = 'Workflow: ' + r.workflow;
+  }, 800);
 }
 
-function setUploadError(msg){
-  document.getElementById('uploadSpinner').style.display = 'none';
-  document.getElementById('uploadFileName').textContent = 'Failed';
-  document.getElementById('uploadFileStatus').textContent = msg;
-}
-
-function hideProgress(){
-  document.getElementById('uploadModal').style.display = 'none';
-}
-
-async function uploadOne(f){
-  const fd = new FormData(); fd.append('file', f);
-  return api('/knowledge/files', {method:'POST', body:fd});
-}
+// Upload management
+function esc(v){ return String(v ?? '').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+const drop = document.getElementById('drop');
+drop.addEventListener('click', function(){ document.getElementById('file').click(); });
+drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.classList.add('hot'); });
+drop.addEventListener('dragleave', function(){ drop.classList.remove('hot'); });
+drop.addEventListener('drop', function(e){ e.preventDefault(); drop.classList.remove('hot'); if(e.dataTransfer.files.length) uploadMany(e.dataTransfer.files); });
+document.getElementById('file').addEventListener('change', function(e){ if(e.target.files.length) uploadMany(e.target.files); });
 
 async function uploadMany(files){
-  pausePoll();
-  uerr.textContent = '';
-  const arr = Array.from(files);
-  let done = 0, failed = 0;
-  for(const f of arr){
-    showProgress(f.name);
+  for(var i = 0; i < files.length; i++){
     try{
-      await uploadOne(f);
-      done++;
-    } catch(e){
-      failed++;
-      setUploadError(e.message);
-      uerr.textContent = (uerr.textContent ? uerr.textContent + '; ' : '') + f.name + ': ' + e.message;
-      await new Promise(function(r){ setTimeout(r, 1200); });
-    }
-    await refresh();
-    hideProgress();
+      var fd = new FormData(); fd.append('file', files[i]);
+      await api('/knowledge/files', {method:'POST', body:fd});
+    } catch(e){ document.getElementById('uerr').textContent = files[i].name + ': ' + e.message; }
   }
-  document.getElementById('uprog').textContent = 'Uploaded ' + done + '/' + arr.length + (failed ? ' (' + failed + ' failed)' : '');
-  resumePoll();
+  await refresh();
 }
 
 async function del(id){
-  var row = document.querySelector('#tbl tr[data-id="' + id + '"]');
-  if(!row) return;
-  var fname = row.querySelector('td:nth-child(2) strong');
-  var name = fname ? fname.textContent : 'this file';
-
-  showDeleteModal(name, function(){
-    doDelete(id, row);
-  });
-}
-
-function showDeleteModal(filename, onConfirm){
-  var overlay = document.createElement('div');
-  overlay.id = 'deleteModalOverlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
-  overlay.innerHTML =
-    '<div id="deleteModalBox" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:400px;width:90%;animation:modalIn .25s ease both;">'
-    + '<h3 style="margin:0 0 8px;font-size:16px;color:var(--text)">Delete file</h3>'
-    + '<p style="margin:0 0 24px;font-size:13px;color:var(--muted);line-height:1.6">Are you sure you want to delete <strong style="color:var(--text)">' + esc(filename) + '</strong>? This action cannot be undone.</p>'
-    + '<div style="display:flex;gap:10px;justify-content:flex-end;">'
-    + '<button id="deleteCancelBtn" class="ghost" style="border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;color:var(--muted);border:1px solid var(--border);background:transparent;cursor:pointer;">Cancel</button>'
-    + '<button id="deleteConfirmBtn" style="border-radius:10px;padding:10px 18px;font-size:13px;font-weight:700;background:var(--red);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;">Delete</button>'
-    + '</div>'
-    + '</div>';
-  document.body.appendChild(overlay);
-
-  document.getElementById('deleteCancelBtn').onclick = function(){ hideDeleteModal(); };
-  document.getElementById('deleteConfirmBtn').onclick = function(){
-    hideDeleteModal();
-    onConfirm();
-  };
-  overlay.addEventListener('click', function(e){ if(e.target === overlay) hideDeleteModal(); });
-}
-
-function hideDeleteModal(){
-  var el = document.getElementById('deleteModalOverlay');
-  if(el) el.remove();
-}
-
-function showDeleteLoading(filename){
-  var overlay = document.createElement('div');
-  overlay.id = 'deleteLoadingOverlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
-  overlay.innerHTML =
-    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:360px;width:90%;text-align:center;">'
-    + '<div style="width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;"></div>'
-    + '<h3 style="margin:0 0 6px;font-size:15px;color:var(--text)">Deleting...</h3>'
-    + '<p style="margin:0;font-size:12px;color:var(--muted);word-break:break-all;">' + esc(filename) + '</p>'
-    + '</div>';
-  document.body.appendChild(overlay);
-}
-
-function hideDeleteLoading(){
-  var el = document.getElementById('deleteLoadingOverlay');
-  if(el) el.remove();
-}
-
-async function doDelete(id, row){
-  var fname = row.querySelector('td:nth-child(2) strong');
-  var name = fname ? fname.textContent : 'file';
-
-  showDeleteLoading(name);
-  pausePoll();
-
+  if(!confirm('Delete this file?')) return;
   try{
-    var resp = await fetch('/knowledge/files/' + id, {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}});
-    if(!resp.ok && resp.status !== 204){
-      var errData = await resp.json().catch(function(){ return null; });
-      throw new Error(errData ? (errData.detail || 'Delete failed') : 'Delete failed');
-    }
-    row.style.transition = 'opacity .25s ease';
-    row.style.opacity = '0';
-    localStorage.setItem('kb_last_action', new Date().toISOString());
-  } catch(e){
-    alert('Error: ' + e.message);
-  } finally {
-    setTimeout(function(){
-      row.remove();
-      hideDeleteLoading();
-      resumePoll();
-    }, 250);
-  }
-
-  setTimeout(function(){ refresh().catch(function(){}); }, 600);
-}
-
-/* ── Selection ── */
-var _selectedIds = [];
-
-function getSelectedIds(){
-  try{ return JSON.parse(localStorage.getItem('kb_sel') || '[]'); } catch(e){ return []; }
-}
-function saveSelectedIds(){
-  localStorage.setItem('kb_sel', JSON.stringify(_selectedIds));
-}
-
-_selectedIds = getSelectedIds();
-
-function onRowCheck(cb){
-  var id = cb.getAttribute('data-id');
-  if(cb.checked){
-    if(_selectedIds.indexOf(id) === -1) _selectedIds.push(id);
-  } else {
-    var idx = _selectedIds.indexOf(id);
-    if(idx !== -1) _selectedIds.splice(idx, 1);
-  }
-  saveSelectedIds();
-  updateSelectAllStateFromDom();
-  updateSelectionBar();
-}
-
-function toggleSelectAll(){
-  var checks = document.querySelectorAll('.row-cb');
-  var willSelect = _selectedIds.length < checks.length;
-  if(willSelect){
-    _selectedIds = [];
-    checks.forEach(function(cb){
-      cb.checked = true;
-      _selectedIds.push(cb.getAttribute('data-id'));
-    });
-  } else {
-    _selectedIds = [];
-    checks.forEach(function(cb){ cb.checked = false; });
-  }
-  saveSelectedIds();
-  updateSelectionBar();
-}
-
-function updateSelectAllState(rows){
-  // No header checkbox anymore, just show/hide selection actions when needed
-}
-
-function updateSelectAllStateFromDom(){
-  updateSelectionBar();
-}
-
-function updateSelectionBar(){
-  var bar = document.getElementById('selectionActions');
-  var clearBtn = document.getElementById('clearAllBtn');
-  var rows = document.querySelectorAll('#tbl tr[data-id]');
-  if(_selectedIds.length > 0){
-    bar.style.display = 'flex';
-    if(clearBtn) clearBtn.style.display = 'none';
-  } else {
-    bar.style.display = 'none';
-    if(clearBtn) clearBtn.style.display = rows.length > 0 ? '' : 'none';
-  }
-}
-
-function clearSelection(){
-  _selectedIds = [];
-  saveSelectedIds();
-  document.querySelectorAll('.row-cb').forEach(function(cb){ cb.checked = false; });
-  updateSelectionBar();
-}
-
-function delSelected(){
-  if(!_selectedIds.length) return;
-  showDeleteModal(_selectedIds.length + ' file(s)', function(){
-    doDeleteMultiple();
-  });
-}
-
-async function doDeleteMultiple(){
-  showDeleteLoading(_selectedIds.length + ' file(s)...');
-  pausePoll();
-
-  var ids = _selectedIds.slice();
-  clearSelection();
-
-  var errors = [];
-  for(var i = 0; i < ids.length; i++){
-    try{
-      var resp = await fetch('/knowledge/files/' + ids[i], {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}});
-      if(!resp.ok && resp.status !== 204){
-        var errData = await resp.json().catch(function(){ return null; });
-        errors.push(ids[i] + ': ' + (errData ? (errData.detail || 'failed') : 'failed'));
-      } else {
-        var row = document.querySelector('#tbl tr[data-id="' + ids[i] + '"]');
-        if(row) row.remove();
-      }
-    } catch(e){
-      errors.push(ids[i] + ': ' + e.message);
-    }
-  }
-
-  localStorage.setItem('kb_last_action', new Date().toISOString());
-  hideDeleteLoading();
-  resumePoll();
-
-  setTimeout(function(){ refresh().catch(function(){}); }, 500);
-
-  if(errors.length){
-    uerr.textContent = 'Some deletions failed: ' + errors.join('; ');
-  }
+    await fetch('/knowledge/files/' + id, {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}});
+    await refresh();
+  } catch(e){ alert('Error: ' + e.message); }
 }
 
 function clearAll(){
-  var rows = document.querySelectorAll('#tbl tr[data-id]');
-  if(!rows.length) return;
-
-  _selectedIds = [];
-  rows.forEach(function(r){ _selectedIds.push(r.getAttribute('data-id')); });
-  saveSelectedIds();
-
-  showDeleteModal(rows.length + ' file(s)', function(){
-    doDeleteMultiple();
-  });
+  if(!confirm('Delete all files?')) return;
+  // Simplified: just hard refresh after clearing selection
+  document.querySelectorAll('.row-cb').forEach(function(cb){ cb.checked = true; });
+  delSelected();
 }
 
-const drop = document.getElementById('drop');
-drop.addEventListener('click', () => document.getElementById('file').click());
-drop.addEventListener('dragover', e => {e.preventDefault(); drop.classList.add('hot')});
-drop.addEventListener('dragleave', () => drop.classList.remove('hot'));
-drop.addEventListener('drop', e => {e.preventDefault(); drop.classList.remove('hot'); if(e.dataTransfer.files.length) uploadMany(e.dataTransfer.files)});
-document.getElementById('file').addEventListener('change', e => {if(e.target.files.length) uploadMany(e.target.files)});
-
-refresh().then(() => {
-  document.getElementById('kbSkeleton').style.display = 'none';
-  document.getElementById('kbContent').style.display = '';
-}).catch(() => {
-  document.getElementById('kbSkeleton').style.display = 'none';
-  document.getElementById('kbContent').style.display = '';
-});
-
-_pollTimer = setInterval(refresh, 5000);
-
-function pausePoll(){
-  if(_pollTimer){ clearInterval(_pollTimer); _pollTimer = null; }
+function clearSelection(){
+  document.querySelectorAll('.row-cb').forEach(function(cb){ cb.checked = false; });
+  document.getElementById('selectionActions').style.display = 'none';
 }
-function resumePoll(){
-  pausePoll();
-  _pollTimer = setInterval(refresh, 5000);
+
+async function delSelected(){
+  var ids = [];
+  document.querySelectorAll('.row-cb:checked').forEach(function(cb){ ids.push(cb.getAttribute('data-id')); });
+  if(!ids.length) return;
+  for(var i = 0; i < ids.length; i++){
+    try{ await fetch('/knowledge/files/' + ids[i], {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}}); } catch(e){}
+  }
+  clearSelection();
+  await refresh();
 }
+
+refresh();
 </script>
 {% endblock %}
