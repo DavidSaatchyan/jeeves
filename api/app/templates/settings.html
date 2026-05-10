@@ -22,17 +22,11 @@
 
 <!-- ═══════════════════════ AUTOMATIONS ═══════════════════════ -->
 <div id="tabAutomations" class="tab-panel" style="display:none">
-  <div class="card" style="margin-bottom:12px">
-    <h2>Workflow toggles</h2>
-    <div id="wfToggles" style="font-size:13px">Loading...</div>
-  </div>
-  <div class="card" style="margin-bottom:12px">
-    <h2>Retry policy</h2>
-    <div id="retryPolicy" style="font-size:13px">Loading...</div>
-  </div>
-  <div class="card">
-    <h2>Escalation policy</h2>
-    <div id="escPolicy" style="font-size:13px">Loading...</div>
+  <div class="card" style="text-align:center;padding:40px">
+    <div style="font-size:40px;margin-bottom:16px">⚡</div>
+    <h2 style="text-transform:none;letter-spacing:0;color:var(--text);font-size:18px;margin-bottom:8px">Automations moved</h2>
+    <p class="muted" style="max-width:400px;margin:0 auto 20px">Workflow configuration and monitoring now has its own dedicated page with per-workflow tabs, analytics, and policy editors.</p>
+    <a href="/admin/automations" class="btn accent" style="text-decoration:none;display:inline-flex">Go to Automations →</a>
   </div>
 </div>
 
@@ -66,55 +60,6 @@
 {% endblock %}
 {% block tail %}
 <script>
-// ── Automations ───────────────────────────────────────────────
-
-function loadConnectors(){
-  api('/admin/api/integrations').then(function(data){
-    renderCards(data);
-  }).catch(function(){});
-}
-
-// ── Automations ─────────────────────────────────────────────
-async function loadPolicies() {
-  try {
-    var pols = await api('/admin/api/policies');
-    var ew = pols.enabled_workflows || {};
-    document.getElementById('wfToggles').innerHTML = [
-      { k: 'payment_recovery', l: 'Payment Recovery', d: 'Automatically retry failed payments and recover lost revenue.' },
-      { k: 'cancellation_save', l: 'Cancellation Save', d: 'Detect cancellation intent and offer save actions (pause, skip, delay).' },
-      { k: 'wismo', l: 'WISMO', d: 'Answer "Where Is My Order?" inquiries with real-time tracking data.' },
-    ].map(function(w){
-      var checked = ew[w.k] !== false;
-      return '<div class="toggle-wrap">' +
-        '<div class="toggle ' + (checked ? 'on' : '') + '" onclick="toggleWorkflow(\'' + w.k + '\', this)"></div>' +
-        '<div><div class="toggle-label">' + w.l + '</div><div class="toggle-desc">' + w.d + '</div></div>' +
-        '</div>';
-    }).join('');
-
-    var rp = pols.retry || {};
-    document.getElementById('retryPolicy').innerHTML =
-      '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Max retries</span><span style="font-weight:600">' + (rp.max_retries || 3) + '</span></div>' +
-      '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Retry intervals</span><span style="font-weight:600">' + ((rp.intervals||[]).join(', ') || '5min, 1h, 24h') + '</span></div>' +
-      '<div class="flex" style="justify-content:space-between"><span class="muted2">Action on failure</span><span style="font-weight:600;text-transform:capitalize">' + (rp.on_failure || 'escalate') + '</span></div>';
-
-    var ep = pols.escalation || {};
-    document.getElementById('escPolicy').innerHTML =
-      '<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span class="muted2">Trigger</span><span style="font-weight:600">' + (ep.trigger || 'frustration or amount > $300') + '</span></div>' +
-      '<div class="flex" style="justify-content:space-between"><span class="muted2">Channel</span><span style="font-weight:600">' + (ep.channel || 'in-app') + '</span></div>';
-  } catch(e) { console.error('policies error:', e); }
-}
-
-async function toggleWorkflow(type, el) {
-  var on = el.classList.contains('on');
-  try {
-    var pols = await api('/admin/api/policies');
-    var ew = pols.enabled_workflows || {};
-    ew[type] = !on;
-    await api('/admin/api/policies/enabled_workflows', { method: 'PUT', body: ew });
-    el.classList.toggle('on');
-  } catch(e) { console.error(e); }
-}
-
 // ── Knowledge ────────────────────────────────────────────────
 async function loadKnowledge() {
   try {
@@ -165,7 +110,6 @@ async function loadChannels() {
 }
 
 // ── Init ─────────────────────────────────────────────────────
-loadPolicies();
 loadKnowledge();
 loadChannels();
 

@@ -197,6 +197,11 @@ def connections_page(request: Request, tenant: Tenant = Depends(get_admin_tenant
     return templates.TemplateResponse(request, "connections.html", context=_ctx(request))
 
 
+@router.get("/automations", response_class=HTMLResponse)
+def automations_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
+    return templates.TemplateResponse(request, "automations.html", context=_ctx(request))
+
+
 @router.get("/account", response_class=HTMLResponse)
 def account_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
     return templates.TemplateResponse(request, "account.html", context=_ctx(request))

@@ -1,0 +1,642 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Automations</h1>
+<p class="page-desc">Configure and monitor automated workflows. Each workflow handles a specific customer lifecycle scenario.</p>
+
+<div class="ch-tabs" id="automationTabs">
+  <button class="ch-tab active" data-tab="overview">
+    <svg class="ch-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    Overview
+  </button>
+  <button class="ch-tab" data-tab="payment_recovery">
+    <span class="ch-tab-icon" style="font-size:16px;line-height:1">💳</span>
+    Payment Recovery
+  </button>
+  <button class="ch-tab" data-tab="cancellation_save">
+    <span class="ch-tab-icon" style="font-size:16px;line-height:1">🛑</span>
+    Cancellation Save
+  </button>
+  <button class="ch-tab" data-tab="wismo">
+    <span class="ch-tab-icon" style="font-size:16px;line-height:1">📦</span>
+    WISMO
+  </button>
+  <button class="ch-tab" data-tab="settings">
+    <svg class="ch-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Global Settings
+  </button>
+</div>
+
+<div id="automationPanels"></div>
+
+{% endblock %}
+{% block tail %}
+<script>
+var WORKFLOWS = [
+  {
+    id: 'payment_recovery',
+    name: 'Payment Recovery',
+    icon: '💳',
+    desc: 'Automatically retry failed payments and recover lost revenue.',
+    provider: 'stripe',
+    events: ['invoice.payment_failed', 'charge.failed'],
+    states: ['PENDING', 'RETRYING', 'REVIEW', 'RECOVERED', 'FAILED'],
+    fields: [
+      { id: 'pr-max-retries', key: 'max_retries', label: 'Max retries', type: 'number', default: 3 },
+      { id: 'pr-intervals', key: 'intervals', label: 'Retry intervals (minutes, comma-separated)', type: 'text', default: '5,60,1440' },
+      { id: 'pr-on-failure', key: 'on_failure', label: 'Action on final failure', type: 'select', default: 'escalate', options: [
+        { value: 'escalate', label: 'Escalate to human' },
+        { value: 'skip', label: 'Skip & mark failed' },
+        { value: 'notify', label: 'Notify customer only' },
+      ]},
+    ],
+    escalationFields: [
+      { id: 'pr-esc-trigger', key: 'trigger', label: 'Trigger condition', type: 'text', default: 'frustration detected OR amount > $300' },
+      { id: 'pr-esc-channel', key: 'channel', label: 'Escalation channel', type: 'select', default: 'in-app', options: [
+        { value: 'in-app', label: 'In-app notification' },
+        { value: 'email', label: 'Email' },
+        { value: 'sms', label: 'SMS' },
+      ]},
+    ],
+    approvalFields: [
+      { id: 'pr-app-threshold', key: 'amount_threshold', label: 'Require approval above amount ($)', type: 'number', default: 500 },
+      { id: 'pr-app-actions', key: 'require_approval_for', label: 'Actions requiring approval', type: 'text', default: 'refund,write_off' },
+    ],
+  },
+  {
+    id: 'cancellation_save',
+    name: 'Cancellation Save',
+    icon: '🛑',
+    desc: 'Detect cancellation intent and offer save actions (pause, skip, delay).',
+    provider: 'recharge',
+    events: ['subscription/cancelled', 'subscription/skipped'],
+    states: ['PENDING', 'OFFERING_SAVES', 'AWAITING_RESPONSE', 'RETAINED', 'CANCELLED'],
+    fields: [
+      { id: 'cs-save-actions', key: 'allowed_save_actions', label: 'Allowed save actions (comma-separated)', type: 'text', default: 'pause,skip,delay,discount' },
+      { id: 'cs-response-window', key: 'response_window_minutes', label: 'Customer response window (minutes)', type: 'number', default: 1440 },
+      { id: 'cs-on-expire', key: 'on_response_expire', label: 'On no response', type: 'select', default: 'process_cancellation', options: [
+        { value: 'process_cancellation', label: 'Process cancellation' },
+        { value: 'escalate', label: 'Escalate to human' },
+        { value: 'apply_best_save', label: 'Apply best save option' },
+      ]},
+    ],
+    escalationFields: [
+      { id: 'cs-esc-trigger', key: 'trigger', label: 'Trigger condition', type: 'text', default: 'high-value customer OR second cancellation attempt' },
+      { id: 'cs-esc-channel', key: 'channel', label: 'Escalation channel', type: 'select', default: 'email', options: [
+        { value: 'in-app', label: 'In-app notification' },
+        { value: 'email', label: 'Email' },
+        { value: 'sms', label: 'SMS' },
+      ]},
+    ],
+    approvalFields: [
+      { id: 'cs-app-discount', key: 'discount_threshold', label: 'Require approval for discount above (%)', type: 'number', default: 50 },
+      { id: 'cs-app-actions', key: 'require_approval_for', label: 'Actions requiring approval', type: 'text', default: 'deep_discount,free_product' },
+    ],
+  },
+  {
+    id: 'wismo',
+    name: 'WISMO',
+    icon: '📦',
+    desc: 'Answer "Where Is My Order?" inquiries with real-time tracking data.',
+    provider: 'shopify',
+    events: ['fulfillments/create', 'fulfillments/update'],
+    states: ['PENDING', 'TRACKING', 'RESOLVED', 'ESCALATED'],
+    fields: [
+      { id: 'ws-carriers', key: 'tracked_carriers', label: 'Tracked carriers (comma-separated)', type: 'text', default: 'ups,usps,fedex,dhl' },
+      { id: 'ws-auto-resolve', key: 'auto_resolve_hours', label: 'Auto-resolve after delivery (hours)', type: 'number', default: 48 },
+      { id: 'ws-on-unavailable', key: 'on_tracking_unavailable', label: 'When tracking unavailable', type: 'select', default: 'escalate', options: [
+        { value: 'escalate', label: 'Escalate to human' },
+        { value: 'provide_estimated', label: 'Provide estimated window' },
+        { value: 'notify_when_available', label: 'Notify when available' },
+      ]},
+    ],
+    escalationFields: [
+      { id: 'ws-esc-trigger', key: 'trigger', label: 'Trigger condition', type: 'text', default: 'delayed beyond EDD OR customer frustration' },
+      { id: 'ws-esc-channel', key: 'channel', label: 'Escalation channel', type: 'select', default: 'in-app', options: [
+        { value: 'in-app', label: 'In-app notification' },
+        { value: 'email', label: 'Email' },
+        { value: 'sms', label: 'SMS' },
+      ]},
+    ],
+    approvalFields: [
+      { id: 'ws-app-replace', key: 'replacement_threshold', label: 'Require approval for replacement above ($)', type: 'number', default: 200 },
+      { id: 'ws-app-actions', key: 'require_approval_for', label: 'Actions requiring approval', type: 'text', default: 'replacement,refund' },
+    ],
+  }
+];
+
+// ── Render ───────────────────────────────────────────────────
+function renderAutomations(analytics, policies, workflows) {
+  var enabledWf = (policies.enabled_workflows || {});
+  var tabsHtml = document.getElementById('automationTabs').innerHTML;
+  var panelsHtml = '';
+
+  // ── Overview panel ──
+  panelsHtml += renderOverview(analytics, policies, workflows);
+
+  // ── Per-workflow panels ──
+  WORKFLOWS.forEach(function(wf){
+    panelsHtml += renderWorkflowPanel(wf, analytics, policies, enabledWf, workflows);
+  });
+
+  // ── Global Settings panel ──
+  panelsHtml += renderGlobalSettings(policies);
+
+  document.getElementById('automationPanels').innerHTML = panelsHtml;
+}
+
+function renderOverview(analytics, policies, workflows) {
+  var enabledWf = (policies.enabled_workflows || {});
+  var activeCount = (policies.enabled_workflows || []).length;
+  var wfList = WORKFLOWS.map(function(wf){
+    var enabled = enabledWf[wf.id] !== false;
+    var wfWorkflows = (workflows || []).filter(function(w){ return w.workflow_type === wf.id; });
+    var total = wfWorkflows.length;
+    var completed = wfWorkflows.filter(function(w){ return w.status === 'completed'; }).length;
+    var active = wfWorkflows.filter(function(w){ return w.status === 'active' || w.status === 'paused'; }).length;
+    return '<div class="overview-wf-row">' +
+      '<div class="overview-wf-icon">' + wf.icon + '</div>' +
+      '<div class="overview-wf-info">' +
+        '<div class="overview-wf-name">' + wf.name + '</div>' +
+        '<div class="overview-wf-desc">' + wf.desc + '</div>' +
+      '</div>' +
+      '<div style="text-align:right">' +
+        '<div class="toggle ' + (enabled ? 'on' : '') + '" onclick="toggleWorkflow(\'' + wf.id + '\', this)"></div>' +
+      '</div>' +
+      '<div class="overview-wf-stats">' +
+        '<div class="overview-stat"><span class="n">' + total + '</span><span class="l">Total</span></div>' +
+        '<div class="overview-stat"><span class="n">' + active + '</span><span class="l">Active</span></div>' +
+        '<div class="overview-stat"><span class="n">' + completed + '</span><span class="l">Done</span></div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  return '<div class="ch-panel active" id="panel-overview">' +
+    '<div class="stats">' +
+      '<div class="stat"><div class="n">$' + ((analytics.recovered_revenue || 0).toLocaleString()) + '</div><div class="l">Recovered revenue (30d)</div></div>' +
+      '<div class="stat"><div class="n">' + (analytics.save_rate || 0) + '%</div><div class="l">Save rate</div></div>' +
+      '<div class="stat"><div class="n">' + (analytics.churn_prevented || 0) + '</div><div class="l">Churn prevented</div></div>' +
+      '<div class="stat"><div class="n">' + (analytics.active_workflows || 0) + '</div><div class="l">Active workflows</div></div>' +
+      '<div class="stat"><div class="n">' + (analytics.escalations || 0) + '</div><div class="l">Escalations (30d)</div></div>' +
+      '<div class="stat"><div class="n">' + (analytics.communications_sent || 0) + '</div><div class="l">Communications (30d)</div></div>' +
+    '</div>' +
+    '<div class="card">' +
+      '<h2>Workflows</h2>' +
+      '<div class="overview-wf-list">' + wfList + '</div>' +
+    '</div>' +
+    '<div class="card">' +
+      '<h2>Approvals (30d)</h2>' +
+      '<div class="flex" style="gap:24px;flex-wrap:wrap">' +
+        '<div><span class="pill accent">' + (analytics.total_approvals || 0) + ' total</span></div>' +
+        '<div><span class="pill ok">' + (analytics.approved_approvals || 0) + ' approved</span></div>' +
+        '<div><span class="pill cyan">' + (analytics.policy_overrides || 0) + ' policy overrides</span></div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderWorkflowPanel(wf, analytics, policies, enabledWf, workflows) {
+  var enabled = enabledWf[wf.id] !== false;
+  var retry = policies.retry || {};
+  var esc = policies.escalation || {};
+  var app = policies.approval || {};
+
+  var wfWorkflows = (workflows || []).filter(function(w){ return w.workflow_type === wf.id; });
+  var total = wfWorkflows.length;
+  var active = wfWorkflows.filter(function(w){ return w.status === 'active' || w.status === 'paused'; }).length;
+  var completed = wfWorkflows.filter(function(w){ return w.status === 'completed'; }).length;
+  var escalated = wfWorkflows.filter(function(w){ return w.status === 'escalated'; }).length;
+  var failed = wfWorkflows.filter(function(w){ return w.status === 'failed' || w.current_state === 'FAILED'; }).length;
+
+  var fieldsHtml = wf.fields.map(function(f){
+    var val = (retry[f.key] !== undefined ? retry[f.key] : f.default);
+    if (typeof val === 'object' && Array.isArray(val)) val = val.join(',');
+    if (f.type === 'select') {
+      var opts = f.options.map(function(o){
+        return '<option value="' + o.value + '"' + (String(val) === o.value ? ' selected' : '') + '>' + o.label + '</option>';
+      }).join('');
+      return '<div class="field-row"><label>' + f.label + '</label><select id="' + f.id + '" data-wf="' + wf.id + '" data-policy="retry" data-key="' + f.key + '">' + opts + '</select></div>';
+    }
+    return '<div class="field-row"><label>' + f.label + '</label><input id="' + f.id + '" type="' + f.type + '" value="' + esc(String(val)) + '" data-wf="' + wf.id + '" data-policy="retry" data-key="' + f.key + '"></div>';
+  }).join('');
+
+  var escFieldsHtml = wf.escalationFields.map(function(f){
+    var val = (esc[f.key] !== undefined ? esc[f.key] : f.default);
+    if (f.type === 'select') {
+      var opts = f.options.map(function(o){
+        return '<option value="' + o.value + '"' + (String(val) === o.value ? ' selected' : '') + '>' + o.label + '</option>';
+      }).join('');
+      return '<div class="field-row"><label>' + f.label + '</label><select id="' + f.id + '" data-wf="' + wf.id + '" data-policy="escalation" data-key="' + f.key + '">' + opts + '</select></div>';
+    }
+    return '<div class="field-row"><label>' + f.label + '</label><input id="' + f.id + '" type="' + f.type + '" value="' + esc(String(val)) + '" data-wf="' + wf.id + '" data-policy="escalation" data-key="' + f.key + '"></div>';
+  }).join('');
+
+  var appFieldsHtml = wf.approvalFields.map(function(f){
+    var val = (app[f.key] !== undefined ? app[f.key] : f.default);
+    if (typeof val === 'object' && Array.isArray(val)) val = val.join(',');
+    return '<div class="field-row"><label>' + f.label + '</label><input id="' + f.id + '" type="' + f.type + '" value="' + esc(String(val)) + '" data-wf="' + wf.id + '" data-policy="approval" data-key="' + f.key + '"></div>';
+  }).join('');
+
+  var eventsHtml = wf.events.map(function(ev){
+    return '<code>' + esc(ev) + '</code>';
+  }).join('');
+
+  var instancesHtml = renderInstances(wfWorkflows.slice(0, 10));
+
+  var statesHtml = wf.states.map(function(s){
+    return '<span class="pill muted">' + s + '</span>';
+  }).join('');
+
+  return '<div class="ch-panel" id="panel-' + wf.id + '">' +
+    // Header
+    '<div class="ch-header">' +
+      '<div class="flex" style="gap:12px;align-items:center;flex-wrap:wrap">' +
+        '<div class="ch-logo" style="font-size:24px;width:48px;height:48px;display:flex;align-items:center;justify-content:center">' + wf.icon + '</div>' +
+        '<div><div class="ch-name">' + wf.name + '</div><div class="ch-desc">' + wf.desc + '</div></div>' +
+        '<div style="margin-left:auto;display:flex;align-items:center;gap:12px">' +
+          '<label style="margin:0;font-size:13px;font-weight:600;color:var(--muted)">Enabled</label>' +
+          '<div class="toggle ' + (enabled ? 'on' : '') + '" id="toggle-' + wf.id + '" onclick="toggleWorkflow(\'' + wf.id + '\', this)"></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    // Stats
+    '<div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">' +
+      '<div class="stat"><div class="n">' + total + '</div><div class="l">Total</div></div>' +
+      '<div class="stat"><div class="n">' + active + '</div><div class="l">Active</div></div>' +
+      '<div class="stat"><div class="n">' + completed + '</div><div class="l">Completed</div></div>' +
+      '<div class="stat"><div class="n">' + escalated + '</div><div class="l">Escalated</div></div>' +
+      '<div class="stat"><div class="n">' + failed + '</div><div class="l">Failed</div></div>' +
+    '</div>' +
+
+    // Config cards
+    '<div class="ch-body">' +
+
+      // Retry / Workflow config
+      '<div class="ch-card collapsible">' +
+        '<div class="section-toggle" onclick="toggleSection(this)">' +
+          '<h3 style="margin:0">Workflow Configuration</h3>' +
+          '<span class="section-arrow open">▼</span>' +
+        '</div>' +
+        '<div class="section-body">' +
+          fieldsHtml +
+          '<div style="margin-top:12px"><button class="ghost sm accent" onclick="saveWfConfig(\'' + wf.id + '\', \'retry\')">Save workflow config</button><span class="muted2 save-msg" id="msg-retry-' + wf.id + '" style="margin-left:8px;font-size:12px"></span></div>' +
+        '</div>' +
+      '</div>' +
+
+      // Escalation config
+      '<div class="ch-card collapsible">' +
+        '<div class="section-toggle" onclick="toggleSection(this)">' +
+          '<h3 style="margin:0">Escalation Policy</h3>' +
+          '<span class="section-arrow open">▼</span>' +
+        '</div>' +
+        '<div class="section-body">' +
+          escFieldsHtml +
+          '<div style="margin-top:12px"><button class="ghost sm accent" onclick="saveWfConfig(\'' + wf.id + '\', \'escalation\')">Save escalation policy</button><span class="muted2 save-msg" id="msg-escalation-' + wf.id + '" style="margin-left:8px;font-size:12px"></span></div>' +
+        '</div>' +
+      '</div>' +
+
+      // Approval config
+      '<div class="ch-card collapsible">' +
+        '<div class="section-toggle" onclick="toggleSection(this)">' +
+          '<h3 style="margin:0">Approval Rules</h3>' +
+          '<span class="section-arrow open">▼</span>' +
+        '</div>' +
+        '<div class="section-body">' +
+          appFieldsHtml +
+          '<div style="margin-top:12px"><button class="ghost sm accent" onclick="saveWfConfig(\'' + wf.id + '\', \'approval\')">Save approval rules</button><span class="muted2 save-msg" id="msg-approval-' + wf.id + '" style="margin-left:8px;font-size:12px"></span></div>' +
+        '</div>' +
+      '</div>' +
+
+      // Events
+      '<div class="ch-card collapsible">' +
+        '<div class="section-toggle" onclick="toggleSection(this)">' +
+          '<h3 style="margin:0">Triggering Events</h3>' +
+          '<span class="section-arrow open">▼</span>' +
+        '</div>' +
+        '<div class="section-body">' +
+          '<div class="wh-events-list">' + eventsHtml + '</div>' +
+          '<div class="muted" style="margin-top:8px;font-size:12px">State machine: ' + statesHtml + '</div>' +
+        '</div>' +
+      '</div>' +
+
+      // Recent instances
+      '<div class="ch-card collapsible">' +
+        '<div class="section-toggle" onclick="toggleSection(this)">' +
+          '<h3 style="margin:0">Recent Instances</h3>' +
+          '<span class="section-arrow open">▼</span>' +
+        '</div>' +
+        '<div class="section-body">' +
+          instancesHtml +
+        '</div>' +
+      '</div>' +
+
+    '</div>' +
+  '</div>';
+}
+
+function renderInstances(instances) {
+  if (!instances || instances.length === 0) {
+    return '<div class="muted" style="padding:12px 0">No workflow instances yet.</div>';
+  }
+  return '<table><thead><tr><th>ID</th><th>State</th><th>Status</th><th>Customer</th><th>Started</th><th></th></tr></thead><tbody>' +
+    instances.map(function(w){
+      var stateColor = 'muted';
+      if (w.current_state === 'RECOVERED' || w.current_state === 'RETAINED' || w.current_state === 'RESOLVED') stateColor = 'ok';
+      else if (w.current_state === 'FAILED' || w.current_state === 'CANCELLED') stateColor = 'err';
+      else if (w.current_state === 'REVIEW' || w.current_state === 'AWAITING_RESPONSE') stateColor = 'warn';
+      return '<tr>' +
+        '<td><code>' + esc(w.id.slice(0, 8)) + '</code></td>' +
+        '<td><span class="pill ' + stateColor + '" style="font-size:10px">' + esc(w.current_state || w.status) + '</span></td>' +
+        '<td><span class="pill ' + (w.status === 'active' ? 'ok' : w.status === 'failed' || w.status === 'escalated' ? 'err' : 'muted') + '" style="font-size:10px">' + esc(w.status) + '</span></td>' +
+        '<td style="font-size:12px">' + esc(w.customer_id ? w.customer_id.slice(0, 8) : '-') + '</td>' +
+        '<td style="font-size:12px;color:var(--muted2)">' + (w.started_at ? new Date(w.started_at).toLocaleDateString() : '-') + '</td>' +
+        '<td><a href="/admin/workflows/' + esc(w.id) + '" style="font-size:12px;border:none">View →</a></td>' +
+      '</tr>';
+    }).join('') +
+  '</tbody></table>';
+}
+
+function renderGlobalSettings(policies) {
+  var retry = policies.retry || {};
+  var comm = policies.communication || {};
+  var esc = policies.escalation || {};
+  var app = policies.approval || {};
+
+  return '<div class="ch-panel" id="panel-settings">' +
+    '<div class="ch-body">' +
+
+      // Global Retry Policy
+      '<div class="ch-card collapsible">' +
+        '<div class="section-toggle" onclick="toggleSection(this)">' +
+          '<h3 style="margin:0">Retry Policy (Global)</h3>' +
+          '<span class="section-arrow open">▼</span>' +
+        '</div>' +
+        '<div class="section-body">' +
+          '<div class="field-row"><label>Max retries</label><input id="g-max-retries" type="number" value="' + (retry.max_retries || 3) + '"></div>' +
+          '<div class="field-row"><label>Retry intervals (minutes, comma-separated)</label><input id="g-intervals" type="text" value="' + esc(((retry.intervals || []).join(', ')) || '5, 60, 1440') + '"></div>' +
+          '<div class="field-row"><label>Action on final failure</label>' +
+            '<select id="g-on-failure">' +
+              '<option value="escalate"' + (retry.on_failure === 'escalate' ? ' selected' : '') + '>Escalate to human</option>' +
+              '<option value="skip"' + (retry.on_failure === 'skip' ? ' selected' : '') + '>Skip & mark failed</option>' +
+              '<option value="notify"' + (retry.on_failure === 'notify' ? ' selected' : '') + '>Notify customer only</option>' +
+            '</select>' +
+          '</div>' +
+          '<div style="margin-top:12px"><button class="ghost sm accent" onclick="saveGlobalPolicy(\'retry\')">Save retry policy</button><span class="muted2 save-msg" id="msg-global-retry" style="margin-left:8px;font-size:12px"></span></div>' +
+        '</div>' +
+      '</div>' +
+
+      // Global Communication Policy
+      '<div class="ch-card collapsible">' +
+        '<div class="section-toggle" onclick="toggleSection(this)">' +
+          '<h3 style="margin:0">Communication Policy</h3>' +
+          '<span class="section-arrow open">▼</span>' +
+        '</div>' +
+        '<div class="section-body">' +
+          '<div class="field-row"><label>Max communications per customer per day</label><input id="g-max-daily" type="number" value="' + (comm.max_daily || 3) + '"></div>' +
+          '<div class="field-row"><label>Cooldown period (minutes) between comms</label><input id="g-cooldown" type="number" value="' + (comm.cooldown_minutes || 60) + '"></div>' +
+          '<div class="field-row"><label>Preferred channels (comma-separated, order = priority)</label><input id="g-channels" type="text" value="' + esc(((comm.preferred_channels || []).join(', ')) || 'in-app, email, sms') + '"></div>' +
+          '<div class="field-row"><label>Communication templates</label><textarea id="g-templates" rows="3">' + esc(JSON.stringify(comm.templates || {}, null, 2)) + '</textarea></div>' +
+          '<div style="margin-top:12px"><button class="ghost sm accent" onclick="saveGlobalPolicy(\'communication\')">Save communication policy</button><span class="muted2 save-msg" id="msg-global-communication" style="margin-left:8px;font-size:12px"></span></div>' +
+        '</div>' +
+      '</div>' +
+
+      // Global Escalation Policy
+      '<div class="ch-card collapsible">' +
+        '<div class="section-toggle" onclick="toggleSection(this)">' +
+          '<h3 style="margin:0">Escalation Policy (Global Default)</h3>' +
+          '<span class="section-arrow open">▼</span>' +
+        '</div>' +
+        '<div class="section-body">' +
+          '<div class="field-row"><label>Default trigger condition</label><input id="g-esc-trigger" type="text" value="' + esc(esc.trigger || 'frustration detected OR amount > $300') + '"></div>' +
+          '<div class="field-row"><label>Default escalation channel</label>' +
+            '<select id="g-esc-channel">' +
+              '<option value="in-app"' + (esc.channel === 'in-app' ? ' selected' : '') + '>In-app notification</option>' +
+              '<option value="email"' + (esc.channel === 'email' ? ' selected' : '') + '>Email</option>' +
+              '<option value="sms"' + (esc.channel === 'sms' ? ' selected' : '') + '>SMS</option>' +
+            '</select>' +
+          '</div>' +
+          '<div class="field-row"><label>SLA hours to respond</label><input id="g-esc-sla" type="number" value="' + (esc.sla_hours || 4) + '"></div>' +
+          '<div style="margin-top:12px"><button class="ghost sm accent" onclick="saveGlobalPolicy(\'escalation\')">Save escalation policy</button><span class="muted2 save-msg" id="msg-global-escalation" style="margin-left:8px;font-size:12px"></span></div>' +
+        '</div>' +
+      '</div>' +
+
+      // Global Approval Policy
+      '<div class="ch-card collapsible">' +
+        '<div class="section-toggle" onclick="toggleSection(this)">' +
+          '<h3 style="margin:0">Approval Policy (Global Default)</h3>' +
+          '<span class="section-arrow open">▼</span>' +
+        '</div>' +
+        '<div class="section-body">' +
+          '<div class="field-row"><label>Require approval for actions involving ($)</label><input id="g-app-amount" type="number" value="' + (app.amount_threshold || 500) + '"></div>' +
+          '<div class="field-row"><label>Always require approval for these actions (comma-separated)</label><input id="g-app-actions" type="text" value="' + esc(((app.require_approval_for || []).join(', ')) || 'refund, write_off') + '"></div>' +
+          '<div class="field-row"><label>AI confidence threshold for auto-approval (%)</label><input id="g-app-confidence" type="number" value="' + (app.ai_confidence_threshold || 90) + '"></div>' +
+          '<div style="margin-top:12px"><button class="ghost sm accent" onclick="saveGlobalPolicy(\'approval\')">Save approval policy</button><span class="muted2 save-msg" id="msg-global-approval" style="margin-left:8px;font-size:12px"></span></div>' +
+        '</div>' +
+      '</div>' +
+
+    '</div>' +
+  '</div>';
+}
+
+// ── Toggle sections ──────────────────────────────────────────
+function toggleSection(el) {
+  var body = el.nextElementSibling;
+  var arrow = el.querySelector('.section-arrow');
+  if (body.style.display === 'none') {
+    body.style.display = '';
+    arrow.classList.add('open');
+  } else {
+    body.style.display = 'none';
+    arrow.classList.remove('open');
+  }
+}
+
+// ── Tab switching ────────────────────────────────────────────
+document.addEventListener('click', function(e){
+  var tab = e.target.closest('.ch-tab');
+  if(!tab) return;
+  document.querySelectorAll('.ch-tab').forEach(function(t){ t.classList.remove('active'); });
+  tab.classList.add('active');
+  document.querySelectorAll('.ch-panel').forEach(function(p){ p.classList.remove('active'); });
+  var panel = document.getElementById('panel-' + tab.dataset.tab);
+  if(panel) panel.classList.add('active');
+});
+
+// ── Toggle workflow ──────────────────────────────────────────
+async function toggleWorkflow(type, el) {
+  var on = el.classList.contains('on');
+  try {
+    var pols = await api('/admin/api/policies');
+    var ew = pols.enabled_workflows || {};
+    if (Array.isArray(ew)) ew = {};
+    ew[type] = !on;
+    await api('/admin/api/policies/enabled_workflows', { method: 'PUT', body: ew });
+    el.classList.toggle('on');
+  } catch(e) { console.error(e); }
+}
+
+// ── Save per-workflow config ─────────────────────────────────
+async function saveWfConfig(wfId, policyType) {
+  var msgEl = document.getElementById('msg-' + policyType + '-' + wfId);
+  if (!msgEl) return;
+  msgEl.textContent = 'Saving…';
+
+  try {
+    var pols = await api('/admin/api/policies');
+    var policy = pols[policyType] || {};
+
+    var inputs = document.querySelectorAll('[data-wf="' + wfId + '"][data-policy="' + policyType + '"]');
+    inputs.forEach(function(inp){
+      var key = inp.dataset.key;
+      var val = inp.value.trim();
+      if (inp.type === 'number') val = parseFloat(val);
+      if (key === 'intervals' || key === 'tracked_carriers' || key === 'allowed_save_actions' || key === 'require_approval_for') {
+        val = val.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+      }
+      policy[key] = val;
+    });
+
+    await api('/admin/api/policies/' + policyType, { method: 'PUT', body: policy });
+    msgEl.textContent = 'Saved ✓';
+    msgEl.style.color = 'var(--green)';
+    setTimeout(function(){ msgEl.textContent = ''; }, 3000);
+  } catch(e) {
+    msgEl.textContent = 'Error: ' + e.message;
+    msgEl.style.color = 'var(--red)';
+  }
+}
+
+// ── Save global policy ──────────────────────────────────────
+async function saveGlobalPolicy(policyType) {
+  var msgEl = document.getElementById('msg-global-' + policyType);
+  if (!msgEl) return;
+  msgEl.textContent = 'Saving…';
+
+  try {
+    var pols = await api('/admin/api/policies');
+    var policy = pols[policyType] || {};
+    var fieldMap = {
+      retry: {
+        'g-max-retries': { key: 'max_retries', type: 'number' },
+        'g-intervals': { key: 'intervals', type: 'csv' },
+        'g-on-failure': { key: 'on_failure', type: 'string' },
+      },
+      communication: {
+        'g-max-daily': { key: 'max_daily', type: 'number' },
+        'g-cooldown': { key: 'cooldown_minutes', type: 'number' },
+        'g-channels': { key: 'preferred_channels', type: 'csv' },
+        'g-templates': { key: 'templates', type: 'json' },
+      },
+      escalation: {
+        'g-esc-trigger': { key: 'trigger', type: 'string' },
+        'g-esc-channel': { key: 'channel', type: 'string' },
+        'g-esc-sla': { key: 'sla_hours', type: 'number' },
+      },
+      approval: {
+        'g-app-amount': { key: 'amount_threshold', type: 'number' },
+        'g-app-actions': { key: 'require_approval_for', type: 'csv' },
+        'g-app-confidence': { key: 'ai_confidence_threshold', type: 'number' },
+      },
+    };
+
+    var fields = fieldMap[policyType] || {};
+    Object.keys(fields).forEach(function(elId){
+      var inp = document.getElementById(elId);
+      if (!inp) return;
+      var f = fields[elId];
+      var val = inp.value.trim();
+      if (f.type === 'number') val = parseFloat(val);
+      else if (f.type === 'csv') val = val.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+      else if (f.type === 'json') {
+        try { val = JSON.parse(val); } catch(e) { val = {}; }
+      }
+      policy[f.key] = val;
+    });
+
+    await api('/admin/api/policies/' + policyType, { method: 'PUT', body: policy });
+    msgEl.textContent = 'Saved ✓';
+    msgEl.style.color = 'var(--green)';
+    setTimeout(function(){ msgEl.textContent = ''; }, 3000);
+  } catch(e) {
+    msgEl.textContent = 'Error: ' + e.message;
+    msgEl.style.color = 'var(--red)';
+  }
+}
+
+// ── Load all data ────────────────────────────────────────────
+async function loadAutomations() {
+  try {
+    var [analytics, policies, workflowsData] = await Promise.all([
+      api('/admin/api/analytics'),
+      api('/admin/api/policies'),
+      api('/admin/api/workflows?limit=200'),
+    ]);
+    renderAutomations(analytics, policies, workflowsData.workflows || []);
+  } catch(e) {
+    document.getElementById('automationPanels').innerHTML = '<div class="card"><div class="err-msg">Error loading automations: ' + esc(e.message) + '</div></div>';
+  }
+}
+
+loadAutomations();
+</script>
+
+<style>
+/* Reuse connection tab styles */
+.ch-tabs { display:flex; gap:4px; margin-bottom:24px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:4px; width:fit-content; }
+.ch-tab { display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600; color:var(--muted2); transition:all .15s; user-select:none; border:none; background:transparent; }
+.ch-tab:hover { color:var(--text); background:rgba(255,255,255,0.04); }
+.ch-tab.active { color:var(--text); background:var(--surface); box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+.ch-panel { display:none; }
+.ch-panel.active { display:block; animation:fadeIn .2s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+.ch-header { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:16px; }
+.ch-logo { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ch-name { font-size:18px; font-weight:700; }
+.ch-desc { font-size:13px; color:var(--muted); margin-top:2px; }
+
+.ch-body { display:flex; flex-direction:column; gap:16px; }
+.ch-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; }
+.ch-card h3 { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--muted); margin-bottom:16px; }
+
+.field-row { margin-bottom:12px; }
+.field-row:last-child { margin-bottom:0; }
+.field-row label { display:block; font-size:12px; font-weight:600; color:var(--muted2); margin-bottom:4px; }
+.field-row input, .field-row select, .field-row textarea { width:100%; padding:9px 12px; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:8px; outline:none; font-family:inherit; font-size:13px; transition:border-color .15s; }
+.field-row input:focus, .field-row select:focus, .field-row textarea:focus { border-color:var(--accent); }
+
+.section-toggle { cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:4px 0; }
+.section-toggle:hover h3 { color:var(--text); }
+.section-arrow { font-size:16px; color:var(--muted2); transition:transform .2s; }
+.section-arrow.open { transform:rotate(180deg); }
+
+/* Overview */
+.overview-wf-list { display:flex; flex-direction:column; gap:0; }
+.overview-wf-row { display:flex; align-items:center; gap:16px; padding:14px 0; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+.overview-wf-row:last-child { border-bottom:none; }
+.overview-wf-icon { font-size:24px; width:40px; text-align:center; }
+.overview-wf-info { flex:1; min-width:200px; }
+.overview-wf-name { font-size:14px; font-weight:700; }
+.overview-wf-desc { font-size:11px; color:var(--muted); margin-top:2px; }
+.overview-wf-stats { display:flex; gap:16px; }
+.overview-stat { text-align:center; }
+.overview-stat .n { font-size:18px; font-weight:800; color:var(--text); }
+.overview-stat .l { font-size:9px; color:var(--muted2); text-transform:uppercase; letter-spacing:.3px; }
+
+.save-msg { transition:opacity .3s; }
+
+/* inherit other styles from base.css */
+.wh-events-list { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+.wh-events-list code { font-size:10px; padding:3px 8px; background:var(--surface2); border:1px solid var(--border); border-radius:4px; color:var(--muted); }
+
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { padding:10px 14px; text-align:left; font-weight:600; color:var(--muted2); font-size:11px; text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border); }
+td { padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:rgba(255,255,255,0.02); }
+
+.err-msg { color:var(--red); font-size:13px; margin-top:8px; }
+.muted { color:var(--muted); font-size:12px; }
+.muted2 { color:var(--muted2); font-size:12px; }
+</style>
+{% endblock %}
