@@ -1,174 +1,325 @@
 {% extends "base.html" %}
 {% block body %}
 <style>
-/* ── PayGuard Redesign per plan-payguard-redesign.md ── */
+/* ═════════════════════════════════════════════
+   PayGuard — Design System Tokens
+   ═════════════════════════════════════════════ */
+:root {
+  /* Colors */
+  --pg-bg:        #08080f;
+  --pg-surface:   #10101a;
+  --pg-border:    rgba(255,255,255,0.07);
+  --pg-text:      #e8e8f0;
+  --pg-muted:     #6868a0;
+  --pg-muted2:    #484870;
+  --pg-accent:    #6366f1;
+  --pg-accent-bg: rgba(99,102,241,0.10);
+  --pg-success:   #22c55e;
+  --pg-warning:   #f59e0b;
+  --pg-error:     #ef4444;
+  --pg-info:      #3b82f6;
+
+  /* Typography */
+  --fs-h1:   24px;
+  --fs-h2:   20px;
+  --fs-h3:   16px;
+  --fs-body: 14px;
+  --fs-label:12px;
+  --fs-small:11px;
+
+  /* Spacing */
+  --sp-xs: 4px;
+  --sp-sm: 8px;
+  --sp-md: 16px;
+  --sp-lg: 24px;
+  --sp-xl: 32px;
+
+  /* Radii */
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+}
 
 /* ── Sticky header ── */
 .pg-header {
   position: sticky; top: 0; z-index: 100;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-lg);
   margin-bottom: 0; padding: 0;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
-.pg-header-inner {
-  display: flex; align-items: stretch; gap: 0;
-}
+.pg-header-inner { display: flex; align-items: stretch; gap: 0; }
 .pg-h-left {
-  display: flex; align-items: center; gap: 16px;
-  padding: 14px 20px; flex: 0 0 auto; min-width: 220px;
-  border-right: 1px solid var(--border);
+  display: flex; align-items: center; gap: var(--sp-md);
+  padding: var(--sp-md) 20px; flex: 0 0 auto; min-width: 220px;
+  border-right: 1px solid var(--pg-border);
 }
-.pg-h-logo { width: 48px; height: 48px; border-radius: 12px; display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0; background:rgba(99,102,241,0.12); }
-.pg-h-name { font-size: 18px; font-weight: 800; letter-spacing:-.3px; line-height:1.2; }
-.pg-h-sub { font-size: 11px; color: var(--muted); line-height:1.3; }
-.pg-h-status { display:flex; gap:4px; margin-top:4px; flex-wrap:wrap; }
+.pg-h-logo {
+  width: 48px; height: 48px; border-radius: var(--r-lg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; flex-shrink: 0; background: var(--pg-accent-bg);
+  color: var(--pg-accent);
+}
+.pg-h-name { font-size: var(--fs-h3); font-weight: 800; letter-spacing: -.3px; line-height: 1.2; }
+.pg-h-sub { font-size: var(--fs-label); color: var(--pg-muted); line-height: 1.3; }
+.pg-h-status { display: flex; gap: var(--sp-xs); margin-top: var(--sp-xs); flex-wrap: wrap; }
 
 .pg-h-center {
   flex: 1; display: flex; gap: 0; padding: 10px 12px;
-  border-right: 1px solid var(--border); min-width: 0; align-items:center;
+  border-right: 1px solid var(--pg-border); min-width: 0; align-items: center;
 }
-.pg-h-kpi { flex: 1; text-align: center; padding: 0 4px; min-width: 0; }
-.pg-h-kpi-val { font-size: 18px; font-weight: 800; color:#fff; letter-spacing:-.3px; line-height:1.2; }
-.pg-h-kpi-lbl { font-size: 9px; color:var(--muted2); text-transform:uppercase; letter-spacing:.3px; margin-top:1px; font-weight:600; }
+.pg-h-kpi { flex: 1; text-align: center; padding: 0 var(--sp-xs); min-width: 0; }
+.pg-h-kpi-val { font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -.3px; line-height: 1.2; }
+.pg-h-kpi-lbl { font-size: var(--fs-label); color: var(--pg-muted); text-transform: uppercase; letter-spacing: .3px; margin-top: 2px; font-weight: 600; }
 
-.pg-h-right {
-  display: flex; align-items: center; gap: 8px; padding: 14px 16px; flex-shrink:0;
-}
-.pg-h-btn { padding:8px 18px; border-radius:8px; font-size:13px; font-weight:700; border:none; cursor:pointer; transition:all .15s; white-space:nowrap; }
-.pg-h-btn.primary { background:var(--accent); color:#fff; }
-.pg-h-btn.primary:hover { filter:brightness(1.15); }
-.pg-h-btn.ghost { background:transparent; color:var(--muted2); border:1px solid var(--border); }
-.pg-h-btn.ghost:hover { color:var(--text); border-color:var(--muted2); }
+.pg-h-right { display: flex; align-items: center; gap: var(--sp-sm); padding: var(--sp-md); flex-shrink: 0; }
+.pg-h-btn { padding: 8px 18px; border-radius: var(--r-md); font-size: 13px; font-weight: 700; border: none; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.pg-h-btn.primary { background: var(--pg-accent); color: #fff; }
+.pg-h-btn.primary:hover { filter: brightness(1.15); }
+.pg-h-btn.ghost { background: transparent; color: var(--pg-muted); border: 1px solid var(--pg-border); }
+.pg-h-btn.ghost:hover { color: var(--pg-text); border-color: var(--pg-muted); }
 
 /* ── Operational Status Ribbon ── */
 .pg-status {
-  display:flex; align-items:center; gap:16px;
-  padding:8px 20px 10px; border-top:1px solid var(--border);
-  font-size:11px; flex-wrap:wrap;
+  display: flex; align-items: center; gap: var(--sp-md);
+  padding: var(--sp-sm) 20px 10px; border-top: 1px solid var(--pg-border);
+  font-size: var(--fs-label); flex-wrap: wrap;
 }
-.pg-status-item { display:flex; align-items:center; gap:5px; }
-.pg-status-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-.pg-status-dot.ok { background:var(--green); }
-.pg-status-dot.warn { background:var(--amber); }
-.pg-status-dot.muted { background:var(--muted2); }
+.pg-status-item { display: flex; align-items: center; gap: 5px; }
+.pg-status-ai { color: var(--pg-muted); font-size: var(--fs-small); }
+.pg-status-spacer { flex: 1; }
+.pg-status-time { font-size: var(--fs-small); }
+.pg-status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.pg-status-dot.ok { background: var(--pg-success); }
+.pg-status-dot.warn { background: var(--pg-warning); }
+.pg-status-dot.muted { background: var(--pg-muted); }
+
+/* Section headings */
+.pg-section { margin-bottom: var(--sp-lg); }
+.pg-section h2 {
+  font-size: var(--fs-h2); font-weight: 800; margin: 0 0 var(--sp-sm);
+  letter-spacing: -.4px; color: var(--pg-text);
+}
 
 /* Policy grid */
-.pg-policy-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.pg-policy-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; }
-.pg-policy-card h3 { font-size:13px; font-weight:700; margin:0 0 10px; display:flex; align-items:center; gap:6px; }
-.pg-policy-card h3 .icon { font-size:16px; }
+.pg-policy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-md); }
+.pg-policy-card { background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-lg); padding: var(--sp-md); }
+.pg-policy-card h3 { font-size: var(--fs-body); font-weight: 700; margin: 0 0 var(--sp-sm); display: flex; align-items: center; gap: 6px; }
+.pg-policy-card h3 .icon { font-size: var(--fs-h3); }
 
 /* Cards */
-.pg-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
-.pg-card + .pg-card { margin-top: 10px; }
-.pg-card-title { font-size: 11px; font-weight: 700; letter-spacing:.2px; color: var(--muted); margin-bottom: 10px; display:flex; align-items:center; justify-content:space-between; }
+.pg-card { background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-lg); padding: var(--sp-md); }
+.pg-card + .pg-card { margin-top: var(--sp-sm); }
+.pg-card-title { font-size: var(--fs-label); font-weight: 700; letter-spacing: .2px; color: var(--pg-muted); margin-bottom: var(--sp-sm); display: flex; align-items: center; justify-content: space-between; }
 
 /* Feed */
-.pg-feed { max-height: 300px; overflow-y: auto; }
-.pg-fi { display:flex; gap:8px; padding:5px 0; border-bottom:1px solid var(--border); cursor:pointer; align-items:flex-start; }
-.pg-fi:last-child { border-bottom:none; }
-.pg-fi:hover { background:rgba(255,255,255,0.02); }
-.pg-fi-icon { font-size:13px; flex-shrink:0; margin-top:2px; }
-.pg-fi-body { flex:1; min-width:0; }
-.pg-fi-top { display:flex; justify-content:space-between; align-items:center; }
-.pg-fi-action { font-size:12px; font-weight:500; }
-.pg-fi-amount { font-size:11px; font-weight:700; color:var(--green); flex-shrink:0; }
-.pg-fi-amount.risk { color:var(--amber); }
-.pg-fi-meta { font-size:10px; color:var(--muted2); margin-top:1px; }
-.pg-fi-msg { font-size:11px; color:var(--muted); margin-top:1px; }
+.pg-feed { max-height: 320px; overflow-y: auto; }
+.pg-fi { display: flex; gap: var(--sp-sm); padding: var(--sp-sm) 0; border-bottom: 1px solid var(--pg-border); cursor: pointer; align-items: flex-start; }
+.pg-fi:last-child { border-bottom: none; }
+.pg-fi:hover { background: rgba(255,255,255,0.02); }
+.pg-fi-icon { font-size: var(--fs-body); flex-shrink: 0; margin-top: 2px; }
+.pg-fi-body { flex: 1; min-width: 0; }
+.pg-fi-top { display: flex; justify-content: space-between; align-items: center; }
+.pg-fi-action { font-size: var(--fs-body); font-weight: 500; }
+.pg-fi-amount { font-size: var(--fs-label); font-weight: 700; color: var(--pg-success); flex-shrink: 0; }
+.pg-fi-amount.risk { color: var(--pg-warning); }
+.pg-fi-meta { font-size: var(--fs-small); color: var(--pg-muted); margin-top: 1px; }
+.pg-fi-msg { font-size: var(--fs-label); color: var(--pg-muted); margin-top: 1px; }
+.pg-fi-conf { font-size: var(--fs-small); color: var(--pg-muted); }
+.pg-fi-meta-right { display: flex; gap: var(--sp-xs); align-items: center; }
+.pg-fi-group {
+  font-size: var(--fs-small); font-weight: 700; text-transform: uppercase;
+  letter-spacing: .3px; padding: var(--sp-sm) 0 var(--sp-xs);
+  border-top: 1px solid var(--pg-border); margin-top: var(--sp-xs);
+}
+.pg-fi-group:first-child { border-top: none; margin-top: 0; }
 
 /* Funnel */
-.pg-funnel { display:flex; flex-direction:column; gap:8px; }
-.pg-fun-row { display:flex; align-items:center; gap:10px; }
-.pg-fun-label { width:80px; font-size:10px; font-weight:600; color:var(--muted); flex-shrink:0; text-align:right; }
-.pg-fun-bar-wrap { flex:1; display:flex; align-items:center; gap:8px; }
-.pg-fun-bar-track { flex:1; height:28px; background:var(--bg); border-radius:6px; overflow:hidden; position:relative; }
-.pg-fun-bar-fill { height:100%; border-radius:6px; transition:width .4s ease; display:flex; align-items:center; padding-left:8px; }
-.pg-fun-bar-count { font-size:13px; font-weight:800; color:#fff; position:relative; z-index:1; }
-.pg-fun-pct { font-size:10px; color:var(--muted2); width:35px; text-align:right; }
-.pg-fun-drop { font-size:9px; color:var(--muted2); margin-left:auto; white-space:nowrap; }
-.pg-fun-icon { font-size:14px; }
+.pg-funnel { display: flex; flex-direction: column; gap: var(--sp-sm); }
+.pg-fun-row { display: flex; align-items: center; gap: 10px; }
+.pg-fun-label { width: 80px; font-size: var(--fs-small); font-weight: 600; color: var(--pg-muted); flex-shrink: 0; text-align: right; }
+.pg-fun-bar-wrap { flex: 1; display: flex; align-items: center; gap: var(--sp-sm); }
+.pg-fun-bar-track { flex: 1; height: 28px; background: var(--pg-bg); border-radius: var(--r-sm); overflow: hidden; }
+.pg-fun-bar-fill { height: 100%; border-radius: var(--r-sm); transition: width .4s ease; display: flex; align-items: center; padding-left: var(--sp-sm); }
+.pg-fun-bar-count { font-size: var(--fs-body); font-weight: 800; color: #fff; }
+.pg-fun-pct { font-size: var(--fs-small); color: var(--pg-muted); width: 35px; text-align: right; }
+.pg-fun-drop { font-size: var(--fs-small); color: var(--pg-muted); margin-left: auto; white-space: nowrap; }
+.pg-fun-icon { font-size: var(--fs-h3); }
 
 /* Queue tabs */
-.pg-qt { display:flex; gap:0; margin:0 0 8px; border-bottom:1px solid var(--border); }
-.pg-qt-btn { padding:5px 10px; font-size:11px; font-weight:600; color:var(--muted2); cursor:pointer; border:none; background:transparent; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .15s; display:flex; align-items:center; gap:3px; white-space:nowrap; }
-.pg-qt-btn:hover { color:var(--text); }
-.pg-qt-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
-.pg-qt-badge { font-size:8px; padding:0 4px; border-radius:5px; background:var(--accent); color:#fff; font-weight:700; line-height:1.3; min-width:14px; text-align:center; }
-.pg-q-body { max-height:280px; overflow-y:auto; }
-.pg-q-empty { text-align:center; padding:20px 16px; color:var(--muted2); font-size:11px; }
+.pg-qt { display: flex; gap: 0; margin: 0 0 var(--sp-sm); border-bottom: 1px solid var(--pg-border); }
+.pg-qt-btn { padding: 6px 12px; font-size: var(--fs-label); font-weight: 600; color: var(--pg-muted); cursor: pointer; border: none; background: transparent; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+.pg-qt-btn:hover { color: var(--pg-text); }
+.pg-qt-btn.active { color: var(--pg-accent); border-bottom-color: var(--pg-accent); }
+.pg-qt-badge { font-size: 10px; padding: 0 5px; border-radius: 5px; background: var(--pg-accent); color: #fff; font-weight: 700; line-height: 1.4; min-width: 16px; text-align: center; }
+.pg-q-body { max-height: 300px; overflow-y: auto; }
+.pg-q-empty { text-align: center; padding: var(--sp-lg) var(--sp-md); color: var(--pg-muted); font-size: var(--fs-label); }
 
 /* Config */
-.pg-cfg-sect { border-bottom:1px solid var(--border); }
-.pg-cfg-sect:last-child { border-bottom:none; }
-.pg-cfg-head { display:flex; align-items:center; gap:8px; padding:10px 0; cursor:pointer; user-select:none; }
-.pg-cfg-head:hover { color:var(--text); }
-.pg-cfg-icon { font-size:10px; color:var(--muted2); transition:transform .2s; }
-.pg-cfg-icon.open { transform:rotate(90deg); }
-.pg-cfg-body { padding:0 0 10px 18px; }
-.pg-cfg-field { margin-bottom:8px; }
-.pg-cfg-label { font-size:10px; font-weight:600; color:var(--muted2); margin-bottom:2px; text-transform:uppercase; letter-spacing:.2px; }
-.pg-cfg-desc { font-size:10px; color:var(--muted2); margin-top:1px; }
-.pg-cfg-row { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
-.pg-cfg-seg { display:flex; gap:1px; background:var(--bg); border-radius:6px; padding:2px; }
-.pg-cfg-seg-btn { padding:4px 10px; font-size:11px; font-weight:600; border:none; background:transparent; color:var(--muted2); cursor:pointer; border-radius:4px; transition:all .1s; }
-.pg-cfg-seg-btn.active { background:var(--surface); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.2); }
-.pg-cfg-seg-btn:hover:not(.active) { color:var(--text); }
-.pg-cfg-adv { margin-top:6px; }
-.pg-cfg-adv-toggle { font-size:10px; color:var(--accent); cursor:pointer; border:none; background:none; font-weight:600; padding:2px 0; }
-.pg-cfg-adv-body { display:none; margin-top:4px; padding:8px; background:var(--bg); border-radius:6px; border:1px solid var(--border); }
-.pg-cfg-adv-body.open { display:block; }
+.pg-cfg-sect { border-bottom: 1px solid var(--pg-border); }
+.pg-cfg-sect:last-child { border-bottom: none; }
+.pg-cfg-head { display: flex; align-items: center; gap: var(--sp-sm); padding: 10px 0; cursor: pointer; user-select: none; }
+.pg-cfg-head:hover { color: var(--pg-text); }
+.pg-cfg-icon { font-size: var(--fs-label); color: var(--pg-muted); transition: transform .2s; }
+.pg-cfg-icon.open { transform: rotate(90deg); }
+.pg-cfg-body { padding: 0 0 10px 18px; }
+.pg-cfg-field { margin-bottom: var(--sp-sm); }
+.pg-cfg-label { font-size: var(--fs-small); font-weight: 600; color: var(--pg-muted); margin-bottom: 2px; text-transform: uppercase; letter-spacing: .2px; }
+.pg-cfg-desc { font-size: var(--fs-small); color: var(--pg-muted); margin-top: 1px; }
+.pg-cfg-row { display: flex; gap: var(--sp-xs); align-items: center; flex-wrap: wrap; }
+.pg-cfg-seg { display: flex; gap: 1px; background: var(--pg-bg); border-radius: var(--r-sm); padding: 2px; }
+.pg-cfg-seg-btn { padding: 5px 12px; font-size: var(--fs-label); font-weight: 600; border: none; background: transparent; color: var(--pg-muted); cursor: pointer; border-radius: var(--r-sm); transition: all .1s; }
+.pg-cfg-seg-btn.active { background: var(--pg-surface); color: var(--pg-text); box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.pg-cfg-seg-btn:hover:not(.active) { color: var(--pg-text); }
+.pg-cfg-adv { margin-top: var(--sp-xs); }
+.pg-cfg-adv-toggle { font-size: var(--fs-small); color: var(--pg-accent); cursor: pointer; border: none; background: none; font-weight: 600; padding: 2px 0; }
+.pg-cfg-adv-body { display: none; margin-top: var(--sp-xs); padding: var(--sp-sm); background: var(--pg-bg); border-radius: var(--r-sm); border: 1px solid var(--pg-border); }
+.pg-cfg-adv-body.open { display: block; }
+.pg-cfg-last { margin-bottom: 0; }
+.pg-cfg-msg-preview { font-size: var(--fs-label); color: var(--pg-muted); padding: var(--sp-sm); background: var(--pg-bg); border-radius: var(--r-sm); border: 1px solid var(--pg-border); }
+.pg-cfg-rule-box { background: var(--pg-bg); padding: 10px; border-radius: var(--r-sm); border: 1px solid var(--pg-border); }
+.pg-cfg-rule-row { margin-bottom: var(--sp-xs); }
+.pg-cfg-rule-hint { color: var(--pg-muted); font-size: var(--fs-small); }
+.pg-cfg-select { padding: 4px 8px; background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-sm); color: var(--pg-text); font-size: var(--fs-label); }
+.pg-cfg-input-wide { width: 100%; padding: var(--sp-xs) var(--sp-sm); background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-sm); color: var(--pg-text); font-size: var(--fs-label); }
+.pg-cfg-input-narrow { width: 60px; padding: var(--sp-xs) var(--sp-sm); background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-sm); color: var(--pg-text); font-size: var(--fs-label); }
+.pg-cfg-chk-label { display: flex; align-items: center; gap: 4px; font-size: var(--fs-label); cursor: pointer; margin-bottom: 3px; }
+.pg-cfg-chk-inline { gap: 3px; font-size: var(--fs-label); cursor: pointer; }
+.pg-cfg-profile-btn { flex: 1; text-align: center; padding: var(--sp-sm) var(--sp-xs); line-height: 1.3; border-radius: var(--r-sm); cursor: pointer; }
+.pg-cfg-profile-name { font-weight: 700; font-size: var(--fs-label); }
+.pg-cfg-profile-desc { font-size: var(--fs-small); color: var(--pg-muted); }
+.pg-cfg-toggle-label { font-size: var(--fs-label); }
+.pg-cfg-autosave-hint { font-size: var(--fs-small); color: var(--pg-muted); }
+
+/* Risk card */
+.pg-risk-card { margin-top: var(--sp-md); border-color: var(--pg-warning); }
 
 /* Toggle switch */
-.pg-toggle { width:36px; height:18px; border-radius:9px; background:var(--border); cursor:pointer; position:relative; transition:background .2s; flex-shrink:0; }
-.pg-toggle.on { background:var(--green); }
-.pg-toggle::after { content:''; position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:#fff; transition:transform .2s; }
-.pg-toggle.on::after { transform:translateX(18px); }
+.pg-toggle { width: 36px; height: 18px; border-radius: 9px; background: var(--pg-border); cursor: pointer; position: relative; transition: background .2s; flex-shrink: 0; }
+.pg-toggle.on { background: var(--pg-success); }
+.pg-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform .2s; }
+.pg-toggle.on::after { transform: translateX(18px); }
 
 /* Trust panel */
-.trust-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200; }
-.trust-overlay.show { display:block; }
-.trust-panel { position:fixed; top:0; right:-480px; width:460px; max-width:90vw; height:100vh; background:var(--surface); border-left:1px solid var(--border); z-index:201; transition:right .3s ease; display:flex; flex-direction:column; box-shadow:-4px 0 20px rgba(0,0,0,.3); }
-.trust-panel.show { right:0; }
-.trust-head { display:flex; justify-content:space-between; align-items:center; padding:16px 18px; border-bottom:1px solid var(--border); }
-.trust-head h3 { font-size:14px; font-weight:700; margin:0; }
-.trust-body { flex:1; overflow-y:auto; padding:16px 18px; }
-.trust-info { font-size:12px; color:var(--muted); margin-bottom:12px; }
-.trust-step { display:flex; gap:10px; padding:8px 0; border-left:2px solid var(--border); margin-left:10px; padding-left:14px; position:relative; }
-.trust-step:last-child { border-left-color:transparent; }
-.trust-step-n { position:absolute; left:-11px; width:20px; height:20px; border-radius:50%; background:var(--bg); border:2px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:var(--muted2); }
-.trust-step-body { flex:1; }
-.trust-step-act { font-size:12px; font-weight:600; }
-.trust-step-det { font-size:11px; color:var(--muted); margin-top:1px; }
-.trust-step-tm { font-size:9px; color:var(--muted2); margin-top:1px; }
+.trust-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; }
+.trust-overlay.show { display: block; }
+.trust-panel {
+  position: fixed; top: 0; right: -420px; width: 400px; max-width: 90vw;
+  height: 100vh; background: var(--pg-surface); border-left: 1px solid var(--pg-border);
+  z-index: 201; transition: right .3s ease; display: flex; flex-direction: column;
+  box-shadow: -4px 0 20px rgba(0,0,0,.4);
+}
+.trust-panel.show { right: 0; }
+.trust-head { display: flex; justify-content: space-between; align-items: center; padding: var(--sp-md) 18px; border-bottom: 1px solid var(--pg-border); }
+.trust-head h3 { font-size: var(--fs-h3); font-weight: 700; margin: 0; }
+.trust-body { flex: 1; overflow-y: auto; padding: var(--sp-md) 18px; }
+.trust-info { font-size: var(--fs-body); color: var(--pg-muted); margin-bottom: var(--sp-sm); }
+.trust-info-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-xs); }
+.trust-info-box { font-size: var(--fs-small); color: var(--pg-muted); padding: var(--sp-sm); background: var(--pg-bg); border-radius: var(--r-sm); border: 1px solid var(--pg-border); margin-bottom: var(--sp-xs); }
+.trust-info-row { margin-top: 2px; }
+.trust-policy-ref { font-size: var(--fs-small); color: var(--pg-muted); }
+.trust-cta { margin-top: var(--sp-sm); }
+.trust-cta a { border-color: var(--pg-border); text-decoration: none; font-size: var(--fs-small); }
+.trust-close { border: none; font-size: var(--fs-h3); }
+.sim-modal { max-width: 700px; }
+.sim-close { border: none; font-size: 18px; }
+.sim-desc { margin-bottom: var(--sp-md); }
+.sim-stats { grid-template-columns: 1fr 1fr 1fr 1fr; margin-bottom: var(--sp-md); }
+.sim-help { margin-top: var(--sp-sm); }
+.sim-actions { margin-top: var(--sp-md); }
+.tab-icon { font-size: 16px; line-height: 1; }
+.trust-step { display: flex; gap: 10px; padding: var(--sp-sm) 0; }
+.trust-step-n {
+  width: 24px; height: 24px; border-radius: 50%; background: var(--pg-bg);
+  border: 2px solid var(--pg-border); display: flex; align-items: center;
+  justify-content: center; font-size: var(--fs-small); font-weight: 700;
+  color: var(--pg-muted); flex-shrink: 0; margin-top: 2px;
+}
+.trust-step-body { flex: 1; }
+.trust-step-act { font-size: var(--fs-label); font-weight: 600; }
+.trust-step-det { font-size: var(--fs-body); color: var(--pg-muted); margin-top: 1px; }
+.trust-step-tm { font-size: var(--fs-small); color: var(--pg-muted); margin-top: 1px; }
 
 /* ROI sparkline bar chart */
-.pg-spark { display:flex; align-items:flex-end; gap:2px; height:32px; margin-top:4px; }
-.pg-spark-bar { flex:1; border-radius:2px 2px 0 0; min-height:2px; background:var(--accent); opacity:.6; }
+.pg-spark { display: flex; align-items: flex-end; gap: 2px; height: 40px; margin-top: var(--sp-xs); }
+.pg-spark-bar { flex: 1; border-radius: 2px 2px 0 0; min-height: 2px; background: var(--pg-accent); opacity: .6; }
 
 /* Chart */
-.pg-chart { display:flex; align-items:flex-end; gap:3px; height:50px; padding:2px 0; }
-.pg-chart-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:1px; }
-.pg-chart-bar { width:100%; background:var(--accent); border-radius:2px 2px 0 0; min-height:2px; }
-.pg-chart-lbl { font-size:6px; color:var(--muted2); }
+.pg-chart { display: flex; align-items: flex-end; gap: 3px; height: 60px; padding: var(--sp-xs) 0; }
+.pg-chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 1px; }
+.pg-chart-bar { width: 100%; background: var(--pg-accent); border-radius: 2px 2px 0 0; min-height: 2px; }
+.pg-chart-lbl { font-size: var(--fs-small); color: var(--pg-muted); }
+
+/* ROI grid stats */
+.roi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-sm); margin-bottom: var(--sp-sm); }
+.roi-stat { padding: var(--sp-sm); }
+.roi-val { font-size: var(--fs-h3); font-weight: 800; color: #fff; letter-spacing: -.3px; line-height: 1.2; }
+.roi-sub { font-size: var(--fs-small); color: var(--pg-muted); margin-top: 1px; }
+.roi-chart-wrap { margin-top: var(--sp-xs); }
+.roi-chart-label { font-size: var(--fs-small); font-weight: 600; letter-spacing: .2px; color: var(--pg-muted); margin-bottom: 2px; }
+
+/* Queue table */
+.q-table { font-size: var(--fs-label); width: 100%; border-collapse: collapse; }
+.q-table th { font-size: var(--fs-small); color: var(--pg-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .2px; padding: var(--sp-xs) var(--sp-sm); text-align: left; border-bottom: 1px solid var(--pg-border); }
+.q-table td { padding: var(--sp-xs) var(--sp-sm); border-bottom: 1px solid var(--pg-border); }
+.q-table tr:last-child td { border-bottom: none; }
+.q-table tr { cursor: pointer; transition: background .1s; }
+.q-table tr:hover { background: rgba(255,255,255,0.02); }
+.q-cell-main { font-size: var(--fs-label); font-weight: 500; }
+.q-cell-bold { font-size: var(--fs-label); font-weight: 700; }
+.q-cell-muted { font-size: var(--fs-small); color: var(--pg-muted); }
+.q-cell { font-size: var(--fs-label); }
+.q-cell-reason { font-size: var(--fs-label); max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+.q-cell-time { font-size: var(--fs-small); color: var(--pg-muted); }
+.q-actions { display: flex; gap: 2px; }
 
 /* Buttons within table rows */
-.pg-op-btn { padding:3px 8px; font-size:10px; font-weight:600; border:none; border-radius:4px; cursor:pointer; transition:all .1s; }
-.pg-op-btn:hover { filter:brightness(1.2); }
+.pg-op-btn { padding: 4px 10px; font-size: var(--fs-label); font-weight: 600; border: none; border-radius: var(--r-sm); cursor: pointer; transition: all .1s; }
+.pg-op-btn:hover { filter: brightness(1.2); }
+.pg-op-btn.approve { background: var(--pg-success); color: #fff; }
+.pg-op-btn.reject { background: var(--pg-error); color: #fff; }
+.pg-op-btn.resolve { background: var(--pg-success); color: #fff; }
 
-/* Empty states */
-.pg-empty { text-align:center; padding:32px 16px; color:var(--muted2); font-size:13px; }
-.pg-empty.big { font-size:16px; padding:48px; }
+/* Empty states with icon */
+.pg-empty { text-align: center; padding: var(--sp-xl) var(--sp-md); color: var(--pg-muted); font-size: var(--fs-body); }
+.pg-empty .pg-empty-icon { font-size: 28px; margin-bottom: var(--sp-sm); opacity: .5; }
+.pg-empty.big { font-size: var(--fs-h3); padding: 48px; }
+
+/* Skeleton loading */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.pg-skeleton {
+  background: linear-gradient(90deg, var(--pg-border) 25%, rgba(255,255,255,0.04) 50%, var(--pg-border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--r-sm);
+}
 
 /* Responsive */
+@media (max-width:1024px) {
+  .trust-panel { width: 360px; }
+  .pg-policy-grid { grid-template-columns: 1fr 1fr; }
+}
 @media (max-width:900px) {
-  .pg-header-inner { flex-wrap:wrap; }
-  .pg-h-left { min-width:160px; padding:10px 14px; border-right:none; border-bottom:1px solid var(--border); width:100%; }
-  .pg-h-center { flex-wrap:wrap; gap:4px; padding:6px 10px; border-right:none; }
-  .pg-h-kpi { min-width:50px; }
-  .pg-h-kpi-val { font-size:14px; }
-  .pg-h-right { padding:8px 12px; }
-  .pg-policy-grid { grid-template-columns:1fr; }
+  .pg-header-inner { flex-wrap: wrap; }
+  .pg-h-left { min-width: 160px; padding: 10px 14px; border-right: none; border-bottom: 1px solid var(--pg-border); width: 100%; }
+  .pg-h-center { flex-wrap: wrap; gap: var(--sp-xs); padding: var(--sp-xs) 10px; border-right: none; }
+  .pg-h-kpi { min-width: 50px; }
+  .pg-h-kpi-val { font-size: 18px; }
+  .pg-h-right { padding: var(--sp-sm) 12px; }
+  .trust-panel { width: 100%; max-width: 100vw; }
+  .pg-policy-grid { grid-template-columns: 1fr; }
+}
+@media (max-width:600px) {
+  .pg-h-left { flex-direction: column; align-items: flex-start; gap: var(--sp-xs); }
+  .pg-h-center { gap: var(--sp-xs); }
+  .pg-h-kpi { min-width: 40%; }
+  .pg-h-kpi-val { font-size: 16px; }
+  .pg-h-right { width: 100%; justify-content: flex-end; }
+  .pg-policy-grid { grid-template-columns: 1fr; }
+  .pg-fun-row { flex-wrap: wrap; }
+  .pg-fun-label { width: 100%; text-align: left; font-size: var(--fs-label); }
 }
 </style>
 
@@ -176,36 +327,36 @@
 <p class="page-desc">Intelligent agents that automate customer lifecycle workflows. Each agent handles a specific scenario end-to-end.</p>
 
 <div class="ch-tabs" id="agentTabs">
-  <button class="ch-tab active" data-tab="payguard"><span style="font-size:16px;line-height:1">🛡️</span> PayGuard</button>
-  <button class="ch-tab" data-tab="retain"><span style="font-size:16px;line-height:1">⚓</span> Retain</button>
-  <button class="ch-tab" data-tab="trace"><span style="font-size:16px;line-height:1">🧭</span> Trace</button>
+  <button class="ch-tab active" data-tab="payguard"><span class="tab-icon">🛡️</span> PayGuard</button>
+  <button class="ch-tab" data-tab="retain"><span class="tab-icon">⚓</span> Retain</button>
+  <button class="ch-tab" data-tab="trace"><span class="tab-icon">🧭</span> Trace</button>
   <button class="ch-tab" data-tab="settings"><svg class="ch-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</button>
 </div>
 
 <!-- Trust Panel slide-out -->
 <div class="trust-overlay" id="trustOverlay" onclick="hideTrust()"></div>
 <div class="trust-panel" id="trustPanel">
-  <div class="trust-head"><h3>Why PayGuard Took This Action</h3><button class="ghost sm" onclick="hideTrust()" style="border:none;font-size:16px">✕</button></div>
+  <div class="trust-head"><h3>Why PayGuard Took This Action</h3><button class="ghost sm trust-close" onclick="hideTrust()">✕</button></div>
   <div class="trust-body" id="trustBody"><div class="pg-empty">Select a workflow row or feed event to see the decision chain.</div></div>
 </div>
 
 <!-- Simulation modal -->
 <div class="modal-overlay" id="simModal">
-  <div class="modal" style="max-width:700px">
-    <div class="modal-header"><h2>🧪 Simulation: Preview PayGuard Before Enabling</h2><button class="ghost sm" onclick="hideSim()" style="border:none;font-size:18px">✕</button></div>
+  <div class="modal sim-modal">
+    <div class="modal-header"><h2>🧪 Simulation: Preview PayGuard Before Enabling</h2><button class="ghost sm sim-close" onclick="hideSim()">✕</button></div>
     <div id="simBody">
-      <p class="muted" style="margin-bottom:16px">Based on your last 30 days of payment failures:</p>
-      <div class="stats" style="grid-template-columns:1fr 1fr 1fr 1fr;margin-bottom:16px">
+      <p class="muted sim-desc">Based on your last 30 days of payment failures:</p>
+      <div class="stats sim-stats">
         <div class="stat"><div class="n" id="simRev">—</div><div class="l">Recovered revenue</div><div class="sub" id="simRevComp"></div></div>
         <div class="stat"><div class="n" id="simAuto">—</div><div class="l">Automation rate</div><div class="sub">vs 0% currently</div></div>
         <div class="stat"><div class="n" id="simEsc">—</div><div class="l">Escalations</div><div class="sub" id="simEscNote"></div></div>
         <div class="stat"><div class="n" id="simHrs">—</div><div class="l">Support hours saved</div></div>
       </div>
-      <div class="help" style="margin-top:12px">
+      <div class="help sim-help">
         <h3>Confidence</h3>
         <p>Based on <strong id="simSample">0</strong> historical payment failures analyzed. Simulation accuracy: <strong id="simAcc">±8%</strong></p>
       </div>
-      <div class="ch-actions" style="margin-top:16px">
+      <div class="ch-actions sim-actions">
         <button class="ghost" onclick="hideSim()">Adjust Policy First</button>
         <button class="accent" id="simEnableBtn" onclick="doEnablePayGuard()">Enable PayGuard</button>
       </div>
@@ -269,11 +420,11 @@ function renderPayGuard(agent, analytics, policies, ew, workflows) {
   var h = '<div class="pg-header" id="pgHead">' +
     '<div class="pg-header-inner">' +
       '<div class="pg-h-left">' +
-        '<div class="pg-h-logo" style="color:#6366f1">🛡️</div>' +
+        '<div class="pg-h-logo">🛡️</div>' +
         '<div><div class="pg-h-name">PayGuard</div><div class="pg-h-sub">Failed Payment Recovery</div>' +
         '<div class="pg-h-status">' +
-          '<span class="pill ' + (enabled?'ok':'muted') + '" id="pgStatPill" style="font-size:9px">' + (enabled?'● Active':'Paused') + '</span>' +
-          '<span class="pill cyan" id="pgAutoPill" style="font-size:9px">Autonomous</span>' +
+          '<span class="pill ' + (enabled?'ok':'muted') + '" id="pgStatPill">' + (enabled?'● Active':'Paused') + '</span>' +
+          '<span class="pill cyan" id="pgAutoPill">Autonomous</span>' +
         '</div></div>' +
       '</div>' +
       '<div class="pg-h-center" id="kpiStrip">' +
@@ -292,27 +443,12 @@ function renderPayGuard(agent, analytics, policies, ew, workflows) {
       '<span class="pg-status-item"><span class="pg-status-dot ok"></span>Running normally</span>' +
       '<span class="pg-status-item" id="pgStatusReview"><span class="pg-status-dot warn"></span>0 awaiting review</span>' +
       '<span class="pg-status-item" id="pgStatusCritical"><span class="pg-status-dot muted"></span>No critical issues</span>' +
-      '<span style="flex:1"></span>' +
-      '<span class="pg-status-item" style="color:var(--muted2);font-size:10px" id="pgStatusAI">🤖 Monitoring active</span>' +
+      '<span class="pg-status-spacer"></span>' +
+      '<span class="pg-status-item pg-status-ai" id="pgStatusAI">🤖 Monitoring active</span>' +
     '</div>' +
   '</div>';
 
-  var feedCard = '<div class="pg-card">' +
-    '<div class="pg-card-title"><span style="color:var(--green)">●</span> Workflow Activity</div>' +
-    '<div id="pgFeed" class="pg-feed"><div class="pg-empty">Waiting for payment failures... Your store is running smoothly.</div></div>' +
-  '</div>';
-
-  var boundsCard = '<div class="pg-card" style="font-size:11px">' +
-    '<div class="pg-card-title" style="margin-bottom:6px">🔒 Autonomy Boundaries</div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
-      '<div style="padding:8px;background:var(--bg);border-radius:6px;border:1px solid var(--border)"><div style="font-size:9px;font-weight:700;color:var(--green);margin-bottom:4px">✓ PayGuard can</div>' +
-        '<div style="font-size:10px;color:var(--muted);line-height:1.6">• Retry failed payments<br>• Send customer outreach<br>• Schedule smart retries<br>• Classify failure types</div></div>' +
-      '<div style="padding:8px;background:var(--bg);border-radius:6px;border:1px solid var(--border)"><div style="font-size:9px;font-weight:700;color:var(--amber);margin-bottom:4px">⚠ Requires approval</div>' +
-        '<div style="font-size:10px;color:var(--muted);line-height:1.6">• Discounts &gt;20%<br>• Recoveries &gt;$500<br>• Angry customers<br>• Fraud-risk signals</div></div>' +
-    '</div></div>';
-
-  var queueCard = '<div class="pg-card">' +
-    '<div class="pg-card-title" style="margin-bottom:0">📋 Queue &amp; Decisions</div>' +
+  var queueCard = '<div class="pg-section"><h2>📋 Queue &amp; Decisions</h2><div class="pg-card">' +
     '<div class="pg-qt" id="queueTabs">' +
       '<button class="pg-qt-btn active" onclick="switchQueue(\'active\',this)">All</button>' +
       '<button class="pg-qt-btn" onclick="switchQueue(\'active\',this)">Active <span class="pg-qt-badge" id="qBadgeActive">' + active + '</span></button>' +
@@ -320,26 +456,29 @@ function renderPayGuard(agent, analytics, policies, ew, workflows) {
       '<button class="pg-qt-btn" onclick="switchQueue(\'escalations\',this)">Escalated <span class="pg-qt-badge" id="qBadgeEsc" style="display:none">0</span></button>' +
       '<button class="pg-qt-btn" onclick="switchQueue(\'log\',this)">History</button>' +
     '</div><div class="pg-q-body" id="queueBody">' + renderQueueTable(wfs.slice(0,5), 'active') + '</div>' +
-  '</div>';
+  '</div></div>';
 
-  var funnelCard = '<div class="pg-card">' +
-    '<div class="pg-card-title">📊 Recovery Pipeline</div>' +
-    '<div id="pgFunnel" class="pg-funnel"><div class="pg-empty">No workflow data yet.</div></div>' +
-  '</div>';
+  var funnelCard = '<div class="pg-section"><h2>📊 Recovery Pipeline</h2><div class="pg-card">' +
+    '<div id="pgFunnel" class="pg-funnel"><div class="pg-empty"><div class="pg-empty-icon">📈</div>No workflow data yet. Run your first transaction to see conversion data.</div></div>' +
+  '</div></div>';
 
-  var configHtml = '<h2 style="font-size:15px;font-weight:700;margin:20px 0 10px">Policies</h2>' +
+  var feedCard = '<div class="pg-section"><h2>🔔 Workflow Activity</h2><div class="pg-card">' +
+    '<div id="pgFeed" class="pg-feed"><div class="pg-empty"><div class="pg-empty-icon">✅</div>All systems operational. No recent events.</div></div>' +
+  '</div></div>';
+
+  var roiHtml = '<div class="pg-section"><h2>💰 Revenue &amp; Impact</h2><div class="pg-card">' +
+    '<div id="roiBody"><div class="pg-empty"><div class="pg-empty-icon">📊</div>Loading...</div></div></div></div>';
+
+  var configHtml = '<div class="pg-section"><h2>⚙️ Policies</h2>' +
     '<div class="pg-policy-grid" id="policyGrid">' +
       renderConfig() +
     '</div>' +
-    '<div class="pg-card" id="riskCard" style="margin-top:12px;border-color:var(--amber)">' +
+    '<div class="pg-card pg-risk-card" id="riskCard">' +
       '<div class="pg-card-title">🛡️ Risk Controls</div><div id="riskBody">' + renderRiskControls() + '</div>' +
-    '</div>';
-
-  var roiHtml = '<h2 style="font-size:15px;font-weight:700;margin:20px 0 10px">Revenue &amp; Impact</h2>' +
-    '<div class="pg-card"><div id="roiBody"><div class="pg-empty">Loading...</div></div></div>';
+    '</div></div>';
 
   return '<div class="ch-panel active" id="panel-payguard">' + h +
-    feedCard + boundsCard + queueCard + funnelCard + roiHtml + configHtml + '</div>';
+    queueCard + funnelCard + feedCard + roiHtml + configHtml + '</div>';
 }
 
 function kpiCell(id, val, lbl) {
@@ -370,7 +509,7 @@ async function loadFeed() {
 
 function renderFeed(events) {
   var el = document.getElementById('pgFeed'); if (!el) return;
-  if (!events.length) { el.innerHTML = '<div class="pg-empty">Waiting for payment failures... Your store is running smoothly.</div>'; return; }
+  if (!events.length) { el.innerHTML = '<div class="pg-empty"><div class="pg-empty-icon">✅</div>All systems operational. No recent events.</div>'; return; }
   var groups = { recoveries:[], waiting:[], escalations:[], review:[] };
   events.slice(0,30).forEach(function(e){
     if (e.state === 'RECOVERED' || e.state === 'RETAINED' || e.state === 'RESOLVED') groups.recoveries.push(e);
@@ -380,37 +519,37 @@ function renderFeed(events) {
   });
   var sections = [];
   if (groups.recoveries.length) sections.push(
-    '<div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.3px;padding:8px 0 4px">Recoveries</div>' +
+    '<div class="pg-fi-group" style="color:var(--pg-success)">Recoveries</div>' +
     groups.recoveries.map(feedItem).join('')
   );
   if (groups.waiting.length) sections.push(
-    '<div style="font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.3px;padding:8px 0 4px;border-top:1px solid var(--border);margin-top:4px">Waiting</div>' +
+    '<div class="pg-fi-group" style="color:var(--pg-warning)">Waiting</div>' +
     groups.waiting.map(feedItem).join('')
   );
   if (groups.escalations.length) sections.push(
-    '<div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.3px;padding:8px 0 4px;border-top:1px solid var(--border);margin-top:4px">Escalations</div>' +
+    '<div class="pg-fi-group" style="color:var(--pg-error)">Escalations</div>' +
     groups.escalations.map(feedItem).join('')
   );
   if (groups.review.length) sections.push(
-    '<div style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.3px;padding:8px 0 4px;border-top:1px solid var(--border);margin-top:4px">Human Review</div>' +
+    '<div class="pg-fi-group" style="color:var(--pg-accent)">Human Review</div>' +
     groups.review.map(feedItem).join('')
   );
-  el.innerHTML = sections.join('') || '<div class="pg-empty">No recent activity.</div>';
+  el.innerHTML = sections.join('') || '<div class="pg-empty"><div class="pg-empty-icon">✅</div>No recent activity.</div>';
 }
 
 function feedItem(e) {
   var icon = e.icon || '🔄';
-  var sc = '';
-  if (e.state === 'RECOVERED' || e.state === 'RETAINED' || e.state === 'RESOLVED') sc = 'color:var(--green)';
-  else if (e.type === 'escalation') sc = 'color:var(--red)';
-  else if (e.state === 'RETRYING' || e.state === 'WAITING_CUSTOMER') sc = 'color:var(--amber)';
-  var amountHtml = e.amount ? '<span style="font-weight:700;font-size:11px;' + sc + '">$' + Number(e.amount).toFixed(2) + '</span>' : '';
-  var confHtml = e.confidence != null ? '<span style="font-size:9px;color:var(--muted2)">' + e.confidence + '% conf</span>' : '';
+  var sc = 'color:var(--pg-muted)';
+  if (e.state === 'RECOVERED' || e.state === 'RETAINED' || e.state === 'RESOLVED') sc = 'color:var(--pg-success)';
+  else if (e.type === 'escalation') sc = 'color:var(--pg-error)';
+  else if (e.state === 'RETRYING' || e.state === 'WAITING_CUSTOMER') sc = 'color:var(--pg-warning)';
+  var amountHtml = e.amount ? '<span class="pg-fi-amount" style="' + sc + '">$' + Number(e.amount).toFixed(2) + '</span>' : '';
+  var confHtml = e.confidence != null ? '<span class="pg-fi-conf">' + e.confidence + '% conf</span>' : '';
   var time = e.created_at ? timeAgo(e.created_at) : '';
-  var msg = e.reason ? '<div style="font-size:10px;color:var(--muted);margin-top:1px">' + esc(e.reason.slice(0,60)) + '</div>' : '';
+  var msg = e.reason ? '<div class="pg-fi-msg">' + esc(e.reason.slice(0,60)) + '</div>' : '';
   return '<div class="pg-fi" onclick="showTrust(\'' + esc(e.workflow_id||'') + '\')">' +
     '<span class="pg-fi-icon">' + icon + '</span>' +
-    '<div class="pg-fi-body"><div class="pg-fi-top"><span class="pg-fi-action">' + esc(e.action||'') + '</span><div style="display:flex;gap:6px;align-items:center">' + amountHtml + confHtml + '</div></div>' +
+    '<div class="pg-fi-body"><div class="pg-fi-top"><span class="pg-fi-action">' + esc(e.action||'') + '</span><div class="pg-fi-meta-right">' + amountHtml + confHtml + '</div></div>' +
     '<div class="pg-fi-meta">' + esc((e.customer_id||'').slice(0,14)) + ' · ' + time + '</div>' + msg +
   '</div></div>';
 }
@@ -425,28 +564,27 @@ async function loadFunnel() {
 
 function renderFunnel(stages, dropOffs) {
   var el = document.getElementById('pgFunnel'); if (!el) return;
-  if (!stages.length) { el.innerHTML = '<div class="pg-empty">No workflow data yet.</div>'; return; }
+  if (!stages.length) { el.innerHTML = '<div class="pg-empty"><div class="pg-empty-icon">📈</div>No workflow data yet. Run your first transaction to see conversion data.</div>'; return; }
   var maxC = Math.max.apply(null, stages.map(function(s){ return s.count; }), 1);
-  var avgAmt = 29.99;
   el.innerHTML = stages.map(function(s, i){
     var pct = Math.round((s.count / maxC) * 100);
     var isLast = i === stages.length - 1;
     var isDrop = s.state === 'Failed' || s.state === 'Escalated' || s.state === 'Expired';
-    var bg = isLast ? '#10b981' : isDrop ? '#ef4444' : i === 0 ? '#6366f1' : '#f59e0b';
-    var monetary = '$' + fmtNum(s.count * avgAmt);
-    var conv = i > 0 && stages[i-1].count > 0 ? Math.round((s.count / stages[i-1].count) * 100) + '%' : '100%';
+    var bg;
+    if (isLast) bg = 'var(--pg-success)';
+    else if (isDrop) bg = 'var(--pg-error)';
+    else if (i === 0) bg = 'var(--pg-accent)';
+    else bg = 'var(--pg-warning)';
     var drop = dropOffs[i-1];
-    var dropHtml = (drop && i > 0 && drop.drop > 0) ? '<span style="font-size:9px;color:var(--muted2);margin-left:4px">▼ ' + drop.drop + ' ' + (drop.reason||'') + '</span>' : '';
-    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
-      '<div style="width:90px;font-size:10px;font-weight:600;color:var(--muted);text-align:right;flex-shrink:0">' + s.label.split(' ').slice(0,2).join(' ') + '</div>' +
-      '<div style="flex:1;display:flex;align-items:center;gap:6px">' +
-        '<div style="height:24px;background:var(--bg);border-radius:4px;overflow:hidden;flex:1;position:relative">' +
-          '<div style="height:100%;width:' + pct + '%;background:' + bg + ';border-radius:4px;display:flex;align-items:center;padding-left:6px;transition:width .4s">' +
-            '<span style="font-size:12px;font-weight:700;color:#fff;position:relative;z-index:1">' + s.count + '</span>' +
+    var dropHtml = (drop && i > 0 && drop.drop > 0) ? '<span class="pg-fun-drop">↓ ' + drop.drop + ' ' + (drop.reason||'') + '</span>' : '';
+    return '<div class="pg-fun-row">' +
+      '<div class="pg-fun-label">' + s.label.split(' ').slice(0,2).join(' ') + '</div>' +
+      '<div class="pg-fun-bar-wrap">' +
+        '<div class="pg-fun-bar-track">' +
+          '<div class="pg-fun-bar-fill" style="width:' + pct + '%;background:' + bg + '">' +
+            '<span class="pg-fun-bar-count">' + s.count + '</span>' +
           '</div>' +
         '</div>' +
-        '<span style="font-size:10px;color:var(--muted2);width:40px;text-align:right">' + conv + '</span>' +
-        '<span style="font-size:10px;color:var(--muted2);width:60px;text-align:right;font-weight:600">' + monetary + '</span>' +
         dropHtml +
       '</div>' +
     '</div>';
@@ -465,35 +603,35 @@ function renderQueueTable(items, type) {
       var sc = ['RECOVERED','RETAINED','RESOLVED'].includes(item.current_state) ? 'ok' : ['FAILED','CANCELLED'].includes(item.current_state) ? 'err' : item.current_state==='ESCALATED'?'err': item.current_state==='WAITING_CUSTOMER'||item.current_state==='RETRYING'?'warn':'muted';
       var rl = item.risk_level === 'high' ? 'err' : item.risk_level === 'medium' ? 'warn' : 'muted';
       var next = item.current_state === 'OUTREACH_SENT' ? 'Awaiting response' : item.current_state === 'RETRY_SCHEDULED' ? 'Retry pending' : item.current_state === 'WAITING_CUSTOMER' ? 'Customer action' : item.current_state === 'CLASSIFYING_FAILURE' ? 'Classifying...' : item.current_state === 'DETECTED' ? 'Starting...' : item.current_state === 'VERIFYING_RESULT' ? 'Verifying...' : item.current_state === 'PAUSED_RECONCILIATION' ? 'Review needed' : item.current_state || item.status;
-      return '<tr style="cursor:pointer" onclick="showTrust(\'' + esc(item.id||'') + '\')">' +
-        '<td style="font-size:12px;font-weight:500">' + esc((item.customer_id||'').slice(0,12)) + '</td>' +
-        '<td style="font-size:12px;font-weight:700">' + (item.amount_due ? '$'+Number(item.amount_due).toFixed(2) : '-') + '</td>' +
-        '<td><span class="pill ' + sc + '" style="font-size:8px">' + esc(item.current_state||'') + '</span></td>' +
-        '<td><span class="pill ' + rl + '" style="font-size:8px">' + esc(item.risk_level||'med') + '</span></td>' +
-        '<td style="font-size:11px;color:var(--muted)">' + next + '</td></tr>';
+      return '<tr onclick="showTrust(\'' + esc(item.id||'') + '\')">' +
+        '<td class="q-cell-main">' + esc((item.customer_id||'').slice(0,12)) + '</td>' +
+        '<td class="q-cell-bold">' + (item.amount_due ? '$'+Number(item.amount_due).toFixed(2) : '-') + '</td>' +
+        '<td><span class="pill ' + sc + '">' + esc(item.current_state||'') + '</span></td>' +
+        '<td><span class="pill ' + rl + '">' + esc(item.risk_level||'med') + '</span></td>' +
+        '<td class="q-cell-muted">' + next + '</td></tr>';
     }
     if (type === 'approvals') {
       var rl = item.risk_level === 'high' ? 'err' : item.risk_level === 'medium' ? 'warn' : 'muted';
       return '<tr><td><code>' + esc((item.id||'').slice(0,8)) + '</code></td>' +
-        '<td style="font-size:11px">' + esc(item.action_type||'') + '</td>' +
-        '<td><span class="pill ' + rl + '" style="font-size:8px">' + esc(item.risk_level||'') + '</span></td>' +
-        '<td style="font-size:11px">' + (item.ai_confidence!=null ? item.ai_confidence+'%' : '-') + '</td>' +
-        '<td><div class="flex" style="gap:2px"><button class="pg-op-btn" style="background:var(--green);color:#fff" onclick="queueApprove(\'' + esc(item.id) + '\')">✓</button><button class="pg-op-btn" style="background:var(--red);color:#fff" onclick="queueReject(\'' + esc(item.id) + '\')">✕</button></div></td></tr>';
+        '<td class="q-cell">' + esc(item.action_type||'') + '</td>' +
+        '<td><span class="pill ' + rl + '">' + esc(item.risk_level||'') + '</span></td>' +
+        '<td class="q-cell">' + (item.ai_confidence!=null ? item.ai_confidence+'%' : '-') + '</td>' +
+        '<td><div class="q-actions"><button class="pg-op-btn approve" onclick="queueApprove(\'' + esc(item.id) + '\')">✓</button><button class="pg-op-btn reject" onclick="queueReject(\'' + esc(item.id) + '\')">✕</button></div></td></tr>';
     }
     if (type === 'escalations') {
       var sv = item.severity === 'critical' ? 'err' : item.severity === 'high' ? 'warn' : 'muted';
       return '<tr><td><code>' + esc((item.id||'').slice(0,8)) + '</code></td>' +
-        '<td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis">' + esc(item.reason||'') + '</td>' +
-        '<td><span class="pill ' + sv + '" style="font-size:8px">' + esc(item.severity||'') + '</span></td>' +
-        '<td><button class="pg-op-btn" style="background:var(--green);color:#fff" onclick="queueResolve(\'' + esc(item.id) + '\')">✓ Resolve</button></td></tr>';
+        '<td class="q-cell-reason">' + esc(item.reason||'') + '</td>' +
+        '<td><span class="pill ' + sv + '">' + esc(item.severity||'') + '</span></td>' +
+        '<td><button class="pg-op-btn resolve" onclick="queueResolve(\'' + esc(item.id) + '\')">✓ Resolve</button></td></tr>';
     }
     if (type === 'log') {
-      return '<tr><td style="font-size:10px;color:var(--muted2)">' + (item.created_at?new Date(item.created_at).toLocaleString():'-') + '</td>' +
-        '<td style="font-size:11px">' + esc(item.event_type||'') + '</td><td><code>' + esc((item.entity_id||'').slice(0,8)) + '</code></td></tr>';
+      return '<tr><td class="q-cell-time">' + (item.created_at?new Date(item.created_at).toLocaleString():'-') + '</td>' +
+        '<td class="q-cell">' + esc(item.event_type||'') + '</td><td><code>' + esc((item.entity_id||'').slice(0,8)) + '</code></td></tr>';
     }
     return '';
   }).join('');
-  return '<table style="font-size:11px"><thead>' + (heads[type]||'') + '</thead><tbody>' + rows + '</tbody></table>';
+  return '<table class="q-table"><thead>' + (heads[type]||'') + '</thead><tbody>' + rows + '</tbody></table>';
 }
 
 async function switchQueue(tab, btn) {
@@ -545,42 +683,42 @@ function renderConfig() {
         return '<div class="pg-cfg-field"><div class="pg-cfg-label">Profile</div><div class="pg-cfg-row">' +
           ['Conservative','Balanced','Aggressive'].map(function(p,i){
             var descs = ['40% recovery, low pressure','62% recovery, moderate','78% recovery, higher risk'];
-            return '<div class="pg-cfg-seg-btn ' + (i===1?'active':'') + '" data-v="' + p.toLowerCase() + '" style="flex:1;text-align:center;padding:8px 6px;font-size:10px;line-height:1.3;border-radius:6px;cursor:pointer">' +
-              '<div style="font-weight:700;font-size:11px">' + p + '</div><div style="font-size:9px;color:var(--muted2)">' + descs[i] + '</div></div>';
+            return '<div class="pg-cfg-seg-btn pg-cfg-profile-btn ' + (i===1?'active':'') + '" data-v="' + p.toLowerCase() + '">' +
+              '<div class="pg-cfg-profile-name">' + p + '</div><div class="pg-cfg-profile-desc">' + descs[i] + '</div></div>';
           }).join('') + '</div></div>' +
           '<div class="pg-cfg-field"><div class="pg-cfg-label">Recovery window</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-window">' +
             '<button class="pg-cfg-seg-btn active" data-v="14">14 days</button>' +
             '<button class="pg-cfg-seg-btn" data-v="30">30 days</button>' +
             '<button class="pg-cfg-seg-btn" data-v="7">7 days</button>' +
           '</div></div></div>' +
-          '<div class="pg-cfg-field"><div class="pg-cfg-row"><div class="pg-toggle on" id="tgl-smart"></div><span style="font-size:11px">AI adapts timing based on success</span></div></div>' +
+          '<div class="pg-cfg-field"><div class="pg-cfg-row"><div class="pg-toggle on" id="tgl-smart"></div><span class="pg-cfg-toggle-label">AI adapts timing based on success</span></div></div>' +
           '<div class="pg-cfg-adv"><button class="pg-cfg-adv-toggle" onclick="toggleAdv(this)">▶ Advanced</button>' +
-          '<div class="pg-cfg-adv-body"><input type="text" class="pg-autosave" data-key="retry_intervals" value="5min, 1h, 24h" style="width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px">' +
-          ' <input type="number" class="pg-autosave" data-key="max_retries" value="3" style="width:60px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"> max attempts' +
-          '</div></div><span class="muted2" style="font-size:9px">⚡ Autosaves after 1.5s</span>';
+          '<div class="pg-cfg-adv-body"><input type="text" class="pg-autosave pg-cfg-input-wide" data-key="retry_intervals" value="5min, 1h, 24h">' +
+          ' <input type="number" class="pg-autosave pg-cfg-input-narrow" data-key="max_retries" value="3"> max attempts' +
+          '</div></div><span class="pg-cfg-autosave-hint">⚡ Autosaves after 1.5s</span>';
       }
     },
     { id:'communication', icon:'✉️', label:'Customer Communication',
       body: function(){
         return '<div class="pg-cfg-field"><div class="pg-cfg-label">Channels</div><div class="pg-cfg-row">' +
-          ['email','widget','sms'].map(function(c,i){ return '<label style="display:flex;align-items:center;gap:3px;font-size:11px;cursor:pointer"><input type="checkbox" ' + (i<2?'checked':'') + '> ' + c + '</label>'; }).join('') +
+          ['email','widget','sms'].map(function(c,i){ return '<label class="pg-cfg-chk-label pg-cfg-chk-inline"><input type="checkbox" ' + (i<2?'checked':'') + '> ' + c + '</label>'; }).join('') +
         '</div></div>' +
         '<div class="pg-cfg-field"><div class="pg-cfg-label">Tone</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-tone">' +
           '<button class="pg-cfg-seg-btn" data-v="strict">Strict</button>' +
           '<button class="pg-cfg-seg-btn active" data-v="professional">Professional</button>' +
           '<button class="pg-cfg-seg-btn" data-v="friendly">Friendly</button>' +
         '</div></div></div>' +
-        '<div class="pg-cfg-field" style="margin-bottom:0"><div class="pg-cfg-label">Example message</div><div style="font-size:11px;color:var(--muted);padding:8px;background:var(--bg);border-radius:6px;border:1px solid var(--border)">"Hi {{name}}, your payment of ${{amount}} didn\'t go through. Update your card to keep your subscription active."</div></div>';
+        '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Example message</div><div class="pg-cfg-msg-preview">"Hi {{name}}, your payment of ${{amount}} didn\'t go through. Update your card to keep your subscription active."</div></div>';
       }
     },
     { id:'approval_rules', icon:'✅', label:'Approval Rules',
       body: function(){
         return '<div class="pg-cfg-field"><div class="pg-cfg-label">Require approval when</div>' +
-          '<div style="font-size:11px;background:var(--bg);padding:10px;border-radius:6px;border:1px solid var(--border)">' +
-            '<div style="margin-bottom:6px"><select class="pg-autosave" data-key="approval_condition" style="padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px">' +
+          '<div class="pg-cfg-rule-box">' +
+            '<div class="pg-cfg-rule-row"><select class="pg-autosave pg-cfg-select" data-key="approval_condition">' +
               '<option value="amount">Amount &gt;</option><option value="risk">Risk level</option><option value="sentiment">Customer sentiment</option></select>' +
-            ' <input type="number" class="pg-autosave" data-key="approval_threshold" value="500" style="width:70px;padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"></div>' +
-            '<div style="color:var(--muted2);font-size:10px">OR when customer sentiment = negative</div>' +
+            ' <input type="number" class="pg-autosave pg-cfg-input-narrow" data-key="approval_threshold" value="500"></div>' +
+            '<div class="pg-cfg-rule-hint">OR when customer sentiment = negative</div>' +
           '</div></div>';
       }
     },
@@ -591,8 +729,8 @@ function renderConfig() {
           '<button class="pg-cfg-seg-btn" data-v="medium">Medium</button>' +
           '<button class="pg-cfg-seg-btn" data-v="critical">Critical</button>' +
         '</div></div></div>' +
-        '<div class="pg-cfg-field" style="margin-bottom:0"><div class="pg-cfg-label">Triggers</div>' +
-          ['Frustration detected','Payment repeatedly fails','High-value at risk','AI confidence low'].map(function(r,i){ return '<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;margin-bottom:3px"><input type="checkbox" ' + (i<3?'checked':'') + '> ' + r + '</label>'; }).join('') +
+        '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Triggers</div>' +
+          ['Frustration detected','Payment repeatedly fails','High-value at risk','AI confidence low'].map(function(r,i){ return '<label class="pg-cfg-chk-label"><input type="checkbox" ' + (i<3?'checked':'') + '> ' + r + '</label>'; }).join('') +
         '</div>';
       }
     },
@@ -604,8 +742,8 @@ function renderConfig() {
 }
 
 function renderRiskControls() {
-  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Blocked failure codes</div><input type="text" class="pg-autosave" data-key="blocked_failure_codes" value="fraud, stolen_card, lost_card, blocked" style="width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"></div>' +
-    '<div class="pg-cfg-field" style="margin-bottom:0"><div class="pg-cfg-label">Rate limits</div><input type="number" class="pg-autosave" data-key="max_daily" value="3" style="width:60px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px"> per customer per day</div>';
+  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Blocked failure codes</div><input type="text" class="pg-autosave pg-cfg-input-wide" data-key="blocked_failure_codes" value="fraud, stolen_card, lost_card, blocked"></div>' +
+    '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Rate limits</div><input type="number" class="pg-autosave pg-cfg-input-narrow" data-key="max_daily" value="3"> per customer per day</div>';
 }
 
 function toggleAdv(btn) {
@@ -682,12 +820,12 @@ function renderROI(d) {
   var bench = (d.recovery_rate||0) >= 60 ? 'above' : (d.recovery_rate||0) >= 40 ? 'at' : 'below';
   var benchLabel = bench === 'above' ? '📈 Above industry average (42%)' : bench === 'at' ? '📊 At industry average (42%)' : '📉 Below industry average (42%)';
 
-  el.innerHTML = '<div class="stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:6px;gap:8px">' +
-    '<div class="stat" style="padding:8px"><div class="pg-h-kpi-val" style="font-size:16px">' + rev30 + '</div><div class="pg-h-kpi-lbl">Recovered</div><div class="pg-spark" style="height:24px">' + sparkData.map(function(x){var h=Math.round((x.revenue/maxR)*100);return '<div class="pg-spark-bar" style="height:'+Math.max(h,3)+'%"></div>';}).join('') + '</div><div class="muted2" style="font-size:8px;margin-top:1px">' + (d.recovery_rate||0) + '% rate</div></div>' +
-    '<div class="stat" style="padding:8px"><div class="pg-h-kpi-val" style="font-size:16px;color:var(--amber)">' + (d.revenue_at_risk != null ? '$'+fmtNum(d.revenue_at_risk) : '$—') + '</div><div class="pg-h-kpi-lbl">At Risk</div><div class="sub" style="font-size:8px;color:var(--muted2)">' + (d.active_at_risk||0) + ' active</div></div>' +
-    '<div class="stat" style="padding:8px"><div class="pg-h-kpi-val" style="font-size:16px">' + (d.support_hours_saved||'—') + 'h</div><div class="pg-h-kpi-lbl">Hours Saved</div><div class="sub" style="font-size:8px;color:var(--muted2)">this month</div></div>' +
-    '<div class="stat" style="padding:8px"><div class="pg-h-kpi-val" style="font-size:16px">' + (d.automation_rate||0) + '%</div><div class="pg-h-kpi-lbl">Auto Rate</div><div class="sub" style="font-size:8px;color:var(--muted2);margin-top:2px"><span class="pill ' + (bench==='above'?'ok':bench==='at'?'warn':'muted') + '" style="font-size:7px">' + benchLabel + '</span></div></div>' +
-  '</div><div style="margin-top:4px"><div class="muted2" style="font-size:8px;font-weight:600;letter-spacing:.2px;margin-bottom:3px">Daily (7d)</div>' + chart + '</div>';
+  el.innerHTML = '<div class="roi-grid">' +
+    '<div class="roi-stat"><div class="roi-val">' + rev30 + '</div><div class="pg-h-kpi-lbl">Recovered</div><div class="pg-spark" style="height:24px">' + sparkData.map(function(x){var h=Math.round((x.revenue/maxR)*100);return '<div class="pg-spark-bar" style="height:'+Math.max(h,3)+'%"></div>';}).join('') + '</div><div class="roi-sub">' + (d.recovery_rate||0) + '% rate</div></div>' +
+    '<div class="roi-stat"><div class="roi-val" style="color:var(--pg-warning)">' + (d.revenue_at_risk != null ? '$'+fmtNum(d.revenue_at_risk) : '$—') + '</div><div class="pg-h-kpi-lbl">At Risk</div><div class="roi-sub">' + (d.active_at_risk||0) + ' active</div></div>' +
+    '<div class="roi-stat"><div class="roi-val">' + (d.support_hours_saved||'—') + 'h</div><div class="pg-h-kpi-lbl">Hours Saved</div><div class="roi-sub">this month</div></div>' +
+    '<div class="roi-stat"><div class="roi-val">' + (d.automation_rate||0) + '%</div><div class="pg-h-kpi-lbl">Auto Rate</div><div class="roi-sub"><span class="pill ' + (bench==='above'?'ok':bench==='at'?'warn':'muted') + '">' + benchLabel + '</span></div></div>' +
+  '</div><div class="roi-chart-wrap"><div class="roi-chart-label">Daily (7d)</div>' + chart + '</div>';
 
   // Update KPI strip
   setKpi('kpiRev', rev30);
@@ -724,28 +862,28 @@ async function loadTrust(wfId, body) {
               first.type === 'escalation' ? 'Policy: escalated due to risk threshold' : 'Policy: standard recovery flow';
     var dataSrc = first.type === 'transition' ? 'Stripe invoice events, Recharge subscription status' :
                   'Workflow events, AI classifier, Commerce domain';
-    body.innerHTML = '<div class="trust-info" style="margin-bottom:8px">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
+    body.innerHTML = '<div class="trust-info">' +
+      '<div class="trust-info-header">' +
         '<span>Workflow <code>' + esc(wfId.slice(0,8)) + '</code></span>' +
-        '<span class="pill ' + (first.confidence>=80?'ok':first.confidence>=50?'warn':'err') + '" style="font-size:8px">' + (first.confidence||'N/A') + '% confidence</span>' +
+        '<span class="pill ' + (first.confidence>=80?'ok':first.confidence>=50?'warn':'err') + '">' + (first.confidence||'N/A') + '% confidence</span>' +
       '</div>' +
-      '<div style="font-size:10px;color:var(--muted);padding:6px 8px;background:var(--bg);border-radius:6px;border:1px solid var(--border);margin-bottom:6px">' +
+      '<div class="trust-info-box">' +
         '<div><strong>Reasoning:</strong> ' + esc((first.reason||'AI classified this payment failure as recoverable').slice(0,120)) + '</div>' +
-        '<div style="margin-top:2px"><strong>Policy:</strong> ' + pol + '</div>' +
-        '<div style="margin-top:2px"><strong>Data:</strong> ' + dataSrc + '</div>' +
+        '<div class="trust-info-row"><strong>Policy:</strong> ' + pol + '</div>' +
+        '<div class="trust-info-row"><strong>Data:</strong> ' + dataSrc + '</div>' +
       '</div>' +
     '</div>' +
     evs.slice(0,10).map(function(e,j){
       var icon = e.icon || '🔄';
-      var polRef = e.type === 'approval' ? '<div style="font-size:9px;color:var(--muted2)">Approval rationale: ' + esc((e.reason||'policy match') + (e.confidence?' · '+e.confidence+'% conf':'')) + '</div>' :
-                   e.type === 'escalation' ? '<div style="font-size:9px;color:var(--muted2)">Escalation rationale: ' + esc((e.reason||'threshold triggered')) + '</div>' : '';
+      var polRef = e.type === 'approval' ? '<div class="trust-policy-ref">Approval rationale: ' + esc((e.reason||'policy match') + (e.confidence?' · '+e.confidence+'% conf':'')) + '</div>' :
+                   e.type === 'escalation' ? '<div class="trust-policy-ref">Escalation rationale: ' + esc((e.reason||'threshold triggered')) + '</div>' : '';
       return '<div class="trust-step"><div class="trust-step-n">' + (j+1) + '</div><div class="trust-step-body">' +
         '<div class="trust-step-act">' + icon + ' ' + esc(e.action||'') + '</div>' +
         (e.reason && e.type !== 'approval' && e.type !== 'escalation' ? '<div class="trust-step-det">' + esc(e.reason.slice(0,80)) + '</div>' : '') +
         polRef +
         '<div class="trust-step-tm">' + timeAgo(e.created_at) + '</div></div></div>';
     }).join('') +
-    '<div style="margin-top:12px"><a href="/admin/workflows/' + esc(wfId) + '" class="ghost sm" style="border-color:var(--border);text-decoration:none;font-size:11px">View full timeline →</a></div>';
+    '<div class="trust-cta"><a href="/admin/workflows/' + esc(wfId) + '" class="ghost sm">View full timeline →</a></div>';
   } catch(e) { body.innerHTML = '<div class="pg-empty">Error loading trust data.</div>'; }
 }
 
@@ -836,7 +974,7 @@ async function loadBadges() {
     }
     var ai = document.getElementById('pgStatusAI');
     if (ai) {
-      ai.textContent = '🤖 Monitoring active · Last check ' + (new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+      ai.innerHTML = '🤖 Monitoring active · <span class="pg-status-time">Last check ' + (new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})) + '</span>';
     }
   } catch(e) {}
 }
