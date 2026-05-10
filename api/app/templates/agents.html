@@ -84,7 +84,7 @@
 .pg-status-ai { color: var(--pg-muted); font-size: var(--fs-small); display: flex; align-items: center; gap: var(--sp-xs); }
 .pg-status-spacer { flex: 1; }
 .pg-status-time { font-size: var(--fs-small); }
-.pg-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.pg-status-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 .pg-status-dot.ok { background: var(--pg-success); }
 .pg-status-dot.warn { background: var(--pg-warning); }
 .pg-status-dot.muted { background: var(--pg-muted); }
@@ -125,10 +125,10 @@
 .pg-fi-meta-right { display: flex; gap: var(--sp-xs); align-items: center; }
 .pg-fi-group {
  font-size: var(--fs-small); font-weight: 700; text-transform: uppercase;
- letter-spacing: .3px; padding: var(--sp-sm) 0 var(--sp-xs);
- border-top: 1px solid var(--pg-border); margin-top: var(--sp-xs);
+ letter-spacing: .3px; padding: var(--sp-md) 0 var(--sp-xs);
+ border-top: 2px solid var(--pg-border); margin-top: var(--sp-md);
 }
-.pg-fi-group:first-child { border-top: none; margin-top: 0; }
+.pg-fi-group:first-child { border-top: none; margin-top: 0; padding-top: 0; }
 
 /* Funnel */
 .pg-funnel { display: flex; flex-direction: column; gap: var(--sp-md); }
@@ -163,8 +163,8 @@
 .pg-cfg-label { font-size: var(--fs-small); font-weight: 600; color: var(--pg-muted); margin-bottom: var(--sp-xs); text-transform: uppercase; letter-spacing: .2px; }
 .pg-cfg-desc { font-size: var(--fs-small); color: var(--pg-muted); margin-top: 1px; }
 .pg-cfg-row { display: flex; gap: var(--sp-sm); align-items: center; flex-wrap: wrap; }
-.pg-cfg-seg { display: flex; gap: 1px; background: var(--pg-bg); border-radius: var(--r-sm); padding: 3px; }
-.pg-cfg-seg-btn { padding: 6px 14px; font-size: var(--fs-label); font-weight: 600; border: none; background: transparent; color: var(--pg-muted); cursor: pointer; border-radius: var(--r-sm); transition: all .1s; }
+.pg-cfg-seg { display: flex; gap: 2px; background: var(--pg-bg); border-radius: var(--r-sm); padding: 3px; }
+.pg-cfg-seg-btn { padding: 8px 18px; font-size: var(--fs-label); font-weight: 600; border: none; background: transparent; color: var(--pg-muted); cursor: pointer; border-radius: var(--r-sm); transition: all .1s; min-height: 36px; }
 .pg-cfg-seg-btn.active { background: var(--pg-surface); color: var(--pg-text); box-shadow: 0 1px 3px rgba(0,0,0,.3); }
 .pg-cfg-seg-btn:hover:not(.active) { color: var(--pg-text); }
 .pg-cfg-adv { margin-top: var(--sp-xs); }
@@ -272,7 +272,7 @@
 .q-actions { display: flex; gap: 2px; }
 
 /* Buttons within table rows */
-.pg-op-btn { padding: 4px 10px; font-size: var(--fs-label); font-weight: 600; border: none; border-radius: var(--r-sm); cursor: pointer; transition: all .1s; }
+.pg-op-btn { padding: 6px 14px; font-size: var(--fs-label); font-weight: 700; border: none; border-radius: var(--r-sm); cursor: pointer; transition: all .1s; min-height: 32px; }
 .pg-op-btn:hover { filter: brightness(1.2); }
 .pg-op-btn.approve { background: var(--pg-success); color: #fff; }
 .pg-op-btn.reject { background: var(--pg-error); color: #fff; }
@@ -297,17 +297,36 @@
 
 /* Sub-tabs inside agent panel */
 .agent-sub-tabs {
- display: flex; gap: 0; border-bottom: 1px solid var(--pg-border); margin-bottom: var(--sp-lg);
+ display: flex; gap: 4px; margin-bottom: var(--sp-lg);
+ background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-md); padding: 4px; width: fit-content;
 }
 .agent-sub-tab {
- padding: 10px 20px; font-size: var(--fs-body); font-weight: 600; color: var(--pg-muted);
- background: transparent; border: none; border-bottom: 2px solid transparent;
- cursor: pointer; transition: all .15s;
+ padding: 8px 20px; font-size: var(--fs-body); font-weight: 600; color: var(--pg-muted2);
+ background: transparent; border: none; border-radius: var(--r-sm);
+ cursor: pointer; transition: all .15s; user-select: none;
 }
-.agent-sub-tab:hover { color: var(--pg-text); }
-.agent-sub-tab.active { color: var(--pg-accent); border-bottom-color: var(--pg-accent); }
+.agent-sub-tab:hover { color: var(--pg-text); background: rgba(255,255,255,0.04); }
+.agent-sub-tab.active { color: var(--pg-text); background: var(--pg-surface); box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
 .agent-tab-content { display: none; }
 .agent-tab-content.active { display: block; }
+
+/* Save status indicator */
+.pg-save-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--pg-muted); margin-bottom: var(--sp-md); padding: 4px 10px; background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: 20px; }
+.pg-save-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.pg-save-dot.saved { background: var(--pg-success); }
+.pg-save-dot.saving { background: var(--pg-warning); animation: pulse-dot 1s infinite; }
+.pg-save-dot.dirty { background: #f59e0b; }
+@keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+/* KPI strip container */
+.pg-kpi-strip {
+ display: flex; gap: 0; padding: var(--sp-md); margin-bottom: var(--sp-lg);
+ background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-lg);
+}
+.pg-kpi-strip .pg-h-kpi { flex: 1; text-align: center; padding: 0 var(--sp-md); min-width: 0; }
+.pg-kpi-strip .pg-h-kpi + .pg-h-kpi { border-left: 1px solid var(--pg-border); }
+.pg-kpi-strip .pg-h-kpi-val { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -.3px; line-height: 1.2; }
+.pg-kpi-strip .pg-h-kpi-lbl { font-size: 12px; color: var(--pg-muted); letter-spacing: .2px; margin-top: 4px; font-weight: 600; }
 
 /* Responsive */
 @media (max-width:1024px) {
@@ -328,6 +347,11 @@
  .pg-kpi-strip .pg-h-kpi { min-width: 50px; }
  .pg-kpi-strip .pg-h-kpi-val { font-size: 18px; }
 }
+@media (max-width:768px) {
+ .roi-grid { grid-template-columns: 1fr 1fr; }
+ .agent-sub-tabs { flex-wrap: wrap; width: 100%; }
+ .agent-sub-tab { flex: 1; text-align: center; padding: 8px 12px; font-size: var(--fs-small); }
+}
 @media (max-width:600px) {
  .pg-h-left { flex-direction: column; align-items: flex-start; gap: var(--sp-xs); }
  .pg-h-kpi { min-width: 40%; }
@@ -339,7 +363,6 @@
 }
 </style>
 
-<h1>Agents</h1>
 <p class="page-desc">Intelligent agents that automate customer lifecycle workflows.</p>
 <div id="agentPanels"></div>
 
@@ -445,7 +468,6 @@ function renderPayGuard(agent, analytics, policies, ew, workflows) {
   var kpiStrip = '<div class="pg-kpi-strip" id="kpiStrip">' +
   kpiCell('kpiRev', '$—', 'Recovered Revenue') +
   kpiCell('kpiRate', '—', 'Recovery Rate') +
-  kpiCell('kpiCustomers', '—', 'Recovered Customers') +
   kpiCell('kpiAtRisk', '$—', 'At Risk') +
   kpiCell('kpiApproval', '—', 'Awaiting Review') +
   '</div>';
@@ -475,6 +497,7 @@ function renderPayGuard(agent, analytics, policies, ew, workflows) {
   '<div class="pg-policy-grid" id="policyGrid">' +
   renderConfig() +
   '</div>' +
+  '<div class="pg-save-status" id="cfgMsg"><span class="pg-save-dot saved"></span>Autosaved</div>' +
   '<div class="pg-card pg-risk-card" id="riskCard">' +
   '<div class="pg-card-title">Risk Controls</div><div id="riskBody">' + renderRiskControls() + '</div>' +
   '</div></div>';
@@ -626,7 +649,7 @@ function renderQueueTable(items, type) {
  '<td class="q-cell">' + esc(item.action_type||'') + '</td>' +
  '<td><span class="pill ' + rl + '">' + esc(item.risk_level||'') + '</span></td>' +
  '<td class="q-cell">' + (item.ai_confidence!=null ? item.ai_confidence+'%' : '-') + '</td>' +
- '<td><div class="q-actions"><button class="pg-op-btn approve" onclick="queueApprove(\\' + esc(item.id) + '\')"></button><button class="pg-op-btn reject" onclick="queueReject(\\' + esc(item.id) + '\')"></button></div></td></tr>';
+ '<td><div class="q-actions"><button class="pg-op-btn approve" onclick="queueApprove(\\' + esc(item.id) + '\')">Approve</button><button class="pg-op-btn reject" onclick="queueReject(\\' + esc(item.id) + '\')">Reject</button></div></td></tr>';
  }
  if (type === 'escalations') {
  var sv = item.severity === 'critical' ? 'err' : item.severity === 'high' ? 'warn' : 'muted';
@@ -764,45 +787,64 @@ function toggleAdv(btn) {
 // Autosave
 (function(){
  var timer = null;
- document.addEventListener('input', function(e){ if (e.target.classList.contains('pg-autosave')) { if (timer) clearTimeout(timer); timer = setTimeout(doSave, 1500); var m=document.getElementById('cfgMsg'); if(m)m.textContent='Unsaved...'; }});
- document.addEventListener('change', function(e){
- if (e.target.closest('.pg-cfg-seg') || e.target.closest('.pg-toggle')) {
- if (timer) clearTimeout(timer); timer = setTimeout(doSave, 1500);
- var m=document.getElementById('cfgMsg'); if(m)m.textContent='Unsaved...';
+ function setSaveStatus(state, text) {
+  var m = document.getElementById('cfgMsg');
+  if (!m) return;
+  var dot = m.querySelector('.pg-save-dot');
+  if (dot) { dot.className = 'pg-save-dot ' + state; }
+  m.childNodes[1].textContent = text || (state === 'saved' ? 'Autosaved' : state === 'dirty' ? 'Unsaved' : state === 'saving' ? 'Saving\u2026' : '');
  }
+ document.addEventListener('input', function(e){
+  if (!e.target.classList.contains('pg-autosave')) return;
+  if (timer) clearTimeout(timer); timer = setTimeout(doSave, 1500);
+  setSaveStatus('dirty', 'Unsaved');
+ });
+ document.addEventListener('change', function(e){
+  if (!e.target.closest('.pg-cfg-seg') && !e.target.closest('.pg-toggle')) return;
+  if (timer) clearTimeout(timer); timer = setTimeout(doSave, 1500);
+  setSaveStatus('dirty', 'Unsaved');
  });
 })();
 
 async function doSave() {
- var msg = document.getElementById('cfgMsg'); if(msg)msg.textContent='Saving...';
+ var sections = ['recovery_strategy','communication','approval_rules','escalation_rules'];
+ var m = document.getElementById('cfgMsg');
+ function setStatus(state, text) {
+  if (!m) return;
+  var dot = m.querySelector('.pg-save-dot');
+  if (dot) dot.className = 'pg-save-dot ' + state;
+  m.childNodes[1].textContent = text;
+ }
+ setStatus('saving', 'Saving\u2026');
  var vals = {};
  document.querySelectorAll('.pg-autosave').forEach(function(inp){
- var k = inp.dataset.key; if (!k) return;
- var v = inp.value !== undefined ? inp.value.trim() : '';
- if (inp.type === 'number') v = parseFloat(v) || 0;
- vals[k] = v;
+  var k = inp.dataset.key; if (!k) return;
+  var v = inp.value !== undefined ? inp.value.trim() : '';
+  if (inp.type === 'number') v = parseFloat(v) || 0;
+  vals[k] = v;
  });
- // Collect segmented buttons
  document.querySelectorAll('.pg-cfg-seg').forEach(function(seg){
- var active = seg.querySelector('.pg-cfg-seg-btn.active');
- if (active) vals[seg.id.replace('seg-','')] = active.dataset.v;
+  var active = seg.querySelector('.pg-cfg-seg-btn.active');
+  if (active) vals[seg.id.replace('seg-','')] = active.dataset.v;
  });
- // Collect toggles
  document.querySelectorAll('.pg-toggle').forEach(function(tgl){
- var id = tgl.id;
- if (id) vals[id.replace('tgl-','')] = tgl.classList.contains('on');
+  var id = tgl.id;
+  if (id) vals[id.replace('tgl-','')] = tgl.classList.contains('on');
  });
- // Collect checkboxes
  document.querySelectorAll('.pg-cfg-body input[type="checkbox"]').forEach(function(cb){
- vals[cb.id || cb.nextSibling.textContent.trim().toLowerCase().replace(/\s+/g,'_')] = cb.checked;
+  vals[cb.id || cb.nextSibling.textContent.trim().toLowerCase().replace(/\s+/g,'_')] = cb.checked;
  });
  try {
- for (var sec of ['recovery_strategy','communication','approval_rules','escalation_rules']) {
- await api('/admin/api/agents/payguard/policy', {method:'PUT', body:{section:sec, values:vals}});
+  for (var i = 0; i < sections.length; i++) {
+   setStatus('saving', 'Saving (' + (i+1) + '/' + sections.length + ')\u2026');
+   await api('/admin/api/agents/payguard/policy', {method:'PUT', body:{section:sections[i], values:vals}});
+  }
+  setStatus('saved', 'Saved');
+  setTimeout(function(){ setStatus('saved', 'Autosaved'); }, 2500);
+ } catch(e) {
+  setStatus('dirty', 'Save failed');
+  setTimeout(function(){ setStatus('dirty', 'Unsaved'); }, 3000);
  }
- if(msg){msg.textContent='All changes saved ' ;msg.style.color='var(--pg-success)';}
- setTimeout(function(){if(msg){msg.textContent='All changes autosaved';msg.style.color='';}}, 3000);
- } catch(e) { if(msg){msg.textContent='Error: '+e.message;msg.style.color='var(--red)';} }
 }
 
 // ROI 
@@ -840,7 +882,6 @@ function renderROI(d) {
  // Update KPI strip
  setKpi('kpiRev', rev30);
  setKpi('kpiRate', (d.recovery_rate||0) + '%');
- setKpi('kpiCustomers', d.recovered_customers || '—');
  setKpi('kpiAtRisk', d.revenue_at_risk != null ? '$'+fmtNum(d.revenue_at_risk) : '$—');
 }
 

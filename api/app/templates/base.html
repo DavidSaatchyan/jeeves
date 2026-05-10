@@ -235,12 +235,13 @@
     .nav-link .nav-badge { opacity:0.9; }
 
     /* ── NAV SECTION (Agents) ── */
-    .nav-section { display:flex; flex-direction:column; gap:1px; margin-bottom:2px; }
-    .nav-section-title { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--muted2); padding:4px 10px; margin-top:6px; }
-    .nav-agent-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-    .nav-link.sub { padding-left:28px; font-size:12px; }
-    .nav-link.disabled { opacity:0.5; cursor:default; pointer-events:none; }
-    .nav-link.sub .pill { font-size:9px; padding:1px 6px; }
+    .nav-section { display:flex; flex-direction:column; gap:1px; margin:4px 0; border-top:1px solid var(--border); padding-top:6px; }
+    .nav-section-title { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--muted2); padding:4px 10px 2px; }
+    .nav-agent-icon { width:20px; height:20px; border-radius:5px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; }
+    .nav-link.sub { font-size:12.5px; font-weight:500; padding:7px 10px; gap:8px; }
+    .nav-link.sub .nav-link-text { flex:1; }
+    .nav-link.disabled { opacity:0.4; cursor:default; pointer-events:none; }
+    .nav-link.sub .pill { font-size:9px; padding:1px 6px; line-height:1.5; }
 
     /* ── ACTIVE STATES ── */
     .active-states{display:flex;gap:6px;flex-wrap:wrap}
@@ -292,18 +293,18 @@ if(!token() && !location.pathname.endsWith('/login')){ location.href='/admin/log
     <div class="nav-section">
       <div class="nav-section-title">Agents</div>
       <a href="/admin/agents" class="nav-link sub" data-path="/admin/agents">
-        <span class="nav-agent-dot" style="background:#6366f1"></span>
-        PayGuard
+        <span class="nav-agent-icon" style="background:rgba(99,102,241,0.15);color:#6366f1">PG</span>
+        <span class="nav-link-text">PayGuard</span>
         <span class="pill ok" style="margin-left:auto">Active</span>
       </a>
       <div class="nav-link sub disabled">
-        <span class="nav-agent-dot" style="background:#f59e0b"></span>
-        Retain
+        <span class="nav-agent-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b">RT</span>
+        <span class="nav-link-text">Retain</span>
         <span class="pill muted" style="margin-left:auto">Soon</span>
       </div>
       <div class="nav-link sub disabled">
-        <span class="nav-agent-dot" style="background:#22d3ee"></span>
-        Trace
+        <span class="nav-agent-icon" style="background:rgba(34,211,238,0.15);color:#22d3ee">TR</span>
+        <span class="nav-link-text">Trace</span>
         <span class="pill muted" style="margin-left:auto">Soon</span>
       </div>
     </div>
