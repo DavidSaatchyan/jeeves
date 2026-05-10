@@ -232,7 +232,7 @@ function renderWorkflowPanel(wf, analytics, policies, enabledWf, workflows) {
   }).join('');
 
   var appFieldsHtml = wf.approvalFields.map(function(f){
-    var val = (app[f.key] !== undefined ? app[f.key] : f.default);
+    var val = (appPol[f.key] !== undefined ? appPol[f.key] : f.default);
     if (typeof val === 'object' && Array.isArray(val)) val = val.join(',');
     return '<div class="field-row"><label>' + f.label + '</label><input id="' + f.id + '" type="' + f.type + '" value="' + esc(String(val)) + '" data-wf="' + wf.id + '" data-policy="approval" data-key="' + f.key + '"></div>';
   }).join('');
