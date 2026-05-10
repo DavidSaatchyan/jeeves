@@ -295,44 +295,6 @@
  border-radius: var(--r-sm);
 }
 
-/* Layout: sidebar + main */
-.agents-layout { display: flex; gap: 0; min-height: 600px; }
-.agents-sidebar {
- width: 220px; flex-shrink: 0;
- background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-lg);
- padding: var(--sp-md); display: flex; flex-direction: column; gap: var(--sp-xs);
-}
-.agents-sidebar-title { font-size: var(--fs-small); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--pg-muted); padding: var(--sp-xs) var(--sp-sm); margin-bottom: var(--sp-xs); }
-.agent-nav-item {
- display: flex; align-items: center; gap: var(--sp-sm); padding: var(--sp-sm) var(--sp-sm);
- border-radius: var(--r-md); cursor: pointer; transition: all .1s;
-}
-.agent-nav-item:hover { background: var(--pg-accent-bg); }
-.agent-nav-item.active { background: var(--pg-accent-bg); border: 1px solid var(--pg-accent); }
-.agent-nav-item.disabled { opacity: .4; cursor: default; }
-.agent-nav-item.disabled:hover { background: transparent; }
-.agent-nav-icon {
- width: 36px; height: 36px; border-radius: var(--r-md);
- display: flex; align-items: center; justify-content: center;
- font-size: 13px; font-weight: 800; flex-shrink: 0;
-}
-.agent-nav-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.agent-nav-name { font-size: var(--fs-body); font-weight: 700; line-height: 1.2; }
-.agent-nav-status { font-size: 11px; font-weight: 600; }
-.agent-nav-status.ok { color: var(--pg-success); }
-.agent-nav-status.muted { color: var(--pg-muted); }
-
-.agents-main { flex: 1; min-width: 0; margin-left: var(--sp-lg); }
-
-/* KPI strip (inside Performance tab) */
-.pg-kpi-strip {
- display: flex; gap: 0; padding: var(--sp-md); margin-bottom: var(--sp-lg);
- background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-lg);
-}
-.pg-kpi-strip .pg-h-kpi { flex: 1; text-align: center; padding: 0 var(--sp-sm); min-width: 0; }
-.pg-kpi-strip .pg-h-kpi-val { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -.3px; line-height: 1.2; }
-.pg-kpi-strip .pg-h-kpi-lbl { font-size: var(--fs-label); color: var(--pg-muted); text-transform: uppercase; letter-spacing: .3px; margin-top: 4px; font-weight: 600; }
-
 /* Sub-tabs inside agent panel */
 .agent-sub-tabs {
  display: flex; gap: 0; border-bottom: 1px solid var(--pg-border); margin-bottom: var(--sp-lg);
@@ -375,42 +337,11 @@
  .pg-fun-row { flex-wrap: wrap; }
  .pg-fun-label { width: 100%; text-align: left; font-size: var(--fs-label); }
 }
-@media (max-width:768px) {
- .agents-layout { flex-direction: column; }
- .agents-sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; gap: var(--sp-xs); padding: var(--sp-sm); }
- .agents-sidebar-title { width: 100%; }
- .agent-nav-item { flex: 1; min-width: 120px; }
- .agents-main { margin-left: 0; margin-top: var(--sp-md); }
-}
 </style>
 
-<div class="agents-layout">
- <div class="agents-sidebar" id="agentSidebar">
-  <div class="agents-sidebar-title">Agents</div>
-  <div class="agent-nav-item active" data-agent="payguard">
-   <div class="agent-nav-icon" style="background:rgba(99,102,241,0.12);color:#6366f1">PG</div>
-   <div class="agent-nav-info">
-    <div class="agent-nav-name">PayGuard</div>
-    <div class="agent-nav-status ok">Active</div>
-   </div>
-  </div>
-  <div class="agent-nav-item disabled">
-   <div class="agent-nav-icon" style="background:rgba(245,158,11,0.12);color:#f59e0b">RT</div>
-   <div class="agent-nav-info">
-    <div class="agent-nav-name">Retain</div>
-    <div class="agent-nav-status muted">Coming Soon</div>
-   </div>
-  </div>
-  <div class="agent-nav-item disabled">
-   <div class="agent-nav-icon" style="background:rgba(34,211,238,0.12);color:#22d3ee">TR</div>
-   <div class="agent-nav-info">
-    <div class="agent-nav-name">Trace</div>
-    <div class="agent-nav-status muted">Coming Soon</div>
-   </div>
-  </div>
- </div>
- <div class="agents-main" id="agentPanels"></div>
-</div>
+<h1>Agents</h1>
+<p class="page-desc">Intelligent agents that automate customer lifecycle workflows.</p>
+<div id="agentPanels"></div>
 
 <!-- Trust Panel slide-out -->
 <div class="trust-overlay" id="trustOverlay" onclick="hideTrust()"></div>

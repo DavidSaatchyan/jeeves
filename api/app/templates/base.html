@@ -234,6 +234,14 @@
     .nav-badge { margin-left:auto; background:var(--red); color:#fff; font-size:9px; font-weight:700; padding:1px 6px; border-radius:10px; line-height:1.4; min-width:18px; text-align:center; }
     .nav-link .nav-badge { opacity:0.9; }
 
+    /* ── NAV SECTION (Agents) ── */
+    .nav-section { display:flex; flex-direction:column; gap:1px; margin-bottom:2px; }
+    .nav-section-title { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--muted2); padding:4px 10px; margin-top:6px; }
+    .nav-agent-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .nav-link.sub { padding-left:28px; font-size:12px; }
+    .nav-link.disabled { opacity:0.5; cursor:default; pointer-events:none; }
+    .nav-link.sub .pill { font-size:9px; padding:1px 6px; }
+
     /* ── ACTIVE STATES ── */
     .active-states{display:flex;gap:6px;flex-wrap:wrap}
   </style>
@@ -281,10 +289,24 @@ if(!token() && !location.pathname.endsWith('/login')){ location.href='/admin/log
       Connections
     </a>
 
-    <a href="/admin/agents" class="nav-link" data-path="/admin/agents">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-      Agents
-    </a>
+    <div class="nav-section">
+      <div class="nav-section-title">Agents</div>
+      <a href="/admin/agents" class="nav-link sub" data-path="/admin/agents">
+        <span class="nav-agent-dot" style="background:#6366f1"></span>
+        PayGuard
+        <span class="pill ok" style="margin-left:auto">Active</span>
+      </a>
+      <div class="nav-link sub disabled">
+        <span class="nav-agent-dot" style="background:#f59e0b"></span>
+        Retain
+        <span class="pill muted" style="margin-left:auto">Soon</span>
+      </div>
+      <div class="nav-link sub disabled">
+        <span class="nav-agent-dot" style="background:#22d3ee"></span>
+        Trace
+        <span class="pill muted" style="margin-left:auto">Soon</span>
+      </div>
+    </div>
 
     <a href="/admin/channels" class="nav-link" data-path="/admin/channels">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
