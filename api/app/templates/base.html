@@ -239,6 +239,24 @@
   </style>
 </head>
 <body>
+<script>
+function token(){ return localStorage.getItem('jeeves_token'); }
+function setToken(t,tid){ localStorage.setItem('jeeves_token',t); if(tid) localStorage.setItem('jeeves_tid',tid); }
+function tenantId(){ return localStorage.getItem('jeeves_tid'); }
+function logout(){ localStorage.removeItem('jeeves_token'); localStorage.removeItem('jeeves_tid'); location.href='/'; }
+async function api(path, opts={}){
+  const headers = opts.headers||{};
+  if(!(opts.body instanceof FormData)) headers['Content-Type']='application/json';
+  const r = await fetch(path,{...opts,headers,credentials:'include',body: opts.body && !(opts.body instanceof FormData) ? JSON.stringify(opts.body):opts.body});
+  if(r.status===401){ location.href='/admin/login'; throw new Error('unauth'); }
+  if(r.status===402){ location.href='/admin/billing'; }
+  const ct=r.headers.get('content-type')||''; const data = ct.includes('json')?await r.json():await r.text();
+  if(!r.ok) throw new Error(typeof data==='string'?data:JSON.stringify(data));
+  return data;
+}
+function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+if(!token() && !location.pathname.endsWith('/login')){ location.href='/admin/login'; }
+</script>
 <aside>
   <div class="brand">
     <h1>Jeeves<span>.</span></h1>
@@ -286,23 +304,6 @@
 })();
 </script>
 <script>
-function token(){ return localStorage.getItem('jeeves_token'); }
-function setToken(t,tid){ localStorage.setItem('jeeves_token',t); if(tid) localStorage.setItem('jeeves_tid',tid); }
-function tenantId(){ return localStorage.getItem('jeeves_tid'); }
-function logout(){ localStorage.removeItem('jeeves_token'); localStorage.removeItem('jeeves_tid'); location.href='/'; }
-async function api(path, opts={}){
-  const headers = opts.headers||{};
-  if(!(opts.body instanceof FormData)) headers['Content-Type']='application/json';
-  const r = await fetch(path,{...opts,headers,credentials:'include',body: opts.body && !(opts.body instanceof FormData) ? JSON.stringify(opts.body):opts.body});
-  if(r.status===401){ location.href='/admin/login'; throw new Error('unauth'); }
-  if(r.status===402){ location.href='/admin/billing'; }
-  const ct=r.headers.get('content-type')||''; const data = ct.includes('json')?await r.json():await r.text();
-  if(!r.ok) throw new Error(typeof data==='string'?data:JSON.stringify(data));
-  return data;
-}
-function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-if(!token() && !location.pathname.endsWith('/login')){ location.href='/admin/login'; }
-
 // Badge counters
 (async function loadBadges(){
   try {
