@@ -73,21 +73,18 @@
 .pg-h-btn.ghost { background: transparent; color: var(--pg-muted); border: 1px solid var(--pg-border); }
 .pg-h-btn.ghost:hover { color: var(--pg-text); border-color: var(--pg-muted); }
 
-/* Operational Status Ribbon */
+/* Status ribbon — simplified */
 .pg-status {
- display: flex; align-items: center; gap: var(--sp-lg);
+ display: flex; align-items: center; gap: var(--sp-md);
  padding: var(--sp-sm) 24px; border-top: 1px solid var(--pg-border);
  font-size: var(--fs-label); flex-wrap: wrap;
 }
-.pg-status-item { display: flex; align-items: center; gap: 6px; }
-.pg-status-main { color: var(--pg-success); font-weight: 600; }
-.pg-status-ai { color: var(--pg-muted); font-size: var(--fs-small); display: flex; align-items: center; gap: var(--sp-xs); }
-.pg-status-spacer { flex: 1; }
-.pg-status-time { font-size: var(--fs-small); }
-.pg-status-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.pg-status-item { display: flex; align-items: center; gap: 6px;}
+.pg-status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .pg-status-dot.ok { background: var(--pg-success); }
 .pg-status-dot.warn { background: var(--pg-warning); }
-.pg-status-dot.muted { background: var(--pg-muted); }
+.pg-status-dot.muted { background: var(--pg-muted2); }
+.pg-status-time { font-size: var(--fs-small); }
 
 /* Section headings */
 .pg-section { margin-bottom: var(--sp-xl); }
@@ -175,22 +172,31 @@
 .pg-cfg-msg-preview { font-size: var(--fs-label); color: var(--pg-muted); padding: var(--sp-sm); background: var(--pg-bg); border-radius: var(--r-sm); border: 1px solid var(--pg-border); }
 .pg-cfg-rule-box { background: var(--pg-bg); padding: 10px; border-radius: var(--r-sm); border: 1px solid var(--pg-border); }
 .pg-cfg-rule-row { margin-bottom: var(--sp-xs); }
+/* Number input with spinner */
+.pg-num-wrap { display: inline-flex; align-items: center; border: 1px solid var(--pg-border); border-radius: var(--r-sm); overflow: hidden; background: var(--pg-bg); }
+.pg-num-wrap input { width: 50px; padding: 6px 4px; border: none; background: transparent; color: var(--pg-text); font-size: var(--fs-body); text-align: center; outline: none; }
+.pg-num-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.pg-num-wrap input[type=number] { -moz-appearance: textfield; }
+.pg-num-btn { padding: 6px 8px; background: transparent; border: none; color: var(--pg-muted); cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; transition: all .1s; }
+.pg-num-btn:hover { color: var(--pg-text); background: rgba(255,255,255,0.04); }
 .pg-cfg-rule-hint { color: var(--pg-muted); font-size: var(--fs-small); }
+.pg-tag-chk { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: 20px; font-size: var(--fs-label); cursor: pointer; transition: all .1s; user-select: none; }
+.pg-tag-chk input { display: none; }
+.pg-tag-chk:has(input:checked) { background: var(--pg-accent-bg); border-color: rgba(99,102,241,0.3); color: var(--pg-accent); }
+.pg-tag-chk:hover { border-color: var(--pg-muted); }
 .pg-cfg-select { padding: 6px 10px; background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-sm); color: var(--pg-text); font-size: var(--fs-body); }
 .pg-cfg-input-wide { width: 100%; padding: 8px 10px; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-sm); color: var(--pg-text); font-size: var(--fs-body); }
 .pg-cfg-input-narrow { width: 70px; padding: 8px 10px; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-sm); color: var(--pg-text); font-size: var(--fs-body); }
 .pg-cfg-chk-label { display: flex; align-items: center; gap: var(--sp-sm); font-size: var(--fs-body); cursor: pointer; margin-bottom: var(--sp-sm); padding: 4px 0; }
-.pg-cfg-chk-label input { width: 16px; height: 16px; accent-color: var(--pg-accent); }
-.pg-cfg-chk-inline { gap: var(--sp-sm); font-size: var(--fs-body); cursor: pointer; padding: 4px 0; }
-.pg-cfg-profile-btn { flex: 1; text-align: center; padding: 12px 8px; line-height: 1.4; border-radius: var(--r-sm); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 52px; justify-content: center; }
-.pg-cfg-profile-btn.active { background: var(--pg-accent-bg); border: 1px solid rgba(99,102,241,0.2); }
-.pg-cfg-profile-name { font-weight: 700; font-size: var(--fs-body); color: var(--pg-text); }
-.pg-cfg-profile-desc { font-size: var(--fs-small); color: var(--pg-muted); white-space: nowrap; }
+.pg-cfg-chk-label input { width: 16px; height: 16px; accent-color: var(--pg-accent); margin: 0; flex-shrink: 0; }
+.pg-cfg-chk-inline { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 0; padding: 6px 12px; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-sm); }
+.pg-cfg-profile-btn { flex: 1; text-align: center; padding: 10px 8px; border-radius: var(--r-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; min-height: 40px; font-weight: 700; font-size: var(--fs-body); color: var(--pg-text); background: transparent; transition: all .15s; border: none; }
+.pg-cfg-profile-btn.active { background: var(--pg-accent-bg); border: 1px solid rgba(99,102,241,0.2); color: var(--pg-accent); }
+.pg-cfg-profile-btn:hover:not(.active) { background: rgba(255,255,255,0.04); }
 .pg-cfg-toggle-label { font-size: var(--fs-label); }
-.pg-cfg-autosave-hint { font-size: var(--fs-small); color: var(--pg-muted); }
 
 /* Risk card */
-.pg-risk-card { margin-top: var(--sp-md); border-color: var(--pg-warning); }
+.pg-risk-card { margin-top: var(--sp-md); }
 
 /* Toggle switch */
 .pg-toggle { width: 36px; height: 18px; border-radius: 9px; background: var(--pg-border); cursor: pointer; position: relative; transition: background .2s; flex-shrink: 0; }
@@ -219,12 +225,6 @@
 .trust-cta { margin-top: var(--sp-sm); }
 .trust-cta a { border-color: var(--pg-border); text-decoration: none; font-size: var(--fs-small); }
 .trust-close { border: none; font-size: var(--fs-h3); }
-.sim-modal { max-width: 700px; }
-.sim-close { border: none; font-size: 18px; }
-.sim-desc { margin-bottom: var(--sp-md); }
-.sim-stats { grid-template-columns: 1fr 1fr 1fr 1fr; margin-bottom: var(--sp-md); }
-.sim-help { margin-top: var(--sp-sm); }
-.sim-actions { margin-top: var(--sp-md); }
 .tab-icon { font-size: 16px; line-height: 1; }
 .trust-step { display: flex; gap: 10px; padding: var(--sp-sm) 0; }
 .trust-step-n {
@@ -310,12 +310,13 @@
 .agent-tab-content { display: none; }
 .agent-tab-content.active { display: block; }
 
-/* Save status indicator */
-.pg-save-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--pg-muted); margin-bottom: var(--sp-md); padding: 4px 10px; background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: 20px; }
-.pg-save-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.pg-save-dot.saved { background: var(--pg-success); }
-.pg-save-dot.saving { background: var(--pg-warning); animation: pulse-dot 1s infinite; }
-.pg-save-dot.dirty { background: #f59e0b; }
+/* Toast notification */
+.pg-toast { position: fixed; bottom: 24px; right: 24px; z-index: 500; display: flex; align-items: center; gap: 8px; padding: 10px 18px; background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-md); font-size: 13px; color: var(--pg-text); box-shadow: 0 4px 20px rgba(0,0,0,0.5); opacity: 0; transform: translateY(12px); transition: all .25s ease; pointer-events: none; }
+.pg-toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.pg-toast-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.pg-toast-dot.saved { background: var(--pg-success); }
+.pg-toast-dot.saving { background: var(--pg-warning); animation: pulse-dot 1s infinite; }
+.pg-toast-dot.dirty { background: #f59e0b; }
 @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
 
 /* KPI strip container */
@@ -373,29 +374,12 @@
   <div class="trust-body" id="trustBody"><div class="pg-empty"><div>Select a workflow row or feed event to see the decision chain.</div></div></div>
 </div>
 
-<!-- Simulation modal -->
-<div class="modal-overlay" id="simModal">
-<div class="modal sim-modal">
- <div class="modal-header"><h2>Simulation: Preview PayGuard Before Enabling</h2><button class="ghost sm sim-close" onclick="hideSim()">Close</button></div>
- <div id="simBody">
- <p class="muted sim-desc">Based on your last 30 days of payment failures:</p>
- <div class="stats sim-stats">
- <div class="stat"><div class="n" id="simRev">—</div><div class="l">Recovered revenue</div><div class="sub" id="simRevComp"></div></div>
- <div class="stat"><div class="n" id="simAuto">—</div><div class="l">Automation rate</div><div class="sub">vs 0% currently</div></div>
- <div class="stat"><div class="n" id="simEsc">—</div><div class="l">Escalations</div><div class="sub" id="simEscNote"></div></div>
- <div class="stat"><div class="n" id="simHrs">—</div><div class="l">Support hours saved</div></div>
- </div>
- <div class="help sim-help">
- <h3>Confidence</h3>
- <p>Based on<strong id="simSample">0</strong> historical payment failures analyzed. Simulation accuracy:<strong id="simAcc">±8%</strong></p>
- </div>
- <div class="ch-actions sim-actions">
- <button class="ghost" onclick="hideSim()">Adjust Policy First</button>
- <button class="accent" id="simEnableBtn" onclick="doEnablePayGuard()">Enable PayGuard</button>
- </div>
- </div>
+<!-- Enable confirmation -->
+<div class="modal-overlay" id="enableModal">
+...
 </div>
-</div>
+
+<div class="pg-toast" id="cfgToast"><span class="pg-toast-dot saved"></span><span id="cfgToastTxt">Saved</span></div>
 {% endblock %}
 
 {% block tail %}
@@ -458,10 +442,8 @@ function renderPayGuard(agent, analytics, policies, ew, workflows) {
   '</div>' +
   '</div>' +
   '<div class="pg-status" id="pgStatusBar">' +
-  '<span class="pg-status-item pg-status-main"><span class="pg-status-dot ok"></span>Running normally</span>' +
-  '<span class="pg-status-spacer"></span>' +
-  '<span class="pg-status-item" id="pgStatusReview"><span class="pg-status-dot warn"></span><span id="reviewCount">0</span> awaiting review</span>' +
-  '<span class="pg-status-item pg-status-ai" id="pgStatusAI">Monitoring active</span>' +
+  '<span class="pg-status-item" id="pgStatusReview"><span class="pg-status-dot ok"></span><span id="reviewCount">0</span> needing review</span>' +
+  '<span class="pg-status-item" id="pgStatusAI">Monitoring active</span>' +
   '</div>' +
   '</div>';
 
@@ -497,7 +479,6 @@ function renderPayGuard(agent, analytics, policies, ew, workflows) {
   '<div class="pg-policy-grid" id="policyGrid">' +
   renderConfig() +
   '</div>' +
-  '<div class="pg-save-status" id="cfgMsg"><span class="pg-save-dot saved"></span>Autosaved</div>' +
   '<div class="pg-card pg-risk-card" id="riskCard">' +
   '<div class="pg-card-title">Risk Controls</div><div id="riskBody">' + renderRiskControls() + '</div>' +
   '</div></div>';
@@ -714,10 +695,10 @@ function renderConfig() {
  { id:'recovery_strategy', icon:'', label:'Recovery Strategy',
  body: function(){
  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Profile</div><div class="pg-cfg-row">' +
- ['Conservative','Balanced','Aggressive'].map(function(p,i){
- var descs = ['40% recovery, low pressure','62% recovery, moderate','78% recovery, higher risk'];
- return '<div class="pg-cfg-seg-btn pg-cfg-profile-btn ' + (i===1?'active':'') + '" data-v="' + p.toLowerCase() + '">' +
- '<div class="pg-cfg-profile-name">' + p + '</div><div class="pg-cfg-profile-desc">' + descs[i] + '</div></div>';
+  ['Conservative','Balanced','Aggressive'].map(function(p,i){
+  var descs = ['40% recovery, low pressure','62% recovery, moderate','78% recovery, higher risk'];
+  return '<div class="pg-cfg-seg-btn pg-cfg-profile-btn ' + (i===1?'active':'') + '" data-v="' + p.toLowerCase() + '" title="' + descs[i] + '">' +
+  '<div class="pg-cfg-profile-name">' + p + '</div></div>';
  }).join('') + '</div></div>' +
  '<div class="pg-cfg-field"><div class="pg-cfg-label">Recovery window</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-window">' +
  '<button class="pg-cfg-seg-btn active" data-v="14">14 days</button>' +
@@ -725,16 +706,22 @@ function renderConfig() {
  '<button class="pg-cfg-seg-btn" data-v="7">7 days</button>' +
  '</div></div></div>' +
  '<div class="pg-cfg-field"><div class="pg-cfg-row"><div class="pg-toggle on" id="tgl-smart"></div><span class="pg-cfg-toggle-label">AI adapts timing based on success</span></div></div>' +
- '<div class="pg-cfg-adv"><button class="pg-cfg-adv-toggle" onclick="toggleAdv(this)"> Advanced</button>' +
- '<div class="pg-cfg-adv-body"><input type="text" class="pg-autosave pg-cfg-input-wide" data-key="retry_intervals" value="5min, 1h, 24h">' +
- '<input type="number" class="pg-autosave pg-cfg-input-narrow" data-key="max_retries" value="3"> max attempts' +
- '</div></div><span class="pg-cfg-autosave-hint">' + ' Autosaves after 1.5s</span>';
+  '<div class="pg-cfg-adv"><button class="pg-cfg-adv-toggle" onclick="toggleAdv(this)"> Advanced</button>' +
+  '<div class="pg-cfg-adv-body">' +
+  '<div class="pg-cfg-field"><div class="pg-cfg-label">Retry intervals</div>' +
+  '<div class="pg-cfg-row" style="gap:4px">' +
+  '<input type="text" class="pg-autosave pg-cfg-input-narrow" data-key="retry_interval_1" value="5min" title="First retry delay" style="width:60px"> <span class="pg-cfg-rule-hint">then</span> ' +
+  '<input type="text" class="pg-autosave pg-cfg-input-narrow" data-key="retry_interval_2" value="1h" title="Second retry delay" style="width:60px"> <span class="pg-cfg-rule-hint">then</span> ' +
+  '<input type="text" class="pg-autosave pg-cfg-input-narrow" data-key="retry_interval_3" value="24h" title="Third retry delay" style="width:60px">' +
+  '</div></div>' +
+  '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Max retry attempts</div><input type="number" class="pg-autosave pg-cfg-input-narrow" data-key="max_retries" value="3" min="1" max="10" style="width:70px"></div>' +
+  '</div></div>';
  }
  },
  { id:'communication', icon:'', label:'Customer Communication',
  body: function(){
  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Channels</div><div class="pg-cfg-row">' +
- ['email','widget','sms'].map(function(c,i){ return '<label class="pg-cfg-chk-label pg-cfg-chk-inline"><input type="checkbox" ' + (i<2?'checked':'') + '> ' + c + '</label>'; }).join('') +
+  ['email','widget','whatsapp'].map(function(c,i){ return '<label class="pg-cfg-chk-label pg-cfg-chk-inline"><input type="checkbox" ' + (i<2?'checked':'') + '> ' + c + '</label>'; }).join('') +
  '</div></div>' +
  '<div class="pg-cfg-field"><div class="pg-cfg-label">Tone</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-tone">' +
  '<button class="pg-cfg-seg-btn" data-v="strict">Strict</button>' +
@@ -746,21 +733,25 @@ function renderConfig() {
  },
  { id:'approval_rules', icon:'', label:'Approval Rules',
  body: function(){
- return '<div class="pg-cfg-field"><div class="pg-cfg-label">Require approval when</div>' +
- '<div class="pg-cfg-rule-box">' +
- '<div class="pg-cfg-rule-row"><select class="pg-autosave pg-cfg-select" data-key="approval_condition">' +
- '<option value="amount">Amount &gt;</option><option value="risk">Risk level</option><option value="sentiment">Customer sentiment</option></select>' +
- '<input type="number" class="pg-autosave pg-cfg-input-narrow" data-key="approval_threshold" value="500"></div>' +
- '<div class="pg-cfg-rule-hint">OR when customer sentiment = negative</div>' +
- '</div></div>';
+  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Require approval when</div>' +
+  '<div class="pg-cfg-rule-box">' +
+  '<div class="pg-cfg-rule-row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+  '<select class="pg-autosave pg-cfg-select" data-key="approval_condition" style="flex:1;min-width:120px">' +
+  '<option value="amount">Amount exceeds</option><option value="risk">Risk level is</option><option value="sentiment">Customer sentiment</option></select>' +
+  '<div class="pg-num-wrap"><button class="pg-num-btn" onclick="spinNum(this,-1)">−</button>' +
+  '<input type="number" class="pg-autosave" data-key="approval_threshold" value="500">' +
+  '<button class="pg-num-btn" onclick="spinNum(this,1)">+</button></div>' +
+  '</div>' +
+  '<div class="pg-cfg-rule-hint" style="margin-top:6px">OR when customer sentiment is negative</div>' +
+  '</div></div>';
  }
  },
  { id:'escalation_rules', icon:'', label:'Escalation Rules',
  body: function(){
- return '<div class="pg-cfg-field"><div class="pg-cfg-label">Severity</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-escalation">' +
- '<button class="pg-cfg-seg-btn active" data-v="low">Low</button>' +
- '<button class="pg-cfg-seg-btn" data-v="medium">Medium</button>' +
- '<button class="pg-cfg-seg-btn" data-v="critical">Critical</button>' +
+  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Severity <span class="pg-cfg-rule-hint" title="Low = normal monitoring, Medium = supervisor notified, Critical = immediate human intervention required" style="cursor:help">(?)</span></div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-escalation">' +
+  '<button class="pg-cfg-seg-btn" data-v="low" title="Normal monitoring, standard retry flow">Low</button>' +
+  '<button class="pg-cfg-seg-btn active" data-v="medium" title="Supervisor notified, additional review triggered">Medium</button>' +
+  '<button class="pg-cfg-seg-btn" data-v="critical" title="Immediate human intervention required">Critical</button>' +
  '</div></div></div>' +
  '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Triggers</div>' +
  ['Frustration detected','Payment repeatedly fails','High-value at risk','AI confidence low'].map(function(r,i){ return '<label class="pg-cfg-chk-label"><input type="checkbox" ' + (i<3?'checked':'') + '> ' + r + '</label>'; }).join('') +
@@ -775,8 +766,19 @@ function renderConfig() {
 }
 
 function renderRiskControls() {
- return '<div class="pg-cfg-field"><div class="pg-cfg-label">Blocked failure codes</div><input type="text" class="pg-autosave pg-cfg-input-wide" data-key="blocked_failure_codes" value="fraud, stolen_card, lost_card, blocked"></div>' +
- '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Rate limits</div><input type="number" class="pg-autosave pg-cfg-input-narrow" data-key="max_daily" value="3"> per customer per day</div>';
+ return '<div class="pg-cfg-field"><div class="pg-cfg-label">Blocked failure codes <span class="pg-cfg-rule-hint" title="Failure codes that PayGuard will never retry. Payments matching these codes are immediately escalated." style="cursor:help">(?)</span></div>' +
+ '<div class="pg-cfg-row" style="gap:4px;flex-wrap:wrap">' +
+ ['fraud','stolen_card','lost_card','blocked'].map(function(c){
+  return '<label class="pg-tag-chk"><input type="checkbox" checked> ' + c.replace(/_/g,' ') + '</label>';
+ }).join('') +
+ '</div></div>' +
+ '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Rate limits</div>' +
+ '<div class="pg-cfg-row" style="gap:8px;align-items:center">' +
+ '<div class="pg-num-wrap"><button class="pg-num-btn" onclick="spinNum(this,-1)">−</button>' +
+ '<input type="number" class="pg-autosave" data-key="max_daily" value="3" min="1" max="50">' +
+ '<button class="pg-num-btn" onclick="spinNum(this,1)">+</button></div>' +
+ '<span class="pg-cfg-rule-hint">retries per customer per day</span>' +
+ '</div></div>';
 }
 
 function toggleAdv(btn) {
@@ -784,38 +786,76 @@ function toggleAdv(btn) {
  if (body) { body.classList.toggle('open'); btn.textContent = body.classList.contains('open') ? '\u25BC Advanced' : '\u25B6 Advanced'; }
 }
 
+function spinNum(btn, dir) {
+ var input = btn.parentNode.querySelector('input');
+ if (!input) return;
+ var v = parseFloat(input.value) || 0;
+ var step = parseFloat(input.step) || 1;
+ input.value = v + step * dir;
+ input.dispatchEvent(new Event('input', {bubbles:true}));
+}
+
 // Autosave
 (function(){
  var timer = null;
- function setSaveStatus(state, text) {
-  var m = document.getElementById('cfgMsg');
-  if (!m) return;
-  var dot = m.querySelector('.pg-save-dot');
-  if (dot) { dot.className = 'pg-save-dot ' + state; }
-  m.childNodes[1].textContent = text || (state === 'saved' ? 'Autosaved' : state === 'dirty' ? 'Unsaved' : state === 'saving' ? 'Saving\u2026' : '');
+ var hideTimer = null;
+ function toast(state, text) {
+  var t = document.getElementById('cfgToast');
+  if (!t) return;
+  var dot = t.querySelector('.pg-toast-dot');
+  if (dot) dot.className = 'pg-toast-dot ' + state;
+  var txt = document.getElementById('cfgToastTxt');
+  if (txt) txt.textContent = text || (state === 'saved' ? 'Saved' : state === 'dirty' ? 'Unsaved' : state === 'saving' ? 'Saving\u2026' : '');
+  t.classList.add('show');
+  clearTimeout(hideTimer);
+  if (state === 'saved') { hideTimer = setTimeout(function(){ t.classList.remove('show'); }, 2000); }
  }
+ // Segmented button click handler
+ document.addEventListener('click', function(e){
+  var btn = e.target.closest('.pg-cfg-seg-btn');
+  if (!btn || btn.closest('.pg-cfg-profile-btn')) return;
+  var seg = btn.closest('.pg-cfg-seg');
+  if (!seg) return;
+  seg.querySelectorAll('.pg-cfg-seg-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  if (timer) clearTimeout(timer); timer = setTimeout(doSave, 1500);
+  toast('dirty', 'Unsaved');
+ });
+ // Profile button click handler
+ document.addEventListener('click', function(e){
+  var btn = e.target.closest('.pg-cfg-profile-btn');
+  if (!btn) return;
+  btn.closest('.pg-cfg-row').querySelectorAll('.pg-cfg-profile-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  if (timer) clearTimeout(timer); timer = setTimeout(doSave, 1500);
+  toast('dirty', 'Unsaved');
+ });
  document.addEventListener('input', function(e){
   if (!e.target.classList.contains('pg-autosave')) return;
   if (timer) clearTimeout(timer); timer = setTimeout(doSave, 1500);
-  setSaveStatus('dirty', 'Unsaved');
+  toast('dirty', 'Unsaved');
  });
  document.addEventListener('change', function(e){
   if (!e.target.closest('.pg-cfg-seg') && !e.target.closest('.pg-toggle')) return;
   if (timer) clearTimeout(timer); timer = setTimeout(doSave, 1500);
-  setSaveStatus('dirty', 'Unsaved');
+  toast('dirty', 'Unsaved');
  });
 })();
 
 async function doSave() {
  var sections = ['recovery_strategy','communication','approval_rules','escalation_rules'];
- var m = document.getElementById('cfgMsg');
- function setStatus(state, text) {
-  if (!m) return;
-  var dot = m.querySelector('.pg-save-dot');
-  if (dot) dot.className = 'pg-save-dot ' + state;
-  m.childNodes[1].textContent = text;
+ function setToast(state, text) {
+  var t = document.getElementById('cfgToast');
+  if (!t) return;
+  var dot = t.querySelector('.pg-toast-dot');
+  if (dot) dot.className = 'pg-toast-dot ' + state;
+  var txt = document.getElementById('cfgToastTxt');
+  if (txt) txt.textContent = text;
+  t.classList.add('show');
+  clearTimeout(window._hideToast);
+  if (state === 'saved') { window._hideToast = setTimeout(function(){ t.classList.remove('show'); }, 2000); }
  }
- setStatus('saving', 'Saving\u2026');
+ setToast('saving', 'Saving\u2026');
  var vals = {};
  document.querySelectorAll('.pg-autosave').forEach(function(inp){
   var k = inp.dataset.key; if (!k) return;
@@ -827,6 +867,9 @@ async function doSave() {
   var active = seg.querySelector('.pg-cfg-seg-btn.active');
   if (active) vals[seg.id.replace('seg-','')] = active.dataset.v;
  });
+ // Collect profile buttons
+ var profileActive = document.querySelector('.pg-cfg-profile-btn.active');
+ if (profileActive) vals.profile = profileActive.dataset.v;
  document.querySelectorAll('.pg-toggle').forEach(function(tgl){
   var id = tgl.id;
   if (id) vals[id.replace('tgl-','')] = tgl.classList.contains('on');
@@ -834,16 +877,17 @@ async function doSave() {
  document.querySelectorAll('.pg-cfg-body input[type="checkbox"]').forEach(function(cb){
   vals[cb.id || cb.nextSibling.textContent.trim().toLowerCase().replace(/\s+/g,'_')] = cb.checked;
  });
+ document.querySelectorAll('#riskBody input[type="checkbox"]').forEach(function(cb){
+  vals[cb.name || 'blocked_' + (cb.value || cb.parentNode.textContent.trim().toLowerCase().replace(/\s+/g,'_'))] = cb.checked;
+ });
  try {
   for (var i = 0; i < sections.length; i++) {
-   setStatus('saving', 'Saving (' + (i+1) + '/' + sections.length + ')\u2026');
+   setToast('saving', 'Saving (' + (i+1) + '/' + sections.length + ')\u2026');
    await api('/admin/api/agents/payguard/policy', {method:'PUT', body:{section:sections[i], values:vals}});
   }
-  setStatus('saved', 'Saved');
-  setTimeout(function(){ setStatus('saved', 'Autosaved'); }, 2500);
+  setToast('saved', 'Saved');
  } catch(e) {
-  setStatus('dirty', 'Save failed');
-  setTimeout(function(){ setStatus('dirty', 'Unsaved'); }, 3000);
+  setToast('dirty', 'Save failed');
  }
 }
 
@@ -938,40 +982,16 @@ async function loadTrust(wfId, body) {
  } catch(e) { body.innerHTML = '<div class="pg-empty"><div>Error loading trust data.</div></div>'; }
 }
 
-// Simulation 
-function showSim() { document.getElementById('simModal').classList.add('show'); runSim(); }
-function hideSim() { document.getElementById('simModal').classList.remove('show'); }
-
-async function runSim() {
- try {
- var d = await api('/admin/api/agents/payguard/roi');
- var total = d.total_workflows || 0;
- var sample = Math.min(total, 100);
- document.getElementById('simSample').textContent = total || '0';
- document.getElementById('simAcc').textContent = total< 50 ? '±15%' : total< 200 ? '±8%' : '±5%';
-
- var rate = (d.recovery_rate || 0) / 100;
- var avgAmt = total> 0 && d.revenue_recovered && d.revenue_recovered['30d'] ? (d.revenue_recovered['30d'] / total) : 29.99;
- var projRec = Math.round(sample * rate);
- var projRev = projRec * avgAmt;
- var projEsc = Math.round(sample * 0.08);
- var projHrs = projRec * 0.5;
-
- document.getElementById('simRev').textContent = '$' + fmtNum(projRev.toFixed(2));
- document.getElementById('simRevComp').textContent = '+' + fmtNum((projRev * 0.25).toFixed(2)) + ' vs manual';
- document.getElementById('simAuto').textContent = Math.round(rate * 100) + '%';
- document.getElementById('simEsc').textContent = projEsc;
- document.getElementById('simEscNote').textContent = projEsc> 20 ? ' ' + projEsc + ' need review' : 'manageable';
- document.getElementById('simHrs').textContent = projHrs.toFixed(1) + 'h';
- } catch(e) {}
-}
+// Enable confirmation
+function showEnable() { document.getElementById('enableModal').classList.add('show'); }
+function hideEnable() { document.getElementById('enableModal').classList.remove('show'); }
 
 function doEnablePayGuard() {
- hideSim();
+ hideEnable();
  pgEnabled = true;
  updatePGStatus(true);
  var btns = document.querySelectorAll('.pg-h-btn.ghost');
- btns.forEach(function(b){ if (b.textContent.includes('Resume')) b.textContent = '⏸ Pause'; });
+  btns.forEach(function(b){ if (b.textContent.includes('Resume')) b.textContent = 'Pause'; });
  api('/admin/api/policies').then(function(pols){
  var ew = toObject(pols.enabled_workflows);
  ew.payguard = true;
@@ -981,13 +1001,12 @@ function doEnablePayGuard() {
 
 async function togglePG(btn) {
  if (!pgEnabled) {
- showSim();
- document.getElementById('simEnableBtn').textContent = 'Enable PayGuard';
- return;
+  showEnable();
+  return;
  }
  pgEnabled = false;
  updatePGStatus(false);
- if (btn) { btn.textContent = ' Resume'; }
+  if (btn) { btn.textContent = 'Resume'; }
  try {
  var pols = await api('/admin/api/policies');
  var ew = toObject(pols.enabled_workflows);
@@ -999,6 +1018,10 @@ async function togglePG(btn) {
 function updatePGStatus(on) {
  var pill = document.getElementById('pgStatPill');
  if (pill) { pill.textContent = on ? 'Active' : 'Paused'; pill.className = 'pill ' + (on ? 'ok' : 'muted'); }
+ var sr = document.getElementById('pgStatusReview');
+ if (sr) { sr.innerHTML = on ? '<span class="pg-status-dot ok"></span>Monitoring' : '<span class="pg-status-dot muted"></span>Paused'; }
+ var navPill = document.getElementById('navPGStatus');
+ if (navPill) { navPill.textContent = on ? 'Enabled' : 'Paused'; navPill.className = 'pill ' + (on ? 'ok' : 'muted'); }
 }
 
 // Badge polling 
@@ -1013,16 +1036,20 @@ async function loadBadges() {
  if (ba) { ba.textContent = ap.total || 0; ba.style.display = ap.total> 0 ? '' : 'none'; }
  if (be) { be.textContent = es.total || 0; be.style.display = es.total> 0 ? '' : 'none'; }
  setKpi('kpiApproval', ap.total || 0);
- // Status ribbon
- var sr = document.getElementById('pgStatusReview');
- if (sr) {
- var n = (ap.total||0) + (es.total||0);
- sr.innerHTML = '<span class="pg-status-dot ' + (n>0?'warn':'ok') + '"></span>' + (n>0 ? n + ' items needing attention' : 'All clear');
- }
- var ai = document.getElementById('pgStatusAI');
- if (ai) {
- ai.innerHTML = ' Monitoring active ·<span class="pg-status-time">Last check ' + (new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})) + '</span>';
- }
+  // Status ribbon
+  var sr = document.getElementById('pgStatusReview');
+  if (sr) {
+   var n = (ap.total||0) + (es.total||0);
+   if (!pgEnabled) {
+    sr.innerHTML = '<span class="pg-status-dot muted"></span>Paused';
+   } else {
+    sr.innerHTML = '<span class="pg-status-dot ' + (n>0?'warn':'ok') + '"></span>' + (n>0 ? n + ' needing review' : 'Monitoring');
+   }
+  }
+  var ai = document.getElementById('pgStatusAI');
+  if (ai) {
+   ai.innerHTML = 'Last check ' + (new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+  }
  } catch(e) {}
 }
 
