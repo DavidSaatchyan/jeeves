@@ -15,6 +15,7 @@ from pydantic import BaseModel
 
 from .chunking import file_sha256, sanitize_filename
 from .auth import get_current_tenant
+from . import rag
 from .config import get_settings
 from .db import get_db, engine
 from .models import FileRecord, Tenant
@@ -33,7 +34,6 @@ async def _background_index(tenant_id: uuid.UUID, file_id: uuid.UUID, file_path:
     """Run RAG indexing in a background thread to avoid blocking the HTTP request."""
     import logging
     try:
-        from . import rag
         logging.info("[index] Starting indexing file %s at %s", file_id, file_path)
         n = await asyncio.to_thread(rag.index_file, tenant_id, file_id, file_path)
         logging.info("[index] Indexed %s chunks for file %s, updating DB", n, file_id)
@@ -152,7 +152,8 @@ async def chat(
     from . import rag
     from openai import AsyncOpenAI
 
-    chunks = rag.search(tenant.id, body.message)
+    import asyncio
+    chunks = await asyncio.to_thread(rag.search, tenant.id, body.message)
     context = "\n\n".join(c["text"] for c in chunks) if chunks else ""
 
     if context:

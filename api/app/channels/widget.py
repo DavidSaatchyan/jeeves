@@ -105,9 +105,17 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
         chunks = []
     context = "\n\n".join(c["text"] for c in chunks) if chunks else ""
     if context:
-        system = f"You are a support agent. Answer the user's question using ONLY the context below. If the context doesn't contain the answer, say you don't know.\n\nContext:\n{context}"
+        system = (
+            "You are a support agent. Answer the user's question based ONLY on the context below. "
+            "If the context doesn't contain enough information, say you don't have that information "
+            "in your knowledge base and offer to connect with a specialist.\n\nContext:\n" + context
+        )
     else:
-        system = None
+        system = (
+            "You are a support agent. You do not have the information to answer this question "
+            "in your knowledge base. Respond that this information is not available and offer to "
+            "connect the user with a specialist."
+        )
 
     result = await _simple_llm_response(tenant.id, body.message, system_override=system)
 

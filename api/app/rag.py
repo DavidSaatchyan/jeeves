@@ -170,8 +170,8 @@ def search(
                     "chunk_hash": meta.get("chunk_hash", ""),
                 }
             )
-        if out and out[0]["distance"] > 0.75:
-            logger.info("search: best dist=%.4f > 0.75, treating as empty", out[0]["distance"])
+        if out and out[0]["distance"] > thr:
+            logger.info("search: best dist=%.4f > %.2f, treating as empty", out[0]["distance"], thr)
             return []
         logger.info("search passed threshold(%f): %d/%d results", thr, len(out), len(docs))
         return out
