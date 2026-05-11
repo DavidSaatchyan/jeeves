@@ -167,7 +167,7 @@
 .pg-num-btn { padding: 6px 8px; background: transparent; border: none; color: var(--pg-muted); cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; transition: all .1s; }
 .pg-num-btn:hover { color: var(--pg-text); background: rgba(255,255,255,0.04); }
 .pg-cfg-rule-hint { color: var(--pg-muted); font-size: var(--fs-small); }
-.pg-tag-chk { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 5px 12px; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: 20px; font-size: var(--fs-label); cursor: pointer; transition: all .1s; user-select: none; }
+.pg-tag-chk { display: inline-block; padding: 5px 12px; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: 20px; font-size: var(--fs-label); cursor: pointer; transition: all .1s; user-select: none; }
 .pg-tag-chk input { display: none; }
 .pg-tag-chk:has(input:checked) { background: var(--pg-accent-bg); border-color: rgba(99,102,241,0.3); color: var(--pg-accent); }
 .pg-tag-chk:hover { border-color: var(--pg-muted); }
@@ -176,7 +176,8 @@
 .pg-cfg-input-narrow { width: 70px; padding: 8px 10px; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-sm); color: var(--pg-text); font-size: var(--fs-body); }
 .pg-cfg-chk-label { display: flex; align-items: center; gap: var(--sp-sm); font-size: var(--fs-body); cursor: pointer; margin-bottom: var(--sp-sm); padding: 4px 0; }
 .pg-cfg-chk-label input { width: 16px; height: 16px; accent-color: var(--pg-accent); margin: 0; flex-shrink: 0; }
-.pg-cfg-chk-inline { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 0; padding: 6px 14px; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-sm); }
+.pg-cfg-chk-inline { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 0; padding: 6px 14px; font-size: var(--fs-body); cursor: pointer; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-sm); }
+.pg-cfg-chk-inline input { width: 16px; height: 16px; accent-color: var(--pg-accent); margin: 0; flex-shrink: 0; }
 .pg-cfg-toggle-label { font-size: var(--fs-label); }
 
 /* Risk card */
@@ -724,7 +725,7 @@ function renderConfig() {
  { id:'communication', icon:'', label:'Customer Communication',
  body: function(){
   return '<div class="pg-cfg-field"><div class="pg-cfg-label">Channels</div><div class="pg-cfg-row">' +
-   ['email','widget','whatsapp'].map(function(c,i){ return '<label class="pg-cfg-chk-label pg-cfg-chk-inline"><input type="checkbox" ' + (i<2?'checked':'') + '> <span>' + c + '</span></label>'; }).join('') +
+    ['email','widget','whatsapp'].map(function(c,i){ return '<label class="pg-cfg-chk-inline"><input type="checkbox" ' + (i<2?'checked':'') + '> <span>' + c + '</span></label>'; }).join('') +
  '</div></div>' +
  '<div class="pg-cfg-field"><div class="pg-cfg-label">Tone</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-tone">' +
  '<button class="pg-cfg-seg-btn" data-v="strict">Strict</button>' +
