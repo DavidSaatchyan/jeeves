@@ -173,7 +173,14 @@ def search(
         if out and out[0]["distance"] > thr:
             logger.info("search: best dist=%.4f > %.2f, treating as empty", out[0]["distance"], thr)
             return []
-        logger.info("search passed threshold(%f): %d/%d results", thr, len(out), len(docs))
+        logger.info(
+            "search passed threshold(%f): %d/%d results\n%s",
+            thr, len(out), len(docs),
+            "\n".join(f"  [{i}] dist={r['distance']:.4f} score={r['score']:.4f} "
+                      f"file={r['filename']} sect={r['section'][:40]} "
+                      f"text={r['text'][:120]!r}"
+                      for i, r in enumerate(out))
+        )
         return out
     except Exception as e:
         logger.error("search failed: %s", e)
