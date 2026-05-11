@@ -50,6 +50,7 @@
     <button id="clearAllBtn" class="ghost sm kb-clear-all" style="display:none" onclick="clearAll()">Clear all</button>
   </div>
   <table class="kb-table"><thead><tr><th class="col-name">Filename</th><th class="col-status">Status</th><th class="col-size">Size</th><th class="col-chunks">Chunks</th><th class="col-date">Uploaded</th><th class="col-actions"></th></tr></thead><tbody id="tbl"></tbody></table>
+  <div id="procMsg" class="kb-proc"><span class="kb-spinner"></span> Processing...</div>
 </div>
 
 
@@ -85,6 +86,7 @@
 .kb-table th,.kb-table td{padding:8px 12px;text-align:left;font-size:12px;border-bottom:1px solid var(--border)}
 .col-name{width:auto}.col-status{width:100px}.col-size{width:80px;text-align:right}.col-chunks{width:80px;text-align:right}.col-date{width:110px}.col-actions{width:60px}
 .kb-clear-all{color:var(--muted2)}.kb-clear-all:hover{color:var(--red)}
+.kb-proc{display:none;align-items:center;gap:8px;padding:12px 16px;font-size:12px;color:var(--muted);border-top:1px solid var(--border)}
 .del-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:4px;padding:4px;cursor:pointer}
 .del-btn:hover{color:var(--red);background:rgba(248,113,113,0.08)}
 .kb-uprog{display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 0}
@@ -117,6 +119,7 @@ async function refresh() {
     document.getElementById('kbSummary').style.display = 'grid';
 
     var hasFiles = rows.length > 0;
+    var hasProcessing = rows.some(function(r){ return r.status === 'processing'; });
     document.getElementById('clearAllBtn').style.display = hasFiles ? '' : 'none';
     document.getElementById('tbl').innerHTML = rows.map(function(r){
       const cls = r.status === 'ready' ? 'ok' : (r.status === 'failed' ? 'err' : 'warn');
@@ -129,6 +132,8 @@ async function refresh() {
         + '<td>' + (r.created_at ? r.created_at.slice(0, 10) : '—') + '</td>'
         + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + esc(r.filename).replace(/"/g,'&quot;') + '">✕</button></td></tr>';
     }).join('') || '<tr><td colspan="6" class="muted" style="text-align:center;padding:16px">No files yet.</td></tr>';
+    document.getElementById('procMsg').style.display = hasProcessing ? '' : 'none';
+    if(hasProcessing && !_pollingActive) pollProcessing();
   } catch(e) { console.error('kb refresh error:', e); }
 }
 
@@ -187,18 +192,29 @@ async function uploadMany(files){
     }
   }
   await refresh();
-  await pollProcessing();
   setTimeout(function(){ prog.innerHTML = ''; }, 2500);
 }
 
+var _pollingActive = false;
 async function pollProcessing(){
-  for(var i = 0; i < 30; i++){
-    var rows = await api('/knowledge/files');
-    var pending = rows.filter(function(r){ return r.status === 'processing'; });
-    if(!pending.length) return;
-    await new Promise(function(r){ setTimeout(r, 2000); });
-  }
-  await refresh();
+  if(_pollingActive) return;
+  _pollingActive = true;
+  try {
+    for(var i = 0; i < 600; i++){
+      var rows = await api('/knowledge/files');
+      var pending = rows.filter(function(r){ return r.status === 'processing'; });
+      var pMsg = document.getElementById('procMsg');
+      if(!pending.length) {
+        pMsg.style.display = 'none';
+        _pollingActive = false;
+        await refresh();
+        return;
+      }
+      pMsg.style.display = '';
+      await new Promise(function(r){ setTimeout(r, 2000); });
+    }
+  } catch(e) { console.error('poll error:', e); }
+  _pollingActive = false;
 }
 
 async function del(btn){
