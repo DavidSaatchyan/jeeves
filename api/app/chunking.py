@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
@@ -165,7 +165,9 @@ def _pack(parts: Iterable[str], separator: str) -> list[str]:
         if p_tok > MAX_TOKENS:
             # part itself too big — flush, then split recursively
             if cur:
-                chunks.append(separator.join(cur)); cur = []; cur_tok = 0
+                chunks.append(separator.join(cur))
+                cur = []
+                cur_tok = 0
             chunks.extend(_split_recursive(p))
             continue
         if cur_tok + p_tok > MAX_TOKENS and cur:

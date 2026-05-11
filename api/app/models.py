@@ -16,9 +16,10 @@ from sqlalchemy import (
 )
 from sqlalchemy import JSON
 from sqlalchemy.dialects.postgresql import UUID
-JSONB = JSON  # Use JSON for dev (SQLite), JSONB in production (PostgreSQL)
 
 from .db import Base
+
+JSONB = JSON  # Use JSON for dev (SQLite), JSONB in production (PostgreSQL)
 
 
 def _uuid():
