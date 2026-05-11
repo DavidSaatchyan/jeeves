@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 _settings = get_settings()
 _rag_cfg = get_yaml_config().get("rag", {})
 EMBED_MODEL = _rag_cfg.get("embedding_model", "text-embedding-3-small")
-TOP_K = int(_rag_cfg.get("top_k", 5))
+TOP_K = int(_rag_cfg.get("top_k", 15))
 # cosine distance (1 - cos_sim). Empirically for text-embedding-3-small,
 # distances below ~0.45 are usefully relevant; above ~0.60 is noise.
 DISTANCE_THRESHOLD = float(_rag_cfg.get("distance_threshold", 0.85))
@@ -152,9 +152,15 @@ def search(
             fname = (meta or {}).get("filename", "?")
             raw_log.append(f"  [{i}] dist={dist:.4f} file={fname} text={doc[:80]}")
         logger.debug("search raw results (%d):\n%s", len(docs), "\n".join(raw_log))
+        seen: set[str] = set()
         out: list[dict[str, Any]] = []
         for i, (doc, meta, dist) in enumerate(zip(docs, metas, dists)):
             meta = meta or {}
+            h = meta.get("chunk_hash", "") or ""
+            if h and h in seen:
+                continue
+            if h:
+                seen.add(h)
             out.append(
                 {
                     "id": ids[i] if i < len(ids) else f"unknown-{i}",
@@ -167,7 +173,7 @@ def search(
                     "page": meta.get("page"),
                     "char_start": meta.get("char_start"),
                     "char_end": meta.get("char_end"),
-                    "chunk_hash": meta.get("chunk_hash", ""),
+                    "chunk_hash": h,
                 }
             )
         if out and out[0]["distance"] > thr:
@@ -185,3 +191,65 @@ def search(
     except Exception as e:
         logger.error("search failed: %s", e)
         return []
+
+
+def _all_chunks(tenant_id: UUID | str) -> tuple[list[str], list[dict]]:
+    """Fetch all chunk IDs + metadatas from a tenant collection."""
+    col = _collection(tenant_id)
+    cnt = col.count()
+    if cnt == 0:
+        return [], []
+    r = col.get(include=["metadatas"])
+    ids: list[str] = r.get("ids", [])
+    metas: list[dict] = r.get("metadatas", []) or []
+    return ids, metas
+
+
+def deduplicate_collection(tenant_id: UUID | str) -> dict:
+    """Remove duplicate chunks (same filename + chunk_hash) from Chroma,
+    keeping only one copy. Returns stats."""
+    col = _collection(tenant_id)
+    ids, metas = _all_chunks(tenant_id)
+    if not ids:
+        return {"total": 0, "removed": 0}
+
+    by_key: dict[str, list[str]] = {}
+    for cid, meta in zip(ids, metas):
+        key = f"{meta.get('filename', '?')}:{meta.get('chunk_hash', '')}"
+        by_key.setdefault(key, []).append(cid)
+
+    to_delete: list[str] = []
+    for key, cids in by_key.items():
+        for cid in cids[1:]:
+            to_delete.append(cid)
+
+    if to_delete:
+        col.delete(ids=to_delete)
+        logger.info("dedup: removed %d duplicate chunks, %d unique remain",
+                     len(to_delete), len(by_key))
+    else:
+        logger.info("dedup: no duplicates found (%d chunks)", len(ids))
+    return {"total": len(ids), "removed": len(to_delete)}
+
+
+def purge_orphans(tenant_id: UUID | str, active_file_ids: set[str]) -> dict:
+    """Remove Chroma chunks whose file_id is not in active_file_ids
+    (i.e. chunks left behind by old uploads / failed deletes). Returns stats."""
+    col = _collection(tenant_id)
+    ids, metas = _all_chunks(tenant_id)
+    if not ids:
+        return {"total": 0, "removed": 0}
+
+    to_delete: list[str] = []
+    for cid, meta in zip(ids, metas):
+        fid = meta.get("file_id") or ""
+        if fid not in active_file_ids:
+            to_delete.append(cid)
+
+    if to_delete:
+        col.delete(ids=to_delete)
+        logger.info("purge: removed %d orphan chunks (active=%d, total=%d)",
+                     len(to_delete), len(active_file_ids), len(ids))
+    else:
+        logger.info("purge: no orphans found (%d chunks)", len(ids))
+    return {"total": len(ids), "removed": len(to_delete)}

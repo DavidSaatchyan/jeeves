@@ -209,28 +209,30 @@ def build_chunks(path: Path) -> list[Chunk]:
         if not text:
             continue
         parts = _split_recursive(text)
+        # Prepend section path to every chunk for richer embeddings + LLM context
+        section_prefix = f"# {u.section}\n\n" if u.section else ""
         # Track char offsets inside the unit (approximate, for citations).
         cursor = 0
         for p in parts:
             idx = u.text.find(p, cursor)
             if idx < 0:
-                # Fallback: use running cursor if find fails (token window may
-                # not be byte-identical to source due to tokenizer round-trip).
                 idx = cursor
             start = idx
             end = idx + len(p)
             cursor = end
+            chunk_text = section_prefix + p
             # Hard cap defence: if somehow a chunk is still too big, window it.
-            if _ntok(p) > HARD_CAP_TOKENS:
+            if _ntok(chunk_text) > HARD_CAP_TOKENS:
                 for w in _token_window(p):
+                    wt = section_prefix + w
                     chunks.append(Chunk(
-                        text=w, filename=filename, section=u.section, page=u.page,
-                        char_start=start, char_end=start + len(w), chunk_hash=_hash(w),
+                        text=wt, filename=filename, section=u.section, page=u.page,
+                        char_start=start, char_end=start + len(w), chunk_hash=_hash(wt),
                     ))
                 continue
             chunks.append(Chunk(
-                text=p, filename=filename, section=u.section, page=u.page,
-                char_start=start, char_end=end, chunk_hash=_hash(p),
+                text=chunk_text, filename=filename, section=u.section, page=u.page,
+                char_start=start, char_end=end, chunk_hash=_hash(chunk_text),
             ))
     return chunks
 

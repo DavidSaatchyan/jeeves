@@ -222,3 +222,22 @@ def delete_file(
         logger.warning("chroma delete warning: %s", e)
 
     return
+
+
+@router.post("/cleanup")
+def cleanup_chroma(
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    """Remove stale/duplicate chunks from Chroma. Steps:
+    1. Purge chunks whose file_id no longer exists in DB (orphans)
+    2. Deduplicate remaining chunks by (filename, chunk_hash)
+    """
+    active = set()
+    for r in db.query(FileRecord).filter(FileRecord.tenant_id == tenant.id).all():
+        active.add(str(r.id))
+
+    p = rag.purge_orphans(tenant.id, active)
+    d = rag.deduplicate_collection(tenant.id)
+
+    return {"purge": p, "dedup": d}
