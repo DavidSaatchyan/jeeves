@@ -73,19 +73,6 @@
 .pg-h-btn.ghost { background: transparent; color: var(--pg-muted); border: 1px solid var(--pg-border); }
 .pg-h-btn.ghost:hover { color: var(--pg-text); border-color: var(--pg-muted); }
 
-/* Status ribbon — simplified */
-.pg-status {
- display: flex; align-items: center; gap: var(--sp-md);
- padding: var(--sp-sm) 24px; border-top: 1px solid var(--pg-border);
- font-size: var(--fs-label); flex-wrap: wrap;
-}
-.pg-status-item { display: flex; align-items: center; gap: 6px;}
-.pg-status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.pg-status-dot.ok { background: var(--pg-success); }
-.pg-status-dot.warn { background: var(--pg-warning); }
-.pg-status-dot.muted { background: var(--pg-muted2); }
-.pg-status-time { font-size: var(--fs-small); }
-
 /* Section headings */
 .pg-section { margin-bottom: var(--sp-xl); }
 .pg-section h2 {
@@ -223,10 +210,11 @@
 .trust-cta a { border-color: var(--pg-border); text-decoration: none; font-size: var(--fs-small); }
 .trust-close { border: none; font-size: var(--fs-h3); }
 /* Tooltip info icon */
-.pg-tip { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,0.06); color: var(--pg-muted); font-size: 10px; font-weight: 700; font-style: normal; cursor: help; position: relative; flex-shrink: 0; line-height: 1; transition: all .1s; }
+.pg-tip { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.08); color: var(--pg-muted); font-size: 11px; font-weight: 400; font-style: normal; cursor: pointer; position: relative; flex-shrink: 0; line-height: 1; transition: all .15s; vertical-align: middle; }
 .pg-tip:hover { background: var(--pg-accent-bg); color: var(--pg-accent); }
-.pg-tip:hover .pg-tip-pop { opacity: 1; visibility: visible; transform: translateY(0); }
-.pg-tip-pop { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%) translateY(4px); background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-sm); padding: 8px 10px; font-size: var(--fs-small); color: var(--pg-muted); white-space: nowrap; font-weight: 400; font-style: normal; opacity: 0; visibility: hidden; transition: all .15s; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 10; pointer-events: none; }
+.pg-tip.active .pg-tip-pop { opacity: 1; visibility: visible; transform: translateY(0); }
+.pg-tip-pop { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) translateY(4px); background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r-md); padding: 12px 16px; font-size: 13px; color: #c8c8e0; white-space: normal; font-weight: 400; font-style: normal; opacity: 0; visibility: hidden; transition: all .2s; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 50; pointer-events: none; min-width: 220px; max-width: 320px; line-height: 1.5; text-transform: none; letter-spacing: normal; }
+.pg-tip-pop::before { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: rgba(255,255,255,0.1); }
 .trust-step { display: flex; gap: 10px; padding: var(--sp-sm) 0; }
 .trust-step-n {
  width: 24px; height: 24px; border-radius: 50%; background: var(--pg-bg);
@@ -391,7 +379,23 @@ function toObject(arr){ return (arr && typeof arr === 'object' && !Array.isArray
 var feedTimer = null, badgeTimer = null, lastFeedId = null;
 var pgEnabled = false, activeAgent = 'payguard', currentQueueTab = null;
 
-function tip(text) { return '<span class="pg-tip">i<span class="pg-tip-pop">' + text + '</span></span>'; }
+function tip(text) { return '<span class="pg-tip" tabindex="0">ⓘ<span class="pg-tip-pop">' + text + '</span></span>'; }
+
+// Close tooltip popovers on click outside
+document.addEventListener('click', function(e) {
+ if (!e.target.closest('.pg-tip')) {
+  document.querySelectorAll('.pg-tip.active').forEach(function(t){ t.classList.remove('active'); });
+ }
+});
+document.addEventListener('focusin', function(e) {
+ if (!e.target.closest('.pg-tip')) {
+  document.querySelectorAll('.pg-tip.active').forEach(function(t){ t.classList.remove('active'); });
+ }
+});
+document.addEventListener('click', function(e) {
+ var tip = e.target.closest('.pg-tip');
+ if (tip) { tip.classList.toggle('active'); e.stopPropagation(); }
+});
 
 // Agent definitions (same as before) 
 var AGENTS = [{ id:'payguard', name:'PayGuard', subtitle:'Failed Payment Recovery', icon:'', color:'#6366f1',
@@ -444,9 +448,6 @@ function renderPayGuard(agent, analytics, policies, ew, workflows) {
   '<button class="pg-h-btn ghost" onclick="togglePG(this)">' + (enabled?'Pause':'Resume') + '</button>' +
   '</div>' +
   '</div>' +
-  '<div class="pg-status" id="pgStatusBar">' +
-  '<span class="pg-status-item" id="pgStatusReview"><span class="pg-status-dot ok"></span><span id="reviewCount">0</span> needing review</span>' +
-  '<span class="pg-status-item" id="pgStatusAI">Monitoring active</span>' +
   '</div>' +
   '</div>';
 
@@ -697,12 +698,12 @@ function renderConfig() {
  var cards = [
  { id:'recovery_strategy', icon:'', label:'Recovery Strategy',
  body: function(){
-  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Profile ' + tip('Conservative: 40% recovery, low pressure. Balanced: 62% recovery, moderate. Aggressive: 78% recovery, higher risk.') + '</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-profile">' +
+  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Profile ' + tip('How aggressively PayGuard attempts recovery. Conservative = fewer retries, lower customer pressure (recovers ~40%). Balanced = moderate approach (recovers ~62%). Aggressive = maximum attempts, higher chance but more outreach (recovers ~78%).') + '</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-profile">' +
    ['Conservative','Balanced','Aggressive'].map(function(p,i){
    return '<button class="pg-cfg-seg-btn ' + (i===1?'active':'') + '" data-v="' + p.toLowerCase() + '">' +
    p + '</button>';
   }).join('') + '</div></div></div>' +
-  '<div class="pg-cfg-field"><div class="pg-cfg-label">Recovery window ' + tip('How long PayGuard will attempt to recover failed payments. 7 days: faster closure. 14 days: balanced. 30 days: maximum recovery chance.') + '</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-window">' +
+  '<div class="pg-cfg-field"><div class="pg-cfg-label">Recovery window ' + tip('The time period during which PayGuard will retry failed payments. 7 days = faster resolution. 14 days = balanced. 30 days = maximum chance of recovery but longer wait for customers.') + '</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-window">' +
  '<button class="pg-cfg-seg-btn active" data-v="14">14 days</button>' +
  '<button class="pg-cfg-seg-btn" data-v="30">30 days</button>' +
  '<button class="pg-cfg-seg-btn" data-v="7">7 days</button>' +
@@ -722,8 +723,8 @@ function renderConfig() {
  },
  { id:'communication', icon:'', label:'Customer Communication',
  body: function(){
- return '<div class="pg-cfg-field"><div class="pg-cfg-label">Channels</div><div class="pg-cfg-row">' +
-  ['email','widget','whatsapp'].map(function(c,i){ return '<label class="pg-cfg-chk-label pg-cfg-chk-inline"><input type="checkbox" ' + (i<2?'checked':'') + '> ' + c + '</label>'; }).join('') +
+  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Channels</div><div class="pg-cfg-row">' +
+   ['email','widget','whatsapp'].map(function(c,i){ return '<label class="pg-cfg-chk-label pg-cfg-chk-inline"><input type="checkbox" ' + (i<2?'checked':'') + '> <span>' + c + '</span></label>'; }).join('') +
  '</div></div>' +
  '<div class="pg-cfg-field"><div class="pg-cfg-label">Tone</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-tone">' +
  '<button class="pg-cfg-seg-btn" data-v="strict">Strict</button>' +
@@ -735,7 +736,7 @@ function renderConfig() {
  },
  { id:'approval_rules', icon:'', label:'Approval Rules',
  body: function(){
-  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Require approval when ' + tip('Set conditions that trigger human review. Amount: approval needed above the threshold. Risk level: requires manual review above this risk score (1-10). Sentiment: trigger review when customer sentiment is negative.') + '</div>' +
+  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Require approval when ' + tip('Decide when PayGuard needs your approval before taking action. Choose "Amount exceeds" and set a dollar limit — anything above that needs your OK. Choose "Risk level above" and pick a score from 1-10. Choose "Customer sentiment" to review cases where the customer seems unhappy.') + '</div>' +
   '<div class="pg-cfg-rule-box">' +
   '<div class="pg-cfg-rule-row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
   '<select class="pg-autosave pg-cfg-select" data-key="approval_condition" style="flex:1;min-width:130px" onchange="updateApprovalHint(this)">' +
@@ -750,13 +751,13 @@ function renderConfig() {
  },
  { id:'escalation_rules', icon:'', label:'Escalation Rules',
  body: function(){
-  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Severity ' + tip('Low = normal monitoring, standard retry flow. Medium = supervisor notified, additional review. Critical = immediate human intervention required.') + '</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-escalation">' +
+  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Severity ' + tip('How urgent the issue is. Low = normal handling, PayGuard works as usual. Medium = a supervisor is alerted to keep an eye on it. Critical = your team is immediately notified to step in.') + '</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-escalation">' +
   '<button class="pg-cfg-seg-btn" data-v="low">Low</button>' +
   '<button class="pg-cfg-seg-btn active" data-v="medium">Medium</button>' +
   '<button class="pg-cfg-seg-btn" data-v="critical">Critical</button>' +
  '</div></div></div>' +
  '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Triggers</div>' +
- ['Frustration detected','Payment repeatedly fails','High-value at risk','AI confidence low'].map(function(r,i){ return '<label class="pg-cfg-chk-label"><input type="checkbox" ' + (i<3?'checked':'') + '> ' + r + '</label>'; }).join('') +
+  ['Frustration detected','Payment repeatedly fails','High-value at risk','AI confidence low'].map(function(r,i){ return '<label class="pg-cfg-chk-label"><input type="checkbox" ' + (i<3?'checked':'') + '> <span>' + r + '</span></label>'; }).join('') +
  '</div>';
  }
  },
@@ -768,10 +769,10 @@ function renderConfig() {
 }
 
 function renderRiskControls() {
- return '<div class="pg-cfg-field"><div class="pg-cfg-label">Blocked failure codes ' + tip('Failure codes that PayGuard will never retry. Payments matching these codes are immediately escalated to your team.') + '</div>' +
+ return '<div class="pg-cfg-field"><div class="pg-cfg-label">Blocked failure codes ' + tip('These are reasons for payment failure that PayGuard will NOT retry — for example if a card is reported stolen or lost. Any payment that fails for these reasons will be sent directly to your team instead of being retried. Uncheck a code to allow PayGuard to retry it.') + '</div>' +
  '<div class="pg-cfg-row" style="gap:4px;flex-wrap:wrap">' +
  ['fraud','stolen_card','lost_card','blocked'].map(function(c){
-  return '<label class="pg-tag-chk"><input type="checkbox" checked> ' + c.replace(/_/g,' ') + '</label>';
+   return '<label class="pg-tag-chk"><input type="checkbox" checked> <span>' + c.replace(/_/g,' ') + '</span></label>';
  }).join('') +
  '</div></div>' +
  '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Rate limits</div>' +
@@ -1022,8 +1023,6 @@ async function togglePG(btn) {
 function updatePGStatus(on) {
  var pill = document.getElementById('pgStatPill');
  if (pill) { pill.textContent = on ? 'Active' : 'Paused'; pill.className = 'pill ' + (on ? 'ok' : 'muted'); }
- var sr = document.getElementById('pgStatusReview');
- if (sr) { sr.innerHTML = on ? '<span class="pg-status-dot ok"></span>Monitoring' : '<span class="pg-status-dot muted"></span>Paused'; }
 }
 
 // Badge polling 
@@ -1037,21 +1036,7 @@ async function loadBadges() {
  var be = document.getElementById('qBadgeEsc');
  if (ba) { ba.textContent = ap.total || 0; ba.style.display = ap.total> 0 ? '' : 'none'; }
  if (be) { be.textContent = es.total || 0; be.style.display = es.total> 0 ? '' : 'none'; }
- setKpi('kpiApproval', ap.total || 0);
-  // Status ribbon
-  var sr = document.getElementById('pgStatusReview');
-  if (sr) {
-   var n = (ap.total||0) + (es.total||0);
-   if (!pgEnabled) {
-    sr.innerHTML = '<span class="pg-status-dot muted"></span>Paused';
-    var ai = document.getElementById('pgStatusAI');
-    if (ai) ai.innerHTML = '';
-   } else {
-    sr.innerHTML = '<span class="pg-status-dot ' + (n>0?'warn':'ok') + '"></span>' + (n>0 ? n + ' needing review' : 'Monitoring');
-    var ai = document.getElementById('pgStatusAI');
-    if (ai) { ai.innerHTML = 'Last check ' + (new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})); }
-    }
-   }
+  setKpi('kpiApproval', ap.total || 0);
   } catch(e) {}
  }
 
