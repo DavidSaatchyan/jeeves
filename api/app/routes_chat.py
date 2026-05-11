@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from .auth import get_current_tenant
 from .db import get_db
-from .models import ChatLog, Tenant, WebhookConfig, WriteBackConfig
+from .models import ChatLog, Tenant, WebhookConfig
 from .moderation import moderate
 from .rate_limit import check_rate_limit
 from .schemas import ChatIn, ChatOut
@@ -101,23 +101,6 @@ async def _fire_outgoing_webhooks(db: Session, tenant_id, user_id: str, event: s
         logger.warning("outgoing webhook failed: %s", e)
 
 
-async def _do_writeback(db: Session, tenant_id, session_id: str):
-    """Execute writeback directly (no Celery) on conversation end."""
-    import httpx
-
-    cfg = db.query(WriteBackConfig).filter(
-        WriteBackConfig.tenant_id == tenant_id,
-    ).first()
-    if not cfg or cfg.type == "off":
-        return
-
-    if cfg.type == "webhook" and cfg.webhook_url:
-        payload = {"tenant_id": str(tenant_id), "session_id": session_id}
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                await client.post(cfg.webhook_url, json=payload)
-        except Exception as e:
-            logger.warning("writeback failed: %s", e)
 
 
 @router.post("/chat", response_model=ChatOut)
@@ -158,9 +141,6 @@ async def chat(body: ChatIn, request: Request, tenant: Tenant = Depends(get_curr
     if result.get("escalated"):
         await _fire_outgoing_webhooks(db, tenant.id, body.user_id, "conversation.escalated", result)
     await _fire_outgoing_webhooks(db, tenant.id, body.user_id, "conversation.ended", result)
-
-    # Execute writeback on conversation end
-    await _do_writeback(db, tenant.id, result.get("session_id", str(session_id)))
 
     return ChatOut(
         response=result["response"],

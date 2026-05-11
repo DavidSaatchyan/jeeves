@@ -109,17 +109,6 @@ class WebhookConfig(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
-class WriteBackConfig(Base):
-    """Per-tenant configuration for writing conversation summaries back to CRM or webhook."""
-    __tablename__ = "writeback_configs"
-
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), primary_key=True)
-    type = Column(String(32), default="off", nullable=False)            # off | hubspot_note | webhook
-    hubspot_note_enabled = Column(Boolean, default=False, nullable=False)
-    hubspot_task_on_escalation = Column(Boolean, default=False, nullable=False)
-    webhook_url = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
 class ChannelConfig(Base):
@@ -239,39 +228,6 @@ class PaymentFailure(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
-class Order(Base):
-    """Canonical commerce order (source of truth: Shopify)."""
-    __tablename__ = "orders"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id", ondelete="CASCADE"), nullable=False, index=True)
-    external_order_id = Column(Text)
-    order_status = Column(String(32))
-    fulfillment_status = Column(String(32))
-    total_amount = Column(Integer)
-    currency = Column(String(8))
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    fulfilled_at = Column(DateTime)
-
-
-class Shipment(Base):
-    """Canonical shipment object with carrier lifecycle."""
-    __tablename__ = "shipments"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id", ondelete="CASCADE"), nullable=False, index=True)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id", ondelete="CASCADE"), nullable=False, index=True)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    carrier = Column(Text)
-    tracking_number = Column(Text)
-    shipment_state = Column(String(32))
-    shipment_confidence = Column(String(16))
-    last_tracking_update = Column(DateTime)
-    estimated_delivery = Column(DateTime)
-    actual_delivery = Column(DateTime)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
 class Workflow(Base):
@@ -416,42 +372,5 @@ class NativeConnector(Base):
     status = Column(String(16), nullable=False, default="connected")
     credentials = Column(Text, nullable=False)
     meta = Column(JSONB, default=dict)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-
-class ApprovalRequest(Base):
-    """Approval request requiring human review before bounded AI action."""
-    __tablename__ = "approval_requests"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id", ondelete="SET NULL"), nullable=True, index=True)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id", ondelete="SET NULL"), nullable=True, index=True)
-    action_type = Column(String(64), nullable=False)
-    action_value = Column(JSONB, default=dict)
-    reason = Column(Text)
-    expected_outcome = Column(Text)
-    risk_level = Column(String(16), default="medium")
-    ai_confidence = Column(Integer, default=0)
-    status = Column(String(32), nullable=False, default="PENDING")
-    reviewed_by = Column(Text)
-    reviewed_at = Column(DateTime)
-    policy_reference = Column(Text)
-    simulation_result = Column(JSONB, default=dict)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-
-class NotificationPreferences(Base):
-    """Per-tenant notification settings."""
-    __tablename__ = "notification_preferences"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
-    escalation_alerts = Column(Boolean, default=True)
-    approval_alerts = Column(Boolean, default=True)
-    workflow_failure_alerts = Column(Boolean, default=True)
-    daily_summary = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)

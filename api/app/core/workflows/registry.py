@@ -33,9 +33,6 @@ async def route_event(event: CanonicalEvent, db: Session) -> None:
         "payment_failed": "payment_recovery",
         "invoice_payment_failed": "payment_recovery",
         "rebill_failed": "payment_recovery",
-        "subscription_cancel_requested": "cancellation_save",
-        "customer_message_cancellation": "cancellation_save",
-        "customer_message_wismo": "wismo",
     }
 
     workflow_type = type_to_workflow.get(event_type)
@@ -104,7 +101,7 @@ def _find_or_create_workflow(
             "tid": tenant_id,
             "cid": customer_id,
             "wt": workflow_type,
-            "state": "DETECTED" if workflow_type == "payment_recovery" else "INTENT_DETECTED" if workflow_type == "cancellation_save" else "INQUIRY_DETECTED",
+            "state": "DETECTED",
             "now": now,
             "exp": expiration,
         },
@@ -116,7 +113,7 @@ def _find_or_create_workflow(
         tenant_id=UUID(tenant_id),
         customer_id=customer_id,
         workflow_type=workflow_type,
-        current_state="DETECTED" if workflow_type == "payment_recovery" else "INTENT_DETECTED" if workflow_type == "cancellation_save" else "INQUIRY_DETECTED",
+        current_state="DETECTED",
         status="active",
         started_at=now,
         policy_engine=engine,
