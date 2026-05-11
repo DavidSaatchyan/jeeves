@@ -44,7 +44,7 @@
 </style>
 <script>
 (async function(){
-  var b = await api('/dashboard/billing');
+  var b = await api('/admin/api/billing');
   document.getElementById('resolved').textContent = b.resolved || 0;
   document.getElementById('limit').textContent = (b.dialogs_limit || 0).toLocaleString();
   var ov = b.overage_charge_usd || 0;

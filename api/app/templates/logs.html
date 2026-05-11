@@ -430,8 +430,8 @@ async function loadLogs(){
   var queryStr = qs.toString();
 
   try {
-    var rowsPromise = api('/dashboard/logs?' + queryStr);
-    var ratingsPromise = api('/dashboard/ratings?' + queryStr).catch(function(){ return []; });
+    var rowsPromise = api('/admin/api/logs?' + queryStr);
+    var ratingsPromise = api('/admin/api/ratings?' + queryStr).catch(function(){ return []; });
 
     var rows = await rowsPromise;
     ALL_RATINGS = await ratingsPromise;

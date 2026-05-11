@@ -110,6 +110,6 @@ def test_login_invalid_credentials(client):
 
 
 def test_protected_endpoint_requires_auth(client):
-    """Dashboard requires authentication."""
-    response = client.get("/dashboard/stats")
-    assert response.status_code == 401
+    """Protected endpoints redirect to login when unauthenticated."""
+    response = client.get("/admin/api/billing", follow_redirects=False)
+    assert response.status_code == 302

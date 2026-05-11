@@ -62,42 +62,6 @@ def widget_js():
     )
 
 
-@router.get("/dashboard")
-def dashboard():
-    path = _FRONTEND_DIR / "index.html"
-    if not path.exists():
-        raise HTTPException(404, "dashboard not built")
-    return Response(
-        content=path.read_text(encoding="utf-8"),
-        media_type="text/html",
-        headers={"Cache-Control": "no-cache"},
-    )
-
-
-@router.get("/dashboard.css")
-def dashboard_css():
-    path = _FRONTEND_DIR / "dashboard.css"
-    if not path.exists():
-        raise HTTPException(404, "dashboard.css not found")
-    return Response(
-        content=path.read_text(encoding="utf-8"),
-        media_type="text/css",
-        headers={"Cache-Control": "public, max-age=3600"},
-    )
-
-
-@router.get("/dashboard.js")
-def dashboard_js():
-    path = _FRONTEND_DIR / "dashboard.js"
-    if not path.exists():
-        raise HTTPException(404, "dashboard.js not found")
-    return Response(
-        content=path.read_text(encoding="utf-8"),
-        media_type="application/javascript",
-        headers={"Cache-Control": "public, max-age=3600"},
-    )
-
-
 @router.post("/widget/chat", response_model=ChatOut)
 async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depends(get_db)):
     """Widget chat entry point — tenant is identified by tenant_id.

@@ -11,7 +11,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
 
-from . import admin, auth, dashboard_api, integrations_routes, knowledge, routes_chat
+from . import admin, auth, integrations_routes, knowledge, routes_chat
 from .integrations import webhooks as webhooks_router
 from .channels import widget as widget_channel
 from .config import get_settings
@@ -214,7 +214,6 @@ def privacy():
 app.include_router(auth.router)
 app.include_router(routes_chat.router)
 app.include_router(knowledge.router)
-app.include_router(dashboard_api.router)
 app.include_router(widget_channel.router)
 app.include_router(admin.router)
 app.include_router(integrations_routes.router)
