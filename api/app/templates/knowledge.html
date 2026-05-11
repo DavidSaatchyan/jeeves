@@ -60,6 +60,19 @@
 
 
 
+<!-- Confirm dialog -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h2>Confirm</h2>
+    </div>
+    <p id="confirmMsg" class="muted" style="margin-bottom:20px;font-size:14px"></p>
+    <div class="flex" style="gap:8px;justify-content:flex-end">
+      <button class="ghost sm" onclick="closeConfirm()">Cancel</button>
+      <button class="btn sm" id="confirmBtn">Delete</button>
+    </div>
+  </div>
+</div>
 {% endblock %}
 {% block tail %}
 <style>
@@ -76,6 +89,9 @@
 .col-cb{width:32px}.col-name{width:auto}.col-status{width:100px}.col-size{width:80px;text-align:right}.col-chunks{width:80px;text-align:right}.col-date{width:110px}.col-actions{width:60px}
 .del-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:4px;padding:4px;cursor:pointer}
 .del-btn:hover{color:var(--red);background:rgba(248,113,113,0.08)}
+.kb-uprog{display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 0}
+.kb-uprog-bar{height:3px;flex:1;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;max-width:200px}
+.kb-uprog-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .3s ease}
 </style>
 <script>
 async function refresh() {
@@ -114,6 +130,25 @@ async function refresh() {
   } catch(e) { console.error('kb refresh error:', e); }
 }
 
+// Confirm modal
+var _confirmCb = null;
+function showConfirm(msg, cb){
+  document.getElementById('confirmMsg').textContent = msg;
+  document.getElementById('confirmModal').classList.add('show');
+  _confirmCb = cb;
+}
+function closeConfirm(){
+  document.getElementById('confirmModal').classList.remove('show');
+  _confirmCb = null;
+}
+document.getElementById('confirmModal').addEventListener('click', function(e){
+  if(e.target === this) closeConfirm();
+});
+document.getElementById('confirmBtn').addEventListener('click', function(){
+  if(_confirmCb) _confirmCb();
+  closeConfirm();
+});
+
 // Upload management
 function esc(v){ return String(v ?? '').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
 const drop = document.getElementById('drop');
@@ -124,28 +159,37 @@ drop.addEventListener('drop', function(e){ e.preventDefault(); drop.classList.re
 document.getElementById('file').addEventListener('change', function(e){ if(e.target.files.length) uploadMany(e.target.files); });
 
 async function uploadMany(files){
+  var prog = document.getElementById('uprog');
   for(var i = 0; i < files.length; i++){
+    var name = files[i].name;
+    prog.innerHTML = '<div class="kb-uprog"><span>' + esc(name) + '</span><div class="kb-uprog-bar"><div class="kb-uprog-fill" style="width:50%"></div></div></div>';
     try{
       var fd = new FormData(); fd.append('file', files[i]);
       await api('/knowledge/files', {method:'POST', body:fd});
-    } catch(e){ document.getElementById('uerr').textContent = files[i].name + ': ' + e.message; }
+      prog.innerHTML = '<div class="kb-uprog"><span style="color:var(--green)">' + esc(name) + ' uploaded</span><div class="kb-uprog-bar"><div class="kb-uprog-fill" style="width:100%;background:var(--green)"></div></div></div>';
+    } catch(e){
+      document.getElementById('uerr').textContent = files[i].name + ': ' + e.message;
+      prog.innerHTML = '<div class="kb-uprog"><span style="color:var(--red)">' + esc(name) + ' failed</span></div>';
+    }
   }
+  setTimeout(function(){ prog.innerHTML = ''; }, 2500);
   await refresh();
 }
 
 async function del(id){
-  if(!confirm('Delete this file?')) return;
-  try{
-    await fetch('/knowledge/files/' + id, {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}});
-    await refresh();
-  } catch(e){ alert('Error: ' + e.message); }
+  showConfirm('Delete this file?', async function(){
+    try{
+      await fetch('/knowledge/files/' + id, {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}});
+      await refresh();
+    } catch(e){ alert('Error: ' + e.message); }
+  });
 }
 
 function clearAll(){
-  if(!confirm('Delete all files?')) return;
-  // Simplified: just hard refresh after clearing selection
-  document.querySelectorAll('.row-cb').forEach(function(cb){ cb.checked = true; });
-  delSelected();
+  showConfirm('Delete all files?', function(){
+    document.querySelectorAll('.row-cb').forEach(function(cb){ cb.checked = true; });
+    delSelected();
+  });
 }
 
 function clearSelection(){
