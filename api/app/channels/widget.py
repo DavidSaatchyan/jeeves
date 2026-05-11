@@ -17,6 +17,7 @@ from ..moderation import moderate
 from ..rate_limit import check_rate_limit
 from ..schemas import ChatOut, WidgetChatIn
 from ..routes_chat import _simple_llm_response
+from ..config import get_settings
 
 router = APIRouter(tags=["widget"])
 
@@ -95,7 +96,20 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
     db.add(log)
     db.commit()
 
-    result = await _simple_llm_response(tenant.id, body.message)
+    # RAG search — retrieve relevant chunks from knowledge base
+    import asyncio
+    try:
+        from .. import rag
+        chunks = await asyncio.to_thread(rag.search, tenant.id, body.message)
+    except Exception:
+        chunks = []
+    context = "\n\n".join(c["text"] for c in chunks) if chunks else ""
+    if context:
+        system = f"You are a support agent. Answer the user's question using ONLY the context below. If the context doesn't contain the answer, say you don't know.\n\nContext:\n{context}"
+    else:
+        system = None
+
+    result = await _simple_llm_response(tenant.id, body.message, system_override=system)
 
     log.response = result["response"]
     log.resolution = "resolved"

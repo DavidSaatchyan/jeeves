@@ -209,7 +209,9 @@ def agents_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
 
 @router.get("/knowledge", response_class=HTMLResponse)
 def knowledge_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "knowledge.html", context=_ctx(request))
+    ctx = _ctx(request)
+    ctx["tenant_id"] = str(tenant.id)
+    return templates.TemplateResponse(request, "knowledge.html", context=ctx)
 
 
 @router.get("/channels", response_class=HTMLResponse)

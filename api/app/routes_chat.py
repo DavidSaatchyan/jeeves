@@ -20,8 +20,10 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["chat"])
 
 
-async def _simple_llm_response(tenant_id, message: str) -> dict:
-    """Direct LLM call without agent tool loop (v2 replacement)."""
+async def _simple_llm_response(tenant_id, message: str, system_override=None) -> dict:
+    """Direct LLM call without agent tool loop (v2 replacement).
+    If system_override is provided, prepend a system message with RAG context.
+    """
     import time
     from .config import get_settings
 
@@ -30,11 +32,15 @@ async def _simple_llm_response(tenant_id, message: str) -> dict:
     try:
         from openai import AsyncOpenAI
         client = AsyncOpenAI(api_key=settings.openai_api_key)
+        messages = []
+        if system_override:
+            messages.append({"role": "system", "content": system_override})
+        messages.append({"role": "user", "content": message})
         response = await client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[{"role": "user", "content": message}],
+            messages=messages,
             temperature=0.3,
-            max_tokens=500,
+            max_tokens=1000,
         )
         text = response.choices[0].message.content or ""
     except Exception as e:
