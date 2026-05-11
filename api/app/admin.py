@@ -440,24 +440,9 @@ def api_analytics(
         or 0
     )
 
-    approval_total = (
-        db.query(func.count(ApprovalRequest.id))
-        .filter(ApprovalRequest.tenant_id == tenant.id, ApprovalRequest.created_at >= thirty_days_ago)
-        .scalar()
-        or 0
-    )
-    approval_approved = (
-        db.query(func.count(ApprovalRequest.id))
-        .filter(ApprovalRequest.tenant_id == tenant.id, ApprovalRequest.status == "APPROVED", ApprovalRequest.created_at >= thirty_days_ago)
-        .scalar()
-        or 0
-    )
-    policy_overrides = (
-        db.query(func.count(ApprovalRequest.id))
-        .filter(ApprovalRequest.tenant_id == tenant.id, ApprovalRequest.status == "ALWAYS_ALLOW", ApprovalRequest.created_at >= thirty_days_ago)
-        .scalar()
-        or 0
-    )
+    approval_total = 0
+    approval_approved = 0
+    policy_overrides = 0
 
     return {
         "recovered_revenue": round(recovered_revenue, 2),
@@ -544,29 +529,6 @@ def api_agent_feed(
         .all()
     )
 
-    # Approval Requests
-    approvals = (
-        db.query(
-            ApprovalRequest.id,
-            ApprovalRequest.workflow_id,
-            ApprovalRequest.customer_id,
-            ApprovalRequest.action_type,
-            ApprovalRequest.risk_level,
-            ApprovalRequest.ai_confidence,
-            ApprovalRequest.status,
-            ApprovalRequest.created_at,
-        )
-        .join(Workflow, Workflow.id == ApprovalRequest.workflow_id)
-        .filter(
-            Workflow.tenant_id == tenant.id,
-            Workflow.workflow_type == agent_type,
-            ApprovalRequest.created_at >= thirty_days_ago,
-        )
-        .order_by(ApprovalRequest.created_at.desc())
-        .limit(limit)
-        .all()
-    )
-
     # Escalations
     escalations = (
         db.query(
@@ -638,21 +600,6 @@ def api_agent_feed(
             "needs_human": False,
             "icon": "📧",
             "created_at": c.sent_at.isoformat() if c.sent_at else None,
-        })
-    for a in approvals:
-        events.append({
-            "id": str(a.id),
-            "type": "approval",
-            "workflow_id": str(a.workflow_id) if a.workflow_id else None,
-            "customer_id": str(a.customer_id) if a.customer_id else None,
-            "amount": None,
-            "state": a.status,
-            "action": a.action_type or "",
-            "reason": "",
-            "confidence": a.ai_confidence,
-            "needs_human": True,
-            "icon": "✅",
-            "created_at": a.created_at.isoformat() if a.created_at else None,
         })
     for e in escalations:
         events.append({
@@ -811,36 +758,6 @@ def api_agent_queue(
             "total": total,
         }
 
-    elif queue == "approvals":
-        q = db.query(ApprovalRequest).filter(
-            ApprovalRequest.tenant_id == tenant.id,
-            ApprovalRequest.status == "PENDING",
-        )
-        if agent_type != "all":
-            q = q.join(Workflow, Workflow.id == ApprovalRequest.workflow_id).filter(
-                Workflow.workflow_type == agent_type
-            )
-        total = q.count()
-        rows = q.order_by(ApprovalRequest.created_at.desc()).offset(offset).limit(limit).all()
-        return {
-            "queue": queue,
-            "items": [
-                {
-                    "id": str(a.id),
-                    "workflow_id": str(a.workflow_id) if a.workflow_id else None,
-                    "customer_id": str(a.customer_id) if a.customer_id else None,
-                    "action_type": a.action_type,
-                    "action_value": a.action_value,
-                    "reason": a.reason,
-                    "risk_level": a.risk_level,
-                    "ai_confidence": a.ai_confidence,
-                    "created_at": a.created_at.isoformat() if a.created_at else None,
-                }
-                for a in rows
-            ],
-            "total": total,
-        }
-
     elif queue == "escalations":
         q = db.query(Escalation).filter(
             Escalation.tenant_id == tenant.id,
@@ -937,50 +854,6 @@ class _QueueActionBody(BaseModel):
 class _PolicyUpdateBody(BaseModel):
     section: str
     values: dict = {}
-
-
-@router.post("/api/agents/{agent_type}/queue/approve")
-def api_agent_queue_approve(
-    agent_type: str,
-    body: _QueueActionBody,
-    tenant: Tenant = Depends(get_admin_tenant),
-    db: Session = Depends(get_db),
-):
-    """Approve a pending approval request."""
-    req = db.query(ApprovalRequest).filter(
-        ApprovalRequest.id == body.item_id,
-        ApprovalRequest.tenant_id == tenant.id,
-        ApprovalRequest.status == "PENDING",
-    ).first()
-    if not req:
-        raise HTTPException(status_code=404, detail="Approval request not found")
-    req.status = "APPROVED"
-    req.reviewed_by = "admin"
-    req.reviewed_at = datetime.utcnow()
-    db.commit()
-    return {"ok": True, "message": "Approved"}
-
-
-@router.post("/api/agents/{agent_type}/queue/reject")
-def api_agent_queue_reject(
-    agent_type: str,
-    body: _QueueActionBody,
-    tenant: Tenant = Depends(get_admin_tenant),
-    db: Session = Depends(get_db),
-):
-    """Reject a pending approval request."""
-    req = db.query(ApprovalRequest).filter(
-        ApprovalRequest.id == body.item_id,
-        ApprovalRequest.tenant_id == tenant.id,
-        ApprovalRequest.status == "PENDING",
-    ).first()
-    if not req:
-        raise HTTPException(status_code=404, detail="Approval request not found")
-    req.status = "REJECTED"
-    req.reviewed_by = "admin"
-    req.reviewed_at = datetime.utcnow()
-    db.commit()
-    return {"ok": True, "message": "Rejected"}
 
 
 @router.post("/api/agents/{agent_type}/queue/resolve")
