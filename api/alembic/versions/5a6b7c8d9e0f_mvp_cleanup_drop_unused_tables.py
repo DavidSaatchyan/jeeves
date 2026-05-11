@@ -1,4 +1,4 @@
-"""Drop tables removed in MVP cleanup: orders, shipments, writeback_configs, approval_requests, notification_preferences
+"""Drop tables removed in MVP cleanup: orders, shipments, writeback_configs, approval_requests
 
 Revision ID: 5a6b7c8d9e0f
 Revises: 4a5b6c7d8e9f
@@ -18,7 +18,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.drop_table("notification_preferences")
     op.drop_table("approval_requests")
     op.drop_table("writeback_configs")
     op.drop_table("shipments")
@@ -111,19 +110,3 @@ def downgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_approval_requests_tenant_id"), "approval_requests", ["tenant_id"])
-
-    # notification_preferences
-    op.create_table(
-        "notification_preferences",
-        sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("tenant_id", sa.UUID(), nullable=False),
-        sa.Column("escalation_alerts", sa.Boolean(), nullable=True, server_default=sa.text("true")),
-        sa.Column("approval_alerts", sa.Boolean(), nullable=True, server_default=sa.text("true")),
-        sa.Column("workflow_failure_alerts", sa.Boolean(), nullable=True, server_default=sa.text("true")),
-        sa.Column("daily_summary", sa.Boolean(), nullable=True, server_default=sa.text("false")),
-        sa.Column("created_at", sa.DateTime(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index(op.f("ix_notification_preferences_tenant_id"), "notification_preferences", ["tenant_id"])

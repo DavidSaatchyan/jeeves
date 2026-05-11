@@ -374,3 +374,17 @@ class NativeConnector(Base):
     meta = Column(JSONB, default=dict)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class NotificationPreferences(Base):
+    """Per-tenant notification settings."""
+    __tablename__ = "notification_preferences"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
+    escalation_alerts = Column(Boolean, default=True)
+    approval_alerts = Column(Boolean, default=True)
+    workflow_failure_alerts = Column(Boolean, default=True)
+    daily_summary = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
