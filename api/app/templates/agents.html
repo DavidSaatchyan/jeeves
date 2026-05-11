@@ -149,7 +149,7 @@
 .pg-cfg-field { margin-bottom: var(--sp-md); }
 .pg-cfg-label { font-size: var(--fs-small); font-weight: 600; color: var(--pg-muted); margin-bottom: var(--sp-xs); text-transform: uppercase; letter-spacing: .2px; }
 .pg-cfg-desc { font-size: var(--fs-small); color: var(--pg-muted); margin-top: 1px; }
-.pg-cfg-row { display: flex; gap: var(--sp-sm); align-items: center; flex-wrap: wrap; }
+.pg-cfg-row { display: grid; grid-auto-flow: column; gap: var(--sp-sm); align-items: center; }
 .pg-cfg-seg { display: flex; gap: 2px; background: var(--pg-bg); border-radius: var(--r-sm); padding: 3px; }
 .pg-cfg-seg-btn { padding: 8px 18px; font-size: var(--fs-label); font-weight: 600; border: none; background: transparent; color: var(--pg-muted); cursor: pointer; border-radius: var(--r-sm); transition: all .1s; min-height: 36px; }
 .pg-cfg-seg-btn.active { background: var(--pg-surface); color: var(--pg-text); box-shadow: 0 1px 3px rgba(0,0,0,.3); }
@@ -735,7 +735,7 @@ function renderConfig() {
  },
  { id:'communication', icon:'', label:'Customer Communication',
  body: function(){
-   return '<div class="pg-cfg-field"><div class="pg-cfg-label">Channels</div><div class="pg-cfg-row" style="flex-wrap:nowrap;overflow-x:auto">' +
+   return '<div class="pg-cfg-field"><div class="pg-cfg-label">Channels</div><div class="pg-cfg-row" style="overflow-x:auto">' +
     ['email','widget','whatsapp'].map(function(c,i){ return '<label class="pg-control-inline pg-cfg-chk-inline"><span class="checkbox-wrap"><input type="checkbox" ' + (i<2?'checked':'') + '><span class="check-vis"></span></span><span>' + c + '</span></label>'; }).join('') +
  '</div></div>' +
  '<div class="pg-cfg-field"><div class="pg-cfg-label">Tone</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-tone">' +
@@ -782,7 +782,7 @@ function renderConfig() {
 
 function renderRiskControls() {
  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Blocked failure codes ' + tip('These are reasons for payment failure that PayGuard will NOT retry — for example if a card is reported stolen or lost. Any payment that fails for these reasons will be sent directly to your team instead of being retried. Uncheck a code to allow PayGuard to retry it.') + '</div>' +
-   '<div class="pg-cfg-row" style="flex-wrap:nowrap;overflow-x:auto;gap:4px">' +
+   '<div class="pg-cfg-row" style="gap:4px;overflow-x:auto">' +
  ['fraud','stolen_card','lost_card','blocked'].map(function(c){
     return '<label class="pg-control-inline pg-tag-chk"><input type="checkbox" checked> <span>' + c.replace(/_/g,' ') + '</span></label>';
  }).join('') +
