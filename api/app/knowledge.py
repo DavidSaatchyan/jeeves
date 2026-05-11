@@ -11,6 +11,8 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 
+from pydantic import BaseModel
+
 from .chunking import file_sha256, sanitize_filename
 from .auth import get_current_tenant
 from .config import get_settings
@@ -136,6 +138,36 @@ async def upload_file(
     # Index asynchronously in background thread
     asyncio.create_task(_background_index(tenant.id, file_id, dest))
     return {"id": str(file_id), "status": "processing", "chunks": 0}
+
+
+class _ChatIn(BaseModel):
+    message: str
+
+
+@router.post("/chat")
+async def chat(
+    body: _ChatIn,
+    tenant: Tenant = Depends(get_current_tenant),
+):
+    from . import rag
+    from openai import AsyncOpenAI
+
+    chunks = rag.search(tenant.id, body.message)
+    context = "\n\n".join(c["text"] for c in chunks) if chunks else ""
+
+    if context:
+        system = f"You are a support agent. Answer the user's question using ONLY the context below. If the context doesn't contain the answer, say you don't know.\n\nContext:\n{context}"
+    else:
+        system = "You are a support agent. Answer the user's question to the best of your ability."
+
+    client = AsyncOpenAI(api_key=_settings.openai_api_key)
+    resp = await client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": system}, {"role": "user", "content": body.message}],
+        temperature=0.3,
+        max_tokens=1000,
+    )
+    return {"response": resp.choices[0].message.content or ""}
 
 
 @router.get("/files")

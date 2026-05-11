@@ -53,6 +53,20 @@
   <div id="procMsg" class="kb-proc"><span class="kb-spinner"></span> Processing...</div>
 </div>
 
+<!-- Chat -->
+<div class="card" id="chatCard">
+  <h2>Test your knowledge base</h2>
+  <p class="muted" style="font-size:12px;margin-bottom:12px">Ask questions and see how the AI responds using your uploaded documents.</p>
+  <div id="chatDisabled" class="kb-chat-disabled">Upload documents to start testing</div>
+  <div id="chatBody" class="kb-chat-body" style="display:none">
+    <div id="chatMsgs" class="kb-chat-msgs"></div>
+    <div class="kb-chat-input">
+      <input id="chatInput" type="text" placeholder="Ask a question about your documents..." />
+      <button id="chatSend" class="btn sm" onclick="chatSend()">Send</button>
+    </div>
+  </div>
+</div>
+
 
 
 <!-- Confirm dialog -->
@@ -87,6 +101,16 @@
 .col-name{width:auto}.col-status{width:100px}.col-size{width:80px;text-align:right}.col-chunks{width:80px;text-align:right}.col-date{width:110px}.col-actions{width:60px}
 .kb-clear-all{color:var(--muted2)}.kb-clear-all:hover{color:var(--red)}
 .kb-proc{display:none;align-items:center;gap:8px;padding:12px 16px;font-size:12px;color:var(--muted);border-top:1px solid var(--border)}
+.kb-chat-disabled{padding:32px 16px;text-align:center;color:var(--muted2);font-size:13px}
+.kb-chat-body{border-top:1px solid var(--border)}
+.kb-chat-msgs{max-height:320px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.kb-msg{padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;max-width:85%}
+.kb-msg.user{background:var(--accent);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.kb-msg.assistant{background:var(--surface);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px}
+.kb-msg.err{background:rgba(248,113,113,0.1);color:var(--red);align-self:flex-start;font-size:12px}
+.kb-chat-input{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border)}
+.kb-chat-input input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);outline:none}
+.kb-chat-input input:focus{border-color:var(--accent)}
 .del-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:4px;padding:4px;cursor:pointer}
 .del-btn:hover{color:var(--red);background:rgba(248,113,113,0.08)}
 .kb-uprog{display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 0}
@@ -134,6 +158,12 @@ async function refresh() {
     }).join('') || '<tr><td colspan="6" class="muted" style="text-align:center;padding:16px">No files yet.</td></tr>';
     document.getElementById('procMsg').style.display = hasProcessing ? '' : 'none';
     if(hasProcessing && !_pollingActive) pollProcessing();
+
+    var hasReady = ready.length > 0;
+    document.getElementById('chatDisabled').style.display = hasReady ? 'none' : '';
+    document.getElementById('chatBody').style.display = hasReady ? '' : 'none';
+    document.getElementById('chatInput').disabled = !hasReady;
+    document.getElementById('chatSend').disabled = !hasReady;
   } catch(e) { console.error('kb refresh error:', e); }
 }
 
@@ -243,6 +273,39 @@ async function clearAll(){
     closeConfirm(true);
   }, 'All documents');
 }
+
+// Chat
+function chatAddMsg(role, text){
+  var msgs = document.getElementById('chatMsgs');
+  var div = document.createElement('div');
+  div.className = 'kb-msg ' + role;
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+async function chatSend(){
+  var input = document.getElementById('chatInput');
+  var text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  chatAddMsg('user', text);
+  chatAddMsg('assistant', '...');
+  try{
+    var res = await api('/knowledge/chat', {method:'POST', body:{message: text}});
+    var msgs = document.getElementById('chatMsgs');
+    msgs.removeChild(msgs.lastChild);
+    chatAddMsg('assistant', res.response);
+  } catch(e){
+    var msgs = document.getElementById('chatMsgs');
+    msgs.removeChild(msgs.lastChild);
+    chatAddMsg('err', 'Error: ' + e.message);
+  }
+}
+
+document.getElementById('chatInput').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') chatSend();
+});
 
 refresh();
 </script>
