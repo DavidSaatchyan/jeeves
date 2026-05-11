@@ -180,17 +180,6 @@
 .pg-cfg-chk-inline input { width: 16px; height: 16px; accent-color: var(--pg-accent); margin: 0; flex-shrink: 0; }
 .pg-cfg-toggle-label { font-size: var(--fs-label); }
 
-/* Inline-wrap layout (avoids Chrome flex-wrap + gap + inline-flex bug) */
-.pg-cfg-row-inline { display: block; font-size: 0; }
-.pg-cfg-row-inline > * {
-  display: inline-block;
-  vertical-align: middle;
-  margin: 4px 8px 4px 0;
-  font-size: var(--fs-body);
-}
-.pg-cfg-row-inline > :last-child { margin-right: 0; }
-.pg-cfg-row-inline-sm > * { margin-right: 4px; }
-
 /* Risk card */
 .pg-risk-card { margin-top: var(--sp-md); }
 
@@ -735,7 +724,7 @@ function renderConfig() {
  },
  { id:'communication', icon:'', label:'Customer Communication',
  body: function(){
-   return '<div class="pg-cfg-field"><div class="pg-cfg-label">Channels</div><div class="pg-cfg-row pg-cfg-row-inline">' +
+  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Channels</div><div class="pg-cfg-row">' +
     ['email','widget','whatsapp'].map(function(c,i){ return '<label class="pg-cfg-chk-inline"><input type="checkbox" ' + (i<2?'checked':'') + '> <span>' + c + '</span></label>'; }).join('') +
  '</div></div>' +
  '<div class="pg-cfg-field"><div class="pg-cfg-label">Tone</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-tone">' +
@@ -782,7 +771,7 @@ function renderConfig() {
 
 function renderRiskControls() {
  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Blocked failure codes ' + tip('These are reasons for payment failure that PayGuard will NOT retry — for example if a card is reported stolen or lost. Any payment that fails for these reasons will be sent directly to your team instead of being retried. Uncheck a code to allow PayGuard to retry it.') + '</div>' +
-   '<div class="pg-cfg-row pg-cfg-row-inline pg-cfg-row-inline-sm">' +
+ '<div class="pg-cfg-row" style="gap:4px;flex-wrap:wrap">' +
  ['fraud','stolen_card','lost_card','blocked'].map(function(c){
    return '<label class="pg-tag-chk"><input type="checkbox" checked> <span>' + c.replace(/_/g,' ') + '</span></label>';
  }).join('') +
