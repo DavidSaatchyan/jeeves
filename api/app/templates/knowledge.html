@@ -12,7 +12,7 @@
     <div class="muted" style="font-size:12px">.pdf, .txt, .md · Max 50 MB total</div>
     <input id="file" type="file" accept=".pdf,.txt,.md" multiple style="display:none"/>
   </div>
-  <div id="uprog" class="muted mt-12"></div>
+  <div id="uprog" class="muted mt-12" style="min-height:24px"></div>
   <div class="err-msg" id="uerr"></div>
 </div>
 
@@ -44,18 +44,14 @@
 
 
 <!-- Files table -->
+<div class="flex" style="justify-content:flex-end;margin-bottom:8px">
+  <button id="clearAllBtn" class="ghost sm" style="color:var(--red);display:none" onclick="clearAll()">Clear all</button>
+</div>
 <div class="card">
   <div class="card-header">
     <h2>Files</h2>
-    <div class="flex gap-sm" style="align-items:center">
-      <button id="clearAllBtn" class="ghost sm" style="color:var(--red);display:none" onclick="clearAll()">Clear all</button>
-      <div id="selectionActions" style="display:none;align-items:center;gap:8px">
-        <button class="ghost sm" style="color:var(--red)" onclick="delSelected()">Delete selected</button>
-        <button class="ghost sm" onclick="clearSelection()">Cancel</button>
-      </div>
-    </div>
   </div>
-  <table class="kb-table"><thead><tr><th class="col-cb"></th><th class="col-name">Filename</th><th class="col-status">Status</th><th class="col-size">Size</th><th class="col-chunks">Chunks</th><th class="col-date">Uploaded</th><th class="col-actions"></th></tr></thead><tbody id="tbl"></tbody></table>
+  <table class="kb-table"><thead><tr><th class="col-name">Filename</th><th class="col-status">Status</th><th class="col-size">Size</th><th class="col-chunks">Chunks</th><th class="col-date">Uploaded</th><th class="col-actions"></th></tr></thead><tbody id="tbl"></tbody></table>
 </div>
 
 
@@ -64,12 +60,15 @@
 <div class="modal-overlay" id="confirmModal">
   <div class="modal" style="max-width:400px">
     <div class="modal-header">
-      <h2>Confirm</h2>
+      <h2 id="confirmTitle">Confirm</h2>
     </div>
     <p id="confirmMsg" class="muted" style="margin-bottom:20px;font-size:14px"></p>
-    <div class="flex" style="gap:8px;justify-content:flex-end">
+    <div class="flex" style="gap:8px;justify-content:flex-end" id="confirmActions">
       <button class="ghost sm" onclick="closeConfirm()">Cancel</button>
       <button class="btn sm" id="confirmBtn">Delete</button>
+    </div>
+    <div id="confirmLoader" style="display:none;align-items:center;justify-content:center;gap:8px;padding:8px 0">
+      <span class="kb-spinner"></span><span class="muted" style="font-size:13px">Deleting...</span>
     </div>
   </div>
 </div>
@@ -86,12 +85,14 @@
 .kb-stat-sub{font-size:11px;color:var(--muted)}
 .kb-table{width:100%;border-collapse:collapse}
 .kb-table th,.kb-table td{padding:8px 12px;text-align:left;font-size:12px;border-bottom:1px solid var(--border)}
-.col-cb{width:32px}.col-name{width:auto}.col-status{width:100px}.col-size{width:80px;text-align:right}.col-chunks{width:80px;text-align:right}.col-date{width:110px}.col-actions{width:60px}
+.col-name{width:auto}.col-status{width:100px}.col-size{width:80px;text-align:right}.col-chunks{width:80px;text-align:right}.col-date{width:110px}.col-actions{width:60px}
 .del-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:4px;padding:4px;cursor:pointer}
 .del-btn:hover{color:var(--red);background:rgba(248,113,113,0.08)}
 .kb-uprog{display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 0}
 .kb-uprog-bar{height:3px;flex:1;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;max-width:200px}
 .kb-uprog-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .3s ease}
+.kb-spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:kb-spin .6s linear infinite;display:inline-block}
+@keyframes kb-spin{to{transform:rotate(360deg)}}
 </style>
 <script>
 async function refresh() {
@@ -116,28 +117,42 @@ async function refresh() {
     document.getElementById('sumAvg').textContent = ready.length ? Math.round(totalChunks / ready.length) + ' avg/file' : '—';
     document.getElementById('kbSummary').style.display = 'grid';
 
+    var hasFiles = rows.length > 0;
+    document.getElementById('clearAllBtn').style.display = hasFiles ? '' : 'none';
     document.getElementById('tbl').innerHTML = rows.map(function(r){
       const cls = r.status === 'ready' ? 'ok' : (r.status === 'failed' ? 'err' : 'warn');
       const label = r.status === 'processing' ? 'Processing' : r.status;
-      return '<tr><td class="col-cb"><input type="checkbox" class="row-cb" data-id="' + r.id + '" style="accent-color:var(--accent)"></td>'
+      return '<tr>'
         + '<td><strong>' + esc(r.filename) + '</strong></td>'
         + '<td><span class="pill ' + cls + '" style="font-size:10px">' + label + '</span></td>'
         + '<td style="text-align:right">' + (r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB') + '</td>'
         + '<td style="text-align:right">' + (r.chunks_total || '—') + '</td>'
         + '<td>' + (r.created_at ? r.created_at.slice(0, 10) : '—') + '</td>'
-        + '<td><button class="del-btn" onclick="del(\'' + r.id + '\')">✕</button></td></tr>';
-    }).join('') || '<tr><td colspan="7" class="muted" style="text-align:center;padding:16px">No files yet.</td></tr>';
+        + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + esc(r.filename).replace(/"/g,'&quot;') + '">✕</button></td></tr>';
+    }).join('') || '<tr><td colspan="6" class="muted" style="text-align:center;padding:16px">No files yet.</td></tr>';
   } catch(e) { console.error('kb refresh error:', e); }
 }
 
 // Confirm modal
 var _confirmCb = null;
-function showConfirm(msg, cb){
+var _confirmLoading = false;
+function showConfirm(msg, cb, title){
+  document.getElementById('confirmTitle').textContent = title || 'Confirm';
   document.getElementById('confirmMsg').textContent = msg;
+  document.getElementById('confirmActions').style.display = '';
+  document.getElementById('confirmLoader').style.display = 'none';
   document.getElementById('confirmModal').classList.add('show');
   _confirmCb = cb;
+  _confirmLoading = false;
 }
-function closeConfirm(){
+function setConfirmLoading(on){
+  _confirmLoading = on;
+  document.getElementById('confirmActions').style.display = on ? 'none' : '';
+  document.getElementById('confirmLoader').style.display = on ? 'flex' : 'none';
+}
+function closeConfirm(force){
+  if(_confirmLoading && !force) return;
+  _confirmLoading = false;
   document.getElementById('confirmModal').classList.remove('show');
   _confirmCb = null;
 }
@@ -145,8 +160,8 @@ document.getElementById('confirmModal').addEventListener('click', function(e){
   if(e.target === this) closeConfirm();
 });
 document.getElementById('confirmBtn').addEventListener('click', function(){
-  if(_confirmCb) _confirmCb();
-  closeConfirm();
+  if(_confirmCb) { _confirmCb(); }
+  if(!_confirmLoading) closeConfirm();
 });
 
 // Upload management
@@ -176,36 +191,31 @@ async function uploadMany(files){
   await refresh();
 }
 
-async function del(id){
-  showConfirm('Delete this file?', async function(){
+async function del(btn){
+  var id = btn.getAttribute('data-id');
+  var name = btn.getAttribute('data-name');
+  showConfirm('Are you sure you want to delete this file?', async function(){
+    setConfirmLoading(true);
     try{
       await fetch('/knowledge/files/' + id, {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}});
       await refresh();
     } catch(e){ alert('Error: ' + e.message); }
-  });
+    closeConfirm(true);
+  }, esc(name));
 }
 
-function clearAll(){
-  showConfirm('Delete all files?', function(){
-    document.querySelectorAll('.row-cb').forEach(function(cb){ cb.checked = true; });
-    delSelected();
-  });
-}
-
-function clearSelection(){
-  document.querySelectorAll('.row-cb').forEach(function(cb){ cb.checked = false; });
-  document.getElementById('selectionActions').style.display = 'none';
-}
-
-async function delSelected(){
-  var ids = [];
-  document.querySelectorAll('.row-cb:checked').forEach(function(cb){ ids.push(cb.getAttribute('data-id')); });
-  if(!ids.length) return;
-  for(var i = 0; i < ids.length; i++){
-    try{ await fetch('/knowledge/files/' + ids[i], {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}}); } catch(e){}
-  }
-  clearSelection();
-  await refresh();
+async function clearAll(){
+  showConfirm('Delete all documents?', async function(){
+    setConfirmLoading(true);
+    try{
+      var rows = await api('/knowledge/files');
+      for(var i = 0; i < rows.length; i++){
+        await fetch('/knowledge/files/' + rows[i].id, {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}});
+      }
+      await refresh();
+    } catch(e){ alert('Error: ' + e.message); }
+    closeConfirm(true);
+  }, 'All documents');
 }
 
 refresh();
