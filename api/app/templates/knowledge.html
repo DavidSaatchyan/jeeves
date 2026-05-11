@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>Knowledge base</h1>
-<p class="page-desc">AI memory system — files, coverage readiness, and a testing playground.</p>
+<p class="page-desc">AI memory system — files and knowledge base.</p>
 
 <!-- Existing file upload area -->
 <div class="card">
@@ -42,32 +42,6 @@
   </div>
 </div>
 
-<!-- AI Readiness -->
-<div class="card" id="aiReadinessCard">
-  <h2>AI Readiness</h2>
-  <div id="aiReadiness" class="muted" style="padding:8px 0">
-    <div class="readiness-row">
-      <span class="readiness-label">WISMO readiness</span>
-      <span class="pill ok" id="readinessWismo">High</span>
-    </div>
-    <div class="readiness-row">
-      <span class="readiness-label">Refund policy confidence</span>
-      <span class="pill warn" id="readinessRefund">Medium</span>
-    </div>
-    <div class="readiness-row">
-      <span class="readiness-label">Retention policy coverage</span>
-      <span class="pill err" id="readinessRetention">Low</span>
-    </div>
-    <div class="readiness-row">
-      <span class="readiness-label">Cancel flow knowledge</span>
-      <span class="pill muted" id="readinessCancel">Unknown</span>
-    </div>
-    <div class="readiness-row">
-      <span class="readiness-label">Payment issue handling</span>
-      <span class="pill warn" id="readinessPayment">Medium</span>
-    </div>
-  </div>
-</div>
 
 <!-- Files table -->
 <div class="card">
@@ -84,47 +58,7 @@
   <table class="kb-table"><thead><tr><th class="col-cb"></th><th class="col-name">Filename</th><th class="col-status">Status</th><th class="col-size">Size</th><th class="col-chunks">Chunks</th><th class="col-date">Uploaded</th><th class="col-actions"></th></tr></thead><tbody id="tbl"></tbody></table>
 </div>
 
-<!-- Missing Knowledge -->
-<div class="card">
-  <h2>Missing knowledge detection</h2>
-  <p class="muted" style="font-size:12px;margin-bottom:12px">AI identifies gaps in your knowledge base based on customer inquiries.</p>
-  <div id="missingKnowledge">
-    <div class="tl-row">
-      <span class="tl-dot" style="background:var(--red)"></span>
-      <span class="muted" style="flex:1;font-size:12px">Damaged shipment policy — 12 customer inquiries uncovered</span>
-    </div>
-    <div class="tl-row">
-      <span class="tl-dot" style="background:var(--red)"></span>
-      <span class="muted" style="flex:1;font-size:12px">Prepaid annual cancellation handling — 8 inquiries uncovered</span>
-    </div>
-    <div class="tl-row">
-      <span class="tl-dot" style="background:var(--amber)"></span>
-      <span class="muted" style="flex:1;font-size:12px">Subscription pause policy — 3 inquiries uncovered</span>
-    </div>
-  </div>
-</div>
 
-<!-- AI Playground -->
-<div class="card">
-  <h2>AI Playground</h2>
-  <p class="muted" style="font-size:12px;margin-bottom:12px">Simulate customer scenarios and see AI responses, confidence, and knowledge sources used.</p>
-  <div class="flex" style="gap:8px;margin-bottom:16px;flex-wrap:wrap">
-    <button class="btn ghost sm" onclick="simulate('wismo')">Simulate WISMO</button>
-    <button class="btn ghost sm" onclick="simulate('cancellation')">Cancellation request</button>
-    <button class="btn ghost sm" onclick="simulate('failed_payment')">Failed payment</button>
-  </div>
-  <div id="playgroundResult" style="display:none">
-    <div style="padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:8px">
-      <div class="muted" style="font-size:11px;margin-bottom:4px">AI response</div>
-      <div id="playgroundResponse" style="font-size:13px;line-height:1.5"></div>
-    </div>
-    <div class="flex" style="gap:12px;flex-wrap:wrap">
-      <span id="playgroundConfidence" class="pill ok">Confidence: —</span>
-      <span id="playgroundSources" class="pill muted">Sources: —</span>
-      <span id="playgroundWorkflow" class="pill muted">Workflow: —</span>
-    </div>
-  </div>
-</div>
 
 {% endblock %}
 {% block tail %}
@@ -137,9 +71,6 @@
 .kb-bar-track{height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:8px}
 .kb-bar-fill{height:100%;border-radius:3px;transition:width .6s ease;background:linear-gradient(90deg,var(--accent),#818cf8)}
 .kb-stat-sub{font-size:11px;color:var(--muted)}
-.readiness-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
-.readiness-row:last-child{border-bottom:none}
-.readiness-label{font-size:13px;font-weight:500}
 .kb-table{width:100%;border-collapse:collapse}
 .kb-table th,.kb-table td{padding:8px 12px;text-align:left;font-size:12px;border-bottom:1px solid var(--border)}
 .col-cb{width:32px}.col-name{width:auto}.col-status{width:100px}.col-size{width:80px;text-align:right}.col-chunks{width:80px;text-align:right}.col-date{width:110px}.col-actions{width:60px}
@@ -180,47 +111,7 @@ async function refresh() {
         + '<td>' + (r.created_at ? r.created_at.slice(0, 10) : '—') + '</td>'
         + '<td><button class="del-btn" onclick="del(\'' + r.id + '\')">✕</button></td></tr>';
     }).join('') || '<tr><td colspan="7" class="muted" style="text-align:center;padding:16px">No files yet.</td></tr>';
-
-    // Update readiness based on files
-    if (ready.length >= 3) {
-      document.getElementById('readinessWismo').textContent = 'High'; document.getElementById('readinessWismo').className = 'pill ok';
-      document.getElementById('readinessRefund').textContent = 'High'; document.getElementById('readinessRefund').className = 'pill ok';
-    } else if (ready.length >= 1) {
-      document.getElementById('readinessWismo').textContent = 'Medium'; document.getElementById('readinessWismo').className = 'pill warn';
-      document.getElementById('readinessRefund').textContent = 'Medium'; document.getElementById('readinessRefund').className = 'pill warn';
-    }
-    if (ready.length >= 5) {
-      document.getElementById('readinessRetention').textContent = 'High'; document.getElementById('readinessRetention').className = 'pill ok';
-      document.getElementById('readinessCancel').textContent = 'Medium'; document.getElementById('readinessCancel').className = 'pill warn';
-      document.getElementById('readinessPayment').textContent = 'High'; document.getElementById('readinessPayment').className = 'pill ok';
-    } else if (ready.length >= 2) {
-      document.getElementById('readinessRetention').textContent = 'Medium'; document.getElementById('readinessRetention').className = 'pill warn';
-    }
   } catch(e) { console.error('kb refresh error:', e); }
-}
-
-// Playground
-async function simulate(scenario) {
-  document.getElementById('playgroundResult').style.display = '';
-  document.getElementById('playgroundResponse').textContent = 'Thinking...';
-  document.getElementById('playgroundConfidence').textContent = 'Confidence: —';
-  document.getElementById('playgroundSources').textContent = 'Sources: —';
-  document.getElementById('playgroundWorkflow').textContent = 'Workflow: —';
-
-  var responses = {
-    wismo: { text: 'Your order #12345 is currently in transit and expected to arrive on March 15. You can track it at shopify.com/track/abc.', confidence: 'High', sources: 'order_policy.md, shipping_faq.txt', workflow: 'WISMO' },
-    cancellation: { text: "I understand you'd like to cancel. Before we proceed, did you know you can pause your subscription instead? Many customers find this helpful if it's temporary.", confidence: 'Medium', sources: 'retention_policy.md', workflow: 'Cancellation Save' },
-    failed_payment: { text: 'It looks like your recent payment of $29.99 failed. I can retry the payment now or you can update your payment method.', confidence: 'High', sources: 'payment_policy.md, retry_settings.json', workflow: 'Payment Recovery' },
-  };
-
-  var r = responses[scenario] || responses.wismo;
-  setTimeout(function(){
-    document.getElementById('playgroundResponse').textContent = r.text;
-    document.getElementById('playgroundConfidence').textContent = 'Confidence: ' + r.confidence;
-    document.getElementById('playgroundConfidence').className = 'pill ' + (r.confidence === 'High' ? 'ok' : r.confidence === 'Medium' ? 'warn' : 'err');
-    document.getElementById('playgroundSources').textContent = 'Sources: ' + r.sources;
-    document.getElementById('playgroundWorkflow').textContent = 'Workflow: ' + r.workflow;
-  }, 800);
 }
 
 // Upload management
