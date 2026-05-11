@@ -38,6 +38,9 @@
  --r-sm: 6px;
  --r-md: 8px;
  --r-lg: 12px;
+
+ /* Control */
+ --control-h: 36px;
 }
 
 /* Sticky header */
@@ -167,17 +170,25 @@
 .pg-num-btn { padding: 6px 8px; background: transparent; border: none; color: var(--pg-muted); cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; transition: all .1s; }
 .pg-num-btn:hover { color: var(--pg-text); background: rgba(255,255,255,0.04); }
 .pg-cfg-rule-hint { color: var(--pg-muted); font-size: var(--fs-small); }
-.pg-tag-chk { display: inline-block; padding: 5px 12px; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: 20px; font-size: var(--fs-label); cursor: pointer; transition: all .1s; user-select: none; flex-shrink: 0; vertical-align: middle; }
+.pg-tag-chk { padding: 5px 12px; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: 20px; font-size: var(--fs-label); cursor: pointer; transition: all .1s; user-select: none; flex-shrink: 0; }
 .pg-tag-chk input { display: none; }
 .pg-tag-chk:has(input:checked) { background: var(--pg-accent-bg); border-color: rgba(99,102,241,0.3); color: var(--pg-accent); }
 .pg-tag-chk:hover { border-color: var(--pg-muted); }
+
+/* Control primitives */
+.pg-control-inline { display: flex; align-items: center; gap: 8px; min-height: var(--control-h); box-sizing: border-box; }
+
+.checkbox-wrap { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; }
+.checkbox-wrap input[type="checkbox"] { opacity: 0; position: absolute; width: 0; height: 0; pointer-events: none; }
+.check-vis { width: 16px; height: 16px; border: 2px solid var(--pg-border); border-radius: 3px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-sizing: border-box; transition: all .15s; }
+.checkbox-wrap input:checked + .check-vis { background: var(--pg-accent); border-color: var(--pg-accent); }
+.checkbox-wrap input:checked + .check-vis::after { content: ''; width: 10px; height: 5px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg); margin-top: -2px; }
+
+.pg-cfg-chk-label { font-size: var(--fs-body); cursor: pointer; margin-bottom: var(--sp-sm); padding: 4px 0; }
+.pg-cfg-chk-inline { padding: 6px 14px; font-size: var(--fs-body); cursor: pointer; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-sm); flex-shrink: 0; }
 .pg-cfg-select { padding: 6px 10px; background: var(--pg-surface); border: 1px solid var(--pg-border); border-radius: var(--r-sm); color: var(--pg-text); font-size: var(--fs-body); }
 .pg-cfg-input-wide { width: 100%; padding: 8px 10px; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-sm); color: var(--pg-text); font-size: var(--fs-body); }
 .pg-cfg-input-narrow { width: 70px; padding: 8px 10px; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-sm); color: var(--pg-text); font-size: var(--fs-body); }
-.pg-cfg-chk-label { display: flex; align-items: center; gap: var(--sp-sm); font-size: var(--fs-body); cursor: pointer; margin-bottom: var(--sp-sm); padding: 4px 0; }
-.pg-cfg-chk-label input { width: 16px; height: 16px; accent-color: var(--pg-accent); margin: 0; flex-shrink: 0; }
-.pg-cfg-chk-inline { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 0; padding: 6px 14px; font-size: var(--fs-body); cursor: pointer; background: var(--pg-bg); border: 1px solid var(--pg-border); border-radius: var(--r-sm); flex-shrink: 0; vertical-align: middle; }
-.pg-cfg-chk-inline input { width: 16px; height: 16px; accent-color: var(--pg-accent); margin: 0; flex-shrink: 0; }
 .pg-cfg-toggle-label { font-size: var(--fs-label); }
 
 /* Risk card */
@@ -725,7 +736,7 @@ function renderConfig() {
  { id:'communication', icon:'', label:'Customer Communication',
  body: function(){
    return '<div class="pg-cfg-field"><div class="pg-cfg-label">Channels</div><div class="pg-cfg-row" style="flex-wrap:nowrap;overflow-x:auto">' +
-    ['email','widget','whatsapp'].map(function(c,i){ return '<label class="pg-cfg-chk-inline"><input type="checkbox" ' + (i<2?'checked':'') + '> <span>' + c + '</span></label>'; }).join('') +
+    ['email','widget','whatsapp'].map(function(c,i){ return '<label class="pg-control-inline pg-cfg-chk-inline"><span class="checkbox-wrap"><input type="checkbox" ' + (i<2?'checked':'') + '><span class="check-vis"></span></span><span>' + c + '</span></label>'; }).join('') +
  '</div></div>' +
  '<div class="pg-cfg-field"><div class="pg-cfg-label">Tone</div><div class="pg-cfg-row"><div class="pg-cfg-seg" id="seg-tone">' +
  '<button class="pg-cfg-seg-btn" data-v="strict">Strict</button>' +
@@ -758,7 +769,7 @@ function renderConfig() {
   '<button class="pg-cfg-seg-btn" data-v="critical">Critical</button>' +
  '</div></div></div>' +
  '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Triggers</div>' +
-  ['Frustration detected','Payment repeatedly fails','High-value at risk','AI confidence low'].map(function(r,i){ return '<label class="pg-cfg-chk-label"><input type="checkbox" ' + (i<3?'checked':'') + '> <span>' + r + '</span></label>'; }).join('') +
+   ['Frustration detected','Payment repeatedly fails','High-value at risk','AI confidence low'].map(function(r,i){ return '<label class="pg-control-inline pg-cfg-chk-label"><span class="checkbox-wrap"><input type="checkbox" ' + (i<3?'checked':'') + '><span class="check-vis"></span></span><span>' + r + '</span></label>'; }).join('') +
  '</div>';
  }
  },
@@ -773,7 +784,7 @@ function renderRiskControls() {
  return '<div class="pg-cfg-field"><div class="pg-cfg-label">Blocked failure codes ' + tip('These are reasons for payment failure that PayGuard will NOT retry — for example if a card is reported stolen or lost. Any payment that fails for these reasons will be sent directly to your team instead of being retried. Uncheck a code to allow PayGuard to retry it.') + '</div>' +
    '<div class="pg-cfg-row" style="flex-wrap:nowrap;overflow-x:auto;gap:4px">' +
  ['fraud','stolen_card','lost_card','blocked'].map(function(c){
-   return '<label class="pg-tag-chk"><input type="checkbox" checked> <span>' + c.replace(/_/g,' ') + '</span></label>';
+    return '<label class="pg-control-inline pg-tag-chk"><input type="checkbox" checked> <span>' + c.replace(/_/g,' ') + '</span></label>';
  }).join('') +
  '</div></div>' +
  '<div class="pg-cfg-field pg-cfg-last"><div class="pg-cfg-label">Rate limits</div>' +
