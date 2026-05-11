@@ -12,7 +12,7 @@
     <div class="muted" style="font-size:12px">.pdf, .txt, .md · Max 50 MB total</div>
     <input id="file" type="file" accept=".pdf,.txt,.md" multiple style="display:none"/>
   </div>
-  <div id="uprog" class="muted mt-12" style="min-height:24px"></div>
+  <div id="uprog" class="muted mt-12" style="min-height:36px"></div>
   <div class="err-msg" id="uerr"></div>
 </div>
 
@@ -44,12 +44,10 @@
 
 
 <!-- Files table -->
-<div class="flex" style="justify-content:flex-end;margin-bottom:8px">
-  <button id="clearAllBtn" class="ghost sm" style="color:var(--red);display:none" onclick="clearAll()">Clear all</button>
-</div>
 <div class="card">
   <div class="card-header">
     <h2>Files</h2>
+    <button id="clearAllBtn" class="ghost sm kb-clear-all" style="display:none" onclick="clearAll()">Clear all</button>
   </div>
   <table class="kb-table"><thead><tr><th class="col-name">Filename</th><th class="col-status">Status</th><th class="col-size">Size</th><th class="col-chunks">Chunks</th><th class="col-date">Uploaded</th><th class="col-actions"></th></tr></thead><tbody id="tbl"></tbody></table>
 </div>
@@ -86,6 +84,7 @@
 .kb-table{width:100%;border-collapse:collapse}
 .kb-table th,.kb-table td{padding:8px 12px;text-align:left;font-size:12px;border-bottom:1px solid var(--border)}
 .col-name{width:auto}.col-status{width:100px}.col-size{width:80px;text-align:right}.col-chunks{width:80px;text-align:right}.col-date{width:110px}.col-actions{width:60px}
+.kb-clear-all{color:var(--muted2)}.kb-clear-all:hover{color:var(--red)}
 .del-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:4px;padding:4px;cursor:pointer}
 .del-btn:hover{color:var(--red);background:rgba(248,113,113,0.08)}
 .kb-uprog{display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 0}
@@ -187,7 +186,18 @@ async function uploadMany(files){
       prog.innerHTML = '<div class="kb-uprog"><span style="color:var(--red)">' + esc(name) + ' failed</span></div>';
     }
   }
+  await refresh();
+  await pollProcessing();
   setTimeout(function(){ prog.innerHTML = ''; }, 2500);
+}
+
+async function pollProcessing(){
+  for(var i = 0; i < 30; i++){
+    var rows = await api('/knowledge/files');
+    var pending = rows.filter(function(r){ return r.status === 'processing'; });
+    if(!pending.length) return;
+    await new Promise(function(r){ setTimeout(r, 2000); });
+  }
   await refresh();
 }
 
