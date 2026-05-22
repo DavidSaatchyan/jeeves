@@ -99,8 +99,10 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
     # RAG search — retrieve relevant chunks from knowledge base
     import asyncio
     try:
+        from ..core.ai.generator import translate_query
+        query = await translate_query(body.message)
         from .. import rag
-        chunks = await asyncio.to_thread(rag.search, tenant.id, body.message)
+        chunks = await asyncio.to_thread(rag.search, tenant.id, query)
     except Exception:
         chunks = []
     context = "\n\n".join(c["text"] for c in chunks) if chunks else ""
