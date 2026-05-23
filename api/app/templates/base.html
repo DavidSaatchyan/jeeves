@@ -280,6 +280,11 @@ if(!token() && !location.pathname.endsWith('/login')){ location.href='/admin/log
       Knowledge
     </a>
 
+    <a href="/admin/channels" class="nav-link" data-path="/admin/channels">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Channels
+    </a>
+
     <a href="/admin/connections" class="nav-link" data-path="/admin/connections">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
       Connections
@@ -288,15 +293,20 @@ if(!token() && !location.pathname.endsWith('/login')){ location.href='/admin/log
     <div class="nav-section">
       <div class="nav-section-title">Agents</div>
       <a href="/admin/agents" class="nav-link sub" data-path="/admin/agents">
-        <span class="nav-agent-icon" style="background:rgba(34,211,238,0.15);color:#22d3ee">TR</span>
-        <span class="nav-link-text">Trace</span>
+        <span class="nav-agent-icon" style="background:rgba(34,211,238,0.15);color:#22d3ee">WM</span>
+        <span class="nav-link-text">WISMO</span>
+      </a>
+      <a href="/admin/agents" class="nav-link sub disabled">
+        <span class="nav-agent-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b">SC</span>
+        <span class="nav-link-text">ShipCare</span>
+        <span class="pill muted">Soon</span>
+      </a>
+      <a href="/admin/agents" class="nav-link sub disabled">
+        <span class="nav-agent-icon" style="background:rgba(129,140,248,0.15);color:#818cf8">BW</span>
+        <span class="nav-link-text">BillWise</span>
+        <span class="pill muted">Soon</span>
       </a>
     </div>
-
-    <a href="/admin/channels" class="nav-link" data-path="/admin/channels">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      Channels
-    </a>
   </nav>
 
   <div class="sidebar-footer">

@@ -362,16 +362,22 @@
 function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function toObject(arr){ return (arr && typeof arr === 'object' && !Array.isArray(arr)) ? arr : {}; }
 
-var TRACE = { id:'trace', name:'Trace', subtitle:'Order Tracking & WISMO', icon:'', color:'#22d3ee',
+var WISMO = { id:'wismo', name:'WISMO', subtitle:'Order Tracking', icon:'', color:'#22d3ee',
  tagline:'Answer "Where Is My Order?" automatically with real-time carrier tracking.',
- whatItDoes:'Trace intercepts order fulfillment events from Shopify, resolves tracking status from major carriers, and proactively communicates delivery updates.',
+ whatItDoes:'WISMO intercepts order fulfillment events from Shopify, resolves tracking status from major carriers, and proactively communicates delivery updates.',
  whatItGives:['Resolves 70-80% of WISMO inquiries without human touch','Proactively communicates delays before customers ask','Integrates with major carriers for real-time tracking'],
  provider:'shopify', events:['fulfillments/create','orders/create'], states:['INQUIRY_DETECTED','VALIDATING_IDENTITY','RETRIEVING_SHIPMENT','CLASSIFYING_RISK','RESPONSE_SENT','RESOLVED','LOST'] };
 
-function renderAll(analytics, policies, workflows) {
- var ew = toObject(policies.enabled_workflows);
- var agent = TRACE;
- var enabled = ew[agent.id] !== false;
+var SHIPCARE = { id:'shipcare', name:'ShipCare', subtitle:'Shipping Exception Management', icon:'', color:'#f59e0b',
+ tagline:'Automatically handle shipping delays, carrier exceptions, and lost package claims.',
+ whatItDoes:'ShipCare monitors carrier notifications for delivery exceptions, proactively communicates with customers about delays, and orchestrates replacement shipments when packages are lost.' };
+
+var BILLWISE = { id:'billwise', name:'BillWise', subtitle:'Billing Issue Resolution', icon:'', color:'#818cf8',
+ tagline:'Resolve billing disputes, double charges, and invoice questions automatically.',
+ whatItDoes:'BillWise intercepts billing inquiries from customers, verifies charges against subscription records, and resolves common billing issues without human intervention.' };
+
+function renderAgentPanel(agent, workflows, ew) {
+ var enabled = agent.id in ew ? ew[agent.id] !== false : false;
  var wfs = workflows.filter(function(w){ return w.workflow_type === agent.id; });
  var total = wfs.length;
  var active = wfs.filter(function(w){ return w.status === 'active' || w.status === 'paused'; }).length;
@@ -379,8 +385,7 @@ function renderAll(analytics, policies, workflows) {
  var escalated = wfs.filter(function(w){ return w.status === 'escalated'; }).length;
  var failed = wfs.filter(function(w){ return w.status==='failed'||w.current_state==='FAILED'||w.current_state==='CANCELLED'||w.current_state==='LOST'; }).length;
 
- document.getElementById('agentPanels').innerHTML =
- '<div class="ch-panel active" id="panel-trace">' +
+ var html = '<div class="ch-panel active" id="panel-' + agent.id + '">' +
  '<div class="agent-hero" style="border-left-color:' + agent.color + '"><div class="agent-hero-header">' +
  '<div class="agent-hero-logo" style="background:rgba(' + hexToRgb(agent.color) + ',0.12);color:' + agent.color + '">' + agent.icon + '</div>' +
  '<div class="agent-hero-title"><div class="agent-name">' + agent.name + '</div><div class="agent-subtitle">' + agent.subtitle + '</div></div>' +
@@ -390,16 +395,29 @@ function renderAll(analytics, policies, workflows) {
  '</div></div>' +
  '<div class="agent-hero-tagline">' + agent.tagline + '</div>' +
  '<div class="agent-hero-section"><div class="agent-hero-label"> What it does</div><div class="agent-hero-text">' + agent.whatItDoes + '</div></div>' +
- '</div>' +
- '<div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">' +
- '<div class="stat"><div class="n">' + total + '</div><div class="l">Total</div></div>' +
- '<div class="stat"><div class="n">' + completed + '</div><div class="l">Resolved</div></div>' +
- '<div class="stat"><div class="n">' + active + '</div><div class="l">Active</div></div>' +
- '<div class="stat"><div class="n">' + escalated + '</div><div class="l">Escalated</div></div>' +
- '<div class="stat"><div class="n">' + failed + '</div><div class="l">Failed</div></div>' +
- '</div>' +
- '<div class="states-viz">' + agent.states.map(function(s,i){ var t=['RECOVERED','FAILED','ESCALATED','EXPIRED','CANCELLED','LOST','RETAINED','RESOLVED'].includes(s); return '<div class="state-node"><div class="state-dot ' + (t?'terminal':'') + '"></div><div class="state-label">' + s.charAt(0)+s.slice(1).toLowerCase() + '</div>' + (i<agent.states.length-1?'<div class="state-arrow">→</div>':'') + '</div>'; }).join('') + '</div>' +
  '</div>';
+
+ if (agent.states) {
+  html += '<div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">' +
+  '<div class="stat"><div class="n">' + total + '</div><div class="l">Total</div></div>' +
+  '<div class="stat"><div class="n">' + completed + '</div><div class="l">Resolved</div></div>' +
+  '<div class="stat"><div class="n">' + active + '</div><div class="l">Active</div></div>' +
+  '<div class="stat"><div class="n">' + escalated + '</div><div class="l">Escalated</div></div>' +
+  '<div class="stat"><div class="n">' + failed + '</div><div class="l">Failed</div></div>' +
+  '</div>' +
+  '<div class="states-viz">' + agent.states.map(function(s,i){ var t=['RECOVERED','FAILED','ESCALATED','EXPIRED','CANCELLED','LOST','RETAINED','RESOLVED'].includes(s); return '<div class="state-node"><div class="state-dot ' + (t?'terminal':'') + '"></div><div class="state-label">' + s.charAt(0)+s.slice(1).toLowerCase() + '</div>' + (i<agent.states.length-1?'<div class="state-arrow">→</div>':'') + '</div>'; }).join('') + '</div>';
+ }
+
+ html += '</div>';
+ return html;
+}
+
+function renderAll(analytics, policies, workflows) {
+ var ew = toObject(policies.enabled_workflows);
+ document.getElementById('agentPanels').innerHTML =
+  renderAgentPanel(WISMO, workflows, ew) +
+  renderAgentPanel(SHIPCARE, workflows, ew) +
+  renderAgentPanel(BILLWISE, workflows, ew);
 }
 
 // Helpers
