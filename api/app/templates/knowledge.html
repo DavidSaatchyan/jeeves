@@ -103,18 +103,6 @@
     <div class="card-header">
       <h2>Products</h2>
     </div>
-    <div class="flex flex-wrap" style="margin-bottom:16px;gap:8px">
-      <input id="catSearch" type="text" placeholder="Search products..." style="flex:1;min-width:200px;padding:8px 12px;font-size:13px" oninput="catSearchTimeout()"/>
-      <select id="catCategoryFilter" style="width:auto;min-width:140px;padding:8px 12px;font-size:13px" onchange="refreshCatalog()">
-        <option value="">All categories</option>
-      </select>
-      <select id="catStockFilter" style="width:auto;min-width:120px;padding:8px 12px;font-size:13px" onchange="refreshCatalog()">
-        <option value="">All stock</option>
-        <option value="in_stock">In stock</option>
-        <option value="out_of_stock">Out of stock</option>
-        <option value="limited">Limited</option>
-      </select>
-    </div>
     <table class="kb-table"><thead><tr><th class="col-cat-name">Name</th><th class="col-cat-sku">SKU</th><th class="col-cat-price">Price</th><th class="col-cat-stock">Stock</th><th class="col-cat-cat">Category</th><th class="col-cat-batch">Batch</th><th class="col-cat-actions"></th></tr></thead><tbody id="catTbl"></tbody></table>
     <div id="catEmpty" class="empty-state" style="display:none">
       <div style="font-size:14px;font-weight:600;margin-bottom:4px">No products yet</div>
@@ -379,12 +367,6 @@ async function clearAll(){
 // CATALOG
 // ════════════════════════════════════════════════════════════════
 
-var _catSearchTimer = null;
-function catSearchTimeout(){
-  if(_catSearchTimer) clearTimeout(_catSearchTimer);
-  _catSearchTimer = setTimeout(refreshCatalog, 300);
-}
-
 // Catalog upload zone
 const catDrop = document.getElementById('catDrop');
 catDrop.addEventListener('click', function(){ document.getElementById('catFile').click(); });
@@ -418,25 +400,7 @@ async function uploadCatalogFile(file){
 
 async function refreshCatalog(){
   try {
-    var q = document.getElementById('catSearch').value.trim();
-    var category = document.getElementById('catCategoryFilter').value;
-    var stock = document.getElementById('catStockFilter').value;
-    var params = new URLSearchParams();
-    if (q) params.set('q', q);
-    if (category) params.set('category', category);
-    if (stock) params.set('in_stock', stock === 'in_stock' ? 'true' : (stock === 'out_of_stock' ? 'false' : ''));
-    params.set('limit', '200');
-
-    var [data, stats] = await Promise.all([
-      api('/knowledge/catalog?' + params.toString()),
-      api('/knowledge/catalog/stats'),
-    ]);
-
-    // Populate category filter
-    var sel = document.getElementById('catCategoryFilter');
-    var currentVal = sel.value;
-    sel.innerHTML = '<option value="">All categories</option>' + stats.categories.map(function(c){ return '<option value="'+esc(c.name)+'">'+esc(c.name)+' ('+c.count+')</option>'; }).join('');
-    sel.value = currentVal;
+    var data = await api('/knowledge/catalog?limit=200');
 
     // Products table
     var results = data.results || [];
