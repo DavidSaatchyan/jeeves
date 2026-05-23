@@ -103,7 +103,7 @@
     <div class="card-header">
       <h2>Products</h2>
     </div>
-    <table class="kb-table"><thead><tr><th class="col-cat-name">Name</th><th class="col-cat-sku">SKU</th><th class="col-cat-price">Price</th><th class="col-cat-stock">Stock</th><th class="col-cat-cat">Category</th><th class="col-cat-batch">Batch</th><th class="col-cat-actions"></th></tr></thead><tbody id="catTbl"></tbody></table>
+    <table class="kb-table"><thead><tr><th class="col-cat-name">Name</th><th class="col-cat-sku">SKU</th><th class="col-cat-price">Price</th><th class="col-cat-stock">Stock</th><th class="col-cat-cat">Category</th><th class="col-cat-batch">Batch</th></tr></thead><tbody id="catTbl"></tbody></table>
     <div id="catEmpty" class="empty-state" style="display:none">
       <div style="font-size:14px;font-weight:600;margin-bottom:4px">No products yet</div>
       <div class="muted">Upload a CSV or JSON file to get started.</div>
@@ -414,8 +414,7 @@ async function refreshCatalog(){
         + '<td style="text-align:right;font-weight:700">' + priceStr + '</td>'
         + '<td><span class="pill ' + stockCls + '" style="font-size:10px">' + stockLabel + '</span></td>'
         + '<td style="color:var(--muted);font-size:11px">' + esc(p.category || '&mdash;') + '</td>'
-        + '<td><span class="cat-batch-label">' + esc((p.import_batch || '').slice(0, 8)) + '</span></td>'
-        + '<td><button class="del-btn" onclick="deleteCatalogProduct(this)" data-id="' + p.id + '" data-name="' + esc(p.name).replace(/"/g,'&quot;') + '">✕</button></td></tr>';
+        + '<td><span class="cat-batch-label">' + esc((p.import_batch || '').slice(0, 8)) + '</span></td></tr>';
     }).join('');
     document.getElementById('catEmpty').style.display = results.length ? 'none' : '';
 
@@ -433,19 +432,6 @@ async function refreshCatalog(){
     document.getElementById('catFileEmpty').style.display = files.length ? 'none' : '';
 
   } catch(e) { console.error('catalog refresh error:', e); }
-}
-
-async function deleteCatalogProduct(btn){
-  var id = btn.getAttribute('data-id');
-  var name = btn.getAttribute('data-name');
-  showConfirm('Are you sure you want to delete "' + name + '" from the catalog?', async function(){
-    setConfirmLoading(true);
-    try{
-      await api('/knowledge/catalog/' + id, {method:'DELETE'});
-      await refreshCatalog();
-    } catch(e){ alert('Error: ' + e.message); }
-    closeConfirm(true);
-  }, esc(name));
 }
 
 async function deleteCatalogFile(btn){
