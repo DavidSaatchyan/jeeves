@@ -98,31 +98,6 @@
     </div>
   </div>
 
-  <!-- Catalog stats -->
-  <div id="catStats" class="kb-summary" style="display:none">
-    <div class="kb-stat">
-      <div class="kb-stat-header">
-        <span class="kb-stat-label">Products</span>
-        <span class="kb-stat-value" id="catTotalProducts">0</span>
-      </div>
-      <div class="kb-stat-sub" id="catTotalBatches">0 batches</div>
-    </div>
-    <div class="kb-stat">
-      <div class="kb-stat-header">
-        <span class="kb-stat-label">Categories</span>
-        <span class="kb-stat-value" id="catTotalCategories">0</span>
-      </div>
-      <div class="kb-stat-sub" id="catCategoryList">&mdash;</div>
-    </div>
-    <div class="kb-stat">
-      <div class="kb-stat-header">
-        <span class="kb-stat-label">Stock</span>
-        <span class="kb-stat-value" id="catInStock">0</span>
-      </div>
-      <div class="kb-stat-sub" id="catOutOfStock">0 out of stock</div>
-    </div>
-  </div>
-
   <!-- Search + filters -->
   <div class="card">
     <div class="card-header">
@@ -459,15 +434,6 @@ async function refreshCatalog(){
       api('/knowledge/catalog?' + params.toString()),
       api('/knowledge/catalog/stats'),
     ]);
-
-    // Stats
-    document.getElementById('catTotalProducts').textContent = stats.total_products;
-    document.getElementById('catTotalBatches').textContent = stats.total_batches + ' batch' + (stats.total_batches !== 1 ? 'es' : '');
-    document.getElementById('catTotalCategories').textContent = stats.categories.length;
-    document.getElementById('catCategoryList').textContent = stats.categories.slice(0, 5).map(function(c){ return c.name; }).join(', ') + (stats.categories.length > 5 ? '...' : '') || '&mdash;';
-    document.getElementById('catInStock').textContent = stats.stock_breakdown.in_stock || 0;
-    document.getElementById('catOutOfStock').textContent = (stats.stock_breakdown.out_of_stock || 0) + ' out of stock';
-    document.getElementById('catStats').style.display = 'grid';
 
     // Populate category filter
     var sel = document.getElementById('catCategoryFilter');
