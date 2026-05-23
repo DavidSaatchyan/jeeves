@@ -10,17 +10,15 @@ from sqlalchemy.orm import Session
 
 from ..models import ChannelConfig
 
-SUPPORTED_CHANNELS = {"web_widget", "telegram", "whatsapp"}
+SUPPORTED_CHANNELS = {"web_widget", "whatsapp"}
 
 CHANNEL_LABELS = {
     "web_widget": "Website Widget",
-    "telegram": "Telegram",
     "whatsapp": "WhatsApp",
 }
 
 CHANNEL_DESCRIPTIONS = {
     "web_widget": "Chat widget embedded on your website",
-    "telegram": "Telegram bot — free, instant setup",
     "whatsapp": "WhatsApp Business Cloud API — requires Meta developer account",
 }
 
@@ -47,12 +45,7 @@ class _ChannelLookupCache:
             self._token_to_tenant.clear()
             self._phone_to_tenant.clear()
             for cfg in configs:
-                if cfg.channel_type == "telegram":
-                    token = cfg.config.get("bot_token", "")
-                    if token:
-                        self._token_to_tenant[token] = cfg.tenant_id
-                        self._token_to_tenant[token.split(":")[0]] = cfg.tenant_id
-                elif cfg.channel_type == "whatsapp":
+                if cfg.channel_type == "whatsapp":
                     phone = cfg.config.get("phone_number_id", "")
                     if phone:
                         self._phone_to_tenant[phone] = cfg.tenant_id
@@ -71,15 +64,6 @@ class _ChannelLookupCache:
         if not self._built:
             return None
         return self._phone_to_tenant.get(phone)
-
-    def get_full_token(self, prefix: str) -> str | None:
-        if not self._built:
-            return None
-        with self._lock:
-            for token in self._token_to_tenant:
-                if token.startswith(prefix) and ":" in token:
-                    return token
-        return None
 
 
 channel_cache = _ChannelLookupCache()
