@@ -342,9 +342,10 @@ async function del(btn){
   showConfirm('Are you sure you want to delete this file?', async function(){
     setConfirmLoading(true);
     try{
-      await fetch('/knowledge/files/' + id, {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}});
+      await api('/knowledge/files/' + id, {method:'DELETE'});
       await refresh();
     } catch(e){ alert('Error: ' + e.message); }
+    setConfirmLoading(false);
     closeConfirm(true);
   }, esc(name));
 }
@@ -355,10 +356,11 @@ async function clearAll(){
     try{
       var rows = await api('/knowledge/files');
       for(var i = 0; i < rows.length; i++){
-        await fetch('/knowledge/files/' + rows[i].id, {method:'DELETE', headers:{'Authorization':'Bearer ' + token()}});
+        await api('/knowledge/files/' + rows[i].id, {method:'DELETE'});
       }
       await refresh();
     } catch(e){ alert('Error: ' + e.message); }
+    setConfirmLoading(false);
     closeConfirm(true);
   }, 'All documents');
 }
