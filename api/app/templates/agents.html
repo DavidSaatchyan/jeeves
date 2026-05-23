@@ -84,6 +84,9 @@
 .policy-toggle.disabled { opacity: 0.4; pointer-events: none; }
 
 .policy-hint { font-size: 11px; color: var(--muted2); margin-top: 12px; font-style: italic; }
+
+.conn-link { color: var(--amber); text-decoration: underline; cursor: pointer; transition: filter .15s; }
+.conn-link:hover { filter: brightness(1.3); }
 </style>
 
 <div id="agentPanels"></div>
@@ -163,7 +166,7 @@ function renderAgentPanel(agent, enabled, shopifyConnected, total, completed, in
   if (!shopifyConnected) {
     h += '<div class="toggle-wrapper tip-trigger"><div class="toggle mini disabled" id="mainToggle"></div>' +
       '<div class="tip-pop">Connect Shopify first to enable WISMO</div></div>';
-    h += '<div class="conn-warn" style="margin-top:10px;font-size:12px;color:var(--amber)">⚠ <a href="/admin/connections" style="color:var(--cyan);text-decoration:underline">Connect Shopify</a> to start tracking orders.</div>';
+    h += '<div class="conn-warn" style="margin-top:10px;font-size:12px;color:var(--amber)">⚠ <a href="/admin/connections" class="conn-link">Connect Shopify</a> to start tracking orders.</div>';
   } else {
     h += '<div class="toggle-wrapper"><div class="toggle mini ' + (enabled ? 'on' : '') + '" id="mainToggle" onclick="toggleWismo()"></div></div>';
   }
