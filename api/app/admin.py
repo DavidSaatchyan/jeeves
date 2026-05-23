@@ -189,14 +189,10 @@ def api_integrations(
 
     PROVIDER_WEBHOOK_EVENTS = {
         "shopify": ["orders/create", "orders/updated", "fulfillments/create", "fulfillments/update", "customers/create", "customers/update"],
-        "recharge": ["subscription/cancelled", "charge/failed", "charge/success", "subscription/skipped"],
-        "stripe": ["invoice.payment_failed", "invoice.payment_succeeded", "customer.subscription.updated", "customer.subscription.deleted"],
     }
 
     PROVIDER_REQUIRED_FIELDS = {
         "shopify": ["shop_domain", "access_token"],
-        "recharge": ["api_key"],
-        "stripe": ["secret_key"],
     }
 
     from .crypto import decrypt
@@ -205,7 +201,7 @@ def api_integrations(
     conn_map = {c.provider: c for c in connectors}
 
     result = []
-    for provider in ("shopify", "recharge", "stripe"):
+    for provider in ("shopify",):
         c = conn_map.get(provider)
         status = "disconnected"
         if c and c.status == "connected":

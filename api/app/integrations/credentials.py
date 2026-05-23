@@ -14,7 +14,7 @@ from ..models import NativeConnector
 
 logger = logging.getLogger(__name__)
 
-_PROVIDERS = frozenset({"shopify", "recharge", "stripe"})
+_PROVIDERS = frozenset({"shopify"})
 
 
 def get_credentials(tenant_id: Any, provider: str, db: Session) -> dict:

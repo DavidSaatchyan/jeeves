@@ -35,10 +35,8 @@ class Settings(BaseSettings):
     hubspot_client_secret: str = ""
     hubspot_redirect_uri: str = "http://localhost:8000/crm/oauth/hubspot/callback"
     fernet_key: str = ""
-    stripe_secret_key: str = ""
     sendgrid_api_key: str = ""
     resend_api_key: str = ""
-    recharge_api_key: str = ""
     shopify_shop: str = ""
     shopify_access_token: str = ""
 

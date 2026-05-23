@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/integrations", tags=["integrations"])
 
-_PROVIDERS = frozenset({"shopify", "recharge", "stripe"})
+_PROVIDERS = frozenset({"shopify"})
 
 
 def _mask_creds(creds: str) -> dict:
@@ -146,10 +146,6 @@ def test_native(
     try:
         if provider == "shopify":
             result = _test_shopify(creds)
-        elif provider == "recharge":
-            result = _test_recharge(creds)
-        elif provider == "stripe":
-            result = _test_stripe(creds)
         else:
             raise HTTPException(status_code=400, detail=f"Unsupported provider: {provider}")
 
@@ -180,44 +176,3 @@ def _test_shopify(creds: dict) -> dict:
         )
     except httpx.RequestError as e:
         raise ConnectorError(provider="shopify", operation="test", message=str(e))
-
-
-def _test_recharge(creds: dict) -> dict:
-    api_key = creds.get("api_key", "")
-    if not api_key:
-        raise ConnectorError(provider="recharge", operation="test", message="Missing api_key")
-
-    url = "https://api.rechargeapps.com/shop"
-    headers = {
-        "X-Recharge-Access-Token": api_key,
-        "Content-Type": "application/json",
-        "Accept": "application/json; version=2021-01",
-    }
-    try:
-        r = httpx.get(url, headers=headers, timeout=10.0)
-        if r.is_success:
-            data = r.json().get("shop", {})
-            return {"shop_name": data.get("shop_name"), "shop_email": data.get("shop_email")}
-        raise ConnectorError(
-            provider="recharge", operation="test", status_code=r.status_code,
-            message=r.text[:200],
-        )
-    except httpx.RequestError as e:
-        raise ConnectorError(provider="recharge", operation="test", message=str(e))
-
-
-def _test_stripe(creds: dict) -> dict:
-    secret_key = creds.get("secret_key", "")
-    if not secret_key:
-        raise ConnectorError(provider="stripe", operation="test", message="Missing secret_key")
-
-    import stripe as stripe_lib
-    stripe_lib.api_key = secret_key
-    try:
-        balance = stripe_lib.Balance.retrieve()
-        return {
-            "livemode": balance.get("livemode", False),
-            "available": [{"currency": b.get("currency"), "amount": b.get("amount")} for b in balance.get("available", [])],
-        }
-    except stripe_lib.error.StripeError as e:
-        raise ConnectorError(provider="stripe", operation="test", message=str(e.user_message or e))
