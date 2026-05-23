@@ -78,9 +78,9 @@
 .policy-control input[type=number] { width: 64px; padding: 6px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; text-align: center; }
 .policy-control .disabled { opacity: 0.4; pointer-events: none; }
 
-.tag-chk { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 11px; cursor: pointer; user-select: none; min-width: 72px; height: 28px; box-sizing: border-box; }
+.tag-chk { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 5px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 11px; line-height: 1; cursor: pointer; user-select: none; min-width: 72px; vertical-align: middle; }
 .tag-chk input { display: none; }
-.tag-chk:has(input:checked) { background: rgba(34,211,238,0.12); border-color: rgba(34,211,238,0.3); color: #22d3ee; }
+.tag-chk:has(input:checked) { background: rgba(34,211,238,0.12); border-color: rgba(34,211,238,0.3); color: #22d3ee; border-width: 1px; border-style: solid; }
 .tag-chk.disabled { opacity: 0.4; pointer-events: none; }
 
 .policy-toggle { width: 32px; height: 18px; border-radius: 9px; background: var(--border); cursor: pointer; position: relative; transition: background .2s; flex-shrink: 0; display: inline-block; }
