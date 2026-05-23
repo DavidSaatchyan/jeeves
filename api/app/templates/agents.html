@@ -11,7 +11,7 @@
 .agent-hero-title { }
 .agent-name { font-size: 18px; font-weight: 800; letter-spacing: -.3px; }
 .agent-subtitle { font-size: 12px; color: var(--muted2); margin-top: 1px; }
-.agent-hero-tagline { font-size: 13px; color: var(--muted); margin-top: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.agent-hero-tagline { font-size: 13px; color: var(--muted); margin-top: 14px; margin-bottom: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .agent-hero-section { margin-top: 14px; }
 .agent-hero-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--muted2); margin-bottom: 4px; }
 .agent-hero-text { font-size: 13px; color: var(--muted); line-height: 1.55; }
@@ -72,7 +72,7 @@
 .policy-control input[type=number] { width: 64px; padding: 6px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; text-align: center; }
 .policy-control .disabled { opacity: 0.4; pointer-events: none; }
 
-.tag-chk { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 11px; cursor: pointer; user-select: none; min-width: 72px; height: 28px; box-sizing: border-box; }
+.tag-chk { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 11px; cursor: pointer; user-select: none; min-width: 72px; height: 28px; box-sizing: border-box; }
 .tag-chk input { display: none; }
 .tag-chk:has(input:checked) { background: rgba(34,211,238,0.12); border-color: rgba(34,211,238,0.3); color: #22d3ee; }
 .tag-chk.disabled { opacity: 0.4; pointer-events: none; }
@@ -142,10 +142,10 @@ function renderPolicySettings(policies, disabled) {
 
   var chk = function(val, arr) { return arr.indexOf(val) !== -1 ? 'checked' : ''; };
 
-  return '<div class="policy-section"><h3>Settings' + (disabled ? ' <span style="color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0">— connect Shopify to configure</span>' : '') + '</h3>' +
+  return '<div class="policy-section"><h3>Settings</h3>' +
     '<div class="policy-row"><div><div class="policy-label">Auto-notify customers</div><div class="policy-desc">Send proactive tracking updates via selected channels</div></div><div class="policy-control"><div class="policy-toggle' + d + ' ' + (autoNotify ? 'on' : '') + '" id="pol-autoNotify" ' + (disabled ? '' : 'onclick="togglePolicy(\'auto_notify\')"') + '></div></div></div>' +
     '<div class="policy-row"><div><div class="policy-label">Notify from status</div><div class="policy-desc">Minimum tracking status to trigger notification</div></div><div class="policy-control"><select id="pol-threshold"' + d + ' onchange="savePolicy()"><option value="delayed"' + (threshold === 'delayed' ? ' selected' : '') + '>Only delays & lost</option><option value="lost"' + (threshold === 'lost' ? ' selected' : '') + '>Lost packages only</option><option value="all"' + (threshold === 'all' ? ' selected' : '') + '>All tracking updates</option></select></div></div>' +
-    '<div class="policy-row"><div><div class="policy-label">Notification channels</div><div class="policy-desc">Where to send proactive notifications</div></div><div class="policy-control" style="display:flex;gap:6px">' +
+    '<div class="policy-row"><div><div class="policy-label">Notification channels</div><div class="policy-desc">Where to send proactive notifications</div></div><div class="policy-control" style="display:flex;align-items:center;gap:6px">' +
     '<label class="tag-chk' + d + '"><input type="checkbox" value="widget" ' + chk('widget', channels) + ' onchange="savePolicy()"> Widget</label>' +
     '<label class="tag-chk' + d + '"><input type="checkbox" value="email" ' + chk('email', channels) + ' onchange="savePolicy()"> Email</label></div></div>' +
     '<div class="policy-row"><div><div class="policy-label">Escalate after delay (days)</div><div class="policy-desc">Auto-escalate if tracking shows delayed beyond this</div></div><div class="policy-control"><input type="number" id="pol-escalationDays" value="' + delayDays + '" min="1" max="30"' + d + ' onchange="savePolicy()"></div></div>' +
