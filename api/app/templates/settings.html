@@ -148,12 +148,12 @@ activateTab(currentTab);
 .tl-row:last-child { border-bottom:none; }
 .toggle-wrap { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
 .toggle-wrap:last-child { border-bottom:none; }
-.toggle { width:40px; height:22px; border-radius:11px; background:var(--border); cursor:pointer; position:relative; transition:background .2s; flex-shrink:0; }
+.toggle { width:36px; height:20px; border-radius:10px; background:var(--border); cursor:pointer; position:relative; transition:background .1s; flex-shrink:0; }
 .toggle.on { background:var(--green); }
-.toggle::after { content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform .2s; }
-.toggle.on::after { transform:translateX(18px); }
-.toggle-label { font-size:13px; font-weight:600; }
-.toggle-desc { font-size:11px; color:var(--muted2); }
+.toggle::after { content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .1s; }
+.toggle.on::after { transform:translateX(16px); }
+.toggle-label { font-size:12px; font-weight:600; }
+.toggle-desc { font-size:10px; color:var(--muted2); }
 
 .err-msg { font-size:11px; min-height:0; transition:all .15s; }
 </style>
