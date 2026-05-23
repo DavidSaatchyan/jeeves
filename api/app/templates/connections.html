@@ -32,47 +32,6 @@ var PROVIDERS = [
       'Set Format to JSON and paste the Webhook URL',
       'Copy the API secret key from your app credentials and paste it above'
     ]
-  },
-  {
-    id: 'recharge',
-    name: 'Recharge',
-    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>',
-    color: '#6366f1',
-    desc: 'Subscriptions, billing, retries',
-    fields: [
-      { id: 'rch-key', label: 'API key', placeholder: 'Recharge API key', type: 'password' },
-    ],
-    whLabel: 'API client secret',
-    whPlaceholder: 'Client secret from Recharge token settings',
-    docUrl: 'https://docs.rechargepayments.com/docs/webhooks-overview',
-    docLabel: 'Recharge webhook docs',
-    events: ['charge/failed', 'charge/paid', 'charge/max_retries_reached', 'subscription/cancelled', 'subscription/skipped', 'subscription/paused', 'customer/payment_method_updated'],
-    setupSteps: [
-      'Go to Recharge Merchant Portal → Tools & Apps → API tokens',
-      'Click your token to find the API Client Secret',
-      'Go to your webhook settings and point each event to the Webhook URL below'
-    ]
-  },
-  {
-    id: 'stripe',
-    name: 'Stripe',
-    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
-    color: '#635bff',
-    desc: 'Payments, invoices, billing',
-    fields: [
-      { id: 'str-key', label: 'Secret key', placeholder: 'sk_live_... or sk_test_...', type: 'password' },
-    ],
-    whLabel: 'Webhook signing secret',
-    whPlaceholder: 'whsec_...',
-    docUrl: 'https://stripe.com/docs/webhooks',
-    docLabel: 'Stripe webhook setup guide',
-    events: ['invoice.payment_failed', 'invoice.payment_succeeded', 'invoice.paid', 'customer.subscription.updated', 'customer.subscription.deleted', 'payment_method.attached', 'payment_method.updated'],
-    setupSteps: [
-      'Go to Stripe Dashboard → Developers → Webhooks',
-      'Click "Add endpoint" and paste the Webhook URL',
-      'Select the events listed below to subscribe',
-      'Copy the signing secret (whsec_...) and paste it above'
-    ]
   }
 ];
 
@@ -191,8 +150,6 @@ function showMsg(p, text, type){
 
 function getCreds(p){
   if(p==='shopify') return { shop_domain: document.getElementById('sf-shop').value.trim(), access_token: document.getElementById('sf-token').value.trim() };
-  if(p==='recharge') return { api_key: document.getElementById('rch-key').value.trim() };
-  if(p==='stripe') return { secret_key: document.getElementById('str-key').value.trim() };
   return {};
 }
 
@@ -206,8 +163,6 @@ function getWhSecret(p){
 function validateProvider(p, creds){
   if(p==='shopify' && !creds.shop_domain) return 'Shop domain is required';
   if(p==='shopify' && !creds.access_token) return 'API token is required';
-  if(p==='recharge' && !creds.api_key) return 'API key is required';
-  if(p==='stripe' && !creds.secret_key) return 'Secret key is required';
   return '';
 }
 
