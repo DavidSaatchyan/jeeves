@@ -8,9 +8,8 @@ from pathlib import Path
 from alembic.config import Config
 from alembic import command
 from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
-from fastapi.staticfiles import StaticFiles
 
 from . import admin, auth, integrations_routes, knowledge, routes_chat
 from .integrations import webhooks as webhooks_router
@@ -169,10 +168,6 @@ def on_startup() -> None:
         db.close()
 
 
-@app.get("/favicon.ico")
-async def favicon():
-    return FileResponse(Path(__file__).parent / "static" / "favicon-white.ico")
-
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
@@ -223,6 +218,3 @@ app.include_router(widget_channel.router)
 app.include_router(admin.router)
 app.include_router(integrations_routes.router)
 app.include_router(webhooks_router.router)
-
-# Serve static assets (logo, favicon, etc.)
-app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
