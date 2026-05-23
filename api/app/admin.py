@@ -371,6 +371,7 @@ def api_policies(
         "communication": ps.communication_policy,
         "escalation": ps.escalation_policy,
         "approval": ps.approval_policy,
+        "wismo": ps.wismo_policy or {},
         "enabled_workflows": ps.enabled_workflows or [],
     }
 
@@ -391,6 +392,7 @@ def api_policies_update(
         "communication": "communication_policy",
         "escalation": "escalation_policy",
         "approval": "approval_policy",
+        "wismo": "wismo_policy",
         "enabled_workflows": "enabled_workflows",
     }
     field = field_map.get(policy_type)
