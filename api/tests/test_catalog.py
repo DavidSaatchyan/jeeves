@@ -14,6 +14,7 @@ from app.knowledge.catalog import (
     parse_catalog,
     _parse_price,
     _parse_attributes,
+    _normalize_headers,
     import_catalog,
 )
 
@@ -132,11 +133,20 @@ class TestParseCsv:
         assert len(products) == 0
         assert len(errors) == 0
 
-    def test_no_header(self):
-        """Single unparseable row — no comma, treated as header-only with 0 data rows"""
+    def test_no_name_column(self):
+        """No 'name' or 'title' column — returns specific error."""
+        products, errors = parse_csv("product_name,price\nWidget,29.99")
+        assert len(products) == 0
+        assert len(errors) == 1
+        assert "Could not find 'name'" in errors[0]
+        assert "title" in errors[0]
+
+    def test_unrecognised_single_column(self):
+        """A single unrecognised column returns name-column error."""
         products, errors = parse_csv("justdata")
         assert len(products) == 0
-        assert len(errors) == 0
+        assert len(errors) == 1
+        assert "Could not find 'name'" in errors[0]
 
     def test_csv_with_extra_columns(self):
         """Extra columns not in the parser's known set are silently ignored."""
@@ -621,6 +631,159 @@ class TestParseCatalogEdgeCases:
         products, errors = parse_catalog(p)
         assert len(products) == 1
         assert products[0]["price"] == 2999
+
+
+class TestHeaderAliases:
+    """Header alias normalisation for _normalize_headers and all parsers."""
+
+    # ── _normalize_headers unit ──────────────────────────────────────────
+
+    def test_normalize_headers_exact_match(self):
+        mapping = _normalize_headers(["name", "price", "category"])
+        assert mapping == {"name": "name"}
+
+    def test_normalize_headers_title_alias(self):
+        mapping = _normalize_headers(["Title", "price"])
+        assert mapping == {"Title": "name"}
+
+    def test_normalize_headers_sku_alias(self):
+        mapping = _normalize_headers(["name", "sku"])
+        assert mapping.get("sku") == "product_id"
+
+    def test_normalize_headers_availability_alias(self):
+        mapping = _normalize_headers(["name", "availability"])
+        assert mapping.get("availability") == "stock_status"
+
+    def test_normalize_headers_desc_alias(self):
+        mapping = _normalize_headers(["name", "desc"])
+        assert mapping.get("desc") == "description"
+
+    def test_normalize_headers_image_alias(self):
+        mapping = _normalize_headers(["name", "image"])
+        assert mapping.get("image") == "image_url"
+
+    def test_normalize_headers_url_alias(self):
+        mapping = _normalize_headers(["name", "url"])
+        assert mapping.get("url") == "product_url"
+
+    def test_normalize_headers_unrecognised_passthrough(self):
+        mapping = _normalize_headers(["name", "random_column", "foo"])
+        assert "random_column" not in mapping
+        assert "foo" not in mapping
+
+    def test_normalize_headers_case_insensitive(self):
+        mapping = _normalize_headers(["NAME", "TITLE", "SKU"])
+        assert mapping.get("NAME") == "name"
+        assert mapping.get("TITLE") == "name"
+        assert mapping.get("SKU") == "product_id"
+
+    # ── CSV parser with aliases ──────────────────────────────────────────
+
+    def test_csv_title_alias(self):
+        csv_content = "title,price\nWidget,29.99"
+        products, errors = parse_csv(csv_content)
+        assert len(products) == 1
+        assert products[0]["name"] == "Widget"
+        assert len(errors) == 0
+
+    def test_csv_sku_alias(self):
+        csv_content = "name,sku,price\nWidget,W-001,29.99"
+        products, errors = parse_csv(csv_content)
+        assert len(products) == 1
+        assert products[0]["product_id"] == "W-001"
+        assert len(errors) == 0
+
+    def test_csv_availability_alias(self):
+        csv_content = "name,price,availability\nWidget,29.99,in_stock"
+        products, errors = parse_csv(csv_content)
+        assert len(products) == 1
+        assert products[0]["stock_status"] == "in_stock"
+        assert len(errors) == 0
+
+    def test_csv_image_alias(self):
+        csv_content = "name,price,image\nWidget,29.99,https://example.com/img.jpg"
+        products, errors = parse_csv(csv_content)
+        assert len(products) == 1
+        assert products[0]["image_url"] == "https://example.com/img.jpg"
+        assert len(errors) == 0
+
+    def test_csv_url_alias(self):
+        csv_content = "name,price,url\nWidget,29.99,https://example.com/p"
+        products, errors = parse_csv(csv_content)
+        assert len(products) == 1
+        assert products[0]["product_url"] == "https://example.com/p"
+        assert len(errors) == 0
+
+    def test_csv_all_aliases(self):
+        csv_content = "title,sku,price,category,availability,desc,image,link\nWidget,W-001,29.99,Gadgets,in_stock,A widget,https://img.com,https://ex.com"
+        products, errors = parse_csv(csv_content)
+        assert len(products) == 1
+        p = products[0]
+        assert p["name"] == "Widget"
+        assert p["product_id"] == "W-001"
+        assert p["price"] == 2999
+        assert p["category"] == "Gadgets"
+        assert p["stock_status"] == "in_stock"
+        assert p["description"] == "A widget"
+        assert p["image_url"] == "https://img.com"
+        assert p["product_url"] == "https://ex.com"
+        assert len(errors) == 0
+
+    def test_csv_mixed_canonical_and_alias(self):
+        """Mix canonical and alias headers in one file."""
+        csv_content = "name,sku,price,availability\nWidget,W-001,29.99,in_stock"
+        products, errors = parse_csv(csv_content)
+        assert len(products) == 1
+        assert products[0]["product_id"] == "W-001"
+        assert products[0]["stock_status"] == "in_stock"
+        assert len(errors) == 0
+
+    # ── JSON parser with aliases ─────────────────────────────────────────
+
+    def test_json_title_alias(self):
+        data = '[{"title":"Widget","price":29.99}]'
+        products, errors = parse_json(data)
+        assert len(products) == 1
+        assert products[0]["name"] == "Widget"
+        assert len(errors) == 0
+
+    def test_json_sku_alias(self):
+        data = '[{"name":"Widget","sku":"W-001"}]'
+        products, errors = parse_json(data)
+        assert len(products) == 1
+        assert products[0]["product_id"] == "W-001"
+        assert len(errors) == 0
+
+    # ── XLSX parser with aliases ─────────────────────────────────────────
+
+    def test_xlsx_title_alias(self, tmp_path):
+        import openpyxl
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.append(["Title", "price"])
+        ws.append(["Widget", "29.99"])
+        path = tmp_path / "alias.xlsx"
+        wb.save(str(path))
+
+        products, errors = parse_xlsx(path)
+        assert len(products) == 1
+        assert products[0]["name"] == "Widget"
+        assert len(errors) == 0
+
+    def test_xlsx_all_aliases(self, tmp_path):
+        import openpyxl
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.append(["Title", "sku", "price"])
+        ws.append(["Widget", "W-001", "29.99"])
+        path = tmp_path / "alias2.xlsx"
+        wb.save(str(path))
+
+        products, errors = parse_xlsx(path)
+        assert len(products) == 1
+        assert products[0]["name"] == "Widget"
+        assert products[0]["product_id"] == "W-001"
+        assert len(errors) == 0
 
 
 class TestImportCatalogEdgeCases:

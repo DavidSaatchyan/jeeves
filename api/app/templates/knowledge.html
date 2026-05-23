@@ -89,6 +89,15 @@
     <div class="err-msg" id="catUerr"></div>
   </div>
 
+  <!-- Catalog uploaded files -->
+  <div class="card">
+    <h2>Uploaded files</h2>
+    <table class="kb-table"><thead><tr><th>Filename</th><th>Size</th><th>Batch</th><th>Uploaded</th><th></th></tr></thead><tbody id="catFileTbl"></tbody></table>
+    <div id="catFileEmpty" class="empty-state" style="display:none">
+      <div class="muted">No catalog files uploaded.</div>
+    </div>
+  </div>
+
   <!-- Catalog stats -->
   <div id="catStats" class="kb-summary" style="display:none">
     <div class="kb-stat">
@@ -504,13 +513,26 @@ async function refreshCatalog(){
     }).join('');
     document.getElementById('catBatchEmpty').style.display = batches.length ? 'none' : '';
 
+    // Catalog uploaded files
+    var files = await api('/knowledge/catalog/files');
+    document.getElementById('catFileTbl').innerHTML = files.map(function(f){
+      var sizeStr = f.size_bytes > 1048576 ? (f.size_bytes / 1048576).toFixed(1) + ' MB' : (f.size_bytes > 1024 ? Math.round(f.size_bytes / 1024) + ' KB' : f.size_bytes + ' B');
+      return '<tr>'
+        + '<td><strong>' + esc(f.filename) + '</strong></td>'
+        + '<td style="text-align:right">' + sizeStr + '</td>'
+        + '<td><span class="cat-batch-label">' + esc((f.batch_id || '').slice(0, 8)) + '</span></td>'
+        + '<td>' + (f.created_at ? f.created_at.slice(0, 10) : '&mdash;') + '</td>'
+        + '<td><button class="del-btn" onclick="deleteCatalogFile(this)" data-id="' + f.id + '" data-batch="' + esc(f.batch_id || '') + '" data-name="' + esc(f.filename).replace(/"/g,'&quot;') + '">✕</button></td></tr>';
+    }).join('');
+    document.getElementById('catFileEmpty').style.display = files.length ? 'none' : '';
+
   } catch(e) { console.error('catalog refresh error:', e); }
 }
 
 async function deleteCatalogProduct(btn){
   var id = btn.getAttribute('data-id');
   var name = btn.getAttribute('data-name');
-  showConfirm('Delete "' + name + '" from the catalog? It will be soft-deleted.', async function(){
+  showConfirm('Are you sure you want to delete "' + name + '" from the catalog?', async function(){
     setConfirmLoading(true);
     try{
       await api('/knowledge/catalog/' + id, {method:'DELETE'});
@@ -523,7 +545,7 @@ async function deleteCatalogProduct(btn){
 async function deleteCatalogBatch(btn){
   var batch = btn.getAttribute('data-batch');
   var count = btn.getAttribute('data-count');
-  showConfirm('Delete all ' + count + ' products in this batch?', async function(){
+  showConfirm('Delete all ' + count + ' product' + (count !== '1' ? 's' : '') + ' in this batch and the uploaded file?', async function(){
     setConfirmLoading(true);
     try{
       await api('/knowledge/catalog/batch/' + encodeURIComponent(batch), {method:'DELETE'});
@@ -531,6 +553,19 @@ async function deleteCatalogBatch(btn){
     } catch(e){ alert('Error: ' + e.message); }
     closeConfirm(true);
   }, 'Batch ' + batch.slice(0, 8));
+}
+
+async function deleteCatalogFile(btn){
+  var id = btn.getAttribute('data-id');
+  var name = btn.getAttribute('data-name');
+  showConfirm('Are you sure you want to delete "' + name + '" and all its products?', async function(){
+    setConfirmLoading(true);
+    try{
+      await api('/knowledge/catalog/files/' + id, {method:'DELETE'});
+      await refreshCatalog();
+    } catch(e){ alert('Error: ' + e.message); }
+    closeConfirm(true);
+  }, esc(name));
 }
 
 refresh();

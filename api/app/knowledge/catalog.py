@@ -27,6 +27,38 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+# ── Header alias normalisation ─────────────────────────────────────────────
+
+HEADER_ALIASES: dict[str, set[str]] = {
+    "name": {"title"},
+    "product_id": {"sku"},
+    "stock_status": {"availability"},
+    "description": {"desc"},
+    "image_url": {"image", "img"},
+    "product_url": {"url", "link"},
+}
+
+
+def _normalize_headers(raw_headers: list[str]) -> dict[str, str]:
+    """Map file header names to canonical fields via HEADER_ALIASES (case-insensitive).
+
+    Returns ``{raw_header: canonical_field}`` only for recognised headers.
+    Unrecognised headers are omitted from the mapping and pass through unchanged.
+    """
+    alias_to_canonical: dict[str, str] = {}
+    for canonical, aliases in HEADER_ALIASES.items():
+        alias_to_canonical[canonical] = canonical
+        for a in aliases:
+            alias_to_canonical[a] = canonical
+
+    mapping: dict[str, str] = {}
+    for raw in raw_headers:
+        key = raw.strip().lower()
+        if key in alias_to_canonical:
+            mapping[raw] = alias_to_canonical[key]
+    return mapping
+
+
 # ── Parsers ────────────────────────────────────────────────────────────────
 
 
@@ -39,8 +71,13 @@ def parse_csv(content: str) -> tuple[list[dict[str, Any]], list[str]]:
     if not reader.fieldnames:
         return [], ["CSV has no header row"]
 
+    header_map = _normalize_headers([h.strip() for h in reader.fieldnames])
+    canonical_to_raw = {v: k for k, v in header_map.items()}
+    if "name" not in canonical_to_raw:
+        return [], ["Could not find 'name' column. Expected one of: name, title"]
+
     for i, row in enumerate(reader, start=2):
-        row = {k.strip(): v.strip() if v else "" for k, v in row.items()}
+        row = {header_map.get(k.strip(), k.strip()): v.strip() if v else "" for k, v in row.items()}
         name = row.get("name", "").strip()
         if not name:
             errors.append(f"Row {i}: missing 'name' — skipped")
@@ -88,6 +125,8 @@ def parse_json(content: str) -> tuple[list[dict[str, Any]], list[str]]:
         if not isinstance(item, dict):
             errors.append(f"Item {i}: expected object, got {type(item).__name__}")
             continue
+        header_map = _normalize_headers(list(item.keys()))
+        item = {header_map.get(k, k): v for k, v in item.items()}
         name = str(item.get("name", "") or "").strip()
         if not name:
             errors.append(f"Item {i}: missing 'name' — skipped")
@@ -131,6 +170,11 @@ def parse_xlsx(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
         return [], ["XLSX file is empty"]
 
     df = df.fillna("")
+    header_map = _normalize_headers(df.columns.tolist())
+    canonical_to_raw = {v: k for k, v in header_map.items()}
+    if "name" not in canonical_to_raw:
+        return [], ["Could not find 'name' column. Expected one of: name, title"]
+    df.rename(columns=header_map, inplace=True)
     products: list[dict[str, Any]] = []
     for i, (_, row) in enumerate(df.iterrows(), start=2):
         r = {k.strip(): str(v).strip() for k, v in row.items()}

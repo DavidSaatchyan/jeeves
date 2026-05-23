@@ -178,7 +178,7 @@ def list_files(
     tenant: Tenant = Depends(get_current_tenant),
     db: Session = Depends(get_db),
 ):
-    rows = db.query(FileRecord).filter(FileRecord.tenant_id == tenant.id).order_by(FileRecord.created_at.desc()).all()
+    rows = db.query(FileRecord).filter(FileRecord.tenant_id == tenant.id, FileRecord.file_type == "document").order_by(FileRecord.created_at.desc()).all()
     return [
         {
             "id": str(r.id),
@@ -286,7 +286,7 @@ async def upload_catalog(
         content_hash=content_hash,
         size_bytes=len(data),
         file_type="catalog",
-        metadata_schema={"columns": list(_catalog_columns(dest))},
+        metadata_schema={"batch_id": batch_id, "columns": list(_catalog_columns(dest))},
     )
     db.add(rec)
     db.commit()
@@ -353,6 +353,29 @@ def catalog_stats(
         "categories": categories,
         "stock_breakdown": stock_breakdown,
     }
+
+
+@router.get("/catalog/files")
+def list_catalog_files(
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    rows = (
+        db.query(FileRecord)
+        .filter(FileRecord.tenant_id == tenant.id, FileRecord.file_type == "catalog")
+        .order_by(FileRecord.created_at.desc())
+        .all()
+    )
+    return [
+        {
+            "id": str(r.id),
+            "filename": r.filename,
+            "size_bytes": r.size_bytes or 0,
+            "batch_id": (r.metadata_schema or {}).get("batch_id", ""),
+            "created_at": _iso_utc(r.created_at),
+        }
+        for r in rows
+    ]
 
 
 @router.get("/catalog")
@@ -490,7 +513,7 @@ def delete_catalog_batch(
     tenant: Tenant = Depends(get_current_tenant),
     db: Session = Depends(get_db),
 ):
-    """Delete all products from a given import batch."""
+    """Delete all products from a given import batch and its uploaded file."""
     count = (
         db.query(ProductCatalog)
         .filter(ProductCatalog.tenant_id == tenant.id, ProductCatalog.import_batch == import_batch)
@@ -501,5 +524,63 @@ def delete_catalog_batch(
     # Remove from Chroma
     rag.delete_products_by_batch(tenant.id, import_batch)
 
+    # Also remove associated FileRecord and physical file
+    file_recs = (
+        db.query(FileRecord)
+        .filter(FileRecord.tenant_id == tenant.id, FileRecord.file_type == "catalog")
+        .all()
+    )
+    for fr in file_recs:
+        if (fr.metadata_schema or {}).get("batch_id") == import_batch:
+            if fr.s3_key and os.path.exists(fr.s3_key):
+                try:
+                    os.remove(fr.s3_key)
+                except Exception:
+                    pass
+            db.delete(fr)
+            logger.info("delete_catalog_batch: removed FileRecord %s for batch %s", fr.id, import_batch)
+    db.commit()
+
     logger.info("delete_catalog_batch: batch=%s deactivated=%d", import_batch, count)
+    return
+
+
+@router.delete("/catalog/files/{file_id}", status_code=204)
+def delete_catalog_file(
+    file_id: uuid.UUID,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    """Delete a catalog file and all products from its batch."""
+    rec = db.query(FileRecord).filter(FileRecord.id == file_id, FileRecord.tenant_id == tenant.id).first()
+    if not rec or rec.file_type != "catalog":
+        raise HTTPException(404, "Catalog file not found")
+
+    batch_id = (rec.metadata_schema or {}).get("batch_id", "")
+
+    # Hard-delete all products from this batch
+    if batch_id:
+        deleted = (
+            db.query(ProductCatalog)
+            .filter(ProductCatalog.tenant_id == tenant.id, ProductCatalog.import_batch == batch_id)
+            .delete(synchronize_session="fetch")
+        )
+        # Remove from Chroma
+        try:
+            rag.delete_products_by_batch(tenant.id, batch_id)
+        except Exception as e:
+            logger.warning("chroma batch delete warning: %s", e)
+        logger.info("delete_catalog_file: batch=%s products_deleted=%d", batch_id, deleted)
+
+    # Remove physical file
+    if rec.s3_key and os.path.exists(rec.s3_key):
+        try:
+            os.remove(rec.s3_key)
+        except Exception:
+            pass
+
+    # Delete DB record
+    db.delete(rec)
+    db.commit()
+    logger.info("delete_catalog_file: file_id=%s batch=%s", file_id, batch_id)
     return
