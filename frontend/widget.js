@@ -46,7 +46,7 @@
   var cfg = {
     title: attr("data-title", "Jeeves support"),
     subtitle: attr("data-subtitle", ""),
-    accent: attr("data-accent", "#2563eb"),
+    accent: attr("data-accent", "#5e6ad2"),
     position: attr("data-position", "right") === "left" ? "left" : "right",
     greeting: attr("data-greeting", "Hi. How can I help?"),
     privacyUrl: attr("data-privacy-url", ""),
