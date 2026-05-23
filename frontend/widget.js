@@ -126,7 +126,7 @@
   var side = cfg.position === "left" ? "left" : "right";
   var opposite = cfg.position === "left" ? "right" : "left";
 
-  var defaultIcon = '<svg class="jw-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7.5 18.5 4 21v-4.2A8.2 8.2 0 0 1 2.5 12C2.5 7 6.8 3 12 3s9.5 4 9.5 9-4.3 9-9.5 9a10.3 10.3 0 0 1-4.5-1.1Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 11.5h8M8 14.5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  var defaultIcon = '<svg class="jw-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 3h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 9h8M8 13h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
   var launcherIconHtml = (function () {
     if (!cfg.icon) return defaultIcon;
     var t = cfg.icon.trim();
