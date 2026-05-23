@@ -281,3 +281,145 @@ class TestSearchWithWhere:
         call_kwargs = col.query.call_args[1]
         assert call_kwargs["where"]["type"] == "product"
         assert call_kwargs["where"]["category"] == "Electronics"
+
+
+# ── Edge cases ──────────────────────────────────────────────────────────
+
+
+class TestTextualizeProductEdgeCases:
+    def test_very_long_name(self):
+        name = "X" * 1000
+        result = rag._textualize_product({"name": name})
+        assert len(result) > 100
+        assert name in result
+
+    def test_float_price_with_cents_zero(self):
+        p = {"name": "X", "price": 19.00}
+        result = rag._textualize_product(p)
+        assert "19.00" in result
+
+    def test_unicode_in_fields(self):
+        p = {"name": "Café", "description": "Crème brûlée €5"}
+        result = rag._textualize_product(p)
+        assert "Café" in result
+        assert "Crème brûlée" in result
+
+    def test_int_product_id(self):
+        p = {"name": "X", "product_id": 12345}
+        result = rag._textualize_product(p)
+        assert "12345" in result
+
+    def test_none_attributes(self):
+        p = {"name": "X", "attributes": None}
+        result = rag._textualize_product(p)
+        assert "Attributes:" not in result
+
+    def test_non_numeric_price_returns_none_in_text(self):
+        p = {"name": "X", "price": None}
+        result = rag._textualize_product(p)
+        assert "Price:" not in result
+
+    def test_zero_price(self):
+        p = {"name": "X", "price": 0}
+        result = rag._textualize_product(p)
+        assert "0.00" in result
+
+    def test_none_description(self):
+        p = {"name": "X", "description": None}
+        result = rag._textualize_product(p)
+        assert "Description:" not in result
+
+    def test_empty_stock_status_excluded(self):
+        p = {"name": "X", "stock_status": ""}
+        result = rag._textualize_product(p)
+        assert "Stock:" not in result  # empty string is falsy, excluded
+
+    def test_none_image_url(self):
+        p = {"name": "X", "image_url": None}
+        result = rag._textualize_product(p)
+        assert "Image:" not in result
+
+    def test_none_product_url(self):
+        p = {"name": "X", "product_url": None}
+        result = rag._textualize_product(p)
+        assert "URL:" not in result
+
+
+class TestIndexProductsEdgeCases:
+    def test_duplicate_product_ids_in_same_batch(self, tenant_id, mock_chroma, mock_openai):
+        col, _ = mock_chroma
+        products = [
+            {"name": "A", "product_id": "ID1"},
+            {"name": "B", "product_id": "ID1"},
+        ]
+        result = rag.index_products(tenant_id, products, import_batch="b1")
+        assert result == 2
+        ids = col.add.call_args[1]["ids"]
+        assert ids == ["product-b1-ID1", "product-b1-ID1"]
+
+    def test_empty_product_id_string(self, tenant_id, mock_chroma, mock_openai):
+        col, _ = mock_chroma
+        products = [{"name": "X", "product_id": ""}]
+        result = rag.index_products(tenant_id, products, import_batch="b1")
+        assert result == 1
+        id_ = col.add.call_args[1]["ids"][0]
+        assert "unknown" in id_
+
+    def test_empty_product_id_no_batch(self, tenant_id, mock_chroma, mock_openai):
+        col, _ = mock_chroma
+        products = [{"name": "X", "product_id": ""}]
+        result = rag.index_products(tenant_id, products, import_batch="")
+        assert result == 1
+        id_ = col.add.call_args[1]["ids"][0]
+        assert "unknown" in id_
+
+    def test_many_products(self, tenant_id, mock_chroma, mock_openai):
+        col, _ = mock_chroma
+        products = [{"name": f"P{i}", "product_id": f"ID{i}"} for i in range(50)]
+        result = rag.index_products(tenant_id, products, import_batch="big")
+        assert result == 50
+        assert len(col.add.call_args[1]["ids"]) == 50
+
+
+class TestDeleteProductsByBatchEdgeCases:
+    def test_delete_special_chars_in_batch(self, tenant_id, mock_chroma):
+        col, _ = mock_chroma
+        col.count.side_effect = [3, 0]
+        result = rag.delete_products_by_batch(tenant_id, "batch/with/slashes")
+        assert result == 3
+        col.delete.assert_called_once_with(
+            where={"$and": [{"type": "product"}, {"import_batch": "batch/with/slashes"}]}
+        )
+
+    def test_delete_empty_batch_string(self, tenant_id, mock_chroma):
+        col, _ = mock_chroma
+        col.count.side_effect = [0, 0]
+        result = rag.delete_products_by_batch(tenant_id, "")
+        assert result == 0
+
+
+class TestSearchWithWhereEdgeCases:
+    def test_where_no_results(self, tenant_id, mock_chroma, mock_openai):
+        col, _ = mock_chroma
+        col.count.return_value = 5
+        col.query.return_value = {
+            "ids": [[]],
+            "documents": [[]],
+            "metadatas": [[]],
+            "distances": [[]],
+        }
+        results = rag.search(tenant_id, "test", where={"type": "nonexistent"}, threshold=0.99)
+        assert results == []
+
+    def test_where_with_empty_dict_is_skipped(self, tenant_id, mock_chroma, mock_openai):
+        col, _ = mock_chroma
+        col.count.return_value = 5
+        col.query.return_value = {
+            "ids": [["id1"]],
+            "documents": [["doc"]],
+            "metadatas": [[{"type": "product"}]],
+            "distances": [[0.3]],
+        }
+        rag.search(tenant_id, "test", where={}, threshold=0.99)
+        call_kwargs = col.query.call_args[1]
+        assert "where" not in call_kwargs  # empty dict is falsy, not passed

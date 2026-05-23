@@ -34,6 +34,7 @@ def parse_csv(content: str) -> tuple[list[dict[str, Any]], list[str]]:
     """Parse CSV string into product dicts.  First row must be column headers."""
     products: list[dict[str, Any]] = []
     errors: list[str] = []
+    content = content.lstrip("\ufeff")
     reader = csv.DictReader(io.StringIO(content))
     if not reader.fieldnames:
         return [], ["CSV has no header row"]

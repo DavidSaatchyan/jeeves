@@ -1,69 +1,157 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>Knowledge base</h1>
-<p class="page-desc">AI memory system — files and knowledge base.</p>
+<p class="page-desc">AI memory system — files and product catalog.</p>
 
-<!-- Existing file upload area -->
-<div class="card">
-  <h2>Upload files</h2>
-  <div id="drop" class="drop">
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;opacity:.4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    <div style="font-size:14px;font-weight:600;margin-bottom:4px">Drop files here or <span style="color:var(--accent);cursor:pointer;text-decoration:underline">browse</span></div>
-    <div class="muted" style="font-size:12px">.pdf, .txt, .md · Max 50 MB total</div>
-    <input id="file" type="file" accept=".pdf,.txt,.md" multiple style="display:none"/>
-  </div>
-  <div id="uprog" class="muted mt-12" style="min-height:36px"></div>
-  <div class="err-msg" id="uerr"></div>
+<!-- Tabs -->
+<div class="ch-tabs">
+  <button class="ch-tab active" data-tab="documents">
+    <svg class="ch-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    Documents
+  </button>
+  <button class="ch-tab" data-tab="catalog">
+    <svg class="ch-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+    Product Catalog
+  </button>
 </div>
 
-<!-- KB Summary Stats -->
-<div id="kbSummary" class="kb-summary" style="display:none">
-  <div class="kb-stat">
-    <div class="kb-stat-header">
-      <span class="kb-stat-label">Files</span>
-      <span class="kb-stat-value" id="sumFiles">0</span>
+<!-- ═══════════════ DOCUMENTS PANEL ═══════════════ -->
+<div class="ch-panel active" id="panel-documents">
+  <div class="card">
+    <h2>Upload files</h2>
+    <div id="drop" class="drop">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;opacity:.4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">Drop files here or <span style="color:var(--accent);cursor:pointer;text-decoration:underline">browse</span></div>
+      <div class="muted" style="font-size:12px">.pdf, .txt, .md &middot; Max 50 MB total</div>
+      <input id="file" type="file" accept=".pdf,.txt,.md" multiple style="display:none"/>
     </div>
-    <div class="kb-stat-sub" id="sumTypes">No files</div>
+    <div id="uprog" class="muted mt-12" style="min-height:36px"></div>
+    <div class="err-msg" id="uerr"></div>
   </div>
-  <div class="kb-stat">
-    <div class="kb-stat-header">
-      <span class="kb-stat-label">Storage</span>
-      <span class="kb-stat-value" id="sumSize">0 KB</span>
+
+  <div id="kbSummary" class="kb-summary" style="display:none">
+    <div class="kb-stat">
+      <div class="kb-stat-header">
+        <span class="kb-stat-label">Files</span>
+        <span class="kb-stat-value" id="sumFiles">0</span>
+      </div>
+      <div class="kb-stat-sub" id="sumTypes">No files</div>
     </div>
-    <div class="kb-bar-track"><div class="kb-bar-fill" id="sizeBar"></div></div>
-    <div class="kb-stat-sub" id="sumQuota">0% of 50 MB</div>
+    <div class="kb-stat">
+      <div class="kb-stat-header">
+        <span class="kb-stat-label">Storage</span>
+        <span class="kb-stat-value" id="sumSize">0 KB</span>
+      </div>
+      <div class="kb-bar-track"><div class="kb-bar-fill" id="sizeBar"></div></div>
+      <div class="kb-stat-sub" id="sumQuota">0% of 50 MB</div>
+    </div>
+    <div class="kb-stat">
+      <div class="kb-stat-header">
+        <span class="kb-stat-label">Chunks indexed</span>
+        <span class="kb-stat-value" id="sumChunks">0</span>
+      </div>
+      <div class="kb-stat-sub" id="sumAvg">&mdash; avg/file</div>
+    </div>
   </div>
-  <div class="kb-stat">
-    <div class="kb-stat-header">
-      <span class="kb-stat-label">Chunks indexed</span>
-      <span class="kb-stat-value" id="sumChunks">0</span>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Files</h2>
+      <button id="clearAllBtn" class="ghost sm kb-clear-all" style="display:none" onclick="clearAll()">Clear all</button>
     </div>
-    <div class="kb-stat-sub" id="sumAvg">— avg/file</div>
+    <table class="kb-table"><thead><tr><th class="col-name">Filename</th><th class="col-status">Status</th><th class="col-size">Size</th><th class="col-chunks">Chunks</th><th class="col-date">Uploaded</th><th class="col-actions"></th></tr></thead><tbody id="tbl"></tbody></table>
+    <div id="procMsg" class="kb-proc"><span class="kb-spinner"></span> Processing...</div>
+  </div>
+
+  <script async src="{{ public_base_url }}/widget.js"
+    data-tenant-id="{{ tenant_id }}"
+    data-email-required="false"
+    data-title="Knowledge base test"
+    data-subtitle="Ask about your documents"
+    data-greeting="Ask any question about your uploaded documents..."
+    data-channel="test_widget"
+  ></script>
+</div>
+
+<!-- ═══════════════ CATALOG PANEL ═══════════════ -->
+<div class="ch-panel" id="panel-catalog">
+
+  <!-- Catalog upload zone -->
+  <div class="card">
+    <h2>Import products</h2>
+    <div id="catDrop" class="drop">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;opacity:.4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">Drop CSV or JSON here or <span style="color:var(--accent);cursor:pointer;text-decoration:underline">browse</span></div>
+      <div class="muted" style="font-size:12px">.csv, .json, .xlsx &middot; Columns: name, product_id, price, category, stock_status, attributes, description, image_url, product_url</div>
+      <input id="catFile" type="file" accept=".csv,.json,.xlsx,.xls" style="display:none"/>
+    </div>
+    <div id="catUprog" class="muted mt-12" style="min-height:36px"></div>
+    <div class="err-msg" id="catUerr"></div>
+  </div>
+
+  <!-- Catalog stats -->
+  <div id="catStats" class="kb-summary" style="display:none">
+    <div class="kb-stat">
+      <div class="kb-stat-header">
+        <span class="kb-stat-label">Products</span>
+        <span class="kb-stat-value" id="catTotalProducts">0</span>
+      </div>
+      <div class="kb-stat-sub" id="catTotalBatches">0 batches</div>
+    </div>
+    <div class="kb-stat">
+      <div class="kb-stat-header">
+        <span class="kb-stat-label">Categories</span>
+        <span class="kb-stat-value" id="catTotalCategories">0</span>
+      </div>
+      <div class="kb-stat-sub" id="catCategoryList">&mdash;</div>
+    </div>
+    <div class="kb-stat">
+      <div class="kb-stat-header">
+        <span class="kb-stat-label">Stock</span>
+        <span class="kb-stat-value" id="catInStock">0</span>
+      </div>
+      <div class="kb-stat-sub" id="catOutOfStock">0 out of stock</div>
+    </div>
+  </div>
+
+  <!-- Search + filters -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Products</h2>
+      <div class="flex" style="gap:8px">
+        <button id="refreshCatalogBtn" class="ghost sm" onclick="refreshCatalog()">Refresh</button>
+      </div>
+    </div>
+    <div class="flex flex-wrap" style="margin-bottom:16px;gap:8px">
+      <input id="catSearch" type="text" placeholder="Search products..." style="flex:1;min-width:200px;padding:8px 12px;font-size:13px" oninput="catSearchTimeout()"/>
+      <select id="catCategoryFilter" style="width:auto;min-width:140px;padding:8px 12px;font-size:13px" onchange="refreshCatalog()">
+        <option value="">All categories</option>
+      </select>
+      <select id="catStockFilter" style="width:auto;min-width:120px;padding:8px 12px;font-size:13px" onchange="refreshCatalog()">
+        <option value="">All stock</option>
+        <option value="in_stock">In stock</option>
+        <option value="out_of_stock">Out of stock</option>
+        <option value="limited">Limited</option>
+      </select>
+    </div>
+    <table class="kb-table"><thead><tr><th class="col-cat-name">Name</th><th class="col-cat-sku">SKU</th><th class="col-cat-price">Price</th><th class="col-cat-stock">Stock</th><th class="col-cat-cat">Category</th><th class="col-cat-batch">Batch</th><th class="col-cat-actions"></th></tr></thead><tbody id="catTbl"></tbody></table>
+    <div id="catEmpty" class="empty-state" style="display:none">
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">No products yet</div>
+      <div class="muted">Upload a CSV or JSON file to get started.</div>
+    </div>
+  </div>
+
+  <!-- Import history -->
+  <div class="card">
+    <h2>Import history</h2>
+    <table class="kb-table"><thead><tr><th>Batch</th><th>Products</th><th>Date</th><th></th></tr></thead><tbody id="catBatchTbl"></tbody></table>
+    <div id="catBatchEmpty" class="empty-state" style="display:none">
+      <div class="muted">No imports yet.</div>
+    </div>
   </div>
 </div>
 
-
-<!-- Files table -->
-<div class="card">
-  <div class="card-header">
-    <h2>Files</h2>
-    <button id="clearAllBtn" class="ghost sm kb-clear-all" style="display:none" onclick="clearAll()">Clear all</button>
-  </div>
-  <table class="kb-table"><thead><tr><th class="col-name">Filename</th><th class="col-status">Status</th><th class="col-size">Size</th><th class="col-chunks">Chunks</th><th class="col-date">Uploaded</th><th class="col-actions"></th></tr></thead><tbody id="tbl"></tbody></table>
-  <div id="procMsg" class="kb-proc"><span class="kb-spinner"></span> Processing...</div>
-</div>
-
-
-
-<!-- Knowledge Base Test Widget -->
-<script async src="{{ public_base_url }}/widget.js"
-  data-tenant-id="{{ tenant_id }}"
-  data-email-required="false"
-  data-title="Knowledge base test"
-  data-subtitle="Ask about your documents"
-  data-greeting="Ask any question about your uploaded documents..."
-  data-channel="test_widget"
-></script>
+<!-- ═══════════════ SHARED MODALS ═══════════════ -->
 
 <!-- Confirm dialog -->
 <div class="modal-overlay" id="confirmModal">
@@ -81,6 +169,17 @@
     </div>
   </div>
 </div>
+
+<!-- Product detail modal -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h2 id="productModalTitle">Product</h2>
+      <button class="ghost sm" onclick="closeProductModal()" style="border:none;font-size:18px;padding:4px 8px">&times;</button>
+    </div>
+    <div id="productModalBody"></div>
+  </div>
+</div>
 {% endblock %}
 {% block tail %}
 <style>
@@ -95,9 +194,9 @@
 .kb-table{width:100%;border-collapse:collapse}
 .kb-table th,.kb-table td{padding:8px 12px;text-align:left;font-size:12px;border-bottom:1px solid var(--border)}
 .col-name{width:auto}.col-status{width:100px}.col-size{width:80px;text-align:right}.col-chunks{width:80px;text-align:right}.col-date{width:110px}.col-actions{width:60px}
+.col-cat-name{width:auto}.col-cat-sku{width:100px}.col-cat-price{width:80px;text-align:right}.col-cat-stock{width:90px}.col-cat-cat{width:100px}.col-cat-batch{width:100px}
 .kb-clear-all{color:var(--muted2)}.kb-clear-all:hover{color:var(--red)}
 .kb-proc{display:none;align-items:center;gap:8px;padding:12px 16px;font-size:12px;color:var(--muted);border-top:1px solid var(--border)}
-
 .del-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:4px;padding:4px;cursor:pointer}
 .del-btn:hover{color:var(--red);background:rgba(248,113,113,0.08)}
 .kb-uprog{display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 0}
@@ -105,8 +204,34 @@
 .kb-uprog-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .3s ease}
 .kb-spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:kb-spin .6s linear infinite;display:inline-block}
 @keyframes kb-spin{to{transform:rotate(360deg)}}
+.cat-product-link{cursor:pointer;color:var(--text);font-weight:600}
+.cat-product-link:hover{color:var(--accent)}
+.cat-batch-label{font-size:11px;color:var(--muted2);font-family:'SF Mono',ui-monospace,Consolas,monospace}
+.cat-import-err{font-size:11px;color:var(--red);margin-top:4px}
 </style>
 <script>
+// ════════════════════════════════════════════════════════════════
+// Tab switching
+// ════════════════════════════════════════════════════════════════
+document.querySelectorAll('.ch-tab').forEach(function(tab){
+  tab.addEventListener('click', function(){
+    document.querySelectorAll('.ch-tab').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('.ch-panel').forEach(function(p){ p.classList.remove('active'); });
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.getAttribute('data-tab')).classList.add('active');
+    if(tab.getAttribute('data-tab') === 'catalog') refreshCatalog();
+  });
+});
+
+// ════════════════════════════════════════════════════════════════
+// DOCUMENTS (unchanged from original)
+// ════════════════════════════════════════════════════════════════
+var _pollingActive = false;
+var _confirmCb = null;
+var _confirmLoading = false;
+
+function esc(v){ return String(v ?? '').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+
 async function refresh() {
   try {
     const rows = await api('/knowledge/files');
@@ -126,12 +251,11 @@ async function refresh() {
     document.getElementById('sizeBar').style.width = pct + '%';
     document.getElementById('sumQuota').textContent = pct.toFixed(1) + '% of 50 MB';
     document.getElementById('sumChunks').textContent = totalChunks;
-    document.getElementById('sumAvg').textContent = ready.length ? Math.round(totalChunks / ready.length) + ' avg/file' : '—';
+    document.getElementById('sumAvg').textContent = ready.length ? Math.round(totalChunks / ready.length) + ' avg/file' : '&mdash;';
     document.getElementById('kbSummary').style.display = 'grid';
 
     var hasFiles = rows.length > 0;
     var hasProcessing = rows.some(function(r){ return r.status === 'processing'; });
-    var hasReady = ready.length > 0;
     document.getElementById('clearAllBtn').style.display = hasFiles ? '' : 'none';
     document.getElementById('tbl').innerHTML = rows.map(function(r){
       const cls = r.status === 'ready' ? 'ok' : (r.status === 'failed' ? 'err' : 'warn');
@@ -140,19 +264,15 @@ async function refresh() {
         + '<td><strong>' + esc(r.filename) + '</strong></td>'
         + '<td><span class="pill ' + cls + '" style="font-size:10px">' + label + '</span></td>'
         + '<td style="text-align:right">' + (r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB') + '</td>'
-        + '<td style="text-align:right">' + (r.chunks_total || '—') + '</td>'
-        + '<td>' + (r.created_at ? r.created_at.slice(0, 10) : '—') + '</td>'
+        + '<td style="text-align:right">' + (r.chunks_total || '&mdash;') + '</td>'
+        + '<td>' + (r.created_at ? r.created_at.slice(0, 10) : '&mdash;') + '</td>'
         + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + esc(r.filename).replace(/"/g,'&quot;') + '">✕</button></td></tr>';
     }).join('') || '<tr><td colspan="6" class="muted" style="text-align:center;padding:16px">No files yet.</td></tr>';
     document.getElementById('procMsg').style.display = hasProcessing ? '' : 'none';
     if(hasProcessing && !_pollingActive) pollProcessing();
-    if(hasReady) openKbWidget();
   } catch(e) { console.error('kb refresh error:', e); }
 }
 
-// Confirm modal
-var _confirmCb = null;
-var _confirmLoading = false;
 function showConfirm(msg, cb, title){
   document.getElementById('confirmTitle').textContent = title || 'Confirm';
   document.getElementById('confirmMsg').textContent = msg;
@@ -181,8 +301,36 @@ document.getElementById('confirmBtn').addEventListener('click', function(){
   if(!_confirmLoading) closeConfirm();
 });
 
-// Upload management
-function esc(v){ return String(v ?? '').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+function showProductModal(product) {
+  document.getElementById('productModalTitle').textContent = esc(product.name);
+  var attrs = '';
+  if (product.attributes && Object.keys(product.attributes).length > 0) {
+    attrs = Object.entries(product.attributes).map(function(kv){ return '<tr><td style="color:var(--muted2);padding:2px 8px 2px 0;font-size:12px">'+esc(kv[0])+'</td><td style="font-size:12px">'+esc(String(kv[1]))+'</td></tr>'; }).join('');
+    attrs = '<table><tbody>' + attrs + '</tbody></table>';
+  }
+  var priceStr = product.price != null ? '$' + (product.price / 100).toFixed(2) + ' ' + (product.currency || 'USD') : '&mdash;';
+  document.getElementById('productModalBody').innerHTML = '<div style="display:grid;gap:12px">'
+    + (product.image_url ? '<div style="text-align:center;margin-bottom:4px"><img src="'+esc(product.image_url)+'" style="max-width:200px;max-height:200px;border-radius:8px;border:1px solid var(--border)"/></div>' : '')
+    + '<div class="flex" style="gap:8px;flex-wrap:wrap">'
+      + '<span class="pill accent">'+esc(product.product_id)+'</span>'
+      + (product.category ? '<span class="pill muted">'+esc(product.category)+'</span>' : '')
+      + '<span class="pill ' + (product.stock_status === 'in_stock' ? 'ok' : 'err') + '">'+esc(product.stock_status || 'unknown')+'</span>'
+    + '</div>'
+    + '<div style="font-size:24px;font-weight:800">'+priceStr+'</div>'
+    + (product.description ? '<div style="color:var(--muted);font-size:13px;line-height:1.6">'+esc(product.description)+'</div>' : '')
+    + (attrs ? '<div><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);margin-bottom:4px">Attributes</div>'+attrs+'</div>' : '')
+    + (product.product_url ? '<div><a href="'+esc(product.product_url)+'" target="_blank" style="font-size:13px">View product page &rarr;</a></div>' : '')
+    + '<div style="font-size:11px;color:var(--muted2)">Batch: <span class="cat-batch-label">'+esc(product.import_batch || '&mdash;')+'</span></div>'
+    + '</div>';
+  document.getElementById('productModal').classList.add('show');
+}
+function closeProductModal(){
+  document.getElementById('productModal').classList.remove('show');
+}
+document.getElementById('productModal').addEventListener('click', function(e){
+  if(e.target === this) closeProductModal();
+});
+
 const drop = document.getElementById('drop');
 drop.addEventListener('click', function(){ document.getElementById('file').click(); });
 drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.classList.add('hot'); });
@@ -208,7 +356,6 @@ async function uploadMany(files){
   setTimeout(function(){ prog.innerHTML = ''; }, 2500);
 }
 
-var _pollingActive = false;
 async function pollProcessing(){
   if(_pollingActive) return;
   _pollingActive = true;
@@ -257,12 +404,133 @@ async function clearAll(){
   }, 'All documents');
 }
 
-function openKbWidget(){
-  if(window.JeevesWidget && window.JeevesWidget.open){
-    window.JeevesWidget.open();
-    return true;
+// ════════════════════════════════════════════════════════════════
+// CATALOG
+// ════════════════════════════════════════════════════════════════
+
+var _catSearchTimer = null;
+function catSearchTimeout(){
+  if(_catSearchTimer) clearTimeout(_catSearchTimer);
+  _catSearchTimer = setTimeout(refreshCatalog, 300);
+}
+
+// Catalog upload zone
+const catDrop = document.getElementById('catDrop');
+catDrop.addEventListener('click', function(){ document.getElementById('catFile').click(); });
+catDrop.addEventListener('dragover', function(e){ e.preventDefault(); catDrop.classList.add('hot'); });
+catDrop.addEventListener('dragleave', function(){ catDrop.classList.remove('hot'); });
+catDrop.addEventListener('drop', function(e){ e.preventDefault(); catDrop.classList.remove('hot'); if(e.dataTransfer.files.length) uploadCatalogFile(e.dataTransfer.files[0]); });
+document.getElementById('catFile').addEventListener('change', function(e){ if(e.target.files.length) uploadCatalogFile(e.target.files[0]); });
+
+async function uploadCatalogFile(file){
+  var prog = document.getElementById('catUprog');
+  var err = document.getElementById('catUerr');
+  err.textContent = '';
+  prog.innerHTML = '<div class="kb-uprog"><span>' + esc(file.name) + '</span><div class="kb-uprog-bar"><div class="kb-uprog-fill" style="width:50%"></div></div></div>';
+  try{
+    var fd = new FormData(); fd.append('file', file);
+    var data = await api('/knowledge/catalog/upload', {method:'POST', body:fd});
+    var msg = data.imported + ' product' + (data.imported !== 1 ? 's' : '') + ' imported';
+    if (data.batch_id) msg += ' (batch: ' + data.batch_id.slice(0, 8) + '&hellip;)';
+    prog.innerHTML = '<div class="kb-uprog"><span style="color:var(--green)">' + msg + '</span></div>';
+    if (data.errors && data.errors.length) {
+      err.innerHTML = data.errors.slice(0, 5).map(function(e){ return '<div class="cat-import-err">' + esc(e) + '</div>'; }).join('');
+      if (data.errors.length > 5) err.innerHTML += '<div class="cat-import-err">...and ' + (data.errors.length - 5) + ' more errors</div>';
+    }
+    await refreshCatalog();
+  } catch(e){
+    err.textContent = 'Upload failed: ' + e.message;
+    prog.innerHTML = '<div class="kb-uprog"><span style="color:var(--red)">' + esc(file.name) + ' failed</span></div>';
   }
-  return false;
+  setTimeout(function(){ prog.innerHTML = ''; }, 4000);
+}
+
+async function refreshCatalog(){
+  try {
+    var q = document.getElementById('catSearch').value.trim();
+    var category = document.getElementById('catCategoryFilter').value;
+    var stock = document.getElementById('catStockFilter').value;
+    var params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (category) params.set('category', category);
+    if (stock) params.set('in_stock', stock === 'in_stock' ? 'true' : (stock === 'out_of_stock' ? 'false' : ''));
+    params.set('limit', '200');
+
+    var [data, stats] = await Promise.all([
+      api('/knowledge/catalog?' + params.toString()),
+      api('/knowledge/catalog/stats'),
+    ]);
+
+    // Stats
+    document.getElementById('catTotalProducts').textContent = stats.total_products;
+    document.getElementById('catTotalBatches').textContent = stats.total_batches + ' batch' + (stats.total_batches !== 1 ? 'es' : '');
+    document.getElementById('catTotalCategories').textContent = stats.categories.length;
+    document.getElementById('catCategoryList').textContent = stats.categories.slice(0, 5).map(function(c){ return c.name; }).join(', ') + (stats.categories.length > 5 ? '...' : '') || '&mdash;';
+    document.getElementById('catInStock').textContent = stats.stock_breakdown.in_stock || 0;
+    document.getElementById('catOutOfStock').textContent = (stats.stock_breakdown.out_of_stock || 0) + ' out of stock';
+    document.getElementById('catStats').style.display = 'grid';
+
+    // Populate category filter
+    var sel = document.getElementById('catCategoryFilter');
+    var currentVal = sel.value;
+    sel.innerHTML = '<option value="">All categories</option>' + stats.categories.map(function(c){ return '<option value="'+esc(c.name)+'">'+esc(c.name)+' ('+c.count+')</option>'; }).join('');
+    sel.value = currentVal;
+
+    // Products table
+    var results = data.results || [];
+    document.getElementById('catTbl').innerHTML = results.map(function(p){
+      var priceStr = p.price != null ? '$' + (p.price / 100).toFixed(2) : '&mdash;';
+      var stockCls = p.stock_status === 'in_stock' ? 'ok' : (p.stock_status === 'limited' ? 'warn' : 'err');
+      var stockLabel = p.stock_status === 'in_stock' ? 'In stock' : (p.stock_status === 'out_of_stock' ? 'Out' : (p.stock_status === 'limited' ? 'Limited' : p.stock_status || '&mdash;'));
+      return '<tr>'
+        + '<td><span class="cat-product-link" onclick="showProductModal(' + JSON.stringify(p).replace(/"/g,'&quot;') + ')">' + esc(p.name) + '</span></td>'
+        + '<td style="font-family:\'SF Mono\',ui-monospace,Consolas,monospace;font-size:11px;color:var(--muted2)">' + esc(p.product_id) + '</td>'
+        + '<td style="text-align:right;font-weight:700">' + priceStr + '</td>'
+        + '<td><span class="pill ' + stockCls + '" style="font-size:10px">' + stockLabel + '</span></td>'
+        + '<td style="color:var(--muted);font-size:11px">' + esc(p.category || '&mdash;') + '</td>'
+        + '<td><span class="cat-batch-label">' + esc((p.import_batch || '').slice(0, 8)) + '</span></td>'
+        + '<td><button class="del-btn" onclick="deleteCatalogProduct(this)" data-id="' + p.id + '" data-name="' + esc(p.name).replace(/"/g,'&quot;') + '">✕</button></td></tr>';
+    }).join('');
+    document.getElementById('catEmpty').style.display = results.length ? 'none' : '';
+
+    // Batch/import history table
+    var batches = Object.entries(stats.batch_breakdown || {}).sort().reverse();
+    document.getElementById('catBatchTbl').innerHTML = batches.map(function(b){
+      return '<tr>'
+        + '<td><span class="cat-batch-label">' + esc(b[0]) + '</span></td>'
+        + '<td>' + b[1] + ' product' + (b[1] !== 1 ? 's' : '') + '</td>'
+        + '<td style="color:var(--muted);font-size:11px">' + esc(b[0].slice(0, 10)) + '</td>'
+        + '<td><button class="ghost sm danger" onclick="deleteCatalogBatch(this)" data-batch="' + esc(b[0]).replace(/"/g,'&quot;') + '" data-count="' + b[1] + '">Delete batch</button></td></tr>';
+    }).join('');
+    document.getElementById('catBatchEmpty').style.display = batches.length ? 'none' : '';
+
+  } catch(e) { console.error('catalog refresh error:', e); }
+}
+
+async function deleteCatalogProduct(btn){
+  var id = btn.getAttribute('data-id');
+  var name = btn.getAttribute('data-name');
+  showConfirm('Delete "' + name + '" from the catalog? It will be soft-deleted.', async function(){
+    setConfirmLoading(true);
+    try{
+      await api('/knowledge/catalog/' + id, {method:'DELETE'});
+      await refreshCatalog();
+    } catch(e){ alert('Error: ' + e.message); }
+    closeConfirm(true);
+  }, esc(name));
+}
+
+async function deleteCatalogBatch(btn){
+  var batch = btn.getAttribute('data-batch');
+  var count = btn.getAttribute('data-count');
+  showConfirm('Delete all ' + count + ' products in this batch?', async function(){
+    setConfirmLoading(true);
+    try{
+      await api('/knowledge/catalog/batch/' + encodeURIComponent(batch), {method:'DELETE'});
+      await refreshCatalog();
+    } catch(e){ alert('Error: ' + e.message); }
+    closeConfirm(true);
+  }, 'Batch ' + batch.slice(0, 8));
 }
 
 refresh();

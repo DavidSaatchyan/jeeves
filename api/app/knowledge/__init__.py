@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from pydantic import BaseModel
@@ -307,6 +308,51 @@ def _catalog_columns(path: Path) -> set[str]:
     for p in products:
         cols.update(p.keys())
     return cols
+
+
+@router.get("/catalog/stats")
+def catalog_stats(
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    """Return aggregate stats for the product catalog."""
+    base = db.query(ProductCatalog).filter(ProductCatalog.tenant_id == tenant.id, ProductCatalog.active)
+
+    total_products = base.count()
+
+    batch_rows = (
+        db.query(ProductCatalog.import_batch, func.count(ProductCatalog.id))
+        .filter(ProductCatalog.tenant_id == tenant.id, ProductCatalog.active)
+        .group_by(ProductCatalog.import_batch)
+        .all()
+    )
+    total_batches = len(batch_rows)
+    batch_breakdown = {b: int(c) for b, c in batch_rows if b}
+
+    cat_rows = (
+        db.query(ProductCatalog.category, func.count(ProductCatalog.id))
+        .filter(ProductCatalog.tenant_id == tenant.id, ProductCatalog.active, ProductCatalog.category != "")
+        .group_by(ProductCatalog.category)
+        .order_by(func.count(ProductCatalog.id).desc())
+        .all()
+    )
+    categories = [{"name": cat, "count": int(cnt)} for cat, cnt in cat_rows]
+
+    stock_rows = (
+        db.query(ProductCatalog.stock_status, func.count(ProductCatalog.id))
+        .filter(ProductCatalog.tenant_id == tenant.id, ProductCatalog.active)
+        .group_by(ProductCatalog.stock_status)
+        .all()
+    )
+    stock_breakdown = {s: int(c) for s, c in stock_rows}
+
+    return {
+        "total_products": total_products,
+        "total_batches": total_batches,
+        "batch_breakdown": batch_breakdown,
+        "categories": categories,
+        "stock_breakdown": stock_breakdown,
+    }
 
 
 @router.get("/catalog")

@@ -405,3 +405,258 @@ class TestImportCatalog:
         assert call_kwargs.stock_status == "in_stock"
         assert call_kwargs.image_url == "https://img.com/w.png"
         assert call_kwargs.product_url == "https://shop.com/w"
+
+
+# ── Edge cases ──────────────────────────────────────────────────────────
+
+
+class TestParsePriceEdgeCases:
+    def test_very_large_value_no_decimal(self):
+        assert _parse_price("100000000") == 100000000
+
+    def test_decimal_only(self):
+        assert _parse_price(".50") == 50
+
+    def test_leading_zeros(self):
+        assert _parse_price("00010.00") == 1000
+
+    def test_dollar_sign_anywhere(self):
+        assert _parse_price("10$00") == 1000
+
+    def test_negative_cents(self):
+        assert _parse_price("-100") == -10000
+
+    def test_trailing_dot(self):
+        assert _parse_price("10.") == 1000
+
+
+class TestParseCsvEdgeCases:
+    def test_bom_handling(self):
+        csv_content = "\ufeffname,price\nWidget,29.99"
+        products, errors = parse_csv(csv_content)
+        assert len(products) == 1
+        assert products[0]["name"] == "Widget"
+        assert len(errors) == 0
+
+    def test_unicode_characters(self):
+        csv_content = "name,description\nCafé,Crème brûlée"
+        products, errors = parse_csv(csv_content)
+        assert len(products) == 1
+        assert products[0]["name"] == "Café"
+        assert products[0]["description"] == "Crème brûlée"
+
+    def test_empty_content_returns_no_header_error(self):
+        products, errors = parse_csv("")
+        assert len(products) == 0
+        assert len(errors) >= 1
+
+    def test_very_long_field_value(self):
+        long_name = "A" * 10000
+        csv_content = f"name,price\n{long_name},29.99"
+        products, errors = parse_csv(csv_content)
+        assert len(products) == 1
+        assert len(products[0]["name"]) == 10000
+
+    def test_special_chars_in_values(self):
+        csv_content = 'name,description\n"Widget <>&""",A&B'
+        products, errors = parse_csv(csv_content)
+        assert len(products) == 1
+        assert products[0]["name"] == 'Widget <>&"'
+
+    def test_tab_separated_not_detected_by_default(self):
+        csv_content = "name\tprice\nWidget\t29.99"
+        products, errors = parse_csv(csv_content)
+        assert len(products) == 0  # csv.DictReader uses comma by default, not tab
+
+    def test_csv_with_only_header_row(self):
+        csv_content = "name,price\n"
+        products, errors = parse_csv(csv_content)
+        assert len(products) == 0
+        assert len(errors) == 0
+
+
+class TestParseJsonEdgeCases:
+    def test_null_description_becomes_string_none(self):
+        data = '[{"name":"X","description":null}]'
+        products, errors = parse_json(data)
+        assert len(products) == 1
+        assert products[0]["description"] == "None"
+
+    def test_boolean_fields_handled(self):
+        data = '[{"name":"X","active":true,"visible":false}]'
+        products, errors = parse_json(data)
+        assert len(products) == 1
+
+    def test_nested_attributes_object(self):
+        data = '[{"name":"X","attributes":{"dimensions":{"w":10,"h":20}}}]'
+        products, errors = parse_json(data)
+        assert products[0]["attributes"] == {"dimensions": {"w": 10, "h": 20}}
+
+    def test_empty_object(self):
+        products, errors = parse_json("{}")
+        assert len(products) == 0
+        assert len(errors) == 1  # {}, no products/items key → wraps in [data], data is empty → no name
+
+    def test_empty_string_content(self):
+        products, errors = parse_json("")
+        assert len(products) == 0
+        assert len(errors) == 1
+        assert "Invalid JSON" in errors[0]
+
+    def test_very_large_json_array(self):
+        items = ','.join([f'{{"name":"P{i}","price":{i}.99}}' for i in range(1000)])
+        data = f'[{items}]'
+        products, errors = parse_json(data)
+        assert len(products) == 1000
+        assert len(errors) == 0
+
+    def test_extra_fields_ignored(self):
+        data = '[{"name":"X","price":10,"wholesale_price":8,"supplier":"Acme"}]'
+        products, errors = parse_json(data)
+        assert len(products) == 1
+        assert "wholesale_price" not in products[0]
+        assert "supplier" not in products[0]
+
+
+class TestParseXlsxEdgeCases:
+    def test_xlsx_with_real_file(self, tmp_path):
+        import openpyxl
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Products"
+        ws.append(["name", "product_id", "price", "stock_status"])
+        ws.append(["Widget", "W001", "29.99", "in_stock"])
+        ws.append(["Gadget", "G001", "49.99", "out_of_stock"])
+        path = tmp_path / "products.xlsx"
+        wb.save(str(path))
+
+        products, errors = parse_xlsx(path)
+        assert len(products) == 2
+        assert products[0]["name"] == "Widget"
+        assert products[0]["price"] == 2999
+        assert products[0]["stock_status"] == "in_stock"
+        assert products[1]["name"] == "Gadget"
+        assert products[1]["price"] == 4999
+        assert len(errors) == 0
+
+    def test_xlsx_with_missing_name_skipped(self, tmp_path):
+        import openpyxl
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.append(["name", "price"])
+        ws.append(["", "10.99"])
+        ws.append(["Widget", "20.99"])
+        path = tmp_path / "products.xlsx"
+        wb.save(str(path))
+
+        products, errors = parse_xlsx(path)
+        assert len(products) == 1
+        assert len(errors) == 1
+        assert "missing" in errors[0].lower()
+
+    def test_xlsx_empty_sheet(self, tmp_path):
+        import openpyxl
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.append(["name", "price"])
+        path = tmp_path / "empty.xlsx"
+        wb.save(str(path))
+
+        products, errors = parse_xlsx(path)
+        assert len(products) == 0
+        assert len(errors) >= 1  # "XLSX file is empty" — header-only sheet
+
+    def test_xlsx_invalid_price(self, tmp_path):
+        import openpyxl
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.append(["name", "price"])
+        ws.append(["Widget", "not_a_price"])
+        path = tmp_path / "bad.xlsx"
+        wb.save(str(path))
+
+        products, errors = parse_xlsx(path)
+        assert len(products) == 1
+        assert products[0]["price"] is None
+        assert len(errors) == 1
+        assert "price" in errors[0].lower()
+
+    def test_xlsx_with_attributes_column(self, tmp_path):
+        import openpyxl
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.append(["name", "attributes"])
+        ws.append(["Widget", "color=red,size=M"])
+        ws.append(["Gadget", '{"material":"steel"}'])
+        path = tmp_path / "attrs.xlsx"
+        wb.save(str(path))
+
+        products, errors = parse_xlsx(path)
+        assert len(products) == 2
+        assert products[0]["attributes"] == {"color": "red", "size": "M"}
+        assert products[1]["attributes"] == {"material": "steel"}
+
+
+class TestParseCatalogEdgeCases:
+    def test_parse_catalog_auto_detect_csv(self, tmp_path):
+        p = tmp_path / "data.csv"
+        p.write_text("name,price\nWidget,29.99")
+        products, errors = parse_catalog(p)
+        assert len(products) == 1
+
+    def test_parse_catalog_auto_detect_json(self, tmp_path):
+        p = tmp_path / "data.json"
+        p.write_text('[{"name":"Widget","price":29.99}]')
+        products, errors = parse_catalog(p)
+        assert len(products) == 1
+
+    def test_parse_catalog_auto_detect_xlsx(self, tmp_path):
+        import openpyxl
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.append(["name", "price"])
+        ws.append(["Widget", "29.99"])
+        p = tmp_path / "data.xlsx"
+        wb.save(str(p))
+        products, errors = parse_catalog(p)
+        assert len(products) == 1
+        assert products[0]["price"] == 2999
+
+
+class TestImportCatalogEdgeCases:
+    @pytest.fixture
+    def tenant_id(self) -> UUID:
+        return uuid4()
+
+    def test_import_catalog_with_special_chars_in_values(self, tenant_id, tmp_path):
+        p = tmp_path / "products.csv"
+        p.write_text("name,product_id\nWidget<>&\"',W-001")
+
+        db = MagicMock()
+        with patch("app.knowledge.catalog.rag.index_products", return_value=1):
+            imported, errors, batch_id = import_catalog(tenant_id, p, db)
+
+        assert imported == 1
+        assert db.add.call_count == 1
+
+    def test_import_catalog_with_empty_batch_string_falls_back_to_timestamp(self, tenant_id, tmp_path):
+        p = tmp_path / "products.csv"
+        p.write_text("name,price\nWidget,29.99")
+
+        db = MagicMock()
+        with patch("app.knowledge.catalog.rag.index_products", return_value=1):
+            imported, errors, batch_id = import_catalog(tenant_id, p, db, batch="")
+
+        assert imported == 1
+        assert batch_id.startswith("import_")  # empty batch falls back to timestamp
+
+    def test_import_catalog_db_commit_error(self, tenant_id, tmp_path):
+        p = tmp_path / "products.csv"
+        p.write_text("name,price\nWidget,29.99")
+
+        db = MagicMock()
+        db.commit.side_effect = Exception("DB connection lost")
+
+        with patch("app.knowledge.catalog.rag.index_products", return_value=1):
+            with pytest.raises(Exception, match="DB connection lost"):
+                import_catalog(tenant_id, p, db)
