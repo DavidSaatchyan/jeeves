@@ -136,7 +136,8 @@
     ".jw-panel{position:absolute;bottom:72px;" + side + ":0;width:376px;height:584px;max-height:min(584px,calc(100vh - 108px));background:#fff;border:1px solid rgba(15,23,42,.12);border-radius:8px;box-shadow:0 24px 64px rgba(15,23,42,.24);display:none;overflow:hidden;flex-direction:column}",
     ".jw-panel.open{display:flex}",
     ".jw-head{min-height:72px;padding:14px 16px;background:#111827;color:#fff;display:flex;align-items:center;gap:12px}",
-    ".jw-avatar{width:38px;height:38px;border-radius:8px;background:" + cfg.accent + ";display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;flex:0 0 auto}",
+    ".jw-avatar{width:38px;height:38px;border-radius:8px;flex:0 0 auto;overflow:hidden}",
+    ".jw-avatar img{width:100%;height:100%;object-fit:cover;display:block}",
     ".jw-head-text{min-width:0;flex:1}",
     ".jw-title{font-size:15px;font-weight:750;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
     ".jw-sub{font-size:12px;color:#cbd5e1;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
@@ -191,7 +192,7 @@
     '<div class="jw-wrap">' +
       '<section class="jw-panel" role="dialog" aria-modal="false" aria-label="' + esc(cfg.title) + '">' +
         '<header class="jw-head">' +
-          '<div class="jw-avatar" aria-hidden="true">J</div>' +
+          '<div class="jw-avatar" aria-hidden="true"><img src="' + BASE + '/static/logo-38x38.png" alt="" width="38" height="38"/></div>' +
           '<div class="jw-head-text"><div class="jw-title">' + esc(cfg.title) + '</div><div class="jw-sub">' + esc(cfg.subtitle) + '</div></div>' +
           '<button class="jw-close" type="button" aria-label="Close chat">x</button>' +
         '</header>' +

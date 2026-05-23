@@ -3,7 +3,9 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Jeeves — Workflow Operations</title>
+  <title>Jeeves — AI Operations</title>
+  <link rel="icon" href="/static/favicon.ico" sizes="32x32"/>
+  <link rel="icon" href="/static/logo-32x32.png" sizes="32x32" type="image/png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -269,8 +271,13 @@ if(!token() && !location.pathname.endsWith('/login')){ location.href='/admin/log
 </script>
 <aside>
   <div class="brand">
-    <h1>Jeeves<span>.</span></h1>
-    <div class="brand-sub">AI Operations</div>
+    <a href="/admin" style="display:flex;align-items:center;gap:10px;text-decoration:none;border:none">
+      <img src="/static/logo-32x32.png" alt="Jeeves" width="32" height="32" style="border-radius:6px;flex-shrink:0"/>
+      <div>
+        <div style="font-size:18px;font-weight:800;letter-spacing:-.5px;color:var(--text);line-height:1.2">Jeeves</div>
+        <div style="font-size:9px;color:var(--muted2);letter-spacing:1px;text-transform:uppercase;line-height:1.2">AI Operations</div>
+      </div>
+    </a>
   </div>
 
   <nav>
