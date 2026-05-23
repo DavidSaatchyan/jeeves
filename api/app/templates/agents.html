@@ -72,7 +72,7 @@
 .policy-control input[type=number] { width: 64px; padding: 6px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; text-align: center; }
 .policy-control .disabled { opacity: 0.4; pointer-events: none; }
 
-.tag-chk { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 11px; cursor: pointer; user-select: none; }
+.tag-chk { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 5px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 11px; cursor: pointer; user-select: none; min-width: 72px; }
 .tag-chk input { display: none; }
 .tag-chk:has(input:checked) { background: rgba(34,211,238,0.12); border-color: rgba(34,211,238,0.3); color: #22d3ee; }
 .tag-chk.disabled { opacity: 0.4; pointer-events: none; }
@@ -94,7 +94,7 @@
 function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&gt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 var WISMO = { id:'wismo', name:'WISMO', subtitle:'Order Tracking', color:'#22d3ee',
-  tagline:'AI that tracks every Shopify order and tells customers exactly where it is — no support tickets needed.',
+  tagline:'Agent tracks every Shopify order and tells customers exactly where it is — no support tickets needed.',
   states:['INQUIRY_DETECTED','VALIDATING_IDENTITY','RETRIEVING_SHIPMENT','CLASSIFYING_RISK','RESPONSE_SENT','RESOLVED','LOST'] };
 
 function renderStats(agent, total, completed, inProgress, escalated, failed) {
@@ -140,7 +140,7 @@ function renderPolicySettings(policies, disabled) {
 
   return '<div class="policy-section"><h3>WISMO Settings' + (disabled ? ' <span style="color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0">— connect Shopify to configure</span>' : '') + '</h3>' +
     '<div class="policy-row"><div><div class="policy-label">Auto-notify customers</div><div class="policy-desc">Send proactive tracking updates via selected channels</div></div><div class="policy-control"><div class="policy-toggle' + d + ' ' + (autoNotify ? 'on' : '') + '" id="pol-autoNotify" ' + (disabled ? '' : 'onclick="togglePolicy(\'auto_notify\')"') + '></div></div></div>' +
-    '<div class="policy-row"><div><div class="policy-label">Notify from status</div><div class="policy-desc">Minimum tracking status to trigger notification</div></div><div class="policy-control"><select id="pol-threshold"' + d + ' onchange="savePolicy()"><option value="delayed"' + (threshold === 'delayed' ? ' selected' : '') + '>Delayed only</option><option value="all"' + (threshold === 'all' ? ' selected' : '') + '>All updates</option></select></div></div>' +
+    '<div class="policy-row"><div><div class="policy-label">Notify from status</div><div class="policy-desc">Minimum tracking status to trigger notification</div></div><div class="policy-control"><select id="pol-threshold"' + d + ' onchange="savePolicy()"><option value="delayed"' + (threshold === 'delayed' ? ' selected' : '') + '>Only delays & lost</option><option value="lost"' + (threshold === 'lost' ? ' selected' : '') + '>Lost packages only</option><option value="all"' + (threshold === 'all' ? ' selected' : '') + '>All tracking updates</option></select></div></div>' +
     '<div class="policy-row"><div><div class="policy-label">Notification channels</div><div class="policy-desc">Where to send proactive notifications</div></div><div class="policy-control" style="display:flex;gap:6px">' +
     '<label class="tag-chk' + d + '"><input type="checkbox" value="widget" ' + chk('widget', channels) + ' onchange="savePolicy()"> Widget</label>' +
     '<label class="tag-chk' + d + '"><input type="checkbox" value="email" ' + chk('email', channels) + ' onchange="savePolicy()"> Email</label></div></div>' +
