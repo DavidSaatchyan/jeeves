@@ -72,7 +72,7 @@
 .policy-control input[type=number] { width: 64px; padding: 6px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; text-align: center; }
 .policy-control .disabled { opacity: 0.4; pointer-events: none; }
 
-.tag-chk { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 5px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 11px; cursor: pointer; user-select: none; min-width: 72px; }
+.tag-chk { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 11px; cursor: pointer; user-select: none; min-width: 72px; height: 28px; box-sizing: border-box; }
 .tag-chk input { display: none; }
 .tag-chk:has(input:checked) { background: rgba(34,211,238,0.12); border-color: rgba(34,211,238,0.3); color: #22d3ee; }
 .tag-chk.disabled { opacity: 0.4; pointer-events: none; }
@@ -138,7 +138,7 @@ function renderPolicySettings(policies, disabled) {
 
   var chk = function(val, arr) { return arr.indexOf(val) !== -1 ? 'checked' : ''; };
 
-  return '<div class="policy-section"><h3>WISMO Settings' + (disabled ? ' <span style="color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0">— connect Shopify to configure</span>' : '') + '</h3>' +
+  return '<div class="policy-section"><h3>Settings' + (disabled ? ' <span style="color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0">— connect Shopify to configure</span>' : '') + '</h3>' +
     '<div class="policy-row"><div><div class="policy-label">Auto-notify customers</div><div class="policy-desc">Send proactive tracking updates via selected channels</div></div><div class="policy-control"><div class="policy-toggle' + d + ' ' + (autoNotify ? 'on' : '') + '" id="pol-autoNotify" ' + (disabled ? '' : 'onclick="togglePolicy(\'auto_notify\')"') + '></div></div></div>' +
     '<div class="policy-row"><div><div class="policy-label">Notify from status</div><div class="policy-desc">Minimum tracking status to trigger notification</div></div><div class="policy-control"><select id="pol-threshold"' + d + ' onchange="savePolicy()"><option value="delayed"' + (threshold === 'delayed' ? ' selected' : '') + '>Only delays & lost</option><option value="lost"' + (threshold === 'lost' ? ' selected' : '') + '>Lost packages only</option><option value="all"' + (threshold === 'all' ? ' selected' : '') + '>All tracking updates</option></select></div></div>' +
     '<div class="policy-row"><div><div class="policy-label">Notification channels</div><div class="policy-desc">Where to send proactive notifications</div></div><div class="policy-control" style="display:flex;gap:6px">' +
@@ -161,7 +161,8 @@ function renderAgentPanel(agent, enabled, shopifyConnected, total, completed, in
   // Toggle — not clickable if Shopify not connected
   if (!shopifyConnected) {
     h += '<div class="toggle-wrapper tip-trigger"><div class="toggle mini disabled" id="mainToggle"></div>' +
-      '<div class="tip-pop">Connect Shopify first → <a href="/admin/connections">Go to Connections</a></div></div>';
+      '<div class="tip-pop">Connect Shopify first to enable WISMO</div></div>';
+    h += '<div class="conn-warn" style="margin-top:10px;font-size:12px;color:var(--amber)">⚠ <a href="/admin/connections" style="color:var(--cyan);text-decoration:underline">Connect Shopify</a> to start tracking orders.</div>';
   } else {
     h += '<div class="toggle-wrapper"><div class="toggle mini ' + (enabled ? 'on' : '') + '" id="mainToggle" onclick="toggleWismo()"></div></div>';
   }
