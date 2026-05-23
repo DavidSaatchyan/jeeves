@@ -40,9 +40,11 @@
 .toggle.mini { width: 36px; height: 20px; }
 .toggle.mini::after { width: 16px; height: 16px; }
 .toggle.mini.on::after { transform: translateX(16px); }
+.toggle.mini.disabled { opacity: 0.35; cursor: default; }
+.toggle.mini.disabled::after { background: #666; }
 
 /* Tooltip */
-.tip-trigger { position: relative; cursor: pointer; }
+.tip-trigger { position: relative; }
 .tip-pop {
   position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%);
   background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
@@ -156,9 +158,9 @@ function renderAgentPanel(agent, enabled, shopifyConnected, total, completed, in
     '<div style="margin-left:auto;display:flex;align-items:center;gap:10px">' +
     '<span class="pill ' + (enabled ? 'ok' : 'muted') + '" style="font-size:10px" id="statusBadge">' + (enabled ? 'Active' : 'Disabled') + '</span>';
 
-  // Toggle with tooltip if Shopify not connected
-  if (!shopifyConnected && !enabled) {
-    h += '<div class="toggle-wrapper tip-trigger"><div class="toggle mini" id="mainToggle"></div>' +
+  // Toggle — not clickable if Shopify not connected
+  if (!shopifyConnected) {
+    h += '<div class="toggle-wrapper tip-trigger"><div class="toggle mini disabled" id="mainToggle"></div>' +
       '<div class="tip-pop">Connect Shopify first → <a href="/admin/connections">Go to Connections</a></div></div>';
   } else {
     h += '<div class="toggle-wrapper"><div class="toggle mini ' + (enabled ? 'on' : '') + '" id="mainToggle" onclick="toggleWismo()"></div></div>';
