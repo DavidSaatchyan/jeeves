@@ -78,9 +78,8 @@
 .policy-control input[type=number] { width: 64px; padding: 6px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; text-align: center; }
 .policy-control .disabled { opacity: 0.4; pointer-events: none; }
 
-.tag-chk { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 5px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 11px; line-height: 1; cursor: pointer; user-select: none; min-width: 72px; vertical-align: middle; }
-.tag-chk input { display: none; }
-.tag-chk:has(input:checked) { background: rgba(34,211,238,0.12); border-color: rgba(34,211,238,0.3); color: #22d3ee; border-width: 1px; border-style: solid; }
+.tag-chk { display: inline-block; padding: 6px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 11px; line-height: 1; cursor: pointer; user-select: none; min-width: 72px; text-align: center; vertical-align: middle; }
+.tag-chk.on { background: rgba(34,211,238,0.12); border-color: rgba(34,211,238,0.3); color: #22d3ee; }
 .tag-chk.disabled { opacity: 0.4; pointer-events: none; }
 
 .policy-toggle { width: 32px; height: 18px; border-radius: 9px; background: var(--border); cursor: pointer; position: relative; transition: background .2s; flex-shrink: 0; display: inline-block; }
@@ -147,14 +146,12 @@ function renderPolicySettings(policies, disabled) {
   var maxNotif = wp.max_notifications_per_workflow || 3;
   var maxSilent = wp.max_silent_tracking_days || 14;
 
-  var chk = function(val, arr) { return arr.indexOf(val) !== -1 ? 'checked' : ''; };
-
   return '<div class="policy-section"><h3>Settings</h3>' +
     '<div class="policy-row"><div><div class="policy-label">Auto-notify customers</div><div class="policy-desc">Send proactive tracking updates via selected channels</div></div><div class="policy-control"><div class="policy-toggle' + d + ' ' + (autoNotify ? 'on' : '') + '" id="pol-autoNotify" ' + (disabled ? '' : 'onclick="togglePolicy(\'auto_notify\')"') + '></div></div></div>' +
     '<div class="policy-row"><div><div class="policy-label">Notify from status</div><div class="policy-desc">Minimum tracking status to trigger notification</div></div><div class="policy-control"><select id="pol-threshold"' + d + ' onchange="savePolicy()"><option value="delayed"' + (threshold === 'delayed' ? ' selected' : '') + '>Only delays & lost</option><option value="lost"' + (threshold === 'lost' ? ' selected' : '') + '>Lost packages only</option><option value="all"' + (threshold === 'all' ? ' selected' : '') + '>All tracking updates</option></select></div></div>' +
     '<div class="policy-row"><div><div class="policy-label">Notification channels</div><div class="policy-desc">Where to send proactive notifications</div></div><div class="policy-control" style="display:flex;align-items:center;gap:6px">' +
-    '<label class="tag-chk' + d + '"><input type="checkbox" value="widget" ' + chk('widget', channels) + ' onchange="savePolicy()"> Widget</label>' +
-    '<label class="tag-chk' + d + '"><input type="checkbox" value="email" ' + chk('email', channels) + ' onchange="savePolicy()"> Email</label></div></div>' +
+    '<span class="tag-chk' + d + ' ' + (channels.indexOf('widget') !== -1 ? 'on' : '') + '" data-channel="widget" onclick="toggleChannel(this)">Widget</span>' +
+    '<span class="tag-chk' + d + ' ' + (channels.indexOf('email') !== -1 ? 'on' : '') + '" data-channel="email" onclick="toggleChannel(this)">Email</span></div></div>' +
     '<div class="policy-row"><div><div class="policy-label">Escalate after delay (days)</div><div class="policy-desc">Auto-escalate if tracking shows delayed beyond this</div></div><div class="policy-control"><input type="number" id="pol-escalationDays" value="' + delayDays + '" min="1" max="30"' + d + ' onchange="savePolicy()"></div></div>' +
     '<div class="policy-row"><div><div class="policy-label">Auto-escalate lost packages</div><div class="policy-desc">Escalate immediately when carrier marks as lost</div></div><div class="policy-control"><div class="policy-toggle' + d + ' ' + (autoEscalate ? 'on' : '') + '" id="pol-autoEscalate" ' + (disabled ? '' : 'onclick="togglePolicy(\'auto_escalate_lost\')"') + '></div></div></div>' +
     '<div class="policy-row"><div><div class="policy-label">Max notifications per workflow</div><div class="policy-desc">Stop sending after this many notifications</div></div><div class="policy-control"><input type="number" id="pol-maxNotif" value="' + maxNotif + '" min="1" max="20"' + d + ' onchange="savePolicy()"></div></div>' +
@@ -230,7 +227,7 @@ function readPolicy() {
   return {
     auto_notify: document.getElementById('pol-autoNotify') ? document.getElementById('pol-autoNotify').classList.contains('on') : true,
     auto_notify_threshold: document.getElementById('pol-threshold') ? document.getElementById('pol-threshold').value : 'delayed',
-    notification_channels: Array.from(document.querySelectorAll('#policySection input[type=checkbox]:checked')).map(function(cb){ return cb.value; }),
+    notification_channels: Array.from(document.querySelectorAll('#policySection .tag-chk.on')).map(function(el){ return el.dataset.channel; }),
     escalation_delay_days: parseInt(document.getElementById('pol-escalationDays')?.value || '7'),
     auto_escalate_lost: document.getElementById('pol-autoEscalate') ? document.getElementById('pol-autoEscalate').classList.contains('on') : true,
     max_notifications_per_workflow: parseInt(document.getElementById('pol-maxNotif')?.value || '3'),
@@ -241,6 +238,12 @@ function readPolicy() {
 function togglePolicy(key) {
   var el = document.getElementById('pol-' + key.charAt(0).toUpperCase() + key.slice(1));
   if (el) el.classList.toggle('on');
+  savePolicy();
+}
+
+function toggleChannel(el) {
+  if (el.classList.contains('disabled')) return;
+  el.classList.toggle('on');
   savePolicy();
 }
 
