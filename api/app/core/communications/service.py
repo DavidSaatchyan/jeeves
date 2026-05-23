@@ -6,7 +6,12 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from .delivery import send_email
-from .templates import render_payment_update, render_retry_reminder, render_auth_assistance, render_save_offer
+from .templates import (
+    render_delay_notification,
+    render_delivery_confirmation,
+    render_lost_package,
+    render_tracking_update,
+)
 from ...core.timeline.recorder import record_timeline_event
 
 logger = logging.getLogger(__name__)
@@ -27,10 +32,10 @@ async def send_communication(db: Session, tenant_id: str, customer_id: str, chan
         return None
 
     templates = {
-        "payment_update": render_payment_update,
-        "retry_reminder": render_retry_reminder,
-        "auth_assistance": render_auth_assistance,
-        "save_offer": render_save_offer,
+        "tracking_update": render_tracking_update,
+        "delay_notification": render_delay_notification,
+        "delivery_confirmation": render_delivery_confirmation,
+        "lost_package": render_lost_package,
     }
 
     renderer = templates.get(template_name)

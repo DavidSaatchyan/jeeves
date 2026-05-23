@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["chat"])
 
 
-async def _simple_llm_response(tenant_id, message: str, system_override=None) -> dict:
+async def _simple_llm_response(tenant_id, message: str, system_override=None, conversation_history: list[dict] | None = None) -> dict:
     """Direct LLM call without agent tool loop (v2 replacement).
     If system_override is provided, prepend a system message with RAG context.
     """
@@ -35,6 +35,8 @@ async def _simple_llm_response(tenant_id, message: str, system_override=None) ->
         messages = []
         if system_override:
             messages.append({"role": "system", "content": system_override})
+        if conversation_history:
+            messages.extend(conversation_history)
         messages.append({"role": "user", "content": message})
         response = await client.chat.completions.create(
             model="gpt-4o-mini",

@@ -26,6 +26,15 @@ _DEFAULT_APPROVAL = {
     "requires_approval": ["discount", "credit", "refund"],
     "allowed_save_actions": ["pause", "skip", "delay"],
 }
+_DEFAULT_WISMO = {
+    "auto_notify": True,
+    "auto_notify_threshold": "delayed",
+    "notification_channels": ["widget"],
+    "escalation_delay_days": 7,
+    "auto_escalate_lost": True,
+    "max_silent_tracking_days": 14,
+    "max_notifications_per_workflow": 3,
+}
 
 
 class PolicyEngine:
@@ -67,6 +76,8 @@ class PolicyEngine:
             return self._evaluate_escalation(context)
         if policy_type == "approval":
             return self._evaluate_approval(context)
+        if policy_type == "wismo":
+            return self._evaluate_wismo(context)
         return {"allowed": True, "reason": "no_policy"}
 
     def _evaluate_retry(self, context: dict[str, Any]) -> dict[str, Any]:
@@ -130,10 +141,25 @@ class PolicyEngine:
             "requires_approval": requires_approval,
         }
 
+    def _evaluate_wismo(self, context: dict[str, Any]) -> dict[str, Any]:
+        policies = self._policy.get("wismo", _DEFAULT_WISMO)
+        return {
+            "allowed": True,
+            "policy": policies,
+            "auto_notify": policies.get("auto_notify", True),
+            "auto_notify_threshold": policies.get("auto_notify_threshold", "delayed"),
+            "notification_channels": policies.get("notification_channels", ["widget"]),
+            "escalation_delay_days": policies.get("escalation_delay_days", 7),
+            "auto_escalate_lost": policies.get("auto_escalate_lost", True),
+            "max_silent_tracking_days": policies.get("max_silent_tracking_days", 14),
+            "max_notifications_per_workflow": policies.get("max_notifications_per_workflow", 3),
+        }
+
     def get_policy_snapshot(self) -> dict[str, Any]:
         return {
             "retry": self._policy.get("retry", _DEFAULT_RETRY),
             "communication": self._policy.get("communication", _DEFAULT_COMMUNICATION),
             "escalation": self._policy.get("escalation", _DEFAULT_ESCALATION),
             "approval": self._policy.get("approval", _DEFAULT_APPROVAL),
+            "wismo": self._policy.get("wismo", _DEFAULT_WISMO),
         }

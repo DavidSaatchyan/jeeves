@@ -96,30 +96,93 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
     db.add(log)
     db.commit()
 
-    # RAG search — retrieve relevant chunks from knowledge base
-    import asyncio
-    try:
-        from ..core.ai.generator import translate_query
-        query = await translate_query(body.message)
-        from .. import rag
-        chunks = await asyncio.to_thread(rag.search, tenant.id, query)
-    except Exception:
-        chunks = []
-    context = "\n\n".join(c["text"] for c in chunks) if chunks else ""
-    if context:
-        system = (
-            "You are a support agent. Answer the user's question based ONLY on the context below. "
-            "If the context doesn't contain enough information, say you don't have that information "
-            "in your knowledge base and offer to connect with a specialist.\n\nContext:\n" + context
-        )
-    else:
-        system = (
-            "You are a support agent. You do not have the information to answer this question "
-            "in your knowledge base. Respond that this information is not available and offer to "
-            "connect the user with a specialist."
-        )
+    # Load conversation history for LLM context
+    from ..core.memory import get_conversation_history
+    history = get_conversation_history(
+        tenant_id=str(tenant.id),
+        customer_id=body.user_id,
+        db=db,
+    )
 
-    result = await _simple_llm_response(tenant.id, body.message, system_override=system)
+    # Intent classification — decide whether this is an order tracking inquiry,
+    # a knowledge base question, or general chat
+    from ..core.ai.intent_classifier import classify_intent
+    intent = await classify_intent(body.message, str(tenant.id), history=history)
+
+    if intent == "wismo":
+        # Order tracking inquiry → route to WISMO workflow
+        from uuid import UUID
+        from ..core.events.schemas import CanonicalEvent
+        from ..core.workflows.registry import route_event
+
+        ev = CanonicalEvent(
+            event_type="intent:wismo",
+            event_source="widget_chat",
+            tenant_id=str(tenant.id),
+            entity_type="chat",
+            entity_id=str(session_id),
+            payload={
+                "customer_id": body.user_id,
+                "message": body.message,
+                "history": history,
+            },
+        )
+        await route_event(ev, db)
+
+        latest = (
+            db.query(ChatLog)
+            .filter(
+                ChatLog.tenant_id == tenant.id,
+                ChatLog.user_id == body.user_id,
+                ChatLog.direction == "outgoing",
+                ChatLog.delivered == False,
+            )
+            .order_by(ChatLog.created_at.desc())
+            .first()
+        )
+        response_text = (
+            latest.response
+            if latest
+            else "I'm looking up your order information right now. I'll send you a notification as soon as I have an update!"
+        )
+        result = {"response": response_text, "latency_ms": 0, "escalated": False}
+
+    elif intent == "general":
+        # Simple greeting / small talk — no RAG needed
+        result = await _simple_llm_response(tenant.id, body.message, conversation_history=history)
+
+    else:
+        # kb_query — RAG search + LLM response (existing flow)
+        import asyncio
+        try:
+            from ..core.ai.generator import translate_query
+            query = await translate_query(body.message)
+            from .. import rag
+            chunks = await asyncio.to_thread(rag.search, tenant.id, query)
+        except Exception:
+            chunks = []
+        context = "\n\n".join(c["text"] for c in chunks) if chunks else ""
+        if context:
+            system = (
+                "You are a support agent. Answer the user's question based ONLY on the context below. "
+                "If the context doesn't contain enough information, say you don't have that information "
+                "in your knowledge base and offer to connect with a specialist."
+            )
+            if history:
+                history_str = "\n".join(f"- {e['role']}: {e['content']}" for e in history)
+                system += f"\n\nConversation history:\n{history_str}"
+            system += f"\n\nContext:\n{context}"
+        else:
+            system = (
+                "You are a support agent. You do not have the information to answer this question "
+                "in your knowledge base. Respond that this information is not available and offer to "
+                "connect the user with a specialist."
+            )
+            if history:
+                history_str = "\n".join(f"- {e['role']}: {e['content']}" for e in history)
+                system += f"\n\nConversation history:\n{history_str}"
+
+        result = await _simple_llm_response(tenant.id, body.message, system_override=system)
 
     log.response = result["response"]
     log.resolution = "resolved"

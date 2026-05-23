@@ -652,15 +652,34 @@ def api_agent_funnel(
         {"tid": tenant.id, "wtype": agent_type},
     ).all()
 
-    # Funnel stage mapping (plan D2)
-    FUNNEL_STAGES = {
+    WISMO_FUNNEL = {
+        "Detected": {"states": ["INQUIRY_DETECTED", "VALIDATING_IDENTITY"], "order": 0, "color": "#6366f1"},
+        "Identified": {"states": ["RETRIEVING_SHIPMENT", "CLASSIFYING_RISK"], "order": 1, "color": "#818cf8"},
+        "Informed": {"states": ["RESPONSE_SENT"], "order": 2, "color": "#f59e0b"},
+        "Resolved": {"states": ["RESOLVED"], "order": 3, "color": "#10b981"},
+        "Lost": {"states": ["LOST"], "order": 4, "color": "#ef4444"},
+    }
+    PAYGUARD_FUNNEL = {
         "Detected": {"states": ["DETECTED", "VALIDATING"], "order": 0, "color": "#6366f1"},
         "Classified": {"states": ["CLASSIFYING_FAILURE", "SELECTING_STRATEGY"], "order": 1, "color": "#818cf8"},
         "Outreach": {"states": ["OUTREACH_PENDING", "OUTREACH_SENT", "WAITING_CUSTOMER"], "order": 2, "color": "#f59e0b"},
         "Retry": {"states": ["RETRY_SCHEDULED", "RETRY_PENDING", "RETRYING", "VERIFYING_RESULT", "PAUSED_RECONCILIATION"], "order": 3, "color": "#22d3ee"},
         "Recovered": {"states": ["RECOVERED"], "order": 4, "color": "#10b981"},
     }
+    FUNNEL_STAGES = WISMO_FUNNEL if agent_type == "wismo" else PAYGUARD_FUNNEL
     DROP_STATES = {"FAILED", "ESCALATED", "EXPIRED"}
+
+    LABELS = {
+        "Detected": "Order inquiries detected",
+        "Identified": "Orders identified and fetched",
+        "Informed": "Notifications sent",
+        "Resolved": "Successfully resolved",
+        "Lost": "Lost packages",
+        "Classified": "Classified as recoverable",
+        "Outreach": "Outreach sent",
+        "Retry": "Retry executed",
+        "Recovered": "Successfully recovered",
+    }
 
     row_map = {r.current_state: r.cnt for r in rows}
     total = sum(row_map.values())
@@ -681,11 +700,7 @@ def api_agent_funnel(
         stages.append({
             "state": label,
             "count": count,
-            "label": f"Failed payments detected" if label == "Detected" else
-                     f"Classified as recoverable" if label == "Classified" else
-                     f"Outreach sent" if label == "Outreach" else
-                     f"Retry executed" if label == "Retry" else
-                     f"Successfully recovered",
+            "label": LABELS.get(label, label),
             "pct": pct,
             "color": cfg["color"],
             "drop_off": drop_off,

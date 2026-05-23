@@ -71,7 +71,7 @@ class Workflow(ABC):
 
         db.commit()
 
-        if to_state in ("RECOVERED", "FAILED", "EXPIRED", "CANCELLED", "RESOLVED", "RETAINED"):
+        if to_state in ("RECOVERED", "FAILED", "EXPIRED", "CANCELLED", "RESOLVED", "RETAINED", "LOST"):
             self.status = "completed"
         elif to_state == "ESCALATED":
             self.status = "escalated"

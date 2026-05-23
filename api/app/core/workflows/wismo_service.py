@@ -1,57 +1,64 @@
 from __future__ import annotations
 
 import logging
+import re
 from datetime import datetime, timedelta
 from uuid import UUID, uuid4
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from ..events.schemas import CanonicalEvent
+from ...integrations.shopify.actions import (
+    fetch_customer_orders,
+    fetch_fulfillments as _fetch_fulfillments,
+    fetch_order as _fetch_order,
+)
 
 logger = logging.getLogger(__name__)
 
-WORKFLOW_REGISTRY: dict[str, type] = {}
 
-WISMO_EVENTS = {"fulfillment_created", "tracking_updated", "order_created", "intent:wismo"}
-
-
-def register_workflow(workflow_type: str, cls: type) -> None:
-    WORKFLOW_REGISTRY[workflow_type] = cls
-    logger.info("registered workflow type: %s \u2192 %s", workflow_type, cls.__name__)
+ORDER_NUMBER_PATTERNS = [
+    re.compile(r"#(\d+)"),
+    re.compile(r"order\s*[#:]?\s*(\d+)", re.IGNORECASE),
+    re.compile(r"ORD[_-]?(\d+)", re.IGNORECASE),
+]
 
 
-def get_workflow_class(workflow_type: str) -> type | None:
-    return WORKFLOW_REGISTRY.get(workflow_type)
+def parse_order_number(message: str | None) -> str | None:
+    if not message:
+        return None
+    for pattern in ORDER_NUMBER_PATTERNS:
+        m = pattern.search(message)
+        if m:
+            return m.group(1)
+    return None
 
 
-async def route_event(event: CanonicalEvent, db: Session) -> None:
-    if event.event_type not in WISMO_EVENTS:
-        logger.debug("no workflow handler for event type: %s", event.event_type)
-        return
+async def fetch_order(tenant_id: UUID, order_id: str, db: Session) -> dict | None:
+    return await _fetch_order(tenant_id, order_id, db)
+
+
+async def fetch_fulfillments(tenant_id: UUID, order_id: str, db: Session) -> list[dict]:
+    return await _fetch_fulfillments(tenant_id, order_id, db)
+
+
+async def find_orders_by_customer(tenant_id: UUID, customer_id: str, db: Session) -> list[dict]:
+    return await fetch_customer_orders(tenant_id, customer_id, db, limit=10)
+
+
+def get_or_create_wismo(
+    db: Session,
+    tenant_id: UUID,
+    customer_id: str,
+    order_id: str = "",
+) -> object | None:
+    from .registry import get_workflow_class
+    from .wismo import WISMO_INITIAL_STATE
 
     cls = get_workflow_class("wismo")
     if cls is None:
         logger.error("WISMO workflow class not registered")
-        return
-
-    payload = event.payload or {}
-    customer_id = str(payload.get("customer_id") or payload.get("customer", {}).get("id") or "")
-    if not customer_id:
-        logger.warning("cannot route event %s: missing customer_id", event.event_id)
-        return
-
-    order_id = str(payload.get("order_id") or payload.get("id") or "")
-    tenant_id = UUID(event.tenant_id)
-    workflow = _load_or_create_wismo(db, cls, tenant_id, customer_id, order_id)
-    if workflow is None:
-        return
-
-    await workflow.handle_event(event, db)
-
-
-def _load_or_create_wismo(db: Session, cls: type, tenant_id: UUID, customer_id: str, order_id: str) -> object | None:
-    from .wismo import WISMO_INITIAL_STATE
+        return None
 
     if order_id:
         existing = db.execute(
@@ -120,3 +127,11 @@ def _load_or_create_wismo(db: Session, cls: type, tenant_id: UUID, customer_id: 
         status="active",
         started_at=now,
     )
+
+
+async def update_workflow_order(db: Session, workflow_id: UUID, order_id: str) -> None:
+    db.execute(
+        text("UPDATE workflows SET order_id = :oid WHERE id = :wid"),
+        {"oid": order_id, "wid": workflow_id},
+    )
+    db.commit()

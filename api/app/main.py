@@ -160,10 +160,12 @@ def _run_alembic_migrations() -> None:
 def on_startup() -> None:
     _run_alembic_migrations()
     from .channels.registry import build_channel_cache
+    from .core.workflows import init_workflows
     from .db import SessionLocal
     db = SessionLocal()
     try:
         build_channel_cache(db)
+        init_workflows()
     finally:
         db.close()
 
