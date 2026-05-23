@@ -150,16 +150,6 @@
     </div>
   </div>
 
-  <!-- Import history -->
-  <div class="card">
-    <h2>Import history</h2>
-    <table class="kb-table"><thead><tr><th>Batch</th><th>Products</th><th>Date</th><th></th></tr></thead><tbody id="catBatchTbl"></tbody></table>
-    <div id="catBatchEmpty" class="empty-state" style="display:none">
-      <div class="muted">No imports yet.</div>
-    </div>
-  </div>
-</div>
-
 <!-- ═══════════════ SHARED MODALS ═══════════════ -->
 
 <!-- Confirm dialog -->
@@ -502,17 +492,6 @@ async function refreshCatalog(){
     }).join('');
     document.getElementById('catEmpty').style.display = results.length ? 'none' : '';
 
-    // Batch/import history table
-    var batches = Object.entries(stats.batch_breakdown || {}).sort().reverse();
-    document.getElementById('catBatchTbl').innerHTML = batches.map(function(b){
-      return '<tr>'
-        + '<td><span class="cat-batch-label">' + esc(b[0]) + '</span></td>'
-        + '<td>' + b[1] + ' product' + (b[1] !== 1 ? 's' : '') + '</td>'
-        + '<td style="color:var(--muted);font-size:11px">' + esc(b[0].slice(0, 10)) + '</td>'
-        + '<td><button class="ghost sm danger" onclick="deleteCatalogBatch(this)" data-batch="' + esc(b[0]).replace(/"/g,'&quot;') + '" data-count="' + b[1] + '">Delete batch</button></td></tr>';
-    }).join('');
-    document.getElementById('catBatchEmpty').style.display = batches.length ? 'none' : '';
-
     // Catalog uploaded files
     var files = await api('/knowledge/catalog/files');
     document.getElementById('catFileTbl').innerHTML = files.map(function(f){
@@ -540,19 +519,6 @@ async function deleteCatalogProduct(btn){
     } catch(e){ alert('Error: ' + e.message); }
     closeConfirm(true);
   }, esc(name));
-}
-
-async function deleteCatalogBatch(btn){
-  var batch = btn.getAttribute('data-batch');
-  var count = btn.getAttribute('data-count');
-  showConfirm('Delete all ' + count + ' product' + (count !== '1' ? 's' : '') + ' in this batch and the uploaded file?', async function(){
-    setConfirmLoading(true);
-    try{
-      await api('/knowledge/catalog/batch/' + encodeURIComponent(batch), {method:'DELETE'});
-      await refreshCatalog();
-    } catch(e){ alert('Error: ' + e.message); }
-    closeConfirm(true);
-  }, 'Batch ' + batch.slice(0, 8));
 }
 
 async function deleteCatalogFile(btn){

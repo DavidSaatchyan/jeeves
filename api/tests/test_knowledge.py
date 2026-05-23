@@ -429,12 +429,6 @@ def mock_rag_index_products():
         yield m
 
 
-@pytest.fixture
-def mock_rag_delete_batch():
-    with patch("app.knowledge.rag.delete_products_by_batch", return_value=1) as m:
-        yield m
-
-
 class TestCatalogUpload:
     def test_upload_csv_success(self, client, mock_db, mock_chunking, mock_rag_index_products, tmp_path):
         mock_db.add.return_value = None
@@ -629,28 +623,6 @@ class TestCatalogDeleteProduct:
         assert resp.status_code == 404
 
 
-class TestCatalogDeleteBatch:
-    def test_delete_batch(self, client, mock_db, mock_rag_delete_batch, mock_rag):
-        # mock_db.query.return_value... is chained. We need to set up the update mock
-        mock_query = MagicMock()
-        mock_db.query.return_value = mock_query
-        mock_query.filter.return_value = mock_query
-        mock_query.update.return_value = 3  # 3 rows affected
-
-        resp = client.delete("/knowledge/catalog/batch/my_batch_1")
-        assert resp.status_code == 204
-        mock_rag_delete_batch.assert_called_once_with(ANY, "my_batch_1")
-
-    def test_delete_nonexistent_batch(self, client, mock_db, mock_rag_delete_batch, mock_rag):
-        mock_query = MagicMock()
-        mock_db.query.return_value = mock_query
-        mock_query.filter.return_value = mock_query
-        mock_query.update.return_value = 0
-
-        resp = client.delete("/knowledge/catalog/batch/nonexistent")
-        assert resp.status_code == 204
-
-
 class TestCatalogAuthGuard:
     def test_upload_requires_auth(self, app):
         app.dependency_overrides.clear()
@@ -675,17 +647,6 @@ class TestCatalogAuthGuard:
         with TestClient(app) as c:
             resp = c.delete(f"/knowledge/catalog/{uuid4()}")
         assert resp.status_code in (401, 403)
-
-    def test_delete_batch_requires_auth(self, app):
-        app.dependency_overrides.clear()
-        with TestClient(app) as c:
-            resp = c.delete("/knowledge/catalog/batch/test")
-        assert resp.status_code in (401, 403)
-
-
-# ══════════════════════════════════════════════════════════════════════
-# Catalog stats tests
-# ══════════════════════════════════════════════════════════════════════
 
 
 class TestCatalogStats:
@@ -853,16 +814,6 @@ class TestCatalogGetProductEdgeCases:
         # So inactive products are still findable by GET (they're not deleted, just hidden)
         resp = client.get(f"/knowledge/catalog/{p.id}")
         assert resp.status_code == 200  # inactive is still a valid product
-
-
-class TestCatalogDeleteBatchEdgeCases:
-    def test_delete_batch_with_empty_string(self, client, mock_db, mock_rag_delete_batch, mock_rag):
-        mock_query = MagicMock()
-        mock_db.query.return_value = mock_query
-        mock_query.filter.return_value = mock_query
-        mock_query.update.return_value = 0
-        resp = client.delete("/knowledge/catalog/batch/%20")
-        assert resp.status_code == 204
 
 
 # ══════════════════════════════════════════════════════════════════════

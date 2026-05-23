@@ -507,43 +507,6 @@ def delete_catalog_product(
     return
 
 
-@router.delete("/catalog/batch/{import_batch}", status_code=204)
-def delete_catalog_batch(
-    import_batch: str,
-    tenant: Tenant = Depends(get_current_tenant),
-    db: Session = Depends(get_db),
-):
-    """Delete all products from a given import batch and its uploaded file."""
-    count = (
-        db.query(ProductCatalog)
-        .filter(ProductCatalog.tenant_id == tenant.id, ProductCatalog.import_batch == import_batch)
-        .update({"active": False}, synchronize_session="fetch")
-    )
-    db.commit()
-
-    # Remove from Chroma
-    rag.delete_products_by_batch(tenant.id, import_batch)
-
-    # Also remove associated FileRecord and physical file
-    file_recs = (
-        db.query(FileRecord)
-        .filter(FileRecord.tenant_id == tenant.id, FileRecord.file_type == "catalog")
-        .all()
-    )
-    for fr in file_recs:
-        if (fr.metadata_schema or {}).get("batch_id") == import_batch:
-            if fr.s3_key and os.path.exists(fr.s3_key):
-                try:
-                    os.remove(fr.s3_key)
-                except Exception:
-                    pass
-            db.delete(fr)
-            logger.info("delete_catalog_batch: removed FileRecord %s for batch %s", fr.id, import_batch)
-    db.commit()
-
-    logger.info("delete_catalog_batch: batch=%s deactivated=%d", import_batch, count)
-    return
-
 
 @router.delete("/catalog/files/{file_id}", status_code=204)
 def delete_catalog_file(
