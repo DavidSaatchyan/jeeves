@@ -8,24 +8,16 @@ from pydantic import BaseModel, Field
 
 
 EVENT_TYPES = {
-    "payment_failed",
-    "payment_recovered",
-    "invoice_payment_failed",
-    "rebill_failed",
-    "subscription_cancel_requested",
-    "subscription_paused",
-    "subscription_skipped",
-    "subscription_delayed",
-    "customer_message_cancellation",
-    "customer_message_wismo",
-    "customer_message_general",
-    "customer_frustrated",
-    "customer_payment_method_updated",
-    "shipment_delayed",
+    # Shopify / WISMO
+    "order_created",
+    "order_updated",
+    "order_fulfilled",
+    "order_cancelled",
+    "customer_created",
+    "customer_updated",
+    "fulfillment_created",
     "tracking_updated",
-    "shipment_exception",
-    "shipment_delivered",
-    "external_payment_success",
+    # Workflow runtime
     "workflow_timeout",
     "manual_escalation",
 }
