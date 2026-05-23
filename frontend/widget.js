@@ -5,9 +5,9 @@
  *   <script async src="https://app.example.com/widget.js" data-tenant-id="<uuid>"></script>
  *
  * Optional data attributes:
- *   data-title, data-subtitle, data-accent, data-position, data-greeting,
- *   data-user-id, data-email-required, data-privacy-url, data-custom-launcher,
- *   data-z-index.
+ *   data-title, data-subtitle (set to "" to hide), data-accent, data-icon
+ *   (SVG string or image URL), data-position, data-greeting, data-user-id,
+ *   data-email-required, data-privacy-url, data-custom-launcher, data-z-index.
  *
  * Runtime API:
  *   window.JeevesWidget.open()
@@ -30,7 +30,7 @@
 
   function attr(name, fallback) {
     var value = script && script.getAttribute(name);
-    return value == null || value === "" ? fallback : value;
+    return value == null ? fallback : value;
   }
 
   var TENANT = attr("data-tenant-id", "");
@@ -45,7 +45,7 @@
 
   var cfg = {
     title: attr("data-title", "Jeeves support"),
-    subtitle: attr("data-subtitle", "AI agent online"),
+    subtitle: attr("data-subtitle", ""),
     accent: attr("data-accent", "#2563eb"),
     position: attr("data-position", "right") === "left" ? "left" : "right",
     greeting: attr("data-greeting", "Hi. How can I help?"),
@@ -55,6 +55,7 @@
     emailRequired: attr("data-email-required", "true") !== "false",
     initialUserId: attr("data-user-id", ""),
     channel: attr("data-channel", "web_widget"),
+    icon: attr("data-icon", ""),
   };
 
   var keys = {
@@ -124,6 +125,15 @@
 
   var side = cfg.position === "left" ? "left" : "right";
   var opposite = cfg.position === "left" ? "right" : "left";
+
+  var defaultIcon = '<svg class="jw-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7.5 18.5 4 21v-4.2A8.2 8.2 0 0 1 2.5 12C2.5 7 6.8 3 12 3s9.5 4 9.5 9-4.3 9-9.5 9a10.3 10.3 0 0 1-4.5-1.1Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 11.5h8M8 14.5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  var launcherIconHtml = (function () {
+    if (!cfg.icon) return defaultIcon;
+    var t = cfg.icon.trim();
+    if (t.indexOf("<svg") === 0) return t;
+    return '<img class="jw-icon" src="' + esc(cfg.icon) + '" alt="">';
+  })();
+
   var css = [
     ":host{all:initial}",
     ".jw-wrap{position:fixed;" + side + ":20px;bottom:20px;z-index:" + cfg.zIndex + ";font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;color:#172033}",
@@ -192,7 +202,7 @@
       '<section class="jw-panel" role="dialog" aria-modal="false" aria-label="' + esc(cfg.title) + '">' +
         '<header class="jw-head">' +
           '<div class="jw-avatar" aria-hidden="true">J</div>' +
-          '<div class="jw-head-text"><div class="jw-title">' + esc(cfg.title) + '</div><div class="jw-sub">' + esc(cfg.subtitle) + '</div></div>' +
+          '<div class="jw-head-text"><div class="jw-title">' + esc(cfg.title) + '</div>' + (cfg.subtitle ? '<div class="jw-sub">' + esc(cfg.subtitle) + '</div>' : '') + '</div>' +
           '<button class="jw-close" type="button" aria-label="Close chat">x</button>' +
         '</header>' +
         '<div class="jw-body">' +
@@ -218,7 +228,7 @@
         '</div>' +
       '</section>' +
       '<button class="jw-launcher" type="button" aria-label="Open support chat" aria-expanded="false">' +
-        '<svg class="jw-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7.5 18.5 4 21v-4.2A8.2 8.2 0 0 1 2.5 12C2.5 7 6.8 3 12 3s9.5 4 9.5 9-4.3 9-9.5 9a10.3 10.3 0 0 1-4.5-1.1Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 11.5h8M8 14.5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>' +
+        launcherIconHtml +
         '<span class="jw-badge"></span>' +
       '</button>' +
     '</div>';
