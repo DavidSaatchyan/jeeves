@@ -171,7 +171,7 @@ def on_startup() -> None:
 
 @app.get("/favicon.ico")
 async def favicon():
-    return FileResponse(Path(__file__).parent / "static" / "favicon.ico")
+    return FileResponse(Path(__file__).parent / "static" / "favicon-white.ico")
 
 @app.get("/health")
 def health() -> dict:

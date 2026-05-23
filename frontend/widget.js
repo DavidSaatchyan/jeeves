@@ -192,7 +192,7 @@
     '<div class="jw-wrap">' +
       '<section class="jw-panel" role="dialog" aria-modal="false" aria-label="' + esc(cfg.title) + '">' +
         '<header class="jw-head">' +
-          '<div class="jw-avatar" aria-hidden="true"><img src="' + BASE + '/static/logo-38x38.png" alt="" width="38" height="38"/></div>' +
+          '<div class="jw-avatar" aria-hidden="true"><img src="' + BASE + '/static/logo-white-38x38.png" alt="" width="38" height="38"/></div>' +
           '<div class="jw-head-text"><div class="jw-title">' + esc(cfg.title) + '</div><div class="jw-sub">' + esc(cfg.subtitle) + '</div></div>' +
           '<button class="jw-close" type="button" aria-label="Close chat">x</button>' +
         '</header>' +
