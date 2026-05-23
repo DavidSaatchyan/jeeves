@@ -13,12 +13,13 @@ from sqlalchemy.orm import Session
 
 from pydantic import BaseModel
 
-from .chunking import file_sha256, sanitize_filename
-from .auth import get_current_tenant
-from . import rag
-from .config import get_settings
-from .db import get_db, engine
-from .models import FileRecord, Tenant
+from ..chunking import file_sha256, sanitize_filename
+from ..auth import get_current_tenant
+from .. import rag
+from ..config import get_settings
+from ..db import get_db, engine
+from .catalog import import_catalog
+from ..models import FileRecord, ProductCatalog, Tenant
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +150,7 @@ async def chat(
     body: _ChatIn,
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    from . import rag
+    from .. import rag
     from openai import AsyncOpenAI
 
     import asyncio
@@ -241,3 +242,218 @@ def cleanup_chroma(
     d = rag.deduplicate_collection(tenant.id)
 
     return {"purge": p, "dedup": d}
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# Catalog endpoints
+# ══════════════════════════════════════════════════════════════════════════
+
+ALLOWED_CATALOG_EXT = {".csv", ".json", ".xlsx", ".xls"}
+
+
+@router.post("/catalog/upload", status_code=201)
+async def upload_catalog(
+    file: UploadFile = File(...),
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    """Upload a product catalog file (CSV, JSON, XLSX) and import products."""
+    original_filename = file.filename or "unnamed"
+    safe_filename = sanitize_filename(original_filename)
+    ext = Path(safe_filename).suffix.lower()
+    if ext not in ALLOWED_CATALOG_EXT:
+        raise HTTPException(400, f"Unsupported format {ext}. Allowed: {sorted(ALLOWED_CATALOG_EXT)}")
+
+    data = await file.read()
+    content_hash = file_sha256(data)
+    file_id = uuid.uuid4()
+    tenant_dir = _tenant_dir(tenant.id) / str(file_id)
+    tenant_dir.mkdir(parents=True, exist_ok=True)
+    dest = tenant_dir / safe_filename
+    dest.write_bytes(data)
+
+    # Parse and import
+    imported, errors, batch_id = import_catalog(tenant.id, dest, db)
+
+    # Record the file
+    rec = FileRecord(
+        id=file_id,
+        tenant_id=tenant.id,
+        filename=safe_filename,
+        s3_key=str(dest),
+        status="ready",
+        content_hash=content_hash,
+        size_bytes=len(data),
+        file_type="catalog",
+        metadata_schema={"columns": list(_catalog_columns(dest))},
+    )
+    db.add(rec)
+    db.commit()
+
+    return {
+        "file_id": str(file_id),
+        "filename": safe_filename,
+        "imported": imported,
+        "errors": errors,
+        "batch_id": batch_id,
+    }
+
+
+def _catalog_columns(path: Path) -> set[str]:
+    """Extract column names from a catalog file for metadata_schema."""
+    from .catalog import parse_catalog
+    products, _ = parse_catalog(path)
+    cols: set[str] = set()
+    for p in products:
+        cols.update(p.keys())
+    return cols
+
+
+@router.get("/catalog")
+def list_catalog(
+    q: str = "",
+    category: str | None = None,
+    in_stock: bool | None = None,
+    limit: int = 50,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    """List/search products in the catalog.
+
+    Supports optional text search via RAG (``q``), category filter,
+    and stock status filter.
+    """
+    query = db.query(ProductCatalog).filter(ProductCatalog.tenant_id == tenant.id, ProductCatalog.active)
+
+    if category:
+        query = query.filter(ProductCatalog.category == category)
+    if in_stock is not None:
+        stock_val = "in_stock" if in_stock else "out_of_stock"
+        query = query.filter(ProductCatalog.stock_status == stock_val)
+
+    query = query.order_by(ProductCatalog.name.asc()).limit(limit)
+    rows = query.all()
+
+    results = []
+    for r in rows:
+        results.append({
+            "id": str(r.id),
+            "product_id": r.product_id,
+            "name": r.name,
+            "description": r.description,
+            "category": r.category,
+            "price": r.price,
+            "currency": r.currency,
+            "attributes": r.attributes,
+            "stock_status": r.stock_status,
+            "image_url": r.image_url,
+            "product_url": r.product_url,
+            "active": r.active,
+            "import_batch": r.import_batch,
+            "created_at": _iso_utc(r.created_at),
+        })
+
+    # RAG search for semantic results if q is provided
+    rag_results = []
+    if q:
+        try:
+            chunks = rag.search(
+                tenant.id, q,
+                where={"type": "product"},
+                top_k=10,
+            )
+            seen_ids: set[str] = set()
+            for c in chunks:
+                pid = (c.get("metadata") or {}).get("product_id") or ""
+                if pid and pid not in seen_ids:
+                    seen_ids.add(pid)
+                    for r in rows:
+                        if r.product_id == pid:
+                            rag_results.append({
+                                "id": str(r.id),
+                                "product_id": r.product_id,
+                                "name": r.name,
+                                "score": c["score"],
+                            })
+                            break
+        except Exception as e:
+            logger.warning("catalog RAG search error: %s", e)
+
+    return {
+        "results": results,
+        "total": len(results),
+        "rag_matches": rag_results if q else [],
+    }
+
+
+@router.get("/catalog/{product_id}")
+def get_catalog_product(
+    product_id: uuid.UUID,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    """Get a single product by its UUID."""
+    rec = (
+        db.query(ProductCatalog)
+        .filter(ProductCatalog.id == product_id, ProductCatalog.tenant_id == tenant.id)
+        .first()
+    )
+    if not rec:
+        raise HTTPException(404, "Product not found")
+    return {
+        "id": str(rec.id),
+        "product_id": rec.product_id,
+        "name": rec.name,
+        "description": rec.description,
+        "category": rec.category,
+        "price": rec.price,
+        "currency": rec.currency,
+        "attributes": rec.attributes,
+        "stock_status": rec.stock_status,
+        "image_url": rec.image_url,
+        "product_url": rec.product_url,
+        "active": rec.active,
+        "import_batch": rec.import_batch,
+        "created_at": _iso_utc(rec.created_at),
+        "updated_at": _iso_utc(rec.updated_at),
+    }
+
+
+@router.delete("/catalog/{product_id}", status_code=204)
+def delete_catalog_product(
+    product_id: uuid.UUID,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    """Soft-delete a product by setting active=False."""
+    rec = (
+        db.query(ProductCatalog)
+        .filter(ProductCatalog.id == product_id, ProductCatalog.tenant_id == tenant.id)
+        .first()
+    )
+    if not rec:
+        raise HTTPException(404, "Product not found")
+    rec.active = False
+    db.commit()
+    return
+
+
+@router.delete("/catalog/batch/{import_batch}", status_code=204)
+def delete_catalog_batch(
+    import_batch: str,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    """Delete all products from a given import batch."""
+    count = (
+        db.query(ProductCatalog)
+        .filter(ProductCatalog.tenant_id == tenant.id, ProductCatalog.import_batch == import_batch)
+        .update({"active": False}, synchronize_session="fetch")
+    )
+    db.commit()
+
+    # Remove from Chroma
+    rag.delete_products_by_batch(tenant.id, import_batch)
+
+    logger.info("delete_catalog_batch: batch=%s deactivated=%d", import_batch, count)
+    return

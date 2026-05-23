@@ -61,6 +61,62 @@ class FileOut(BaseModel):
     id: UUID
     filename: str
     status: str
+    file_type: str = "document"
+
+
+class CatalogProductIn(BaseModel):
+    product_id: str
+    name: str
+    description: str = ""
+    category: str = ""
+    price: float | None = None
+    currency: str = "USD"
+    attributes: dict[str, Any] = {}
+    stock_status: str = "unknown"
+    image_url: str = ""
+    product_url: str = ""
+
+
+class CatalogProductOut(CatalogProductIn):
+    id: UUID
+    tenant_id: UUID
+    active: bool
+    import_batch: str
+    created_at: str
+    updated_at: str
+
+
+class CatalogUploadOut(BaseModel):
+    imported: int
+    errors: list[str] = []
+
+
+class CatalogQueryIn(BaseModel):
+    q: str = ""
+    category: str | None = None
+    in_stock: bool | None = None
+    limit: int = 20
+
+
+class CompatibilityRowIn(BaseModel):
+    source_product_id: str
+    target_product_id: str
+    source_product_name: str = ""
+    target_product_name: str = ""
+    relationship: str = "compatible_with"
+    condition: str = ""
+    notes: str = ""
+
+
+class CompatibilityRowOut(CompatibilityRowIn):
+    id: UUID
+    tenant_id: UUID
+    created_at: str
+
+
+class CompatibilityUploadOut(BaseModel):
+    imported: int
+    errors: list[str] = []
 
 
 class CustomerOut(BaseModel):

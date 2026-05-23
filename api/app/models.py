@@ -55,6 +55,61 @@ class FileRecord(Base):
     chunks_total = Column(Integer, default=0, nullable=False)
     size_bytes = Column(Integer, default=0, nullable=False)
     error = Column(Text)  # populated when status=failed
+    file_type = Column(String(32), default="document", nullable=False)  # document, catalog, compatibility
+    metadata_schema = Column(JSONB)  # CSV column mapping for structured imports
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class ProductCatalog(Base):
+    """Structured product catalog — source of truth for product data."""
+    __tablename__ = "product_catalog"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    product_id = Column(Text, nullable=False)  # external product ID (SKU, Shopify ID)
+    name = Column(Text, nullable=False)
+    description = Column(Text, default="")
+    category = Column(Text, default="")
+    price = Column(Integer, nullable=True)  # stored in cents (same as Invoice.amount_due)
+    currency = Column(String(8), default="USD")
+    attributes = Column(JSONB, default=dict)  # {"color": "red", "size": "M", "material": "cotton"}
+    stock_status = Column(String(16), default="unknown")  # in_stock, out_of_stock, limited, unknown
+    image_url = Column(Text, default="")
+    product_url = Column(Text, default="")
+    active = Column(Boolean, default=True, nullable=False)
+    import_batch = Column(Text, default="")
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class CatalogVariant(Base):
+    """Product variants — sizes, colors, SKU-level data."""
+    __tablename__ = "catalog_variants"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    product_id = Column(UUID(as_uuid=True), ForeignKey("product_catalog.id", ondelete="CASCADE"), nullable=False, index=True)
+    sku = Column(Text, nullable=False)
+    name = Column(Text, default="")
+    attributes = Column(JSONB, default=dict)
+    price = Column(Integer, nullable=True)
+    stock_status = Column(String(16), default="unknown")
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class Compatibility(Base):
+    """Compatibility table — model-to-model relationships."""
+    __tablename__ = "compatibility"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    source_product_id = Column(Text, nullable=False)
+    source_product_name = Column(Text, default="")
+    target_product_id = Column(Text, nullable=False)
+    target_product_name = Column(Text, default="")
+    relationship = Column(String(32), default="compatible_with")  # compatible_with, requires, optional_for
+    condition = Column(Text, default="")
+    notes = Column(Text, default="")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 

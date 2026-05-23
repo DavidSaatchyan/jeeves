@@ -1,5 +1,6 @@
 numpy<2
 fastapi>=0.115.0
+starlette>=0.40.0,<0.47.0
 uvicorn[standard]>=0.34.0
 SQLAlchemy>=2.0.36
 psycopg2-binary>=2.9.10
@@ -18,6 +19,7 @@ pypdf>=5.1.0
 tiktoken>=0.8.0
 jsonpath-ng>=1.7.0
 email-validator>=2.2.0
+pandas>=2.0.0
 stripe>=11.3.0
 cryptography>=44.0.0
 alembic>=1.13.0

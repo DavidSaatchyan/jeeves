@@ -1,0 +1,16 @@
+policies:
+  retry:
+    max_attempts: 3
+    retry_windows: [300, 3600, 86400]
+    cooldown_minutes: 5
+  communication:
+    max_outreach_per_workflow: 3
+    cooldown_between_messages: 24
+    allowed_channels: [email, widget]
+  escalation:
+    frustration_threshold: medium
+    max_failures_before_escalation: 3
+    sla_hours: 24
+  approval:
+    requires_approval: [discount, credit, refund]
+    allowed_save_actions: [pause, skip, delay]

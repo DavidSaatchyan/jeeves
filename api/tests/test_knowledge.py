@@ -416,3 +416,268 @@ class TestAuthGuard:
         with TestClient(app) as c:
             resp = c.post("/knowledge/cleanup")
         assert resp.status_code in (401, 403)
+
+
+# ══════════════════════════════════════════════════════════════════════
+# Catalog endpoint tests
+# ══════════════════════════════════════════════════════════════════════
+
+
+@pytest.fixture
+def mock_rag_index_products():
+    with patch("app.knowledge.rag.index_products", return_value=1) as m:
+        yield m
+
+
+@pytest.fixture
+def mock_rag_delete_batch():
+    with patch("app.knowledge.rag.delete_products_by_batch", return_value=1) as m:
+        yield m
+
+
+class TestCatalogUpload:
+    def test_upload_csv_success(self, client, mock_db, mock_chunking, mock_rag_index_products, tmp_path):
+        mock_db.add.return_value = None
+        mock_db.commit.return_value = None
+        csv_content = b"name,product_id,price,stock_status\nWidget Pro,WP-001,29.99,in_stock"
+        with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
+            resp = client.post(
+                "/knowledge/catalog/upload",
+                files={"file": ("products.csv", io.BytesIO(csv_content), "text/csv")},
+            )
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["imported"] == 1
+        assert len(data["errors"]) == 0
+        assert "batch_id" in data
+        assert data["filename"] == "products.csv"
+
+    def test_upload_json_success(self, client, mock_db, mock_chunking, mock_rag_index_products, tmp_path):
+        mock_db.add.return_value = None
+        mock_db.commit.return_value = None
+        json_content = b'[{"name":"Widget","product_id":"W1","price":19.99}]'
+        with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
+            resp = client.post(
+                "/knowledge/catalog/upload",
+                files={"file": ("products.json", io.BytesIO(json_content), "application/json")},
+            )
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["imported"] == 1
+
+    def test_upload_unsupported_extension(self, client, mock_db, mock_chunking):
+        resp = client.post(
+            "/knowledge/catalog/upload",
+            files={"file": ("products.exe", io.BytesIO(b"data"), "application/octet-stream")},
+        )
+        assert resp.status_code == 400
+        assert "Unsupported" in resp.text
+
+    def test_upload_creates_filerecord(self, client, mock_db, mock_chunking, mock_rag_index_products, tmp_path):
+        mock_db.add.return_value = None
+        mock_db.commit.return_value = None
+        csv_content = b"name,price\nWidget,9.99"
+        with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
+            resp = client.post(
+                "/knowledge/catalog/upload",
+                files={"file": ("cat.csv", io.BytesIO(csv_content), "text/csv")},
+            )
+        assert resp.status_code == 201
+
+        # Verify FileRecord was created with correct type
+        add_calls = [c for c in mock_db.add.call_args_list if c[0][0].__class__.__name__ == "FileRecord"]
+        assert len(add_calls) >= 1
+        rec = add_calls[0][0][0]
+        assert rec.file_type == "catalog"
+
+    def test_upload_empty_csv(self, client, mock_db, mock_chunking, tmp_path):
+        mock_db.add.return_value = None
+        mock_db.commit.return_value = None
+        with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
+            resp = client.post(
+                "/knowledge/catalog/upload",
+                files={"file": ("empty.csv", io.BytesIO(b"name,price\n"), "text/csv")},
+            )
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["imported"] == 0
+        assert "No products found" in str(data["errors"])
+
+    def test_upload_with_parse_errors(self, client, mock_db, mock_chunking, mock_rag_index_products, tmp_path):
+        mock_db.add.return_value = None
+        mock_db.commit.return_value = None
+        csv_content = b"name,price\n,10.99\nWidget,not_a_number\nGadget,20.99"
+        with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
+            resp = client.post(
+                "/knowledge/catalog/upload",
+                files={"file": ("partial.csv", io.BytesIO(csv_content), "text/csv")},
+            )
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["imported"] == 2  # 2 valid products
+        assert len(data["errors"]) == 2  # 2 errors
+
+
+class TestCatalogList:
+    def _build_query_mock(self, result):
+        """Build a self-returning query mock chain.
+        The endpoint calls: query.filter(a, b) [.filter(c)] .order_by().limit().all()
+        """
+        q = MagicMock()
+        q.filter.return_value = q
+        q.order_by.return_value = q
+        q.limit.return_value = q
+        q.all.return_value = result
+        return q
+
+    def test_list_empty(self, client, mock_db, mock_rag):
+        mock_db.query.return_value = self._build_query_mock([])
+        resp = client.get("/knowledge/catalog")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["total"] == 0
+        assert data["results"] == []
+
+    def test_list_with_products(self, client, mock_db, mock_rag):
+        from datetime import datetime
+        from app.models import ProductCatalog
+
+        p1 = ProductCatalog(
+            id=uuid4(), tenant_id=uuid4(), product_id="P1", name="Alpha",
+            category="A", price=1999, currency="USD", stock_status="in_stock",
+            active=True, import_batch="b1",
+            created_at=datetime(2025, 1, 1),
+        )
+        p2 = ProductCatalog(
+            id=uuid4(), tenant_id=uuid4(), product_id="P2", name="Beta",
+            category="B", price=2999, currency="USD", stock_status="out_of_stock",
+            active=True, import_batch="b1",
+            created_at=datetime(2025, 1, 2),
+        )
+
+        mock_db.query.return_value = self._build_query_mock([p1, p2])
+        resp = client.get("/knowledge/catalog")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["total"] == 2
+        assert data["results"][0]["name"] == "Alpha"
+        assert data["results"][1]["name"] == "Beta"
+
+    def test_list_filter_by_category(self, client, mock_db, mock_rag):
+        from app.models import ProductCatalog
+        p = ProductCatalog(id=uuid4(), tenant_id=uuid4(), product_id="P1", name="X",
+                           category="Electronics", active=True,
+                           created_at=__import__("datetime").datetime(2025, 1, 1))
+        mock_db.query.return_value = self._build_query_mock([p])
+
+        resp = client.get("/knowledge/catalog?category=Electronics")
+        assert resp.status_code == 200
+        assert resp.json()["total"] == 1
+
+    def test_list_filter_by_stock(self, client, mock_db, mock_rag):
+        from app.models import ProductCatalog
+        p = ProductCatalog(id=uuid4(), tenant_id=uuid4(), product_id="P1", name="X",
+                           stock_status="in_stock", active=True,
+                           created_at=__import__("datetime").datetime(2025, 1, 1))
+        mock_db.query.return_value = self._build_query_mock([p])
+
+        resp = client.get("/knowledge/catalog?in_stock=true")
+        assert resp.status_code == 200
+        assert resp.json()["total"] == 1
+
+
+class TestCatalogGetProduct:
+    def test_get_existing(self, client, mock_db, mock_rag):
+        from datetime import datetime
+        from app.models import ProductCatalog
+
+        pid = uuid4()
+        p = ProductCatalog(
+            id=pid, tenant_id=uuid4(), product_id="P1", name="Widget",
+            price=2999, active=True, created_at=datetime(2025, 1, 1),
+            updated_at=datetime(2025, 1, 2),
+        )
+        mock_db.query.return_value.filter.return_value.first.return_value = p
+
+        resp = client.get(f"/knowledge/catalog/{pid}")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["name"] == "Widget"
+        assert data["price"] == 2999
+
+    def test_get_not_found(self, client, mock_db, mock_rag):
+        mock_db.query.return_value.filter.return_value.first.return_value = None
+        resp = client.get(f"/knowledge/catalog/{uuid4()}")
+        assert resp.status_code == 404
+
+
+class TestCatalogDeleteProduct:
+    def test_delete_existing(self, client, mock_db, mock_rag):
+        from app.models import ProductCatalog
+        pid = uuid4()
+        rec = ProductCatalog(id=pid, tenant_id=uuid4(), product_id="P1", name="X", active=True)
+        mock_db.query.return_value.filter.return_value.first.return_value = rec
+
+        resp = client.delete(f"/knowledge/catalog/{pid}")
+        assert resp.status_code == 204
+        assert rec.active is False
+        mock_db.commit.assert_called_once()
+
+    def test_delete_not_found(self, client, mock_db, mock_rag):
+        mock_db.query.return_value.filter.return_value.first.return_value = None
+        resp = client.delete(f"/knowledge/catalog/{uuid4()}")
+        assert resp.status_code == 404
+
+
+class TestCatalogDeleteBatch:
+    def test_delete_batch(self, client, mock_db, mock_rag_delete_batch, mock_rag):
+        # mock_db.query.return_value... is chained. We need to set up the update mock
+        mock_query = MagicMock()
+        mock_db.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.update.return_value = 3  # 3 rows affected
+
+        resp = client.delete("/knowledge/catalog/batch/my_batch_1")
+        assert resp.status_code == 204
+        mock_rag_delete_batch.assert_called_once_with(ANY, "my_batch_1")
+
+    def test_delete_nonexistent_batch(self, client, mock_db, mock_rag_delete_batch, mock_rag):
+        mock_query = MagicMock()
+        mock_db.query.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.update.return_value = 0
+
+        resp = client.delete("/knowledge/catalog/batch/nonexistent")
+        assert resp.status_code == 204
+
+
+class TestCatalogAuthGuard:
+    def test_upload_requires_auth(self, app):
+        app.dependency_overrides.clear()
+        with TestClient(app) as c:
+            resp = c.post("/knowledge/catalog/upload", files={"file": ("t.csv", io.BytesIO(b"data"), "text/csv")})
+        assert resp.status_code in (401, 403)
+
+    def test_list_requires_auth(self, app):
+        app.dependency_overrides.clear()
+        with TestClient(app) as c:
+            resp = c.get("/knowledge/catalog")
+        assert resp.status_code in (401, 403)
+
+    def test_get_requires_auth(self, app):
+        app.dependency_overrides.clear()
+        with TestClient(app) as c:
+            resp = c.get(f"/knowledge/catalog/{uuid4()}")
+        assert resp.status_code in (401, 403)
+
+    def test_delete_product_requires_auth(self, app):
+        app.dependency_overrides.clear()
+        with TestClient(app) as c:
+            resp = c.delete(f"/knowledge/catalog/{uuid4()}")
+        assert resp.status_code in (401, 403)
+
+    def test_delete_batch_requires_auth(self, app):
+        app.dependency_overrides.clear()
+        with TestClient(app) as c:
+            resp = c.delete("/knowledge/catalog/batch/test")
+        assert resp.status_code in (401, 403)
