@@ -63,13 +63,13 @@
     <div id="procMsg" class="kb-proc"><span class="kb-spinner"></span> Processing...</div>
   </div>
 
-  <script async src="{{ public_base_url }}/widget.js"
-    data-tenant-id="{{ tenant_id }}"
-    data-email-required="false"
-    data-title="Knowledge base"
-    data-greeting="Ask any question about your uploaded documents..."
-    data-channel="test_widget"
-  ></script>
+  <jeeves-widget
+    tenant="{{ tenant_id }}"
+    email-required="false"
+    title="Knowledge base"
+    greeting="Ask any question about your uploaded documents..."
+    channel="test_widget"
+  ></jeeves-widget>
 </div>
 
 <!-- ═══════════════ CATALOG PANEL ═══════════════ -->
@@ -451,4 +451,5 @@ async function deleteCatalogFile(btn){
 
 refresh();
 </script>
+<script defer src="{{ public_base_url }}/widget.js"></script>
 {% endblock %}

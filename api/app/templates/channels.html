@@ -36,13 +36,13 @@
         <label>Widget title</label>
         <input id="wTitle" type="text" value="Jeeves support"/>
         <label>Subtitle</label>
-        <input id="wSubtitle" type="text" value="AI agent online"/>
+        <input id="wSubtitle" type="text" value=""/>
         <label>Greeting</label>
         <input id="wGreeting" type="text" value="Hi. How can I help?"/>
       </div>
       <div>
         <label>Accent color</label>
-        <input id="wAccent" type="text" value="#2563eb"/>
+        <input id="wAccent" type="text" value="#5e6ad2"/>
         <label>Position</label>
         <select id="wPosition">
           <option value="right">Right</option>
@@ -163,11 +163,6 @@ var tid = tenantId() || 'YOUR_TENANT_ID';
 var base = '{{ public_base_url }}';
 var wFields = ['wTitle','wSubtitle','wGreeting','wAccent','wPosition','wEmail'];
 
-function htmlAttr(v){ return String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-function attr(name, value, defaultValue){
-  if(!value || value===defaultValue) return '';
-  return '\n  '+name+'="'+htmlAttr(value)+'"';
-}
 function buildSnippet(){
   var title = document.getElementById('wTitle').value.trim();
   var subtitle = document.getElementById('wSubtitle').value.trim();
@@ -177,7 +172,19 @@ function buildSnippet(){
   var email = document.getElementById('wEmail').value;
   var el = document.getElementById('snippet');
   if(!el) return;
-  el.textContent = '<script async\n  src="'+base+'/widget.js"\n  data-tenant-id="'+tid+'"'+attr('data-title',title,'Jeeves support')+attr('data-subtitle',subtitle,'AI agent online')+attr('data-greeting',greeting,'Hi. How can I help?')+attr('data-accent',accent,'#2563eb')+attr('data-position',position,'right')+attr('data-email-required',email,'true')+'><\/script>';
+
+  function wAttr(name, fallback, value){
+    return value && value !== fallback ? '\n  '+name+'="'+esc(value)+'"' : '';
+  }
+
+  el.textContent = '<jeeves-widget\n  tenant="'+tid+'"'
+    + wAttr('title', 'Jeeves support', title)
+    + wAttr('subtitle', '', subtitle)
+    + wAttr('greeting', 'Hi. How can I help?', greeting)
+    + wAttr('accent', '#5e6ad2', accent)
+    + wAttr('position', 'right', position)
+    + wAttr('email-required', 'true', email)
+    + '></jeeves-widget>\n<script defer src="'+base+'/widget.js"><\/script>';
 }
 wFields.forEach(function(id){
   var el = document.getElementById(id);
