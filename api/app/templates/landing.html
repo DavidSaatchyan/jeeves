@@ -32,8 +32,8 @@
 
     /* NAV */
     nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 40px; position: fixed; top: 0; width: 100%; z-index: 100; backdrop-filter: blur(24px); background: rgba(10,10,11,0.85); border-bottom: 1px solid var(--border); }
-    .logo { font-size: 15px; font-weight: 700; letter-spacing: -.2px; display: flex; align-items: center; gap: 8px; }
-    .logo-img { width: 64px; height: 64px; border-radius: 10px; }
+    .logo { font-size: 15px; font-weight: 700; letter-spacing: -.2px; display: flex; align-items: center; }
+    .logo-img { width: 64px; height: 64px; border-radius: 10px; margin-right: 6px; }
     .nav-links { display: flex; gap: 28px; align-items: center; }
     .nav-links a { color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 500; transition: color .15s; }
     .nav-links a:hover { color: var(--text); }
@@ -673,7 +673,7 @@ footer .footer-copy { color: var(--muted2); font-size: 10px; }
 <body>
 
 <nav>
-    <div class="logo"><img src="/static/logo.png" alt="" class="logo-img"/> Jeeves</div>
+    <div class="logo"><img src="/static/logo.png" alt="" class="logo-img"/>Jeeves</div>
   <div class="nav-links">
     <a href="#how">How it works</a>
     <a href="#pricing">Pricing</a>
