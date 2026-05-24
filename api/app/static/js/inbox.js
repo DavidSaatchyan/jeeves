@@ -159,13 +159,13 @@ document.addEventListener('keydown', function(e){
 });
 
 // ── Conversation list ──
-function loadConversations(){
+function loadConversations(silent){
   var q = document.getElementById('filterSearch').value;
   var params = '?limit=50&offset=0';
   if(currentStatusFilter) params += '&status=' + encodeURIComponent(currentStatusFilter);
   if(q) params += '&q=' + encodeURIComponent(q);
   var list = document.getElementById('convItems');
-  list.innerHTML = '<div class="inbox-loading">Loading</div>';
+  if(!silent) list.innerHTML = '<div class="inbox-loading">Loading</div>';
   api('/admin/api/inbox/conversations' + params).then(function(data){
     convData = data.conversations||[];
     var html = '';
@@ -195,33 +195,31 @@ function loadConversations(){
   }).catch(function(){});
 }
 
+function renderDetailHeader(c){
+  var name = (c.customer&&c.customer.display_name) || c.customer?.email || 'Unknown';
+  var statusClass = c.status === 'handoff_requested' ? 'handoff_requested' : c.status;
+  var a = '';
+  if (c.status === 'active' || c.status === 'waiting' || c.status === 'handoff_requested') a += '<button onclick="takeoverConv()">Take over</button>';
+  if (c.status === 'assigned' && c.assigned_to) a += '<button onclick="returnToAi()">Return to AI</button>';
+  if (c.status !== 'closed') a += '<button onclick="closeConv()">Close</button>';
+  document.getElementById('detailHeader').innerHTML =
+    '<div class="info">' +
+      '<div class="info-left">' +
+        '<span class="status-dot ' + statusClass + '"></span>' +
+        '<span class="name">' + esc(name) + '</span>' +
+      '</div>' +
+      '<div class="meta">' + esc(c.channel) + (c.assigned_to ? ' \u00b7 ' + esc(c.assigned_to) : '') + '</div>' +
+    '</div>' +
+    '<div class="actions">' + a + '</div>';
+}
+
 function selectConv(id){
   selectedConv = { id: id };
-  loadConversations();
+  loadConversations(true);
   api('/admin/api/inbox/conversations/' + id + '/read', {method:'POST'}).catch(function(){});
   api('/admin/api/inbox/conversations/' + id).then(function(c){
     selectedConvDetail = c;
-    var name = (c.customer&&c.customer.display_name) || c.customer?.email || 'Unknown';
-    var statusClass = c.status === 'handoff_requested' ? 'handoff_requested' : c.status;
-    var actionsHtml = '';
-    if (c.status === 'active' || c.status === 'waiting' || c.status === 'handoff_requested') {
-      actionsHtml += '<button onclick="takeoverConv()">Take over</button>';
-    }
-    if (c.status === 'assigned' && c.assigned_to) {
-      actionsHtml += '<button onclick="returnToAi()">Return to AI</button>';
-    }
-    if (c.status !== 'closed') {
-      actionsHtml += '<button onclick="closeConv()">Close</button>';
-    }
-    document.getElementById('detailHeader').innerHTML =
-      '<div class="info">' +
-        '<div class="info-left">' +
-          '<span class="status-dot ' + statusClass + '"></span>' +
-          '<span class="name">' + esc(name) + '</span>' +
-        '</div>' +
-        '<div class="meta">' + esc(c.channel) + (c.assigned_to ? ' \u00b7 ' + esc(c.assigned_to) : '') + '</div>' +
-      '</div>' +
-      '<div class="actions">' + actionsHtml + '</div>';
+    renderDetailHeader(c);
     loadMessages(id);
     loadNotes(id);
     loadCustomerProfile(c);
@@ -380,7 +378,7 @@ function sendReply(){
     input.value = '';
     if(btn) btn.disabled = false;
     loadMessages(selectedConv.id);
-    loadConversations();
+    loadConversations(true);
   }).catch(function(e){
     if(btn) btn.disabled = false;
     toast(e.message);
@@ -390,16 +388,22 @@ function sendReply(){
 function takeoverConv(){
   if(!selectedConv) return;
   api('/admin/api/inbox/conversations/' + selectedConv.id + '/takeover', {method:'POST', body:{reason:'operator_takeover'}}).then(function(){
-    selectConv(selectedConv.id);
-    loadConversations();
+    loadConversations(true);
+    api('/admin/api/inbox/conversations/' + selectedConv.id).then(function(c){
+      selectedConvDetail = c;
+      renderDetailHeader(c);
+    });
   }).catch(function(e){ toast(e.message); });
 }
 
 function returnToAi(){
   if(!selectedConv) return;
   api('/admin/api/inbox/conversations/' + selectedConv.id + '/return-to-ai', {method:'POST'}).then(function(){
-    selectConv(selectedConv.id);
-    loadConversations();
+    loadConversations(true);
+    api('/admin/api/inbox/conversations/' + selectedConv.id).then(function(c){
+      selectedConvDetail = c;
+      renderDetailHeader(c);
+    });
   }).catch(function(e){ toast(e.message); });
 }
 
@@ -411,7 +415,7 @@ function closeConv(){
     selectedConvDetail = null;
     document.getElementById('emptyState').style.display = 'flex';
     document.getElementById('messagesArea').style.display = 'none';
-    loadConversations();
+    loadConversations(true);
   }).catch(function(e){ toast(e.message); });
 }
 
