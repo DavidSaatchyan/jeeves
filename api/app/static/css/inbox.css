@@ -2,25 +2,32 @@
    Inbox — Front-inspired Redesign
    ═══════════════════════════════════════════════════ */
 
-/* ── Layout ── */
-#inboxApp { height: calc(100vh - 56px); display: flex; }
-.inbox-layout { display: flex; flex: 1; height: 100%; }
+/* ── Root layout fix ──
+   Inbox is rendered inside <main> which has inline padding.
+   Override it when inbox is present. */
+body:has(#inboxApp) main {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+#inboxApp { height: 100%; display: flex; }
+.inbox-layout { display: flex; flex: 1; min-height: 0; }
 
 /* ── Left Panel ── */
 .inbox-list { width: 280px; min-width: 280px; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--surface); }
 
-.inbox-list-header { display: flex; align-items: center; gap: 8px; padding: 16px 14px 6px; }
+.inbox-list-header { display: flex; align-items: center; gap: 8px; padding: 16px 14px 6px; flex-shrink: 0; }
 .inbox-list-header h2 { font-size: 15px; font-weight: 700; margin: 0; }
 .inbox-badge { font-size: 10px; padding: 1px 7px; border-radius: 10px; background: var(--accent); color: #fff; font-weight: 600; }
 
 /* Search */
-.inbox-search-wrap { padding: 0 14px 6px; position: relative; }
+.inbox-search-wrap { padding: 0 14px 6px; position: relative; flex-shrink: 0; }
 .inbox-search-wrap input { width: 100%; padding: 7px 10px 7px 28px; font-size: 12px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; outline: none; box-sizing: border-box; transition: border-color .15s; }
 .inbox-search-wrap input:focus { border-color: var(--accent); }
 .inbox-search-icon { position: absolute; left: 21px; top: 50%; transform: translateY(-50%); font-size: 12px; opacity: .45; pointer-events: none; line-height: 1; }
 
 /* Status tabs */
-.inbox-status-tabs { display: flex; gap: 2px; padding: 0 14px 8px; flex-wrap: wrap; }
+.inbox-status-tabs { display: flex; gap: 2px; padding: 0 14px 8px; flex-wrap: wrap; flex-shrink: 0; }
 .inbox-status-tab { font-size: 11px; padding: 3px 10px; border-radius: 12px; background: none; border: none; color: var(--muted2); cursor: pointer; font-weight: 500; transition: background .12s, color .12s; }
 .inbox-status-tab:hover { background: rgba(255,255,255,0.04); color: var(--text); }
 .inbox-status-tab.active { background: rgba(94,106,210,0.1); color: var(--accent); }
@@ -28,7 +35,7 @@
 /* Conversation list */
 .inbox-convs { flex: 1; overflow-y: auto; padding: 0 6px; }
 
-.inbox-conv { display: flex; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer; transition: background .1s; align-items: flex-start; position: relative; }
+.inbox-conv { display: flex; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer; transition: background .1s; align-items: flex-start; }
 .inbox-conv:hover { background: rgba(255,255,255,0.03); }
 .inbox-conv.active { background: rgba(94,106,210,0.08); }
 .inbox-conv + .inbox-conv { border-top: 1px solid rgba(255,255,255,0.03); }
@@ -44,13 +51,14 @@
 
 /* Status dots */
 .status-dot { width: 8px; height: 8px; min-width: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.inbox-conv .status-dot { margin-top: 6px; }
 .status-dot.active { background: var(--green); }
 .status-dot.waiting { background: var(--amber); }
 .status-dot.handoff_requested { background: var(--red); }
 .status-dot.assigned { background: var(--accent); }
 .status-dot.closed { background: var(--muted2); }
 
-.inbox-pagination { padding: 6px 14px; font-size: 10px; color: var(--muted2); text-align: center; border-top: 1px solid var(--border); }
+.inbox-pagination { padding: 6px 14px; font-size: 10px; color: var(--muted2); text-align: center; flex-shrink: 0; border-top: 1px solid var(--border); }
 
 /* ── Center Panel ── */
 .inbox-detail { flex: 1; display: flex; flex-direction: column; background: var(--bg); min-width: 0; position: relative; }
@@ -60,11 +68,11 @@
 .inbox-empty p { font-size: 13px; margin: 0; color: var(--muted2); }
 
 /* Detail header */
-.inbox-detail-header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; min-height: 48px; }
+.inbox-detail-header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; min-height: 48px; box-sizing: border-box; }
 .inbox-detail-header .info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
 .inbox-detail-header .info-left { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
 .inbox-detail-header .name { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.inbox-detail-header .meta { font-size: 11px; color: var(--muted2); white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+.inbox-detail-header .meta { font-size: 11px; color: var(--muted2); white-space: nowrap; display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .inbox-detail-header .actions { display: flex; gap: 4px; flex-shrink: 0; }
 .inbox-detail-header .actions button { font-size: 11px; padding: 4px 10px; border-radius: 5px; background: none; border: 1px solid var(--border); color: var(--muted); cursor: pointer; transition: background .12s, color .12s, border-color .12s; }
 .inbox-detail-header .actions button:hover { background: rgba(255,255,255,0.04); color: var(--text); border-color: var(--muted2); }
@@ -107,7 +115,7 @@
 
 /* Canned popup */
 .canned-popup { position: absolute; bottom: 100%; left: 12px; right: 12px; max-height: 300px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 -4px 20px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; z-index: 100; }
-.canned-header { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--muted2); text-transform: uppercase; letter-spacing: .4px; }
+.canned-header { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--muted2); text-transform: uppercase; letter-spacing: .4px; flex-shrink: 0; }
 .canned-header .ghost { margin-left: auto; font-size: 10px; padding: 2px 7px; border-radius: 4px; background: none; border: 1px solid var(--border); color: var(--muted2); cursor: pointer; }
 .canned-header .ghost:hover { color: var(--text); border-color: var(--muted2); }
 .canned-list { overflow-y: auto; flex: 1; }
@@ -121,9 +129,9 @@
 /* ── Right Panel: Profile ── */
 .inbox-profile { position: absolute; top: 0; right: 0; bottom: 0; width: 280px; border-left: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; overflow-y: auto; z-index: 50; box-shadow: -4px 0 16px rgba(0,0,0,0.2); animation: slideIn .15s ease; }
 @keyframes slideIn { from { transform: translateX(16px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-@media (min-width: 1200px) { .inbox-profile { position: static; box-shadow: none; animation: none; } }
+@media (min-width: 1200px) { .inbox-messages { margin-right: 280px; } .inbox-profile { box-shadow: none; animation: none; } }
 
-.profile-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.profile-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .profile-avatar { width: 36px; height: 36px; min-width: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; }
 .profile-header .info { flex: 1; min-width: 0; }
 .profile-header .name { font-size: 14px; font-weight: 600; }
@@ -135,9 +143,8 @@
 .profile-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 14px; }
 .profile-section h4 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted2); margin: 0 0 6px; }
 .profile-section .row { font-size: 12px; color: var(--text); padding: 3px 0; display: flex; justify-content: space-between; align-items: center; }
-.profile-section .row .label { color: var(--muted2); flex-shrink: 0; }
+.profile-section .row .label { color: var(--muted2); }
 .profile-section .row .value { font-weight: 500; text-align: right; }
-.profile-divider { height: 1px; background: var(--border); margin: 2px 0; }
 
 .risk-low { color: var(--green); }
 .risk-medium { color: var(--amber); }
