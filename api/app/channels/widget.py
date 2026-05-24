@@ -198,8 +198,20 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
     if log.channel != "test_widget":
         tenant.dialogs_used += 1
         tenant.resolved_count += 1
-    if intent != "wismo":
-        add_message(db, conv, "outgoing", result["response"], sender_type="bot")
+    if intent == "wismo":
+        # Mark all outgoing messages as delivered — they're returned in the POST response
+        undelivered = db.execute(
+            select(Message).where(
+                Message.conversation_id == conv.id,
+                Message.direction == "outgoing",
+                Message.delivered == False,
+            )
+        ).scalars().all()
+        for m in undelivered:
+            m.delivered = True
+    else:
+        m = add_message(db, conv, "outgoing", result["response"], sender_type="bot")
+        m.delivered = True
     db.commit()
 
     return ChatOut(

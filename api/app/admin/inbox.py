@@ -405,6 +405,21 @@ def send_message(
     )
     if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found")
+
+    # Dedup: prevent double-send from double-click within 2s window
+    recent = db.scalar(
+        select(Message).where(
+            Message.conversation_id == conv.id,
+            Message.direction == "outgoing",
+            Message.sender_type == "operator",
+            Message.content == content,
+            Message.created_at >= datetime.utcnow() - timedelta(seconds=2),
+        ).order_by(Message.created_at.desc())
+    )
+    if recent:
+        db.refresh(recent)
+        return MessageOut.model_validate(recent).model_dump()
+
     msg = add_message(
         db=db,
         conversation=conv,

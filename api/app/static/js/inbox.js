@@ -372,13 +372,19 @@ function addNote(){
 
 function sendReply(){
   var input = document.getElementById('replyInput');
+  var btn = document.querySelector('.inbox-reply button.accent');
   var content = input.value.trim();
   if(!content || !selectedConv) return;
+  if(btn) btn.disabled = true;
   api('/admin/api/inbox/messages/send', {method:'POST', body:{conversation_id: selectedConv.id, content: content}}).then(function(){
     input.value = '';
+    if(btn) btn.disabled = false;
     loadMessages(selectedConv.id);
     loadConversations();
-  }).catch(function(e){ toast(e.message); });
+  }).catch(function(e){
+    if(btn) btn.disabled = false;
+    toast(e.message);
+  });
 }
 
 function takeoverConv(){

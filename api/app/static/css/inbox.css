@@ -116,6 +116,7 @@
 .inbox-reply input:focus { border-color: var(--accent); }
 .inbox-reply button.accent { padding: 8px 16px; font-size: 12px; font-weight: 600; background: var(--accent); color: #fff; border: none; border-radius: 8px; cursor: pointer; }
 .inbox-reply button.accent:hover { opacity: .85; }
+.inbox-reply button.accent:disabled { opacity: .5; cursor: default; }
 
 /* Canned popup */
 .canned-popup { position: absolute; bottom: 100%; left: 12px; right: 12px; max-height: 300px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 -4px 20px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; z-index: 100; }
