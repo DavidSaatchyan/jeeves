@@ -15,6 +15,7 @@ from .models import ChatLog, Tenant
 from .moderation import moderate
 from .rate_limit import check_rate_limit
 from .schemas import ChatIn, ChatOut
+from .shared.inbox_writer import add_message, get_or_create_conversation
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,9 @@ async def chat(body: ChatIn, request: Request, tenant: Tenant = Depends(get_curr
         session_id=session_id,
     )
     db.add(log)
+
+    conv = get_or_create_conversation(db, tenant.id, body.user_id, channel="web_widget", user_display_name=body.user_id)
+    add_message(db, conv, "incoming", body.message, sender_type="customer")
     db.commit()
 
     result = await simple_llm_response(tenant.id, body.message)
@@ -55,6 +59,7 @@ async def chat(body: ChatIn, request: Request, tenant: Tenant = Depends(get_curr
     log.session_id = session_id
     tenant.dialogs_used += 1
     tenant.resolved_count += 1
+    add_message(db, conv, "outgoing", result["response"], sender_type="bot")
     db.commit()
 
     # Fire outgoing webhooks for configured events

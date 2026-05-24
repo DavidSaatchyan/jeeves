@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from ..db import SessionLocal
 from ..models import ChannelConfig, ChatLog, Tenant
+from ..shared.inbox_writer import add_message, get_or_create_conversation
 
 
 WHATSAPP_API = "https://graph.facebook.com/v17.0/{phone_number_id}/messages"
@@ -120,6 +121,10 @@ async def handle_webhook(body: dict) -> dict:
                         channel="whatsapp",
                     )
                     db.add(log)
+
+                    contact_name = value.get("contacts", [{}])[0].get("profile", {}).get("name") if value.get("contacts") else None
+                    conv = get_or_create_conversation(db, tenant.id, wa_id, channel="whatsapp", user_display_name=contact_name)
+                    add_message(db, conv, "incoming", text, sender_type="customer")
                     db.commit()
 
                     result = await agent.run(db, tenant.id, wa_id, text, session_id=session_id, extra_fields={"channel": "whatsapp"})
@@ -133,6 +138,7 @@ async def handle_webhook(body: dict) -> dict:
                     tenant.dialogs_used += 1
                     if not result["escalated"]:
                         tenant.resolved_count += 1
+                    add_message(db, conv, "outgoing", result["response"], sender_type="bot")
                     db.commit()
 
                     if result["response"]:

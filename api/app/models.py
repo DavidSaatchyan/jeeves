@@ -1,6 +1,7 @@
 """ORM models matching the spec (5.5 Data schemas)."""
 from __future__ import annotations
 
+import enum
 import uuid
 from datetime import datetime, timedelta
 
@@ -8,7 +9,9 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
+    Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -200,6 +203,118 @@ class ApiKey(Base):
 
 
 # ═══════════════════════════════════════════════════════════════
+# Inbox / Operations Center Models
+# ═══════════════════════════════════════════════════════════════
+
+
+class ConversationState(str, enum.Enum):
+    ACTIVE = "active"
+    WAITING = "waiting"
+    HANDOFF_REQUESTED = "handoff_requested"
+    ASSIGNED = "assigned"
+    CLOSED = "closed"
+
+
+class Conversation(Base):
+    """A customer conversation — the core inbox entity."""
+    __tablename__ = "conversations"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
+
+    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=True, index=True)
+    user_id = Column(Text, nullable=False, index=True)
+    user_display_name = Column(Text, nullable=True)
+    channel = Column(String(32), nullable=False, default="web_widget")
+
+    status = Column(String(32), nullable=False, default=ConversationState.ACTIVE.value, index=True)
+    assigned_to = Column(Text, nullable=True)
+    assigned_at = Column(DateTime, nullable=True)
+
+    workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id"), nullable=True)
+    workflow_type = Column(String(64), nullable=True)
+    escalation_id = Column(UUID(as_uuid=True), ForeignKey("escalations.id"), nullable=True)
+
+    started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    last_message_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    closed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    last_message_preview = Column(Text, nullable=True)
+    message_count = Column(Integer, default=0, nullable=False)
+    unread_count = Column(Integer, default=0, nullable=False)
+
+    __table_args__ = (
+        Index("ix_conversations_tenant_status", "tenant_id", "status"),
+        Index("ix_conversations_tenant_user", "tenant_id", "user_id"),
+    )
+
+
+class MessageDirection(str, enum.Enum):
+    INCOMING = "incoming"
+    OUTGOING = "outgoing"
+    NOTE = "note"
+
+
+class Message(Base):
+    """A single message in a conversation."""
+    __tablename__ = "messages"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
+    conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.id"), nullable=False, index=True)
+
+    direction = Column(String(16), nullable=False)
+    content = Column(Text, nullable=False)
+    content_type = Column(String(32), default="text")
+
+    sender_type = Column(String(16), nullable=False, default="customer")
+    operator_id = Column(Text, nullable=True)
+
+    workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id"), nullable=True)
+    workflow_state = Column(String(64), nullable=True)
+
+    sources = Column(JSONB, nullable=True)
+    confidence = Column(Float, nullable=True)
+
+    delivered = Column(Boolean, default=False)
+    read_at = Column(DateTime, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    __table_args__ = (
+        Index("ix_messages_conversation_created", "conversation_id", "created_at"),
+    )
+
+
+class OperatorNote(Base):
+    """Internal operator notes attached to conversations."""
+    __tablename__ = "operator_notes"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
+    conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.id"), nullable=False, index=True)
+    content = Column(Text, nullable=False)
+    operator_id = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class CannedResponse(Base):
+    """Saved reply templates for operator use."""
+    __tablename__ = "canned_responses"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
+    title = Column(String(128), nullable=False)
+    content = Column(Text, nullable=False)
+    shortcut = Column(String(32), nullable=True)
+    category = Column(String(64), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+# ═══════════════════════════════════════════════════════════════
 # v2 Workflow Domain Models
 # ═══════════════════════════════════════════════════════════════
 
@@ -215,11 +330,27 @@ class Customer(Base):
     shopify_customer_id = Column(Text)
     stripe_customer_id = Column(Text)
     recharge_customer_id = Column(Text)
+
+    # Profile
+    display_name = Column(Text, nullable=True)
+    avatar_url = Column(Text, nullable=True)
+    locale = Column(String(16), nullable=True)
+    timezone = Column(String(64), nullable=True)
+    tags = Column(JSONB, nullable=True, default=list)
+
+    # Activity
+    total_conversations = Column(Integer, default=0)
+    total_workflows = Column(Integer, default=0)
     first_seen_at = Column(DateTime)
     last_seen_at = Column(DateTime)
+    last_message_at = Column(DateTime, nullable=True)
+
+    # Risk & sentiment
     risk_level = Column(String(32))
     sentiment_state = Column(String(32))
+    sentiment_trend = Column(String(16), nullable=True)
     frustration_score = Column(Integer)
+
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 

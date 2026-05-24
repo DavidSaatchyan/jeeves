@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from ..events.schemas import CanonicalEvent
@@ -78,12 +79,20 @@ class Workflow(ABC):
         elif to_state in ("PAUSED_RECONCILIATION",):
             self.status = "paused"
 
-    async def pause(self) -> None:
+    async def pause(self, db: Session, reason: str = "") -> None:
         self.status = "paused"
+        db.execute(
+            text("UPDATE workflows SET status = 'paused' WHERE id = :id AND status = 'active'"),
+            {"id": self.workflow_id},
+        )
 
-    async def resume(self) -> None:
+    async def resume(self, db: Session) -> None:
         if self.status == "paused":
             self.status = "active"
+            db.execute(
+                text("UPDATE workflows SET status = 'active' WHERE id = :id AND status = 'paused'"),
+                {"id": self.workflow_id},
+            )
 
     async def expire(self, db: Session) -> None:
         from ..events.schemas import CanonicalEvent

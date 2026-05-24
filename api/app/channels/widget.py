@@ -9,15 +9,17 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import ChannelConfig, ChatLog, ConversationRating, Tenant
+from ..models import ChannelConfig, ChatLog, Conversation, ConversationRating, Message, Tenant
 from ..moderation import moderate
 from ..rate_limit import check_rate_limit
 from ..schemas import ChatOut, WidgetChatIn
 from ..core.ai import simple_llm_response
 from ..config import get_settings
+from ..shared.inbox_writer import add_message, get_or_create_conversation
 
 router = APIRouter(tags=["widget"])
 
@@ -94,6 +96,10 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
         session_id=session_id,
     )
     db.add(log)
+
+    channel = body.channel or "web_widget"
+    conv = get_or_create_conversation(db, tenant.id, body.user_id, channel=channel, user_display_name=body.user_id)
+    add_message(db, conv, "incoming", body.message, sender_type="customer")
     db.commit()
 
     # Load conversation history for LLM context
@@ -188,10 +194,12 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
     log.resolution = "resolved"
     log.latency_ms = result["latency_ms"]
     log.session_id = session_id
-    log.channel = body.channel or "web_widget"
+    log.channel = channel
     if log.channel != "test_widget":
         tenant.dialogs_used += 1
         tenant.resolved_count += 1
+    if intent != "wismo":
+        add_message(db, conv, "outgoing", result["response"], sender_type="bot")
     db.commit()
 
     return ChatOut(
@@ -207,20 +215,32 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
 def widget_inbox(tenant_id: uuid.UUID, user_id: str, request: Request, db: Session = Depends(get_db)):
     """Return any undelivered outgoing (proactive) messages for this user."""
     _validate_origin_strict(tenant_id, request, db)
-    rows = (
-        db.query(ChatLog)
-        .filter(
-            ChatLog.tenant_id == tenant_id,
-            ChatLog.user_id == user_id,
-            ChatLog.direction == "outgoing",
-            ChatLog.delivered == False,  # noqa: E712
+
+    conv = db.scalar(
+        select(Conversation)
+        .where(
+            Conversation.tenant_id == tenant_id,
+            Conversation.user_id == user_id,
+            Conversation.status != "closed",
         )
-        .order_by(ChatLog.created_at.asc())
-        .all()
+        .order_by(Conversation.last_message_at.desc())
     )
-    out = [{"id": str(r.id), "message": r.response, "created_at": r.created_at.isoformat()} for r in rows]
-    for r in rows:
-        r.delivered = True
+    if not conv:
+        return {"messages": []}
+
+    rows = db.execute(
+        select(Message)
+        .where(
+            Message.conversation_id == conv.id,
+            Message.direction == "outgoing",
+            Message.delivered == False,
+            Message.sender_type != "operator",
+        )
+        .order_by(Message.created_at.asc())
+    ).scalars().all()
+    out = [{"id": str(m.id), "message": m.content, "created_at": m.created_at.isoformat()} for m in rows]
+    for m in rows:
+        m.delivered = True
     db.commit()
     return {"messages": out}
 

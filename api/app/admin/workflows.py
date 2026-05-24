@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 
-from ..models import Customer, Escalation, Tenant, TimelineEvent, Workflow
+from ..models import Conversation, Customer, Escalation, Tenant, TimelineEvent, Workflow
 from .deps import get_admin_tenant
 from .router import router
 
@@ -122,6 +122,13 @@ def api_workflow_escalate(
             status="OPEN",
         )
         db.add(esc)
+
+    conv = db.query(Conversation).filter(
+        Conversation.workflow_id == wf_id,
+        Conversation.status.in_(["active", "waiting"]),
+    ).first()
+    if conv:
+        conv.status = "handoff_requested"
 
     db.commit()
     return {"ok": True, "message": "Workflow escalated"}

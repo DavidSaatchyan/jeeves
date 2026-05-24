@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from . import agents, analytics, integrations, logs, pages, policies, settings, workflows
+from . import agents, analytics, inbox, integrations, logs, pages, policies, settings, workflows
 from .router import router
 
 __all__ = [

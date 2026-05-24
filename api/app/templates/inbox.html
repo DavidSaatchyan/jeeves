@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+{% block body %}
+<div id="inboxApp">
+  <div class="inbox-layout">
+    <div class="inbox-list" id="convList">
+      <div class="inbox-list-header">
+        <h2>Inbox</h2>
+        <span class="inbox-badge" id="totalBadge">0</span>
+        <span class="inbox-badge" id="handoffBadge" style="display:none;background:var(--red);">!</span>
+      </div>
+      <div class="inbox-filters">
+        <select id="filterStatus" onchange="loadConversations()">
+          <option value="">All</option>
+          <option value="active">Active</option>
+          <option value="waiting">Waiting</option>
+          <option value="handoff_requested">Handoff Requested</option>
+          <option value="assigned">Assigned</option>
+          <option value="closed">Closed</option>
+        </select>
+        <input id="filterSearch" placeholder="Search..." oninput="debounceSearch()"/>
+      </div>
+      <div class="inbox-convs" id="convItems"></div>
+      <div class="inbox-pagination" id="convPagination"></div>
+    </div>
+    <div class="inbox-detail" id="convDetail">
+      <div class="inbox-empty" id="emptyState">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--muted2);margin-bottom:12px"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+        <p>Select a conversation</p>
+      </div>
+      <div class="inbox-messages" id="messagesArea" style="display:none">
+        <div class="inbox-detail-header" id="detailHeader"></div>
+        <div class="inbox-msgs" id="msgList"></div>
+        <div class="inbox-notes" id="notesArea" style="display:none">
+          <div class="inbox-notes-list" id="notesList"></div>
+          <div class="inbox-notes-input"><input id="noteInput" placeholder="Add internal note..." onkeydown="if(event.key==='Enter')addNote()"/></div>
+        </div>
+        <div class="inbox-reply" id="replyArea">
+          <button class="ghost sm" id="cannedBtn" onclick="toggleCanned()" title="Canned responses" style="font-size:16px;padding:4px 8px;">⚡</button>
+          <input id="replyInput" placeholder="Type a message... (/ for canned)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReply()}"/>
+          <button onclick="sendReply()" class="accent sm">Send</button>
+          <div class="canned-popup" id="cannedPopup" style="display:none">
+            <div class="canned-header">Canned Responses <button class="ghost xs" onclick="showNewCanned()" style="margin-left:auto;font-size:10px">+ New</button></div>
+            <div class="canned-list" id="cannedList"></div>
+            <div class="canned-new" id="cannedNew" style="display:none;padding:8px;border-top:1px solid var(--border)">
+              <input id="cannedTitle" placeholder="Title" style="width:100%;margin-bottom:4px;padding:5px 8px;font-size:11px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;outline:none;box-sizing:border-box"/>
+              <input id="cannedShortcut" placeholder="Shortcut (e.g. greeting)" style="width:100%;margin-bottom:4px;padding:5px 8px;font-size:11px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;outline:none;box-sizing:border-box"/>
+              <textarea id="cannedContent" placeholder="Response text" rows="3" style="width:100%;margin-bottom:4px;padding:5px 8px;font-size:11px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+              <button class="accent xs" onclick="saveNewCanned()" style="width:100%">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="inbox-profile" id="profilePanel" style="display:none">
+      <div class="profile-header" id="profileHeader"></div>
+      <div class="profile-body" id="profileBody">
+        <div class="profile-section" id="profileInfo"></div>
+        <div class="profile-section" id="profileRisk"></div>
+        <div class="profile-section" id="profileSubscriptions"></div>
+        <div class="profile-section" id="profileConversations"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block tail %}
+<style>
+#inboxApp { height: calc(100vh - 0px); display: flex; }
+.inbox-layout { display: flex; flex: 1; height: 100%; gap: 0; }
+.inbox-list { width: 320px; min-width: 320px; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--surface); }
+.inbox-list-header { display: flex; align-items: center; gap: 8px; padding: 14px 14px 10px; }
+.inbox-list-header h2 { font-size: 15px; font-weight: 700; margin: 0; }
+.inbox-badge { font-size: 11px; padding: 2px 8px; border-radius: var(--radius-sm); background: var(--accent); color: #fff; font-weight: 600; }
+.inbox-filters { display: flex; gap: 5px; padding: 0 14px 10px; }
+.inbox-filters select { flex: 1; padding: 5px 7px; font-size: 11px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 5px; outline: none; }
+.inbox-filters input { flex: 1; padding: 5px 8px; font-size: 11px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 5px; outline: none; }
+.inbox-convs { flex: 1; overflow-y: auto; padding: 0 6px; }
+.inbox-conv { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 6px; cursor: pointer; transition: background .1s; margin-bottom: 2px; border: 1px solid transparent; }
+.inbox-conv:hover { background: rgba(255,255,255,0.04); }
+.inbox-conv.active { background: rgba(94,106,210,0.1); border-color: rgba(94,106,210,0.2); }
+.inbox-conv-row1 { display: flex; align-items: center; gap: 5px; }
+.inbox-conv-name { font-size: 12px; font-weight: 600; color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inbox-conv-time { font-size: 10px; color: var(--muted2); white-space: nowrap; }
+.inbox-conv-row2 { display: flex; align-items: center; gap: 4px; }
+.inbox-conv-status { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 600; }
+.inbox-conv-status.active { background: rgba(34,166,126,0.12); color: var(--green); }
+.inbox-conv-status.waiting { background: rgba(245,166,35,0.12); color: var(--amber); }
+.inbox-conv-status.handoff_requested { background: rgba(229,72,77,0.12); color: var(--red); }
+.inbox-conv-status.assigned { background: rgba(94,106,210,0.12); color: var(--accent); }
+.inbox-conv-status.closed { background: rgba(255,255,255,0.06); color: var(--muted2); }
+.inbox-conv-preview { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inbox-conv-meta { font-size: 10px; color: var(--muted2); display: flex; gap: 5px; }
+.inbox-conv-unread { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 5px; }
+.inbox-pagination { padding: 6px 14px; font-size: 10px; color: var(--muted2); text-align: center; border-top: 1px solid var(--border); }
+.inbox-detail { flex: 1; display: flex; flex-direction: column; background: var(--bg); min-width: 0; }
+.inbox-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted2); }
+.inbox-empty p { font-size: 13px; margin: 0; }
+.inbox-detail-header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface); }
+.inbox-detail-header .info { flex: 1; min-width: 0; }
+.inbox-detail-header .name { font-size: 14px; font-weight: 600; }
+.inbox-detail-header .meta { font-size: 10px; color: var(--muted2); }
+.inbox-detail-header .actions { display: flex; gap: 4px; flex-shrink: 0; }
+.inbox-msgs { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.msg-row { display: flex; gap: 6px; max-width: 80%; }
+.msg-row.incoming { align-self: flex-start; }
+.msg-row.outgoing { align-self: flex-end; flex-direction: row-reverse; }
+.msg-row.system { align-self: center; max-width: 100%; }
+.msg-bubble { padding: 7px 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; }
+.msg-row.incoming .msg-bubble { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+.msg-row.outgoing .msg-bubble { background: var(--accent); color: #fff; }
+.msg-row.system .msg-bubble { background: rgba(255,255,255,0.04); border: 1px dashed var(--border); color: var(--muted2); font-size: 11px; padding: 5px 12px; border-radius: 6px; }
+.msg-sender { font-size: 9px; color: var(--muted2); margin-bottom: 2px; }
+.msg-time { font-size: 9px; color: var(--muted2); margin-top: 3px; text-align: right; }
+.msg-row.system .msg-time { display: none; }
+.inbox-notes { border-top: 1px solid var(--border); background: var(--surface); }
+.inbox-notes-list { padding: 8px 14px; display: flex; flex-direction: column; gap: 5px; max-height: 100px; overflow-y: auto; }
+.note-item { font-size: 11px; color: var(--muted); padding: 5px 8px; background: var(--bg); border-radius: 4px; border-left: 2px solid var(--amber); }
+.note-item .note-meta { font-size: 9px; color: var(--muted2); margin-bottom: 2px; }
+.inbox-notes-input { padding: 6px 14px 10px; }
+.inbox-notes-input input { width: 100%; padding: 6px 8px; font-size: 11px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 5px; outline: none; }
+.inbox-reply { display: flex; gap: 5px; padding: 10px 14px; border-top: 1px solid var(--border); background: var(--surface); position: relative; }
+.inbox-reply input { flex: 1; padding: 7px 10px; font-size: 12px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; outline: none; }
+.canned-popup { position: absolute; bottom: 100%; left: 8px; right: 8px; max-height: 300px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; z-index: 100; }
+.canned-header { font-size: 11px; font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--muted2); text-transform: uppercase; letter-spacing: .5px; display: flex; align-items: center; }
+.canned-list { overflow-y: auto; flex: 1; }
+.canned-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background .1s; }
+.canned-item:hover { background: rgba(94,106,210,0.08); }
+.canned-item .ci-title { font-size: 12px; font-weight: 600; color: var(--text); }
+.canned-item .ci-preview { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.canned-item .ci-shortcut { font-size: 9px; color: var(--muted2); background: var(--bg); padding: 1px 5px; border-radius: 3px; margin-left: 6px; }
+.notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); display: inline-block; margin-left: 4px; vertical-align: middle; }
+
+/* Customer Profile Panel */
+.inbox-profile { width: 280px; min-width: 280px; border-left: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; overflow-y: auto; }
+.profile-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.profile-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.profile-header .info { flex: 1; min-width: 0; }
+.profile-header .name { font-size: 13px; font-weight: 600; }
+.profile-header .email { font-size: 10px; color: var(--muted2); }
+.profile-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 14px; }
+.profile-section h4 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted2); margin: 0 0 6px; }
+.profile-section .row { font-size: 11px; color: var(--text); padding: 3px 0; display: flex; justify-content: space-between; }
+.profile-section .row .label { color: var(--muted2); }
+.profile-section .row .value { font-weight: 500; text-align: right; }
+.risk-low { color: var(--green); }
+.risk-medium { color: var(--amber); }
+.risk-high { color: var(--red); }
+.profile-conv-item { font-size: 11px; color: var(--muted); padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04); cursor: pointer; }
+.profile-conv-item:hover { color: var(--text); }
+.profile-conv-item .pc-date { font-size: 9px; color: var(--muted2); }
+.tag { display: inline-block; font-size: 9px; padding: 1px 6px; border-radius: 3px; background: rgba(94,106,210,0.12); color: var(--accent); margin: 1px 2px 1px 0; }
+</style>
+<script>
+var selectedConv = null;
+var selectedConvDetail = null;
+var pollTimer = null;
+var convData = [];
+var oldestMsgAt = null;
+var loadingMore = false;
+
+function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function timeAgo(d){
+  if(!d) return '';
+  var s = Math.floor((new Date() - new Date(d)) / 1000);
+  if(s < 60) return 'now';
+  var m = Math.floor(s / 60); if(m < 60) return m+'m';
+  var h = Math.floor(m / 60); if(h < 24) return h+'h';
+  return Math.floor(h / 24)+'d';
+}
+
+function convStatusClass(s){ return s === 'handoff_requested' ? 'handoff_requested' : s; }
+
+// ── Notification sound (Web Audio API) ──
+function playNotificationSound(){
+  try {
+    var ctx = new (window.AudioContext||window.webkitAudioContext)();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(660, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3);
+  } catch(e){}
+}
+
+var lastHandoffCount = 0;
+function checkNotifications(){
+  api('/admin/api/inbox/notifications').then(function(n){
+    document.getElementById('totalBadge').textContent = n.total_unread || 0;
+    var badge = document.getElementById('handoffBadge');
+    if(n.handoff_requested > 0){
+      badge.style.display = 'inline-block';
+      badge.textContent = n.handoff_requested;
+      if(n.handoff_requested > lastHandoffCount) playNotificationSound();
+    } else {
+      badge.style.display = 'none';
+    }
+    lastHandoffCount = n.handoff_requested;
+  }).catch(function(){});
+}
+
+// ── Canned responses ──
+var cannedData = [];
+function toggleCanned(){
+  var popup = document.getElementById('cannedPopup');
+  if(popup.style.display === 'block'){ popup.style.display = 'none'; return; }
+  if(!cannedData.length){
+    api('/admin/api/inbox/canned-responses').then(function(resp){
+      cannedData = resp||[];
+      renderCanned(cannedData);
+    });
+  }
+  popup.style.display = 'block';
+}
+
+function renderCanned(list){
+  var html = '';
+  list.forEach(function(c){
+    html += '<div class="canned-item" onclick="selectCanned(\'' + c.id + '\')">' +
+      '<div class="ci-title">' + esc(c.title) + (c.shortcut ? ' <span class="ci-shortcut">/' + esc(c.shortcut) + '</span>' : '') + '</div>' +
+      '<div class="ci-preview">' + esc(c.content.substring(0,80)) + '</div></div>';
+  });
+  if(!html) html = '<div style="padding:12px;text-align:center;color:var(--muted2);font-size:11px">No canned responses</div>';
+  document.getElementById('cannedList').innerHTML = html;
+}
+
+function selectCanned(id){
+  var c = cannedData.find(function(x){ return x.id === id; });
+  if(!c) return;
+  document.getElementById('replyInput').value = c.content;
+  document.getElementById('cannedPopup').style.display = 'none';
+}
+
+function showNewCanned(){
+  var el = document.getElementById('cannedNew');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  if(el.style.display === 'block') document.getElementById('cannedTitle').focus();
+}
+
+function saveNewCanned(){
+  var title = document.getElementById('cannedTitle').value.trim();
+  var content = document.getElementById('cannedContent').value.trim();
+  var shortcut = document.getElementById('cannedShortcut').value.trim();
+  if(!title || !content){ return; }
+  api('/admin/api/inbox/canned-responses', {method:'POST', body:{title:title, content:content, shortcut:shortcut||null}}).then(function(){
+    document.getElementById('cannedTitle').value = '';
+    document.getElementById('cannedContent').value = '';
+    document.getElementById('cannedShortcut').value = '';
+    document.getElementById('cannedNew').style.display = 'none';
+    cannedData = [];
+    api('/admin/api/inbox/canned-responses').then(function(resp){ cannedData = resp||[]; renderCanned(cannedData); });
+    loadCannedShortcuts();
+  });
+}
+
+document.addEventListener('click', function(e){
+  var popup = document.getElementById('cannedPopup');
+  if(popup && popup.style.display === 'block' && !e.target.closest('.inbox-reply')){
+    popup.style.display = 'none';
+  }
+});
+
+// ── Keyboard shortcuts ──
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && selectedConv && document.getElementById('messagesArea').style.display !== 'none'){
+    closeConv(); e.preventDefault(); return;
+  }
+  if(e.key === '/' && document.activeElement !== document.getElementById('replyInput') && document.activeElement !== document.getElementById('filterSearch') && document.getElementById('messagesArea').style.display !== 'none'){
+    document.getElementById('replyInput').focus(); e.preventDefault(); return;
+  }
+  if(e.ctrlKey && e.key === 'Enter' && document.getElementById('replyInput') === document.activeElement){
+    sendReply(); e.preventDefault(); return;
+  }
+  if(e.key === 't' && selectedConv && !e.ctrlKey && !e.metaKey && document.activeElement === document.body){
+    takeoverConv(); e.preventDefault(); return;
+  }
+  if(e.key === 'r' && selectedConv && !e.ctrlKey && !e.metaKey && document.activeElement === document.body){
+    returnToAi(); e.preventDefault(); return;
+  }
+});
+
+// ── Conversation list ──
+function loadConversations(){
+  var status = document.getElementById('filterStatus').value;
+  var q = document.getElementById('filterSearch').value;
+  var params = '?limit=50&offset=0';
+  if(status) params += '&status=' + encodeURIComponent(status);
+  if(q) params += '&q=' + encodeURIComponent(q);
+  api('/admin/api/inbox/conversations' + params).then(function(data){
+    convData = data.conversations||[];
+    var list = document.getElementById('convItems');
+    var html = '';
+    convData.forEach(function(c){
+      var name = (c.customer&&c.customer.display_name) || c.customer?.email || c.user_id || 'Unknown';
+      var statusClass = convStatusClass(c.status);
+      var nameClass = c.customer && c.customer.id && c.customer.display_name ? '' : '';
+      html += '<div class="inbox-conv' + (selectedConv && selectedConv.id === c.id ? ' active' : '') + '" data-id="' + c.id + '" onclick="selectConv(\'' + c.id + '\')">' +
+        '<div class="inbox-conv-row1">' +
+          (c.unread_count > 0 ? '<div class="inbox-conv-unread"></div>' : '') +
+          '<div class="inbox-conv-name">' + esc(name) + '</div>' +
+          '<div class="inbox-conv-time">' + timeAgo(c.last_message_at) + '</div>' +
+        '</div>' +
+        '<div class="inbox-conv-row2">' +
+          '<span class="inbox-conv-status ' + statusClass + '">' + esc(c.status) + '</span>' +
+          (c.workflow ? '<span style="font-size:9px;color:var(--muted2)">' + esc(c.workflow.state||'') + '</span>' : '') +
+        '</div>' +
+        '<div class="inbox-conv-preview">' + esc(c.last_message_preview||'') + '</div>' +
+        '<div class="inbox-conv-meta">' + esc(c.channel) + (c.assigned_to ? ' · ' + esc(c.assigned_to) : '') + '</div>' +
+      '</div>';
+    });
+    if(!html) html = '<div style="padding:20px;text-align:center;color:var(--muted2);font-size:12px">No conversations</div>';
+    list.innerHTML = html;
+  }).catch(function(){});
+}
+
+function selectConv(id){
+  selectedConv = { id: id };
+  loadConversations();
+  api('/admin/api/inbox/conversations/' + id).then(function(c){
+    selectedConvDetail = c;
+    var name = (c.customer&&c.customer.display_name) || c.customer?.email || 'Unknown';
+    var statusClass = convStatusClass(c.status);
+    var html = '<div class="info"><div class="name">' + esc(name) + '</div><div class="meta">' + esc(c.channel) + ' · ' + esc(c.status) + (c.assigned_to ? ' · ' + esc(c.assigned_to) : '') + '</div></div>' +
+      '<div class="actions">' +
+        (!c.assigned_to && (c.status === 'active' || c.status === 'waiting' || c.status === 'handoff_requested') ? '<button class="ghost sm" onclick="assignToMe()">Assign</button>' : '') +
+        (c.status === 'handoff_requested' || c.status === 'active' ? '<button class="ghost sm" onclick="takeoverConv()">Take over</button>' : '') +
+        (c.status === 'assigned' && c.assigned_to ? '<button class="ghost sm" onclick="returnToAi()">Return to AI</button>' : '') +
+        (c.status !== 'closed' ? '<button class="ghost sm" onclick="closeConv()">Close</button>' : '') +
+      '</div>';
+    document.getElementById('detailHeader').innerHTML = html;
+    loadMessages(id);
+    loadNotes(id);
+    loadCustomerProfile(c);
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('messagesArea').style.display = 'flex';
+  });
+}
+
+function loadCustomerProfile(c){
+  var panel = document.getElementById('profilePanel');
+  if(!c.customer || !c.customer.id){ panel.style.display = 'none'; return; }
+  panel.style.display = 'flex';
+  var custId = c.customer.id;
+  api('/admin/api/customers/' + custId).then(function(p){
+    var initial = (p.display_name||p.email||'?')[0].toUpperCase();
+    document.getElementById('profileHeader').innerHTML =
+      '<div class="profile-avatar">' + esc(initial) + '</div>' +
+      '<div class="info"><div class="name">' + esc(p.display_name||p.email||'Customer') + '</div><div class="email">' + esc(p.email||'') + '</div></div>';
+
+    var tagsHtml = '';
+    if(p.tags && p.tags.length) p.tags.forEach(function(t){ tagsHtml += '<span class="tag">' + esc(t) + '</span>'; });
+
+    document.getElementById('profileInfo').innerHTML =
+      '<h4>Info</h4>' +
+      (p.phone ? '<div class="row"><span class="label">Phone</span><span class="value">' + esc(p.phone) + '</span></div>' : '') +
+      (p.locale ? '<div class="row"><span class="label">Locale</span><span class="value">' + esc(p.locale) + '</span></div>' : '') +
+      (p.timezone ? '<div class="row"><span class="label">Timezone</span><span class="value">' + esc(p.timezone) + '</span></div>' : '') +
+      '<div class="row"><span class="label">Conversations</span><span class="value">' + (p.total_conversations||0) + '</span></div>' +
+      '<div class="row"><span class="label">Last seen</span><span class="value">' + timeAgo(p.last_seen_at) + '</span></div>' +
+      (tagsHtml ? '<div class="row" style="flex-wrap:wrap"><span class="label">Tags</span><span class="value" style="text-align:right">' + tagsHtml + '</span></div>' : '');
+
+    var riskHtml = '';
+    if(p.risk_level || p.sentiment_trend || p.frustration_score != null){
+      var riskClass = 'risk-' + (p.risk_level||'low');
+      riskHtml += '<h4>Risk</h4>' +
+        (p.risk_level ? '<div class="row"><span class="label">Level</span><span class="value ' + riskClass + '">' + esc(p.risk_level) + '</span></div>' : '') +
+        (p.frustration_score != null ? '<div class="row"><span class="label">Frustration</span><span class="value">' + p.frustration_score + '/100</span></div>' : '') +
+        (p.sentiment_trend ? '<div class="row"><span class="label">Trend</span><span class="value">' + esc(p.sentiment_trend) + '</span></div>' : '');
+    }
+    document.getElementById('profileRisk').innerHTML = riskHtml;
+    loadCustomerSubscriptions(custId);
+    loadCustomerConversations(custId);
+  });
+}
+
+function loadCustomerSubscriptions(custId){
+  api('/admin/api/customers/' + custId + '/subscriptions').then(function(subs){
+    if(!subs || !subs.length){ document.getElementById('profileSubscriptions').innerHTML = ''; return; }
+    var html = '<h4>Subscriptions</h4>';
+    subs.forEach(function(s){
+      html += '<div class="row"><span class="label">' + esc(s.plan_name||'Plan') + '</span><span class="value">' +
+        (s.mrr ? '$'+(s.mrr/100).toFixed(2) : '') + ' · ' + esc(s.status) + '</span></div>';
+    });
+    document.getElementById('profileSubscriptions').innerHTML = html;
+  });
+}
+
+function loadCustomerConversations(custId){
+  api('/admin/api/customers/' + custId + '/conversations').then(function(convs){
+    if(!convs || !convs.length){ document.getElementById('profileConversations').innerHTML = ''; return; }
+    var html = '<h4>Past Conversations</h4>';
+    convs.forEach(function(c){
+      html += '<div class="profile-conv-item" onclick="selectConv(\'' + c.id + '\')">' +
+        esc(c.last_message_preview||'') +
+        '<span class="pc-date"> · ' + timeAgo(c.last_message_at) + '</span></div>';
+    });
+    document.getElementById('profileConversations').innerHTML = html;
+  });
+}
+
+function loadMessages(convId, before){
+  var url = '/admin/api/inbox/conversations/' + convId + '/messages?limit=50';
+  if(before) url += '&before=' + encodeURIComponent(before);
+  api(url).then(function(msgs){
+    var list = document.getElementById('msgList');
+    var html = '';
+    (msgs||[]).forEach(function(m){
+      if(m.sender_type === 'system' || m.content_type === 'system_event'){
+        html += '<div class="msg-row system"><div class="msg-bubble">' + esc(m.content) + '</div></div>';
+      } else {
+        html += '<div class="msg-row ' + (m.direction === 'incoming' ? 'incoming' : 'outgoing') + '">' +
+          '<div><div class="msg-sender">' + esc(m.sender_type) + '</div><div class="msg-bubble">' + esc(m.content) + '</div><div class="msg-time">' + timeAgo(m.created_at) + '</div></div>' +
+        '</div>';
+      }
+    });
+    if(before){
+      list.innerHTML = html + list.innerHTML;
+    } else {
+      list.innerHTML = html;
+      oldestMsgAt = msgs.length ? msgs[0].created_at : null;
+    }
+    list.scrollTop = before ? 200 : list.scrollHeight;
+  });
+}
+
+function setupInfiniteScroll(){
+  var list = document.getElementById('msgList');
+  list.addEventListener('scroll', function(){
+    if(list.scrollTop < 50 && oldestMsgAt && !loadingMore && selectedConv){
+      loadingMore = true;
+      var prevScrollHeight = list.scrollHeight;
+      loadMessages(selectedConv.id, oldestMsgAt);
+      oldestMsgAt = null;
+      setTimeout(function(){ loadingMore = false; }, 500);
+    }
+  });
+}
+
+function loadNotes(convId){
+  api('/admin/api/inbox/conversations/' + convId + '/notes').then(function(notes){
+    var area = document.getElementById('notesArea');
+    var list = document.getElementById('notesList');
+    if(!notes||!notes.length){ area.style.display='none'; return; }
+    area.style.display='block';
+    var html = '';
+    (notes||[]).forEach(function(n){
+      html += '<div class="note-item"><div class="note-meta">' + esc(n.operator_id) + ' · ' + timeAgo(n.created_at) + '</div>' + esc(n.content) + '</div>';
+    });
+    list.innerHTML = html;
+  });
+}
+
+function addNote(){
+  var input = document.getElementById('noteInput');
+  var content = input.value.trim();
+  if(!content || !selectedConv) return;
+  api('/admin/api/inbox/conversations/' + selectedConv.id + '/notes', {method:'POST', body:{content:content}}).then(function(){
+    input.value = '';
+    loadNotes(selectedConv.id);
+  });
+}
+
+function sendReply(){
+  var input = document.getElementById('replyInput');
+  var content = input.value.trim();
+  if(!content || !selectedConv) return;
+  api('/admin/api/inbox/messages/send', {method:'POST', body:{conversation_id: selectedConv.id, content: content}}).then(function(){
+    input.value = '';
+    loadMessages(selectedConv.id);
+    loadConversations();
+  });
+}
+
+function assignToMe(){
+  if(!selectedConv) return;
+  api('/admin/api/inbox/conversations/' + selectedConv.id + '/assign', {method:'POST'}).then(function(){
+    selectConv(selectedConv.id);
+    loadConversations();
+  });
+}
+
+function takeoverConv(){
+  if(!selectedConv) return;
+  api('/admin/api/inbox/conversations/' + selectedConv.id + '/takeover', {method:'POST', body:{reason:'operator_takeover'}}).then(function(){
+    selectConv(selectedConv.id);
+    loadConversations();
+  });
+}
+
+function returnToAi(){
+  if(!selectedConv) return;
+  api('/admin/api/inbox/conversations/' + selectedConv.id + '/return-to-ai', {method:'POST'}).then(function(){
+    selectConv(selectedConv.id);
+    loadConversations();
+  });
+}
+
+function closeConv(){
+  if(!selectedConv) return;
+  api('/admin/api/inbox/conversations/' + selectedConv.id + '/close', {method:'POST'}).then(function(){
+    document.getElementById('profilePanel').style.display = 'none';
+    selectedConv = null;
+    selectedConvDetail = null;
+    document.getElementById('emptyState').style.display = 'flex';
+    document.getElementById('messagesArea').style.display = 'none';
+    loadConversations();
+  });
+}
+
+var searchTimer = null;
+function debounceSearch(){
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(loadConversations, 300);
+}
+
+// ── Canned response /shortcut processing ──
+var cannedByShortcut = {};
+function loadCannedShortcuts(){
+  api('/admin/api/inbox/canned-responses').then(function(resp){
+    cannedData = resp||[];
+    cannedByShortcut = {};
+    cannedData.forEach(function(c){ if(c.shortcut) cannedByShortcut[c.shortcut] = c; });
+  });
+}
+
+document.getElementById('replyInput').addEventListener('input', function(e){
+  var val = this.value;
+  if(val.startsWith('/') && val.length > 1){
+    var shortcut = val.slice(1).toLowerCase();
+    var match = cannedByShortcut[shortcut];
+    if(match && val.length === shortcut.length + 1){
+      this.value = match.content;
+    }
+  }
+});
+
+// ── SSE real-time updates ──
+function connectSSE(){
+  var es = new EventSource('/admin/api/inbox/events');
+  es.onmessage = function(e){
+    if(!e.data || e.data === '') return;
+    try {
+      var ev = JSON.parse(e.data);
+      if(ev.type === 'conversations_updated'){
+        loadConversations();
+        checkNotifications();
+      }
+    } catch(err){}
+  };
+  es.onerror = function(){
+    setTimeout(connectSSE, 5000);
+  };
+}
+
+// ── Poll + SSE hybrid startup ──
+function startPolling(){
+  loadConversations();
+  checkNotifications();
+  loadCannedShortcuts();
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(function(){
+    loadConversations();
+    checkNotifications();
+  }, 10000);
+  connectSSE();
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  startPolling();
+  setupInfiniteScroll();
+});
+</script>
+{% endblock %}

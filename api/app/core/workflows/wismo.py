@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..events.schemas import CanonicalEvent
 from ..policies.engine import PolicyEngine
+from ...shared.inbox_writer import add_message, get_or_create_conversation
 from .runtime import Workflow
 
 logger = logging.getLogger(__name__)
@@ -151,6 +152,8 @@ class WismoWorkflow(Workflow):
                 channel="web_widget",
             )
             db.add(retry)
+            conv = get_or_create_conversation(db, self.tenant_id, customer_id)
+            add_message(db, conv, "outgoing", retry.response, sender_type="bot")
             db.commit()
             return
 
@@ -169,6 +172,8 @@ class WismoWorkflow(Workflow):
                 channel="web_widget",
             )
             db.add(not_found)
+            conv = get_or_create_conversation(db, self.tenant_id, customer_id)
+            add_message(db, conv, "outgoing", not_found.response, sender_type="bot")
             db.commit()
             return
 
@@ -204,6 +209,8 @@ class WismoWorkflow(Workflow):
             channel="web_widget",
         )
         db.add(outgoing)
+        conv = get_or_create_conversation(db, self.tenant_id, customer_id)
+        add_message(db, conv, "outgoing", outgoing.response, sender_type="bot")
         db.commit()
 
     async def _classify_and_respond(self, event: CanonicalEvent, db: Session, order: dict, fulfillments: list[dict]) -> None:
@@ -319,6 +326,8 @@ class WismoWorkflow(Workflow):
                     channel="web_widget",
                 )
                 db.add(outgoing)
+                conv = get_or_create_conversation(db, self.tenant_id, customer_id)
+                add_message(db, conv, "outgoing", widget_msg, sender_type="bot")
 
         if "email" in allowed and context.get("email"):
             await send_communication(
