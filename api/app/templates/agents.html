@@ -1,39 +1,39 @@
 {% extends "base.html" %}
 {% block body %}
 <style>
-.section { margin-bottom: 28px; }
-.section h2 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--muted2); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+.section { margin-bottom: 36px; }
+.section h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--muted2); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
 
 /* Hero */
-.agent-hero { background: transparent; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; border-left: 3px solid #5bc0de; margin-bottom: 16px; }
-.agent-hero:hover { border-color: var(--border-bright); }
-.agent-hero-header { display: flex; align-items: center; gap: 12px; }
-.agent-hero-logo { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; flex-shrink: 0; }
-.agent-name { font-size: 16px; font-weight: 700; letter-spacing: -.3px; }
-.agent-subtitle { font-size: 11px; color: var(--muted2); margin-top: 1px; }
-.agent-hero-tagline { font-size: 12px; color: var(--muted); margin-top: 12px; margin-bottom: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.agent-hero-section { margin-top: 12px; }
-.agent-hero-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--muted2); margin-bottom: 4px; }
-.agent-hero-text { font-size: 12px; color: var(--muted); line-height: 1.55; }
+.agent-hero { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; border-left: 3px solid #5bc0de; margin-bottom: 18px; }
+.agent-hero:hover { border-color: var(--border-bright); background: rgba(255,255,255,0.03); }
+.agent-hero-header { display: flex; align-items: center; gap: 16px; }
+.agent-hero-logo { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; flex-shrink: 0; }
+.agent-name { font-size: 20px; font-weight: 700; letter-spacing: -.3px; }
+.agent-subtitle { font-size: 13px; color: var(--muted2); margin-top: 2px; }
+.agent-hero-tagline { font-size: 14px; color: var(--muted); margin-top: 16px; margin-bottom: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.agent-hero-section { margin-top: 16px; }
+.agent-hero-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--muted2); margin-bottom: 6px; }
+.agent-hero-text { font-size: 14px; color: var(--muted); line-height: 1.65; }
 
 /* KPI strip */
-.kpi-strip { display: flex; align-items: center; gap: 0; padding: 8px 0; margin: 14px 0 4px; border-top: 1px solid var(--border); }
-.kpi-item { display: flex; align-items: center; gap: 4px; padding: 0 10px; flex: 1; justify-content: center; min-width: 0; }
+.kpi-strip { display: flex; align-items: center; gap: 0; padding: 10px 0; margin: 16px 0 6px; border-top: 1px solid var(--border); }
+.kpi-item { display: flex; align-items: center; gap: 6px; padding: 0 12px; flex: 1; justify-content: center; min-width: 0; }
 .kpi-item + .kpi-item { border-left: 1px solid var(--border); }
-.kpi-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-.kpi-n { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -.3px; }
-.kpi-l { font-size: 9px; color: var(--muted2); text-transform: uppercase; letter-spacing: .3px; font-weight: 600; white-space: nowrap; }
-.state-funnel { margin-top: 16px; }
-.state-flow { display: flex; align-items: center; gap: 0; padding: 10px 0; overflow-x: auto; }
-.state-flow .state-node { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.state-flow .state-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+.kpi-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.kpi-n { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -.3px; }
+.kpi-l { font-size: 10px; color: var(--muted2); text-transform: uppercase; letter-spacing: .4px; font-weight: 600; white-space: nowrap; }
+.state-funnel { margin-top: 18px; }
+.state-flow { display: flex; align-items: center; gap: 0; padding: 12px 0; overflow-x: auto; }
+.state-flow .state-node { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.state-flow .state-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
 .state-flow .state-dot.terminal { background: var(--amber); box-shadow: 0 0 6px rgba(245,166,35,0.3); }
 .state-flow .state-dot.active { background: var(--cyan); box-shadow: 0 0 6px rgba(91,192,222,0.3); }
-.state-flow .state-label { font-size: 10px; font-weight: 500; color: var(--muted2); white-space: nowrap; }
-.state-flow .state-arrow { color: var(--border); font-size: 12px; margin: 0 3px; }
+.state-flow .state-label { font-size: 11px; font-weight: 500; color: var(--muted2); white-space: nowrap; }
+.state-flow .state-arrow { color: var(--border); font-size: 13px; margin: 0 4px; }
 
-.state-distribution { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.state-bar { display: flex; align-items: center; gap: 4px; padding: 5px 8px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 11px; }
+.state-distribution { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.state-bar { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; }
 
 /* Toggle in hero */
 .toggle-wrapper { position: relative; display: inline-flex; }
@@ -46,43 +46,43 @@
 /* Tooltip */
 .tip-trigger { position: relative; }
 .tip-pop {
-  position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
-  background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
-  padding: 8px 12px; font-size: 11px; color: var(--muted); white-space: nowrap;
+  position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 14px; font-size: 12px; color: var(--muted); white-space: nowrap;
   opacity: 0; visibility: hidden; transition: all .1s; pointer-events: none;
-  z-index: 50; line-height: 1.4;
+  z-index: 50; line-height: 1.5;
 }
 .tip-trigger:hover .tip-pop { opacity: 1; visibility: visible; }
 .tip-pop::after {
   content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-  border: 5px solid transparent; border-top-color: var(--surface);
+  border: 6px solid transparent; border-top-color: var(--surface);
 }
 .tip-pop a { color: var(--accent); text-decoration: underline; }
 
 /* Policy section */
-.policy-section { margin-top: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-.policy-section h3 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted2); margin-bottom: 14px; }
+.policy-section { margin-top: 16px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.policy-section h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted2); margin-bottom: 16px; }
 
-.policy-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.policy-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .policy-row:last-child { border-bottom: none; }
-.policy-label { font-size: 12px; font-weight: 500; color: var(--text); }
-.policy-desc { font-size: 10px; color: var(--muted2); margin-top: 2px; }
-.policy-control { flex-shrink: 0; margin-left: 20px; }
-.policy-control select { padding: 4px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 11px; }
-.policy-control input[type=number] { width: 60px; padding: 4px 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 11px; text-align: center; }
+.policy-label { font-size: 14px; font-weight: 500; color: var(--text); }
+.policy-desc { font-size: 12px; color: var(--muted2); margin-top: 2px; }
+.policy-control { flex-shrink: 0; margin-left: 24px; }
+.policy-control select { padding: 6px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-size: 13px; }
+.policy-control input[type=number] { width: 70px; padding: 6px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-size: 13px; text-align: center; }
 .policy-control .disabled { opacity: 0.4; pointer-events: none; }
 
-.tag-chk { display: inline-block; padding: 4px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 10px; line-height: 1; cursor: pointer; user-select: none; min-width: 64px; text-align: center; vertical-align: middle; }
+.tag-chk { display: inline-block; padding: 6px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; line-height: 1; cursor: pointer; user-select: none; min-width: 70px; text-align: center; vertical-align: middle; }
 .tag-chk.on { background: rgba(91,192,222,0.12); border-color: rgba(91,192,222,0.3); color: var(--cyan); }
 .tag-chk.disabled { opacity: 0.4; pointer-events: none; }
 
-.policy-toggle { width: 28px; height: 16px; border-radius: 8px; background: var(--border); cursor: pointer; position: relative; transition: background .1s; flex-shrink: 0; display: inline-block; }
+.policy-toggle { width: 32px; height: 18px; border-radius: 9px; background: var(--border); cursor: pointer; position: relative; transition: background .1s; flex-shrink: 0; display: inline-block; }
 .policy-toggle.on { background: var(--cyan); }
-.policy-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: transform .1s; }
-.policy-toggle.on::after { transform: translateX(12px); }
+.policy-toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: transform .1s; }
+.policy-toggle.on::after { transform: translateX(14px); }
 .policy-toggle.disabled { opacity: 0.4; pointer-events: none; }
 
-.policy-hint { font-size: 10px; color: var(--muted2); margin-top: 10px; font-style: italic; }
+.policy-hint { font-size: 12px; color: var(--muted2); margin-top: 12px; font-style: italic; }
 
 .conn-link { color: var(--amber); text-decoration: underline; cursor: pointer; transition: filter .1s; }
 .conn-link:hover { filter: brightness(1.3); }
@@ -158,13 +158,13 @@ function renderAgentPanel(agent, enabled, shopifyConnected, total, completed, in
     '<div class="agent-hero-logo" style="background:rgba(' + hexToRgb(agent.color) + ',0.12);color:' + agent.color + '">' + agent.icon + '</div>' +
     '<div class="agent-hero-title"><div class="agent-name">' + agent.name + '</div><div class="agent-subtitle">' + agent.subtitle + '</div></div>' +
     '<div style="margin-left:auto;display:flex;align-items:center;gap:10px">' +
-    '<span class="pill ' + (enabled ? 'ok' : 'muted') + '" style="font-size:10px" id="statusBadge">' + (enabled ? 'Active' : 'Disabled') + '</span>';
+    '<span class="pill ' + (enabled ? 'ok' : 'muted') + '" style="font-size:11px" id="statusBadge">' + (enabled ? 'Active' : 'Disabled') + '</span>';
 
   // Toggle — not clickable if Shopify not connected
   if (!shopifyConnected) {
     h += '<div class="toggle-wrapper tip-trigger"><div class="toggle mini disabled" id="mainToggle"></div>' +
       '<div class="tip-pop">Connect Shopify first to enable WISMO</div></div>';
-    h += '<div class="conn-warn" style="margin-top:10px;font-size:12px;color:var(--amber)">⚠ <a href="/admin/connections" class="conn-link">Connect Shopify</a> to start tracking orders.</div>';
+    h += '<div class="conn-warn" style="margin-top:12px;font-size:13px;color:var(--amber)">⚠ <a href="/admin/connections" class="conn-link">Connect Shopify</a> to start tracking orders.</div>';
   } else {
     h += '<div class="toggle-wrapper"><div class="toggle mini ' + (enabled ? 'on' : '') + '" id="mainToggle" onclick="toggleWismo()"></div></div>';
   }
