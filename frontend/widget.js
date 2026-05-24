@@ -28,6 +28,16 @@
 
   var _instanceCounter = 0;
 
+  // Auto-detect API base URL from the script's own src attribute.
+  // This lets customers embed <script src="https://jeeves-ai.up.railway.app/widget.js">
+  // without manually setting base-url on the custom element.
+  var _scriptSrc = "";
+  try {
+    var _s = document.currentScript || document.querySelector('script[src*="widget.js"]');
+    if (_s) _scriptSrc = _s.src;
+  } catch(e) {}
+  var _defaultBaseUrl = _scriptSrc ? _scriptSrc.replace(/\/widget\.js.*$/, "") : location.origin;
+
   // ── Shared helpers ──
 
   function stoGet(key, fallback) {
@@ -146,7 +156,7 @@
         channel: g(el, "channel", "web_widget"),
         icon: g(el, "icon", ""),
         initialUserId: g(el, "user-id", ""),
-        baseUrl: g(el, "base-url", location.origin),
+        baseUrl: g(el, "base-url", _defaultBaseUrl),
       };
       if (!this._cfg.tenant) console.warn("[Jeeves] missing tenant attribute");
     }
