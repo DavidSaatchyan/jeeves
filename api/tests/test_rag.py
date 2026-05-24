@@ -12,9 +12,9 @@ from app import rag
 @pytest.fixture(autouse=True)
 def reset_rag_globals():
     """Reset module-level globals between tests."""
-    rag._chroma_client = None
+    rag.client._chroma_client = None
     yield
-    rag._chroma_client = None
+    rag.client._chroma_client = None
 
 
 @pytest.fixture
@@ -38,9 +38,9 @@ def mock_chroma():
     client = MagicMock(name="chroma_client")
     client.get_or_create_collection.return_value = col
 
-    with patch("app.rag._chroma", return_value=client):
+    with patch("app.rag.client._chroma", return_value=client):
         # Also patch the module-level client so _chroma() returns our mock
-        with patch.object(rag, "_chroma_client", client):
+        with patch.object(rag.client, "_chroma_client", client):
             yield col, client
 
 
@@ -56,7 +56,7 @@ def mock_openai():
 
     mock_client.embeddings.create.return_value = mock_response
 
-    with patch("app.rag.OpenAI", return_value=mock_client):
+    with patch("app.rag.client.OpenAI", return_value=mock_client):
         yield mock_client
 
 
@@ -65,10 +65,10 @@ def mock_openai():
 
 class TestEmbedBatch:
     def test_empty_list(self, mock_openai):
-        assert rag.embed_batch([]) == []
+        assert rag.client.embed_batch([]) == []
 
     def test_single_text(self, mock_openai):
-        result = rag.embed_batch(["hello"])
+        result = rag.client.embed_batch(["hello"])
         assert len(result) == 1
         assert result[0] == [0.1, 0.2, 0.3]
 
@@ -84,8 +84,8 @@ class TestEmbedBatch:
         mock_response.data = fake_data
         mock_client.embeddings.create.return_value = mock_response
 
-        with patch("app.rag.OpenAI", return_value=mock_client):
-            result = rag.embed_batch(["a", "b"])
+        with patch("app.rag.client.OpenAI", return_value=mock_client):
+            result = rag.client.embed_batch(["a", "b"])
             assert len(result) == 2
 
 
@@ -335,7 +335,7 @@ class TestPurgeOrphans:
 class TestCollection:
     def test_collection_name_format(self, tenant_id, mock_chroma):
         col, client = mock_chroma
-        _ = rag._collection(tenant_id)
+        _ = rag.client._collection(tenant_id)
         expected_name = f"tenant_{str(tenant_id).replace('-', '')}"
         client.get_or_create_collection.assert_called_once()
         call_name = client.get_or_create_collection.call_args[1]["name"]
@@ -343,7 +343,7 @@ class TestCollection:
 
     def test_collection_name_str_tenant(self, mock_chroma):
         col, client = mock_chroma
-        _ = rag._collection("some-tenant-id")
+        _ = rag.client._collection("some-tenant-id")
         expected = "tenant_sometenantid"
         call_name = client.get_or_create_collection.call_args[1]["name"]
         assert call_name == expected
@@ -356,12 +356,12 @@ class TestCountAllChunks:
     def test_returns_count(self, tenant_id, mock_chroma):
         col, _ = mock_chroma
         col.count.return_value = 42
-        assert rag._count_all_chunks(tenant_id) == 42
+        assert rag.engine._count_all_chunks(tenant_id) == 42
 
     def test_exception_returns_zero(self, tenant_id, mock_chroma):
         col, _ = mock_chroma
         col.count.side_effect = Exception("Error")
-        assert rag._count_all_chunks(tenant_id) == 0
+        assert rag.engine._count_all_chunks(tenant_id) == 0
 
 
 # ── _chroma singleton ──────────────────────────────────────────────────────
@@ -369,18 +369,18 @@ class TestCountAllChunks:
 
 class TestChromaSingleton:
     def test_singleton_behavior(self):
-        rag._chroma_client = None
-        with patch("app.rag.chromadb.PersistentClient") as mock_pc:
-            with patch("app.rag._settings.chroma_path", "/tmp/chroma"):
-                with patch("app.rag._settings.chroma_url", ""):
-                    c1 = rag._chroma()
-                    c2 = rag._chroma()
+        rag.client._chroma_client = None
+        with patch("app.rag.client.chromadb.PersistentClient") as mock_pc:
+            with patch("app.rag.client._settings.chroma_path", "/tmp/chroma"):
+                with patch("app.rag.client._settings.chroma_url", ""):
+                    c1 = rag.client._chroma()
+                    c2 = rag.client._chroma()
                     assert c1 is c2
                     mock_pc.assert_called_once()
 
     def test_no_config_raises(self):
-        rag._chroma_client = None
-        with patch("app.rag._settings.chroma_path", ""):
-            with patch("app.rag._settings.chroma_url", ""):
+        rag.client._chroma_client = None
+        with patch("app.rag.client._settings.chroma_path", ""):
+            with patch("app.rag.client._settings.chroma_url", ""):
                 with pytest.raises(RuntimeError, match="Neither CHROMA_URL nor CHROMA_PATH"):
-                    rag._chroma()
+                    rag.client._chroma()

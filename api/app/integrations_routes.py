@@ -12,7 +12,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from .auth import get_current_tenant
+from .auth.deps import get_current_tenant
 from .crypto import ConnectorError, decrypt, encrypt
 from .db import get_db
 from .models import NativeConnector, Tenant

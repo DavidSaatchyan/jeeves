@@ -73,6 +73,36 @@ async def generate_email(context: dict[str, Any], template_name: str) -> str:
         return ""
 
 
+async def simple_llm_response(tenant_id, message: str, system_override=None, conversation_history: list[dict] | None = None) -> dict:
+    """Direct LLM call without agent tool loop (v2 replacement)."""
+    import time
+
+    start = time.monotonic()
+    try:
+        from openai import AsyncOpenAI
+
+        client = AsyncOpenAI(api_key=_settings.openai_api_key)
+        messages = []
+        if system_override:
+            messages.append({"role": "system", "content": system_override})
+        if conversation_history:
+            messages.extend(conversation_history)
+        messages.append({"role": "user", "content": message})
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            temperature=0.3,
+            max_tokens=1000,
+        )
+        text = response.choices[0].message.content or ""
+    except Exception as e:
+        logger.error("LLM call failed: %s", e)
+        text = "I'm sorry, I'm having trouble processing your request."
+
+    elapsed = int((time.monotonic() - start) * 1000)
+    return {"response": text, "latency_ms": elapsed, "escalated": False}
+
+
 async def generate_widget_message(context: dict[str, Any], template_name: str) -> str:
     prompt = (
         f"Generate a short, conversational widget message based on:\n"

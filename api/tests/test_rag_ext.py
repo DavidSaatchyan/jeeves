@@ -11,9 +11,9 @@ from app import rag
 
 @pytest.fixture(autouse=True)
 def reset_rag_globals():
-    rag._chroma_client = None
+    rag.client._chroma_client = None
     yield
-    rag._chroma_client = None
+    rag.client._chroma_client = None
 
 
 @pytest.fixture
@@ -30,8 +30,8 @@ def mock_chroma():
     client = MagicMock(name="chroma_client")
     client.get_or_create_collection.return_value = col
 
-    with patch("app.rag._chroma", return_value=client):
-        with patch.object(rag, "_chroma_client", client):
+    with patch("app.rag.client._chroma", return_value=client):
+        with patch.object(rag.client, "_chroma_client", client):
             yield col, client
 
 
@@ -43,7 +43,7 @@ def mock_openai():
     mock_response.data = fake_data
     mock_client.embeddings.create.return_value = mock_response
 
-    with patch("app.rag.OpenAI", return_value=mock_client):
+    with patch("app.rag.client.OpenAI", return_value=mock_client):
         yield mock_client
 
 
@@ -52,7 +52,7 @@ def mock_openai():
 
 class TestTextualizeProduct:
     def test_minimal_product(self):
-        result = rag._textualize_product({"name": "Widget"})
+        result = rag.products._textualize_product({"name": "Widget"})
         assert "Product: Widget" in result
         assert "SKU/ID:" not in result
         assert "Category:" not in result
@@ -71,7 +71,7 @@ class TestTextualizeProduct:
             "image_url": "https://example.com/img.png",
             "product_url": "https://example.com/pw-001",
         }
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "Product: Pro Widget" in result
         assert "SKU/ID: PW-001" in result
         assert "Category: Widgets" in result
@@ -83,39 +83,39 @@ class TestTextualizeProduct:
 
     def test_price_in_cents_converts_to_dollars(self):
         p = {"name": "X", "price": 1000}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "10.00" in result
 
     def test_int_price_none(self):
         p = {"name": "X", "price": None}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "Price:" not in result
 
     def test_float_price(self):
         p = {"name": "X", "price": 19.99}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         # Float 19.99 has a decimal point → treated as dollars (not cents)
         assert "19.99" in result
 
     def test_attributes_as_dict(self):
         p = {"name": "X", "attributes": {"color": "blue", "size": "L"}}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "color=blue" in result
         assert "size=L" in result
 
     def test_attributes_empty(self):
         p = {"name": "X", "attributes": {}}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "Attributes:" not in result
 
     def test_empty_name(self):
         p = {"name": ""}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "Product: " in result
 
     def test_missing_keys(self):
         p = {"name": "X"}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "Product: X" in result
         assert "Category:" not in result  # key not present → .get returns None
 
@@ -289,59 +289,59 @@ class TestSearchWithWhere:
 class TestTextualizeProductEdgeCases:
     def test_very_long_name(self):
         name = "X" * 1000
-        result = rag._textualize_product({"name": name})
+        result = rag.products._textualize_product({"name": name})
         assert len(result) > 100
         assert name in result
 
     def test_float_price_with_cents_zero(self):
         p = {"name": "X", "price": 19.00}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "19.00" in result
 
     def test_unicode_in_fields(self):
         p = {"name": "Café", "description": "Crème brûlée €5"}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "Café" in result
         assert "Crème brûlée" in result
 
     def test_int_product_id(self):
         p = {"name": "X", "product_id": 12345}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "12345" in result
 
     def test_none_attributes(self):
         p = {"name": "X", "attributes": None}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "Attributes:" not in result
 
     def test_non_numeric_price_returns_none_in_text(self):
         p = {"name": "X", "price": None}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "Price:" not in result
 
     def test_zero_price(self):
         p = {"name": "X", "price": 0}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "0.00" in result
 
     def test_none_description(self):
         p = {"name": "X", "description": None}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "Description:" not in result
 
     def test_empty_stock_status_excluded(self):
         p = {"name": "X", "stock_status": ""}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "Stock:" not in result  # empty string is falsy, excluded
 
     def test_none_image_url(self):
         p = {"name": "X", "image_url": None}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "Image:" not in result
 
     def test_none_product_url(self):
         p = {"name": "X", "product_url": None}
-        result = rag._textualize_product(p)
+        result = rag.products._textualize_product(p)
         assert "URL:" not in result
 
 

@@ -16,7 +16,7 @@ from ..models import ChannelConfig, ChatLog, ConversationRating, Tenant
 from ..moderation import moderate
 from ..rate_limit import check_rate_limit
 from ..schemas import ChatOut, WidgetChatIn
-from ..routes_chat import _simple_llm_response
+from ..core.ai import simple_llm_response
 from ..config import get_settings
 
 router = APIRouter(tags=["widget"])
@@ -149,7 +149,7 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
 
     elif intent == "general":
         # Simple greeting / small talk — no RAG needed
-        result = await _simple_llm_response(tenant.id, body.message, conversation_history=history)
+        result = await simple_llm_response(tenant.id, body.message, conversation_history=history)
 
     else:
         # kb_query — RAG search + LLM response (existing flow)
@@ -182,7 +182,7 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
                 history_str = "\n".join(f"- {e['role']}: {e['content']}" for e in history)
                 system += f"\n\nConversation history:\n{history_str}"
 
-        result = await _simple_llm_response(tenant.id, body.message, system_override=system)
+        result = await simple_llm_response(tenant.id, body.message, system_override=system)
 
     log.response = result["response"]
     log.resolution = "resolved"
