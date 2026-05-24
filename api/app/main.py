@@ -10,6 +10,7 @@ from alembic import command
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.staticfiles import StaticFiles
 
 from . import admin, auth, integrations_routes, knowledge, routes_chat
 from .integrations import webhooks as webhooks_router
@@ -190,6 +191,9 @@ def health_db() -> dict:
     except Exception as e:
         return {"status": "error", "detail": str(e)}
 
+
+_STATIC = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=str(_STATIC)), name="static")
 
 _LANDING = Path(__file__).parent / "templates" / "landing.html"
 

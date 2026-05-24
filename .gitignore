@@ -34,8 +34,8 @@ AGENTS.md
 # Local config
 hubspot.config.yml
 
-# Logo source
-logo.png
+# Logo source (root only — static/ copy is tracked)
+/logo.png
 
 # Knowledge base (tenant data only)
 knowledge/*/
