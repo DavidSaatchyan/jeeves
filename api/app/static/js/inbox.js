@@ -3,8 +3,22 @@ var selectedConvDetail = null;
 var convData = [];
 var oldestMsgAt = null;
 var loadingMore = false;
+var currentStatusFilter = '';
 
 function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function initials(name){
+  var parts = (name || '?').split(' ');
+  var a = parts[0] ? parts[0][0] : '?';
+  var b = parts[1] ? parts[1][0] : '';
+  return (a + b).toUpperCase() || '?';
+}
+
+function avatarColor(name){
+  var hash = 0;
+  for (var i = 0; i < (name || '').length; i++) { hash = name.charCodeAt(i) + ((hash << 5) - hash); }
+  return 'avatar-' + (Math.abs(hash) % 8);
+}
 
 function timeAgo(d){
   if(!d) return '';
@@ -15,7 +29,16 @@ function timeAgo(d){
   return Math.floor(h / 24)+'d';
 }
 
-function convStatusClass(s){ return s === 'handoff_requested' ? 'handoff_requested' : s; }
+function isToday(d){ return new Date(d).toDateString() === new Date().toDateString(); }
+function isYesterday(d){ var y = new Date(); y.setDate(y.getDate() - 1); return new Date(d).toDateString() === y.toDateString(); }
+function formatDate(d){ return new Date(d).toLocaleDateString(undefined, {month:'short', day:'numeric'}); }
+
+function setStatusTab(el){
+  document.querySelectorAll('.inbox-status-tab').forEach(function(t){ t.classList.remove('active'); });
+  el.classList.add('active');
+  currentStatusFilter = el.getAttribute('data-status') || '';
+  loadConversations();
+}
 
 function toast(msg){
   var el = document.createElement('div');
@@ -52,7 +75,7 @@ function checkNotifications(){
       badge.style.display = 'none';
     }
     lastHandoffCount = n.handoff_requested;
-  }).catch(function(e){ /* notification check is best-effort */ });
+  }).catch(function(){});
 }
 
 // ── Canned responses ──
@@ -76,7 +99,7 @@ function renderCanned(list){
       '<div class="ci-title">' + esc(c.title) + (c.shortcut ? ' <span class="ci-shortcut">/' + esc(c.shortcut) + '</span>' : '') + '</div>' +
       '<div class="ci-preview">' + esc(c.content.substring(0,80)) + '</div></div>';
   });
-  if(!html) html = '<div style="padding:12px;text-align:center;color:var(--muted2);font-size:11px">No canned responses</div>';
+  if(!html) html = '<div style="padding:10px 12px;text-align:center;color:var(--muted2);font-size:11px">No canned responses</div>';
   document.getElementById('cannedList').innerHTML = html;
 }
 
@@ -137,10 +160,9 @@ document.addEventListener('keydown', function(e){
 
 // ── Conversation list ──
 function loadConversations(){
-  var status = document.getElementById('filterStatus').value;
   var q = document.getElementById('filterSearch').value;
   var params = '?limit=50&offset=0';
-  if(status) params += '&status=' + encodeURIComponent(status);
+  if(currentStatusFilter) params += '&status=' + encodeURIComponent(currentStatusFilter);
   if(q) params += '&q=' + encodeURIComponent(q);
   var list = document.getElementById('convItems');
   list.innerHTML = '<div class="inbox-loading">Loading</div>';
@@ -149,22 +171,26 @@ function loadConversations(){
     var html = '';
     convData.forEach(function(c){
       var name = (c.customer&&c.customer.display_name) || c.customer?.email || c.user_id || 'Unknown';
-      var statusClass = convStatusClass(c.status);
-      html += '<div class="inbox-conv' + (selectedConv && selectedConv.id === c.id ? ' active' : '') + '" data-id="' + c.id + '" onclick="selectConv(\'' + c.id + '\')">' +
-        '<div class="inbox-conv-row1">' +
-          (c.unread_count > 0 ? '<div class="inbox-conv-unread"></div>' : '') +
-          '<div class="inbox-conv-name">' + esc(name) + '</div>' +
-          '<div class="inbox-conv-time">' + timeAgo(c.last_message_at) + '</div>' +
+      var isUnread = c.unread_count > 0;
+      var statusClass = c.status === 'handoff_requested' ? 'handoff_requested' : c.status;
+      var initial = initials(name);
+      var colorClass = avatarColor(name);
+      html += '<div class="inbox-conv' +
+        (selectedConv && selectedConv.id === c.id ? ' active' : '') +
+        (isUnread ? ' unread' : '') +
+        '" data-id="' + c.id + '" onclick="selectConv(\'' + c.id + '\')">' +
+        '<div class="inbox-conv-avatar ' + colorClass + '">' + esc(initial) + '</div>' +
+        '<div class="inbox-conv-body">' +
+          '<div class="inbox-conv-top">' +
+            '<span class="inbox-conv-name">' + esc(name) + '</span>' +
+            '<span class="inbox-conv-time">' + timeAgo(c.last_message_at) + '</span>' +
+          '</div>' +
+          '<div class="inbox-conv-preview">' + esc(c.last_message_preview||'') + '</div>' +
         '</div>' +
-        '<div class="inbox-conv-row2">' +
-          '<span class="inbox-conv-status ' + statusClass + '">' + esc(c.status) + '</span>' +
-          (c.workflow ? '<span style="font-size:9px;color:var(--muted2)">' + esc(c.workflow.state||'') + '</span>' : '') +
-        '</div>' +
-        '<div class="inbox-conv-preview">' + esc(c.last_message_preview||'') + '</div>' +
-        '<div class="inbox-conv-meta">' + esc(c.channel) + (c.assigned_to ? ' · ' + esc(c.assigned_to) : '') + '</div>' +
+        '<span class="status-dot ' + statusClass + '"></span>' +
       '</div>';
     });
-    if(!html) html = '<div style="padding:20px;text-align:center;color:var(--muted2);font-size:12px">No conversations</div>';
+    if(!html) html = '<div style="padding:40px 20px;text-align:center;color:var(--muted2);font-size:12px">No conversations</div>';
     list.innerHTML = html;
   }).catch(function(){});
 }
@@ -176,20 +202,26 @@ function selectConv(id){
   api('/admin/api/inbox/conversations/' + id).then(function(c){
     selectedConvDetail = c;
     var name = (c.customer&&c.customer.display_name) || c.customer?.email || 'Unknown';
-    var statusClass = convStatusClass(c.status);
+    var statusClass = c.status === 'handoff_requested' ? 'handoff_requested' : c.status;
     var actionsHtml = '';
     if (c.status === 'active' || c.status === 'waiting' || c.status === 'handoff_requested') {
-      actionsHtml += '<button class="ghost sm" onclick="takeoverConv()">Take over</button>';
+      actionsHtml += '<button onclick="takeoverConv()">Take over</button>';
     }
     if (c.status === 'assigned' && c.assigned_to) {
-      actionsHtml += '<button class="ghost sm" onclick="returnToAi()">Return to AI</button>';
+      actionsHtml += '<button onclick="returnToAi()">Return to AI</button>';
     }
     if (c.status !== 'closed') {
-      actionsHtml += '<button class="ghost sm" onclick="closeConv()">Close</button>';
+      actionsHtml += '<button onclick="closeConv()">Close</button>';
     }
-    var html = '<div class="info"><div class="name">' + esc(name) + '</div><div class="meta">' + esc(c.channel) + ' · ' + esc(c.status) + (c.assigned_to ? ' · ' + esc(c.assigned_to) : '') + '</div></div>' +
+    document.getElementById('detailHeader').innerHTML =
+      '<div class="info">' +
+        '<div class="info-left">' +
+          '<span class="status-dot ' + statusClass + '"></span>' +
+          '<span class="name">' + esc(name) + '</span>' +
+        '</div>' +
+        '<div class="meta">' + esc(c.channel) + (c.assigned_to ? ' \u00b7 ' + esc(c.assigned_to) : '') + '</div>' +
+      '</div>' +
       '<div class="actions">' + actionsHtml + '</div>';
-    document.getElementById('detailHeader').innerHTML = html;
     loadMessages(id);
     loadNotes(id);
     loadCustomerProfile(c);
@@ -205,10 +237,11 @@ function loadCustomerProfile(c){
   var custId = c.customer.id;
   api('/admin/api/customers/' + custId).then(function(p){
     var initial = (p.display_name||p.email||'?')[0].toUpperCase();
+    var colorClass = avatarColor(p.display_name||p.email||'');
     document.getElementById('profileHeader').innerHTML =
-      '<div class="profile-avatar">' + esc(initial) + '</div>' +
+      '<div class="profile-avatar ' + colorClass + '">' + esc(initial) + '</div>' +
       '<div class="info"><div class="name">' + esc(p.display_name||p.email||'Customer') + '</div><div class="email">' + esc(p.email||'') + '</div></div>' +
-      '<button class="profile-close" onclick="closeProfile()">✕</button>';
+      '<button class="profile-close" onclick="closeProfile()">\u2715</button>';
 
     var tagsHtml = '';
     if(p.tags && p.tags.length) p.tags.forEach(function(t){ tagsHtml += '<span class="tag">' + esc(t) + '</span>'; });
@@ -224,11 +257,10 @@ function loadCustomerProfile(c){
 
     var riskHtml = '';
     if(p.risk_level || p.sentiment_trend || p.frustration_score != null){
-      var riskClass = 'risk-' + (p.risk_level||'low');
-      riskHtml += '<h4>Risk</h4>' +
-        (p.risk_level ? '<div class="row"><span class="label">Level</span><span class="value ' + riskClass + '">' + esc(p.risk_level) + '</span></div>' : '') +
-        (p.frustration_score != null ? '<div class="row"><span class="label">Frustration</span><span class="value">' + p.frustration_score + '/100</span></div>' : '') +
-        (p.sentiment_trend ? '<div class="row"><span class="label">Trend</span><span class="value">' + esc(p.sentiment_trend) + '</span></div>' : '');
+      riskHtml += '<h4>Risk</h4>';
+      if(p.risk_level) riskHtml += '<div class="row"><span class="label">Level</span><span class="value risk-' + p.risk_level + '">' + esc(p.risk_level) + '</span></div>';
+      if(p.frustration_score != null) riskHtml += '<div class="row"><span class="label">Frustration</span><span class="value">' + p.frustration_score + '/100</span></div>';
+      if(p.sentiment_trend) riskHtml += '<div class="row"><span class="label">Trend</span><span class="value">' + esc(p.sentiment_trend) + '</span></div>';
     }
     document.getElementById('profileRisk').innerHTML = riskHtml;
     loadCustomerSubscriptions(custId);
@@ -242,7 +274,7 @@ function loadCustomerSubscriptions(custId){
     var html = '<h4>Subscriptions</h4>';
     subs.forEach(function(s){
       html += '<div class="row"><span class="label">' + esc(s.plan_name||'Plan') + '</span><span class="value">' +
-        (s.mrr ? '$'+(s.mrr/100).toFixed(2) : '') + ' · ' + esc(s.status) + '</span></div>';
+        (s.mrr ? '$'+(s.mrr/100).toFixed(2) : '') + ' \u00b7 ' + esc(s.status) + '</span></div>';
     });
     document.getElementById('profileSubscriptions').innerHTML = html;
   });
@@ -254,8 +286,8 @@ function loadCustomerConversations(custId){
     var html = '<h4>Past Conversations</h4>';
     convs.forEach(function(c){
       html += '<div class="profile-conv-item" onclick="selectConv(\'' + c.id + '\')">' +
-        esc(c.last_message_preview||'') +
-        '<span class="pc-date"> · ' + timeAgo(c.last_message_at) + '</span></div>';
+        '<span class="pc-text">' + esc(c.last_message_preview||'(empty)') + '</span>' +
+        '<span class="pc-date">' + timeAgo(c.last_message_at) + '</span></div>';
     });
     document.getElementById('profileConversations').innerHTML = html;
   });
@@ -268,13 +300,28 @@ function loadMessages(convId, before){
   api(url).then(function(msgs){
     var list = document.getElementById('msgList');
     var html = '';
+    var lastDate = null;
+    var lastSender = null;
     (msgs||[]).forEach(function(m){
+      var msgDate = m.created_at ? new Date(m.created_at).toDateString() : null;
+      if(msgDate && msgDate !== lastDate){
+        var label = isToday(m.created_at) ? 'Today' : isYesterday(m.created_at) ? 'Yesterday' : formatDate(m.created_at);
+        html += '<div class="msg-date-sep"><span>' + label + '</span></div>';
+        lastDate = msgDate;
+        lastSender = null;
+      }
       if(m.sender_type === 'system' || m.content_type === 'system_event'){
         html += '<div class="msg-row system"><div class="msg-bubble">' + esc(m.content) + '</div></div>';
+        lastSender = null;
       } else {
-        html += '<div class="msg-row ' + (m.direction === 'incoming' ? 'incoming' : 'outgoing') + '">' +
-          '<div><div class="msg-sender">' + esc(m.sender_type) + '</div><div class="msg-bubble">' + esc(m.content) + '</div><div class="msg-time">' + timeAgo(m.created_at) + '</div></div>' +
+        var dir = m.direction === 'incoming' ? 'incoming' : 'outgoing';
+        var showSender = dir === 'incoming' && m.sender_type !== lastSender;
+        html += '<div class="msg-row ' + dir + '">' +
+          (showSender ? '<div class="msg-sender">' + esc(m.sender_type) + '</div>' : '') +
+          '<div class="msg-bubble">' + esc(m.content) + '</div>' +
+          '<div class="msg-time">' + timeAgo(m.created_at) + '</div>' +
         '</div>';
+        if(dir === 'incoming') lastSender = m.sender_type;
       }
     });
     if(before){
@@ -292,7 +339,6 @@ function setupInfiniteScroll(){
   list.addEventListener('scroll', function(){
     if(list.scrollTop < 50 && oldestMsgAt && !loadingMore && selectedConv){
       loadingMore = true;
-      var prevScrollHeight = list.scrollHeight;
       loadMessages(selectedConv.id, oldestMsgAt);
       oldestMsgAt = null;
       setTimeout(function(){ loadingMore = false; }, 500);
@@ -308,7 +354,7 @@ function loadNotes(convId){
     area.style.display='block';
     var html = '';
     (notes||[]).forEach(function(n){
-      html += '<div class="note-item"><div class="note-meta">' + esc(n.operator_id) + ' · ' + timeAgo(n.created_at) + '</div>' + esc(n.content) + '</div>';
+      html += '<div class="note-item"><div class="note-meta">' + esc(n.operator_id) + ' \u00b7 ' + timeAgo(n.created_at) + '</div>' + esc(n.content) + '</div>';
     });
     list.innerHTML = html;
   });
@@ -373,7 +419,7 @@ function debounceSearch(){
   searchTimer = setTimeout(loadConversations, 300);
 }
 
-// ── Canned response /shortcut processing ──
+// ── Canned shortcuts ──
 var cannedByShortcut = {};
 
 function loadCannedShortcuts(){
@@ -384,22 +430,17 @@ function loadCannedShortcuts(){
   });
 }
 
-// ── SSE real-time updates ──
+// ── SSE ──
 function connectSSE(){
   var es = new EventSource('/admin/api/inbox/events');
   es.onmessage = function(e){
     if(!e.data || e.data === '') return;
     try {
       var ev = JSON.parse(e.data);
-      if(ev.type === 'conversations_updated'){
-        loadConversations();
-        checkNotifications();
-      }
+      if(ev.type === 'conversations_updated'){ loadConversations(); checkNotifications(); }
     } catch(err){}
   };
-  es.onerror = function(){
-    setTimeout(connectSSE, 5000);
-  };
+  es.onerror = function(){ setTimeout(connectSSE, 5000); };
 }
 
 function startInbox(){
@@ -411,15 +452,13 @@ function startInbox(){
 
 document.addEventListener('DOMContentLoaded', function(){
   var input = document.getElementById('replyInput');
-  if (input) {
+  if(input){
     input.addEventListener('input', function(e){
       var val = this.value;
       if(val.startsWith('/') && val.length > 1){
         var shortcut = val.slice(1).toLowerCase();
         var match = cannedByShortcut[shortcut];
-        if(match && val.length === shortcut.length + 1){
-          this.value = match.content;
-        }
+        if(match && val.length === shortcut.length + 1){ this.value = match.content; }
       }
     });
   }

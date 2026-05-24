@@ -11,16 +11,17 @@
         <span class="inbox-badge" id="totalBadge">0</span>
         <span class="inbox-badge" id="handoffBadge" style="display:none;background:var(--red);">!</span>
       </div>
-      <div class="inbox-filters">
-        <select id="filterStatus" onchange="loadConversations()">
-          <option value="">All</option>
-          <option value="active">Active</option>
-          <option value="waiting">Waiting</option>
-          <option value="handoff_requested">Handoff Requested</option>
-          <option value="assigned">Assigned</option>
-          <option value="closed">Closed</option>
-        </select>
+      <div class="inbox-search-wrap">
+        <span class="inbox-search-icon">🔍</span>
         <input id="filterSearch" placeholder="Search..." oninput="debounceSearch()"/>
+      </div>
+      <div class="inbox-status-tabs">
+        <button class="inbox-status-tab active" data-status="" onclick="setStatusTab(this)">All</button>
+        <button class="inbox-status-tab" data-status="active" onclick="setStatusTab(this)">Active</button>
+        <button class="inbox-status-tab" data-status="waiting" onclick="setStatusTab(this)">Waiting</button>
+        <button class="inbox-status-tab" data-status="handoff_requested" onclick="setStatusTab(this)">Handoff</button>
+        <button class="inbox-status-tab" data-status="assigned" onclick="setStatusTab(this)">Assigned</button>
+        <button class="inbox-status-tab" data-status="closed" onclick="setStatusTab(this)">Closed</button>
       </div>
       <div class="inbox-convs" id="convItems"></div>
       <div class="inbox-pagination" id="convPagination"></div>
