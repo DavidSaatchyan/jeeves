@@ -39,8 +39,8 @@
           <div class="inbox-notes-input"><input id="noteInput" placeholder="Add internal note..." onkeydown="if(event.key==='Enter')addNote()"/></div>
         </div>
         <div class="inbox-reply" id="replyArea">
-          <button class="ghost sm" id="cannedBtn" onclick="toggleCanned()" title="Canned responses" style="font-size:16px;padding:4px 8px;">⚡</button>
-          <input id="replyInput" placeholder="Type a message... (/ for canned)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReply()}"/>
+          <button class="ghost sm" onclick="toggleCanned()" title="Insert canned response" style="padding:4px 10px;font-size:11px;white-space:nowrap">Canned</button>
+          <input id="replyInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendReply()}"/>
           <button onclick="sendReply()" class="accent sm">Send</button>
           <div class="canned-popup" id="cannedPopup" style="display:none">
             <div class="canned-header">Canned Responses <button class="ghost xs" onclick="showNewCanned()" style="margin-left:auto;font-size:10px">+ New</button></div>

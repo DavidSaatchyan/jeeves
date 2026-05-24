@@ -1,16 +1,18 @@
 /* ═══════════════════════════════════════════════════
-   Inbox — Front-inspired Redesign
+   Inbox — Full-viewport layout (independent of base.html)
    ═══════════════════════════════════════════════════ */
 
-/* ── Root layout fix ──
-   Inbox is rendered inside <main> which has inline padding.
-   Override it when inbox is present. */
-body:has(#inboxApp) main {
-  padding: 0 !important;
-  overflow: hidden;
+/* Fill viewport right of sidebar (220px) */
+#inboxApp {
+  position: fixed;
+  top: 0;
+  left: 220px;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  z-index: 1000;
 }
 
-#inboxApp { height: 100%; display: flex; }
 .inbox-layout { display: flex; flex: 1; min-height: 0; }
 
 /* ── Left Panel ── */
@@ -20,22 +22,19 @@ body:has(#inboxApp) main {
 .inbox-list-header h2 { font-size: 15px; font-weight: 700; margin: 0; }
 .inbox-badge { font-size: 10px; padding: 1px 7px; border-radius: 10px; background: var(--accent); color: #fff; font-weight: 600; }
 
-/* Search */
 .inbox-search-wrap { padding: 0 14px 6px; position: relative; flex-shrink: 0; }
-.inbox-search-wrap input { width: 100%; padding: 7px 10px 7px 28px; font-size: 12px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; outline: none; box-sizing: border-box; transition: border-color .15s; }
+.inbox-search-wrap input { width: 100%; padding: 7px 10px 7px 28px; font-size: 12px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; outline: none; box-sizing: border-box; }
 .inbox-search-wrap input:focus { border-color: var(--accent); }
-.inbox-search-icon { position: absolute; left: 21px; top: 50%; transform: translateY(-50%); font-size: 12px; opacity: .45; pointer-events: none; line-height: 1; }
+.inbox-search-icon { position: absolute; left: 21px; top: 50%; transform: translateY(-50%); font-size: 12px; opacity: .45; pointer-events: none; }
 
-/* Status tabs */
 .inbox-status-tabs { display: flex; gap: 2px; padding: 0 14px 8px; flex-wrap: wrap; flex-shrink: 0; }
-.inbox-status-tab { font-size: 11px; padding: 3px 10px; border-radius: 12px; background: none; border: none; color: var(--muted2); cursor: pointer; font-weight: 500; transition: background .12s, color .12s; }
+.inbox-status-tab { font-size: 11px; padding: 3px 10px; border-radius: 12px; background: none; border: none; color: var(--muted2); cursor: pointer; font-weight: 500; }
 .inbox-status-tab:hover { background: rgba(255,255,255,0.04); color: var(--text); }
 .inbox-status-tab.active { background: rgba(94,106,210,0.1); color: var(--accent); }
 
-/* Conversation list */
 .inbox-convs { flex: 1; overflow-y: auto; padding: 0 6px; }
 
-.inbox-conv { display: flex; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer; transition: background .1s; align-items: flex-start; }
+.inbox-conv { display: flex; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer; align-items: flex-start; }
 .inbox-conv:hover { background: rgba(255,255,255,0.03); }
 .inbox-conv.active { background: rgba(94,106,210,0.08); }
 .inbox-conv + .inbox-conv { border-top: 1px solid rgba(255,255,255,0.03); }
@@ -64,27 +63,32 @@ body:has(#inboxApp) main {
 .inbox-detail { flex: 1; display: flex; flex-direction: column; background: var(--bg); min-width: 0; position: relative; }
 
 .inbox-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
-.inbox-empty svg { width: 40px; height: 40px; opacity: .35; }
 .inbox-empty p { font-size: 13px; margin: 0; color: var(--muted2); }
 
-/* Detail header */
-.inbox-detail-header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; min-height: 48px; box-sizing: border-box; }
+.inbox-detail-header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; min-height: 48px; }
 .inbox-detail-header .info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
 .inbox-detail-header .info-left { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
 .inbox-detail-header .name { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.inbox-detail-header .meta { font-size: 11px; color: var(--muted2); white-space: nowrap; display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.inbox-detail-header .meta { font-size: 11px; color: var(--muted2); white-space: nowrap; flex-shrink: 0; }
 .inbox-detail-header .actions { display: flex; gap: 4px; flex-shrink: 0; }
-.inbox-detail-header .actions button { font-size: 11px; padding: 4px 10px; border-radius: 5px; background: none; border: 1px solid var(--border); color: var(--muted); cursor: pointer; transition: background .12s, color .12s, border-color .12s; }
+.inbox-detail-header .actions button { font-size: 11px; padding: 4px 10px; border-radius: 5px; background: none; border: 1px solid var(--border); color: var(--muted); cursor: pointer; }
 .inbox-detail-header .actions button:hover { background: rgba(255,255,255,0.04); color: var(--text); border-color: var(--muted2); }
 
-/* Messages */
+/* ★ CRITICAL: messages container must FILL the detail panel */
+.inbox-messages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .inbox-msgs { flex: 1; overflow-y: auto; padding: 8px 16px; }
 
 .msg-date-sep { text-align: center; font-size: 11px; color: var(--muted2); padding: 12px 0 6px; font-weight: 500; position: relative; }
 .msg-date-sep::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--border); z-index: 0; }
 .msg-date-sep span { background: var(--bg); padding: 0 10px; position: relative; z-index: 1; }
 
-.msg-row { margin-bottom: 4px; max-width: 80%; }
+.msg-row { margin-bottom: 4px; max-width: 85%; }
 .msg-row.incoming { margin-right: auto; }
 .msg-row.outgoing { margin-left: auto; text-align: right; }
 .msg-row.system { margin: 4px auto; text-align: center; max-width: 95%; }
@@ -108,18 +112,17 @@ body:has(#inboxApp) main {
 
 /* Reply area */
 .inbox-reply { display: flex; align-items: flex-end; gap: 6px; padding: 10px 16px; border-top: 1px solid var(--border); background: var(--surface); position: relative; flex-shrink: 0; }
-.inbox-reply input { flex: 1; padding: 8px 12px; font-size: 13px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; outline: none; transition: border-color .15s; }
+.inbox-reply input { flex: 1; padding: 8px 12px; font-size: 13px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; outline: none; }
 .inbox-reply input:focus { border-color: var(--accent); }
-.inbox-reply button.accent { padding: 8px 16px; font-size: 12px; font-weight: 600; background: var(--accent); color: #fff; border: none; border-radius: 8px; cursor: pointer; transition: opacity .15s; }
+.inbox-reply button.accent { padding: 8px 16px; font-size: 12px; font-weight: 600; background: var(--accent); color: #fff; border: none; border-radius: 8px; cursor: pointer; }
 .inbox-reply button.accent:hover { opacity: .85; }
 
 /* Canned popup */
 .canned-popup { position: absolute; bottom: 100%; left: 12px; right: 12px; max-height: 300px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 -4px 20px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; z-index: 100; }
 .canned-header { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--muted2); text-transform: uppercase; letter-spacing: .4px; flex-shrink: 0; }
 .canned-header .ghost { margin-left: auto; font-size: 10px; padding: 2px 7px; border-radius: 4px; background: none; border: 1px solid var(--border); color: var(--muted2); cursor: pointer; }
-.canned-header .ghost:hover { color: var(--text); border-color: var(--muted2); }
 .canned-list { overflow-y: auto; flex: 1; }
-.canned-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.03); transition: background .1s; }
+.canned-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.03); }
 .canned-item:hover { background: rgba(94,106,210,0.07); }
 .canned-item:last-child { border-bottom: none; }
 .canned-item .ci-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 1px; }
@@ -127,9 +130,8 @@ body:has(#inboxApp) main {
 .canned-item .ci-preview { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── Right Panel: Profile ── */
-.inbox-profile { position: absolute; top: 0; right: 0; bottom: 0; width: 280px; border-left: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; overflow-y: auto; z-index: 50; box-shadow: -4px 0 16px rgba(0,0,0,0.2); animation: slideIn .15s ease; }
-@keyframes slideIn { from { transform: translateX(16px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-@media (min-width: 1200px) { .inbox-messages { margin-right: 280px; } .inbox-profile { box-shadow: none; animation: none; } }
+.inbox-profile { position: absolute; top: 0; right: 0; bottom: 0; width: 280px; border-left: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; overflow-y: auto; z-index: 50; box-shadow: -4px 0 16px rgba(0,0,0,0.2); }
+@media (min-width: 1200px) { .inbox-messages { margin-right: 280px; } .inbox-profile { box-shadow: none; } }
 
 .profile-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .profile-avatar { width: 36px; height: 36px; min-width: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; }
@@ -152,18 +154,17 @@ body:has(#inboxApp) main {
 
 .tag { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(94,106,210,0.1); color: var(--accent); margin: 1px 2px; white-space: nowrap; }
 
-.profile-conv-item { font-size: 11px; color: var(--muted); padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); cursor: pointer; transition: color .1s; display: flex; justify-content: space-between; gap: 8px; }
+.profile-conv-item { font-size: 11px; color: var(--muted); padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); cursor: pointer; display: flex; justify-content: space-between; gap: 8px; }
 .profile-conv-item:hover { color: var(--text); }
 .profile-conv-item .pc-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-.profile-conv-item .pc-date { font-size: 10px; color: var(--muted2); white-space: nowrap; flex-shrink: 0; }
+.profile-conv-item .pc-date { font-size: 10px; color: var(--muted2); white-space: nowrap; }
 
 /* ── Shared ── */
 .inbox-loading { display: flex; align-items: center; justify-content: center; padding: 30px; gap: 8px; color: var(--muted2); font-size: 12px; }
 .inbox-loading::before { content: ''; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.inbox-toast { position: fixed; bottom: 20px; right: 20px; background: var(--red); color: #fff; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 500; z-index: 1000; max-width: 280px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); animation: fadeIn .15s; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.inbox-toast { position: fixed; bottom: 20px; right: 20px; background: var(--red); color: #fff; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 500; z-index: 2000; max-width: 280px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
 
 /* Avatar colors */
 .avatar-0 { background: #5e6ad2; }
@@ -174,3 +175,8 @@ body:has(#inboxApp) main {
 .avatar-5 { background: #a855f7; }
 .avatar-6 { background: #ec4899; }
 .avatar-7 { background: #14b8a6; }
+
+/* ── Mobile fallback (sidebar collapses) ── */
+@media (max-width: 768px) {
+  #inboxApp { position: static; left: auto; }
+}
