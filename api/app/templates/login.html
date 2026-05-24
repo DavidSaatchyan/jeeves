@@ -16,7 +16,10 @@ main{display:block;padding:0;max-width:none;}
 .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:40px 36px 36px;}
 
 .auth-header{text-align:center;margin-bottom:32px;}
-.auth-header .auth-logo{width:40px;height:40px;border-radius:10px;margin:0 auto 16px;display:block;object-fit:contain;}
+.auth-header .auth-brand{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:20px;}
+.auth-header .auth-logo{width:36px;height:36px;border-radius:8px;flex-shrink:0;}
+.auth-header .auth-name{font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.3px;}
+.auth-header .auth-name span{color:var(--accent);}
 .auth-header .sub{font-size:14px;color:var(--muted);}
 
 /* Tab switcher */
@@ -87,7 +90,10 @@ main{display:block;padding:0;max-width:none;}
   <div class="auth-wrapper">
     <div class="auth-card">
       <div class="auth-header">
-        <img src="/static/logo.png" alt="Jeeves" class="auth-logo"/>
+        <div class="auth-brand">
+          <img src="/static/logo-36.png" alt="" class="auth-logo"/>
+          <span class="auth-name">Jeeves<span>.</span></span>
+        </div>
         <div class="sub" id="authSub">Sign in to your admin panel</div>
       </div>
 
