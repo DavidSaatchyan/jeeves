@@ -70,6 +70,7 @@ class ConversationListResponse(BaseModel):
 
 
 class MessageOut(BaseModel):
+    model_config = {"from_attributes": True}
     id: UUID
     direction: str
     content: str
@@ -83,6 +84,7 @@ class MessageOut(BaseModel):
 
 
 class NoteOut(BaseModel):
+    model_config = {"from_attributes": True}
     id: UUID
     content: str
     operator_id: str
@@ -512,6 +514,7 @@ def return_to_ai(
 
 
 class CustomerProfileOut(BaseModel):
+    model_config = {"from_attributes": True}
     id: UUID
     email: str | None = None
     phone: str | None = None
@@ -790,6 +793,7 @@ def _auto_close_stale_conversations(db: Session, tenant_id: UUID) -> int:
 
 
 class CannedResponseOut(BaseModel):
+    model_config = {"from_attributes": True}
     id: UUID
     title: str
     content: str
