@@ -8,7 +8,7 @@ from pathlib import Path
 from alembic.config import Config
 from alembic import command
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 
@@ -110,10 +110,14 @@ async def dynamic_cors(request: Request, call_next):
 
     # Widget endpoints — allow any origin (needed for embedding)
     if path in _widget_paths or path.startswith("/widget"):
-        response = await call_next(request)
+        if request.method == "OPTIONS":
+            response = Response(status_code=200)
+        else:
+            response = await call_next(request)
         if origin:
             response.headers["Access-Control-Allow-Origin"] = origin
-            response.headers["Vary"] = "Origin"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
         return response
 
     # API endpoints — restrictive CORS
