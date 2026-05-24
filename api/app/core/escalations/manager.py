@@ -27,16 +27,16 @@ class EscalationManager:
     def __init__(self, db: Session):
         self.db = db
 
-    def create(self, tenant_id: str, workflow_id: UUID, reason: str,
+    def create(self, tenant_id: str, workflow_id: UUID, customer_id: UUID, reason: str,
                source: str = "workflow", metadata: dict | None = None) -> dict:
         eid = uuid4()
         now = datetime.utcnow()
         self.db.execute(
             text("""
-                INSERT INTO escalations (id, tenant_id, workflow_id, status, reason, source, metadata, created_at, updated_at)
-                VALUES (:id, :tid, :wid, 'OPEN', :reason, :source, :meta, :now, :now)
+                INSERT INTO escalations (id, tenant_id, workflow_id, customer_id, status, escalation_reason, source, extra_metadata, created_at, updated_at)
+                VALUES (:id, :tid, :wid, :cid, 'OPEN', :reason, :source, :meta, :now, :now)
             """),
-            {"id": eid, "tid": tenant_id, "wid": workflow_id,
+            {"id": eid, "tid": tenant_id, "wid": workflow_id, "cid": customer_id,
              "reason": reason, "source": source, "meta": metadata or {}, "now": now},
         )
 

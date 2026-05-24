@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from ..core.timeline.recorder import record_transition
 from ..db import get_db
+from ..shared.inbox_writer import add_message
 from ..models import (
     CannedResponse,
     Communication,
@@ -89,6 +90,19 @@ class NoteOut(BaseModel):
 
 
 # ── Helpers ──
+
+
+def _add_system_event(db: Session, conv: Conversation, tenant: Tenant, text: str) -> Message:
+    msg = Message(
+        tenant_id=tenant.id,
+        conversation_id=conv.id,
+        direction="outgoing",
+        content=text,
+        content_type="system_event",
+        sender_type="system",
+    )
+    db.add(msg)
+    return msg
 
 
 def _conversation_to_item(c: Conversation, db: Session) -> ConversationListItem:
@@ -188,8 +202,36 @@ def list_conversations(
     query = query.offset(offset).limit(limit)
     rows = db.execute(query).scalars().all()
 
+    # Batch-load customers and workflows to avoid N+1
+    customer_ids = {c.customer_id for c in rows if c.customer_id}
+    workflow_ids = {c.workflow_id for c in rows if c.workflow_id}
+    customers = {}
+    if customer_ids:
+        for c in db.execute(select(Customer).where(Customer.id.in_(customer_ids))).scalars():
+            customers[c.id] = c
+    workflows = {}
+    if workflow_ids:
+        for w in db.execute(select(Workflow).where(Workflow.id.in_(workflow_ids))).scalars():
+            workflows[w.id] = w
+
+    def _item(c: Conversation) -> ConversationListItem:
+        customer = None
+        if c.customer_id and c.customer_id in customers:
+            cust = customers[c.customer_id]
+            customer = CustomerBrief(id=cust.id, display_name=cust.email, email=cust.email)
+        wf = None
+        if c.workflow_id and c.workflow_id in workflows:
+            w = workflows[c.workflow_id]
+            wf = WorkflowBrief(id=w.id, type=w.workflow_type, state=w.current_state, status=w.status)
+        return ConversationListItem(
+            id=c.id, customer=customer, channel=c.channel, status=c.status,
+            assigned_to=c.assigned_to, workflow=wf,
+            last_message_preview=c.last_message_preview, message_count=c.message_count,
+            unread_count=c.unread_count, last_message_at=c.last_message_at, started_at=c.started_at,
+        )
+
     return ConversationListResponse(
-        conversations=[_conversation_to_item(c, db) for c in rows],
+        conversations=[_item(c) for c in rows],
         total=total,
         limit=limit,
         offset=offset,
@@ -252,6 +294,7 @@ def assign_conversation(
     conv.assigned_at = datetime.utcnow()
     if conv.status in ("active", "waiting", "handoff_requested"):
         conv.status = "assigned"
+    _add_system_event(db, conv, tenant, f"Assigned to {tenant.email}")
     db.commit()
     return {"ok": True, "assigned_to": tenant.email}
 
@@ -267,8 +310,32 @@ def close_conversation(
     )
     if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found")
+    if conv.status == "closed":
+        raise HTTPException(status_code=400, detail="Conversation already closed")
     conv.status = "closed"
     conv.closed_at = datetime.utcnow()
+    if conv.workflow_id:
+        db.execute(
+            text("UPDATE workflows SET status = 'completed' WHERE id = :id AND status IN ('active','paused')"),
+            {"id": conv.workflow_id},
+        )
+    _add_system_event(db, conv, tenant, "Conversation closed")
+    db.commit()
+    return {"ok": True}
+
+
+@router.post("/api/inbox/conversations/{conversation_id}/read")
+def mark_conversation_read(
+    conversation_id: UUID,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    conv = db.scalar(
+        select(Conversation).where(Conversation.id == conversation_id, Conversation.tenant_id == tenant.id)
+    )
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    conv.unread_count = 0
     db.commit()
     return {"ok": True}
 
@@ -329,24 +396,21 @@ def send_message(
     content = body.get("content", "").strip()
     if not conversation_id or not content:
         raise HTTPException(status_code=400, detail="conversation_id and content are required")
+    if len(content) > 5000:
+        raise HTTPException(status_code=400, detail="Message too long (max 5000 chars)")
     conv = db.scalar(
         select(Conversation).where(Conversation.id == conversation_id, Conversation.tenant_id == tenant.id)
     )
     if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found")
-    msg = Message(
-        tenant_id=tenant.id,
-        conversation_id=conversation_id,
+    msg = add_message(
+        db=db,
+        conversation=conv,
         direction="outgoing",
         content=content,
-        content_type="text",
         sender_type="operator",
         operator_id=tenant.email,
     )
-    db.add(msg)
-    conv.last_message_preview = content[:120]
-    conv.last_message_at = datetime.utcnow()
-    conv.message_count += 1
     db.commit()
     db.refresh(msg)
     return MessageOut.model_validate(msg).model_dump()
@@ -364,20 +428,21 @@ def takeover_conversation(
     )
     if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found")
+    if conv.status == "closed":
+        raise HTTPException(status_code=400, detail="Cannot take over a closed conversation")
+    if conv.assigned_to and conv.assigned_to != tenant.email:
+        previous_assignee = conv.assigned_to
+    else:
+        previous_assignee = None
     previous_status = conv.status
     conv.status = "assigned"
     conv.assigned_to = tenant.email
     conv.assigned_at = datetime.utcnow()
 
-    system_msg = Message(
-        tenant_id=tenant.id,
-        conversation_id=conversation_id,
-        direction="outgoing",
-        content="Operator has taken over. AI monitoring paused.",
-        content_type="system_event",
-        sender_type="system",
-    )
-    db.add(system_msg)
+    take_msg = f"Operator {tenant.email} took over."
+    if previous_assignee:
+        take_msg += f" Previously assigned to {previous_assignee}."
+    _add_system_event(db, conv, tenant, take_msg)
 
     if conv.workflow_id:
         db.execute(
@@ -395,9 +460,6 @@ def takeover_conversation(
         )
 
     if conv.escalation_id:
-        esc = db.get(Escalation, conv.escalation_id)
-        if esc:
-            esc.status = "ASSIGNED"
         esc = db.get(Escalation, conv.escalation_id)
         if esc:
             esc.status = "ASSIGNED"
@@ -423,25 +485,24 @@ def return_to_ai(
     )
     if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found")
+    if conv.status == "closed":
+        raise HTTPException(status_code=400, detail="Cannot return a closed conversation to AI")
     conv.status = "active"
     conv.assigned_to = None
     conv.assigned_at = None
 
-    system_msg = Message(
-        tenant_id=tenant.id,
-        conversation_id=conversation_id,
-        direction="outgoing",
-        content="Conversation returned to AI agent.",
-        content_type="system_event",
-        sender_type="system",
-    )
-    db.add(system_msg)
+    _add_system_event(db, conv, tenant, "Conversation returned to AI agent.")
 
     if conv.workflow_id:
         db.execute(
             text("UPDATE workflows SET status = 'active' WHERE id = :id AND status = 'paused'"),
             {"id": conv.workflow_id},
         )
+        if conv.escalation_id:
+            db.execute(
+                text("UPDATE escalations SET status = 'RESOLVED', resolved_at = :now WHERE id = :id AND status != 'CLOSED'"),
+                {"id": conv.escalation_id, "now": datetime.utcnow()},
+            )
 
     db.commit()
     return {"ok": True, "status": "active"}
@@ -891,7 +952,5 @@ async def inbox_events(
             except Exception:
                 pass
             await asyncio.sleep(3)
-
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")

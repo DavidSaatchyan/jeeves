@@ -212,8 +212,10 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
 
 
 @router.get("/widget/inbox")
-def widget_inbox(tenant_id: uuid.UUID, user_id: str, request: Request, db: Session = Depends(get_db)):
-    """Return any undelivered outgoing (proactive) messages for this user."""
+def widget_inbox(tenant_id: uuid.UUID, user_id: str, viewing: bool = False, request: Request = None, db: Session = Depends(get_db)):
+    """Return any undelivered outgoing messages for this user.
+    If viewing=True, mark them as delivered (user has the panel open).
+    """
     _validate_origin_strict(tenant_id, request, db)
 
     conv = db.scalar(
@@ -234,14 +236,14 @@ def widget_inbox(tenant_id: uuid.UUID, user_id: str, request: Request, db: Sessi
             Message.conversation_id == conv.id,
             Message.direction == "outgoing",
             Message.delivered == False,
-            Message.sender_type != "operator",
         )
         .order_by(Message.created_at.asc())
     ).scalars().all()
     out = [{"id": str(m.id), "message": m.content, "created_at": m.created_at.isoformat()} for m in rows]
-    for m in rows:
-        m.delivered = True
-    db.commit()
+    if viewing:
+        for m in rows:
+            m.delivered = True
+        db.commit()
     return {"messages": out}
 
 

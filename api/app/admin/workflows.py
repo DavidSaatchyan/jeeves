@@ -122,6 +122,7 @@ def api_workflow_escalate(
             status="OPEN",
         )
         db.add(esc)
+        db.flush()
 
     conv = db.query(Conversation).filter(
         Conversation.workflow_id == wf_id,
@@ -129,6 +130,8 @@ def api_workflow_escalate(
     ).first()
     if conv:
         conv.status = "handoff_requested"
+        if customer_uuid and esc:
+            conv.escalation_id = esc.id
 
     db.commit()
     return {"ok": True, "message": "Workflow escalated"}

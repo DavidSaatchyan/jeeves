@@ -45,14 +45,3 @@ def should_escalate_conflict(conflict_type: str, tenant_id: str) -> tuple[bool, 
         return True, f"conflict_detected_{conflict_type}"
 
     return False, ""
-
-
-def should_escalate_conflict(conflict_type: str, tenant_id: str) -> tuple[bool, str]:
-    engine = PolicyEngine(tenant_id)
-    policy = engine.evaluate("escalation", {})
-
-    conflict_triggers = policy.get("conflict_triggers", ["reconciliation"])
-    if conflict_type in conflict_triggers:
-        return True, f"conflict_detected_{conflict_type}"
-
-    return False, ""

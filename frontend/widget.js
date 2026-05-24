@@ -663,7 +663,8 @@
     _pollInbox() {
       if (!this._state.userId) return;
       var self = this;
-      fetch(this._cfg.baseUrl + "/widget/inbox?tenant_id=" + encodeURIComponent(this._cfg.tenant) + "&user_id=" + encodeURIComponent(this._state.userId))
+      var viewing = self._state.open ? 'true' : 'false';
+      fetch(this._cfg.baseUrl + "/widget/inbox?tenant_id=" + encodeURIComponent(this._cfg.tenant) + "&user_id=" + encodeURIComponent(this._state.userId) + "&viewing=" + viewing)
         .then(function (r) { return r.ok ? r.json() : { messages: [] }; })
         .then(function (data) {
           var seen = stoGet(self._keys().seenInbox, []);
