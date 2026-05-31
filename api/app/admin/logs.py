@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from fastapi import Depends, Query
+from fastapi import Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 

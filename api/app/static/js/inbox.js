@@ -238,7 +238,7 @@ function loadCustomerProfile(c){
     var colorClass = avatarColor(p.display_name||p.email||'');
     document.getElementById('profileHeader').innerHTML =
       '<div class="profile-avatar ' + colorClass + '">' + esc(initial) + '</div>' +
-      '<div class="info"><div class="name">' + esc(p.display_name||p.email||'Customer') + '</div><div class="email">' + esc(p.email||'') + '</div></div>' +
+      '<div class="info"><div class="name">' + esc(p.display_name||p.email||'Patient') + '</div><div class="email">' + esc(p.email||'') + '</div></div>' +
       '<button class="profile-close" onclick="closeProfile()">\u2715</button>';
 
     var tagsHtml = '';
@@ -267,15 +267,7 @@ function loadCustomerProfile(c){
 }
 
 function loadCustomerSubscriptions(custId){
-  api('/admin/api/customers/' + custId + '/subscriptions').then(function(subs){
-    if(!subs || !subs.length){ document.getElementById('profileSubscriptions').innerHTML = ''; return; }
-    var html = '<h4>Subscriptions</h4>';
-    subs.forEach(function(s){
-      html += '<div class="row"><span class="label">' + esc(s.plan_name||'Plan') + '</span><span class="value">' +
-        (s.mrr ? '$'+(s.mrr/100).toFixed(2) : '') + ' \u00b7 ' + esc(s.status) + '</span></div>';
-    });
-    document.getElementById('profileSubscriptions').innerHTML = html;
-  });
+  document.getElementById('profileSubscriptions').innerHTML = '';
 }
 
 function loadCustomerConversations(custId){

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from pathlib import Path
 
 from alembic.config import Config
@@ -12,9 +11,10 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 
-from . import admin, auth, integrations_routes, knowledge, routes_chat
-from .integrations import webhooks as webhooks_router
+from . import admin, auth, knowledge, routes_chat
 from .channels import widget as widget_channel
+from .channels import whatsapp as whatsapp_channel
+from .integrations.crm.webhooks import router as crm_webhooks_router
 from .config import get_settings
 from .db import engine
 from sqlalchemy import text
@@ -163,14 +163,14 @@ def _run_alembic_migrations() -> None:
 
 @app.on_event("startup")
 def on_startup() -> None:
+    from .core.workflows import init_workflows
+    init_workflows()
     _run_alembic_migrations()
     from .channels.registry import build_channel_cache
-    from .core.workflows import init_workflows
     from .db import SessionLocal
     db = SessionLocal()
     try:
         build_channel_cache(db)
-        init_workflows()
     finally:
         db.close()
 
@@ -225,6 +225,7 @@ app.include_router(auth.router)
 app.include_router(routes_chat.router)
 app.include_router(knowledge.router)
 app.include_router(widget_channel.router)
+app.include_router(whatsapp_channel.router)
 app.include_router(admin.router)
-app.include_router(integrations_routes.router)
-app.include_router(webhooks_router.router)
+app.include_router(crm_webhooks_router)
+

@@ -3,15 +3,12 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from ..events.schemas import CanonicalEvent
-from ..policies.engine import PolicyEngine
-from ...shared.locks import workflow_lock
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +23,6 @@ class Workflow(ABC):
         current_state: str,
         status: str = "active",
         started_at: datetime | None = None,
-        policy_engine: PolicyEngine | None = None,
     ):
         self.workflow_id = workflow_id
         self.tenant_id = tenant_id
@@ -35,7 +31,6 @@ class Workflow(ABC):
         self.current_state = current_state
         self.status = status
         self.started_at = started_at or datetime.utcnow()
-        self.policy_engine = policy_engine
 
     @abstractmethod
     async def handle_event(self, event: CanonicalEvent, db: Session) -> None:
@@ -55,10 +50,6 @@ class Workflow(ABC):
         from_state = self.current_state
         self.current_state = to_state
 
-        policy_snapshot = {}
-        if self.policy_engine:
-            policy_snapshot = self.policy_engine.get_policy_snapshot()
-
         record_transition(
             db=db,
             workflow_id=self.workflow_id,
@@ -67,12 +58,12 @@ class Workflow(ABC):
             to_state=to_state,
             trigger_event=event.event_type,
             decision_reason=reason,
-            policy_snapshot=policy_snapshot,
+            policy_snapshot={},
         )
 
         db.commit()
 
-        if to_state in ("RECOVERED", "FAILED", "EXPIRED", "CANCELLED", "RESOLVED", "RETAINED", "LOST"):
+        if to_state in ("RECOVERED", "FAILED", "EXPIRED", "CANCELLED", "RESOLVED", "RETAINED", "LOST", "CONVERTED", "CLOSED"):
             self.status = "completed"
         elif to_state == "ESCALATED":
             self.status = "escalated"

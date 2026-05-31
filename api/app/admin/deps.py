@@ -3,10 +3,8 @@ from __future__ import annotations
 from typing import Optional
 
 from fastapi import Cookie, Depends, HTTPException, Request, status
-from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
-from ..auth.deps import get_current_tenant
 from ..auth.tokens import decode_token
 from ..config import get_settings
 from ..db import get_db

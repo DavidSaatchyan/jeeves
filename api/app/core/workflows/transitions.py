@@ -1,19 +1,13 @@
 from __future__ import annotations
 
-WISMO_TRANSITIONS: dict[str, list[str]] = {
-    "INQUIRY_DETECTED": ["VALIDATING_IDENTITY", "ESCALATED"],
-    "VALIDATING_IDENTITY": ["RETRIEVING_SHIPMENT", "WAITING_ORDER_SELECTION", "ESCALATED"],
-    "WAITING_ORDER_SELECTION": ["RETRIEVING_SHIPMENT", "ESCALATED"],
-    "RETRIEVING_SHIPMENT": ["CLASSIFYING_RISK", "ESCALATED"],
-    "CLASSIFYING_RISK": ["RESPONSE_SENT", "RESOLVED", "LOST", "ESCALATED"],
-    "RESPONSE_SENT": ["RESOLVED", "ESCALATED"],
-    "RESOLVED": [],
-    "LOST": [],
-    "ESCALATED": [],
-}
+from .appointment import TRANSITION_TABLE as APPOINTMENT_TABLE
+from .marketing import TRANSITION_TABLE as MARKETING_TABLE
+from .followup import TRANSITION_TABLE as FOLLOWUP_TABLE
 
 TRANSITION_TABLES: dict[str, dict[str, list[str]]] = {
-    "wismo": WISMO_TRANSITIONS,
+    "appointment": APPOINTMENT_TABLE,
+    "marketing": MARKETING_TABLE,
+    "followup": FOLLOWUP_TABLE,
 }
 
 

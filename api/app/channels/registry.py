@@ -46,7 +46,7 @@ class _ChannelLookupCache:
             self._phone_to_tenant.clear()
             for cfg in configs:
                 if cfg.channel_type == "whatsapp":
-                    phone = cfg.config.get("phone_number_id", "")
+                    phone = cfg.config.get("business_phone", "")
                     if phone:
                         self._phone_to_tenant[phone] = cfg.tenant_id
             self._built = True

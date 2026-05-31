@@ -63,57 +63,7 @@ class FileRecord(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
-class ProductCatalog(Base):
-    """Structured product catalog — source of truth for product data."""
-    __tablename__ = "product_catalog"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    product_id = Column(Text, nullable=False)  # external product ID (SKU, Shopify ID)
-    name = Column(Text, nullable=False)
-    description = Column(Text, default="")
-    category = Column(Text, default="")
-    price = Column(Integer, nullable=True)  # stored in cents (same as Invoice.amount_due)
-    currency = Column(String(8), default="USD")
-    attributes = Column(JSONB, default=dict)  # {"color": "red", "size": "M", "material": "cotton"}
-    stock_status = Column(String(16), default="unknown")  # in_stock, out_of_stock, limited, unknown
-    image_url = Column(Text, default="")
-    product_url = Column(Text, default="")
-    active = Column(Boolean, default=True, nullable=False)
-    import_batch = Column(Text, default="")
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-
-class CatalogVariant(Base):
-    """Product variants — sizes, colors, SKU-level data."""
-    __tablename__ = "catalog_variants"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    product_id = Column(UUID(as_uuid=True), ForeignKey("product_catalog.id", ondelete="CASCADE"), nullable=False, index=True)
-    sku = Column(Text, nullable=False)
-    name = Column(Text, default="")
-    attributes = Column(JSONB, default=dict)
-    price = Column(Integer, nullable=True)
-    stock_status = Column(String(16), default="unknown")
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-
-class Compatibility(Base):
-    """Compatibility table — model-to-model relationships."""
-    __tablename__ = "compatibility"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    source_product_id = Column(Text, nullable=False)
-    source_product_name = Column(Text, default="")
-    target_product_id = Column(Text, nullable=False)
-    target_product_name = Column(Text, default="")
-    relationship = Column(String(32), default="compatible_with")  # compatible_with, requires, optional_for
-    condition = Column(Text, default="")
-    notes = Column(Text, default="")
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+# Phase 1: ProductCatalog, CatalogVariant, Compatibility removed — e-commerce concepts
 
 
 class ChatLog(Base):
@@ -231,10 +181,6 @@ class Conversation(Base):
     assigned_to = Column(Text, nullable=True)
     assigned_at = Column(DateTime, nullable=True)
 
-    workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id"), nullable=True)
-    workflow_type = Column(String(64), nullable=True)
-    escalation_id = Column(UUID(as_uuid=True), ForeignKey("escalations.id"), nullable=True)
-
     started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     last_message_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
     closed_at = Column(DateTime, nullable=True)
@@ -244,6 +190,10 @@ class Conversation(Base):
     last_message_preview = Column(Text, nullable=True)
     message_count = Column(Integer, default=0, nullable=False)
     unread_count = Column(Integer, default=0, nullable=False)
+
+    workflow_id = Column(UUID(as_uuid=True), nullable=True, index=True)
+    workflow_type = Column(String(64), nullable=True)
+    workflow_state = Column(String(64), nullable=True)
 
     __table_args__ = (
         Index("ix_conversations_tenant_status", "tenant_id", "status"),
@@ -271,9 +221,6 @@ class Message(Base):
 
     sender_type = Column(String(16), nullable=False, default="customer")
     operator_id = Column(Text, nullable=True)
-
-    workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id"), nullable=True)
-    workflow_state = Column(String(64), nullable=True)
 
     sources = Column(JSONB, nullable=True)
     confidence = Column(Float, nullable=True)
@@ -320,16 +267,13 @@ class CannedResponse(Base):
 
 
 class Customer(Base):
-    """Canonical cross-system customer identity."""
+    """Canonical cross-system customer/patient identity."""
     __tablename__ = "customers"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
     email = Column(Text)
     phone = Column(Text)
-    shopify_customer_id = Column(Text)
-    stripe_customer_id = Column(Text)
-    recharge_customer_id = Column(Text)
 
     # Profile
     display_name = Column(Text, nullable=True)
@@ -345,74 +289,11 @@ class Customer(Base):
     last_seen_at = Column(DateTime)
     last_message_at = Column(DateTime, nullable=True)
 
-    # Risk & sentiment
-    risk_level = Column(String(32))
-    sentiment_state = Column(String(32))
-    sentiment_trend = Column(String(16), nullable=True)
-    frustration_score = Column(Integer)
-
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
-class Subscription(Base):
-    """Canonical subscription state (source of truth: Recharge)."""
-    __tablename__ = "subscriptions"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id", ondelete="CASCADE"), nullable=False, index=True)
-    external_subscription_id = Column(Text)
-    status = Column(String(32), nullable=False)
-    plan_name = Column(Text)
-    product_sku = Column(Text)
-    renewal_date = Column(DateTime)
-    started_at = Column(DateTime)
-    pause_state = Column(String(32))
-    skip_state = Column(String(32))
-    mrr = Column(Integer)
-    currency = Column(String(8))
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-
-class Invoice(Base):
-    """Canonical billing/payment entity (source of truth: Stripe)."""
-    __tablename__ = "invoices"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id", ondelete="CASCADE"), nullable=False, index=True)
-    subscription_id = Column(UUID(as_uuid=True), ForeignKey("subscriptions.id", ondelete="SET NULL"), nullable=True)
-    external_invoice_id = Column(Text)
-    status = Column(String(32), nullable=False)
-    amount_due = Column(Integer)
-    currency = Column(String(8))
-    payment_attempt_count = Column(Integer, default=0)
-    last_failure_reason = Column(Text)
-    due_date = Column(DateTime)
-    paid_at = Column(DateTime)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-
-class PaymentFailure(Base):
-    """Operational payment failure object tracked across retry lifecycle."""
-    __tablename__ = "payment_failures"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    invoice_id = Column(UUID(as_uuid=True), ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False, index=True)
-    subscription_id = Column(UUID(as_uuid=True), ForeignKey("subscriptions.id", ondelete="SET NULL"), nullable=True)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id", ondelete="CASCADE"), nullable=False, index=True)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    failure_type = Column(Text)
-    failure_category = Column(Text)
-    recoverability = Column(String(32))
-    attempt_number = Column(Integer, default=0)
-    detected_at = Column(DateTime, nullable=False)
-    last_retry_at = Column(DateTime)
-    workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id", ondelete="SET NULL"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+# Phase 1: Subscription, Invoice, PaymentFailure removed — e-commerce concepts
 
 
 
@@ -486,25 +367,7 @@ class Communication(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
-class Escalation(Base):
-    """Human intervention / escalation object."""
-    __tablename__ = "escalations"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id", ondelete="CASCADE"), nullable=False, index=True)
-    customer_id = Column(UUID(as_uuid=True), ForeignKey("customers.id", ondelete="CASCADE"), nullable=False, index=True)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    escalation_reason = Column(Text)
-    severity = Column(String(16))
-    owner_id = Column(Text)
-    assigned_to = Column(Text)
-    source = Column(String(64))
-    extra_metadata = Column(JSONB, default=dict)
-    sla_breached = Column(Boolean, default=False)
-    status = Column(String(32), nullable=False, default="OPEN")
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    resolved_at = Column(DateTime)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+# Phase 1: Escalation model removed — will be rebuilt for medical in later phases
 
 
 class TimelineEvent(Base):
@@ -535,24 +398,11 @@ class AIInteraction(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
-class PolicySet(Base):
-    """Merchant operational governance policies."""
-    __tablename__ = "policy_sets"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
-    retry_policy = Column(JSONB, default=dict)
-    communication_policy = Column(JSONB, default=dict)
-    escalation_policy = Column(JSONB, default=dict)
-    approval_policy = Column(JSONB, default=dict)
-    wismo_policy = Column(JSONB, default=dict)
-    enabled_workflows = Column(JSONB, default=list)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+# Phase 1: PolicySet model removed — will be rebuilt for medical in later phases
 
 
 class NativeConnector(Base):
-    """Third-party connector credentials (Shopify, Stripe, etc.)."""
+    """Third-party connector credentials (CRM, etc.)."""
     __tablename__ = "native_connectors"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
@@ -565,15 +415,149 @@ class NativeConnector(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
-class NotificationPreferences(Base):
-    """Per-tenant notification settings."""
-    __tablename__ = "notification_preferences"
+# Phase 1: NotificationPreferences model removed
+
+
+class Patient(Base):
+    """Medical patient — canonical patient identity for clinic context."""
+    __tablename__ = "patients"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
-    escalation_alerts = Column(Boolean, default=True)
-    approval_alerts = Column(Boolean, default=True)
-    workflow_failure_alerts = Column(Boolean, default=True)
-    daily_summary = Column(Boolean, default=False)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    external_id = Column(Text)                              # CRM patient ID
+    first_name = Column(Text, nullable=False)
+    last_name = Column(Text, nullable=False)
+    email = Column(Text)
+    phone = Column(Text, nullable=False)
+    date_of_birth = Column(DateTime)
+    gender = Column(String(16))
+
+    # Consent management
+    consent_status = Column(String(16), default="pending")  # pending | granted | revoked | expired
+    consent_timestamp = Column(DateTime)
+    consent_channel = Column(String(32))                     # whatsapp | widget | web | admin
+    gdpr_data_retention = Column(String(32))                 # retention policy applied
+
+    extra_data = Column(JSONB, default=dict)                 # CRM-specific fields
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class Appointment(Base):
+    """Patient appointment record."""
+    __tablename__ = "appointments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    patient_id = Column(UUID(as_uuid=True), ForeignKey("patients.id"), nullable=False, index=True)
+    external_id = Column(Text)                              # CRM appointment ID
+    provider_name = Column(Text, nullable=False)
+    provider_specialty = Column(Text)
+    department = Column(Text)
+    start_time = Column(DateTime, nullable=False)
+    end_time = Column(DateTime, nullable=False)
+    status = Column(String(32), nullable=False, default="scheduled")
+    reason = Column(Text)
+    notes = Column(Text)
+    source = Column(String(32), default="whatsapp")
+    slot_token = Column(String(64))
+    reminder_sent_24h = Column(Boolean, default=False)
+    reminder_sent_2h = Column(Boolean, default=False)
+    consent_id = Column(UUID(as_uuid=True), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class ConsentLog(Base):
+    """Immutable consent journal (GDPR Art. 7)."""
+    __tablename__ = "consent_logs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    patient_id = Column(UUID(as_uuid=True), ForeignKey("patients.id"), nullable=True, index=True)
+    type = Column(String(32), nullable=False)                # marketing | appointment | phi_whatsapp | data_processing
+    status = Column(String(16), nullable=False, default="granted")  # granted | revoked | expired
+    channel = Column(String(32), nullable=False)             # whatsapp | widget | web | admin
+    consent_text = Column(Text, nullable=False)              # exact text patient agreed to
+    ip_address = Column(String(45))
+    user_agent = Column(Text)
+    granted_at = Column(DateTime, nullable=False)
+    revoked_at = Column(DateTime)
+    expires_at = Column(DateTime)
+
+    __table_args__ = (
+        Index("ix_consent_logs_tenant_type_status", "tenant_id", "type", "status"),
+    )
+
+
+class Provider(Base):
+    """Healthcare provider / doctor."""
+    __tablename__ = "providers"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    external_id = Column(Text)                              # CRM provider ID
+    name = Column(Text, nullable=False)
+    specialty = Column(Text)
+    email = Column(Text)
+    phone = Column(Text)
+    schedule = Column(JSONB, default=dict)                  # availability rules
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class CrmConnection(Base):
+    """CRM provider connection config."""
+    __tablename__ = "crm_connections"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    provider = Column(String(32), nullable=False)             # zoho | hubspot | salesforce | custom_api
+    config = Column(JSONB, default=dict)                     # encrypted credentials, endpoints, mappings
+    status = Column(String(16), nullable=False, default="disconnected")  # connected | disconnected | error
+    last_sync_at = Column(DateTime)
+    webhook_secret = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class AuditLog(Base):
+    """Extended compliance audit log (GDPR Art. 30 / HIPAA)."""
+    __tablename__ = "audit_logs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    patient_id = Column(UUID(as_uuid=True), ForeignKey("patients.id"), nullable=True)
+    actor_type = Column(String(16), nullable=False)          # patient | staff | system | whatsapp
+    actor_id = Column(Text)
+    action = Column(String(64), nullable=False)               # message_sent | appointment_booked | consent_granted | phi_accessed | data_deleted
+    resource_type = Column(String(32))
+    resource_id = Column(Text)
+    details = Column(JSONB, default=dict)                    # NOT raw PHI — references/tokens only
+    ip_address = Column(String(45))
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    retention_until = Column(DateTime)
+
+    __table_args__ = (
+        Index("ix_audit_logs_tenant_action", "tenant_id", "action"),
+        Index("ix_audit_logs_tenant_timestamp", "tenant_id", "timestamp"),
+    )
+
+
+class Campaign(Base):
+    """Marketing campaign."""
+    __tablename__ = "campaigns"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    name = Column(Text, nullable=False)
+    trigger_type = Column(String(32), nullable=False, default="manual")
+    trigger_config = Column(JSONB, default=dict)
+    message_template = Column(Text, default="")
+    target_filters = Column(JSONB, default=dict)
+    status = Column(String(16), nullable=False, default="draft")
+    metrics = Column(JSONB, default=dict)
+    start_at = Column(DateTime)
+    end_at = Column(DateTime)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)

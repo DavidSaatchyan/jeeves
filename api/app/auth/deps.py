@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..models import ApiKey, Tenant
-from .router import SESSION_COOKIE, settings
+from .router import SESSION_COOKIE
 from .tokens import _hash_key, decode_token
 
 

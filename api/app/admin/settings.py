@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import uuid as uuid_mod
-from datetime import datetime
 
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -9,7 +8,7 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 
 from .. import billing
-from ..models import ApiKey, NotificationPreferences, Tenant
+from ..models import ApiKey, Tenant
 from .deps import get_admin_tenant
 from .router import router
 
@@ -19,7 +18,6 @@ def api_settings(
     tenant: Tenant = Depends(get_admin_tenant),
     db: Session = Depends(get_db),
 ):
-    prefs = db.query(NotificationPreferences).filter(NotificationPreferences.tenant_id == tenant.id).first()
     keys = db.query(ApiKey).filter(ApiKey.tenant_id == tenant.id).order_by(ApiKey.created_at.desc()).all()
     return {
         "workspace": {
@@ -41,11 +39,6 @@ def api_settings(
             for k in keys
         ],
         "notifications": {
-            "escalation_alerts": prefs.escalation_alerts if prefs else True,
-            "approval_alerts": prefs.approval_alerts if prefs else True,
-            "workflow_failure_alerts": prefs.workflow_failure_alerts if prefs else True,
-            "daily_summary": prefs.daily_summary if prefs else False,
-        } if prefs else {
             "escalation_alerts": True,
             "approval_alerts": True,
             "workflow_failure_alerts": True,
@@ -61,22 +54,7 @@ def api_settings_update(
     tenant: Tenant = Depends(get_admin_tenant),
     db: Session = Depends(get_db),
 ):
-    prefs = db.query(NotificationPreferences).filter(NotificationPreferences.tenant_id == tenant.id).first()
-    if not prefs:
-        prefs = NotificationPreferences(tenant_id=tenant.id)
-        db.add(prefs)
-    notifications = body.get("notifications", {})
-    if "escalation_alerts" in notifications:
-        prefs.escalation_alerts = bool(notifications["escalation_alerts"])
-    if "approval_alerts" in notifications:
-        prefs.approval_alerts = bool(notifications["approval_alerts"])
-    if "workflow_failure_alerts" in notifications:
-        prefs.workflow_failure_alerts = bool(notifications["workflow_failure_alerts"])
-    if "daily_summary" in notifications:
-        prefs.daily_summary = bool(notifications["daily_summary"])
-    prefs.updated_at = datetime.utcnow()
-    db.commit()
-    return {"ok": True, "message": "Settings updated"}
+    return {"ok": True, "message": "Settings updated (placeholder)"}
 
 
 @router.post("/api/settings/api-keys")
@@ -85,7 +63,8 @@ def api_settings_create_key(
     tenant: Tenant = Depends(get_admin_tenant),
     db: Session = Depends(get_db),
 ):
-    import hashlib, secrets
+    import hashlib
+    import secrets
     name = body.get("name", "default")
     raw = "jev_sk_" + secrets.token_hex(24)
     hashed = hashlib.sha256(raw.encode()).hexdigest()

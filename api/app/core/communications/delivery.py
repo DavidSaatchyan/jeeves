@@ -1,39 +1,41 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
-from ...config import get_settings
+import httpx
 
 logger = logging.getLogger(__name__)
 
-_settings = get_settings()
+WHATSAPP_API = "https://graph.facebook.com/v17.0/{phone_number_id}/messages"
+
+
+async def send_whatsapp_message(phone_number_id: str, access_token: str, wa_id: str, text: str) -> dict:
+    """Send a WhatsApp text message via Cloud API.
+
+    This is the shared delivery function used by workflows and channels.
+    """
+    url = WHATSAPP_API.format(phone_number_id=phone_number_id)
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        r = await client.post(
+            url,
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": wa_id,
+                "type": "text",
+                "text": {"body": text},
+            },
+        )
+        r.raise_for_status()
+        return r.json()
 
 
 async def send_email(to: str, subject: str, body: str) -> bool:
-    provider = _get_email_provider()
-    if not provider:
-        logger.warning("no email provider configured, skipping send to %s", to)
-        return False
-
-    try:
-        return await provider.send(to, subject, body)
-    except Exception as e:
-        logger.error("email send failed to %s: %s", to, e)
-        return False
-
-
-def _get_email_provider() -> Any | None:
-    api_key = _settings.sendgrid_api_key or _settings.resend_api_key
-    if not api_key:
-        return None
-
-    if _settings.sendgrid_api_key:
-        from ...integrations.email.provider import SendGridProvider
-        return SendGridProvider(_settings.sendgrid_api_key)
-
-    if _settings.resend_api_key:
-        from ...integrations.email.provider import ResendProvider
-        return ResendProvider(_settings.resend_api_key)
-
-    return None
+    """Email delivery is being removed (Phase 1). WhatsApp replaces email.
+    This stub remains to avoid breaking existing communication service imports."""
+    logger.warning("email delivery removed: would send to %s subject=%s", to, subject)
+    return False

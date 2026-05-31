@@ -19,7 +19,7 @@ def _ensure_customer(db: Session, conversation: Conversation, user_display_name:
         cust = db.scalar(
             select(Customer).where(
                 Customer.tenant_id == conversation.tenant_id,
-                Customer.shopify_customer_id == conversation.user_id,
+                Customer.phone == conversation.user_id,
             )
         )
     if not cust:

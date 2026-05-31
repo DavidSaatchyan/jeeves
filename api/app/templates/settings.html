@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>Integrate</h1>
-<p class="page-desc">Connect your commerce stack and configure how Jeeves works.</p>
+<p class="page-desc">Connect your CRM stack and configure how the system works.</p>
 
 <div class="st-tabs" id="settingsTabs">
   <button class="st-tab active" data-tab="connections">Connections</button>
@@ -34,7 +34,7 @@
 <div id="tabKnowledge" class="tab-panel" style="display:none">
   <div class="card" style="margin-bottom:12px">
     <h2>Files</h2>
-    <p class="muted" style="font-size:12px;margin-bottom:12px">Upload PDF, TXT, or MD files that the AI reads to answer customer questions.</p>
+    <p class="muted" style="font-size:12px;margin-bottom:12px">Upload PDF, TXT, or MD files that the AI reads to answer patient questions.</p>
     <div id="drop" class="drop" style="cursor:pointer">
       <div style="font-size:13px;font-weight:600">Drop files here or <span style="color:var(--accent);text-decoration:underline">browse</span></div>
       <div class="muted" style="font-size:11px">.pdf, .txt, .md · Max 50 MB</div>
@@ -52,7 +52,7 @@
 <div id="tabChannels" class="tab-panel" style="display:none">
   <div class="card">
     <h2>Channels</h2>
-    <p class="muted" style="font-size:12px;margin-bottom:16px">Where the AI interacts with customers.</p>
+    <p class="muted" style="font-size:12px;margin-bottom:16px">Where the AI interacts with patients.</p>
     <div id="channelsList" style="font-size:13px">Loading...</div>
   </div>
 </div>
@@ -104,8 +104,8 @@ async function loadChannels() {
   try {
     var settings = await api('/admin/api/settings');
     document.getElementById('channelsList').innerHTML =
-      '<div class="tl-row"><span>💬</span><span style="flex:1;font-weight:500">Website Widget</span><span class="pill ok" style="font-size:10px">Active</span></div>' +
-      '<div class="tl-row"><span>📧</span><span style="flex:1;font-weight:500">Email</span><span class="pill ' + (settings.notifications ? 'ok' : 'muted') + '" style="font-size:10px">' + (settings.notifications ? 'Configured' : 'Not set up') + '</span></div>';
+      '<div class="tl-row"><span>💬</span><span style="flex:1;font-weight:500">WhatsApp</span><span class="pill ok" style="font-size:10px">Primary</span></div>' +
+      '<div class="tl-row"><span>🌐</span><span style="flex:1;font-weight:500">Website Widget</span><span class="pill ok" style="font-size:10px">Active</span></div>';
   } catch(e) { console.error('channels error:', e); }
 }
 

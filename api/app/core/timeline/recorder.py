@@ -7,7 +7,8 @@ from uuid import UUID
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from ..events.schemas import CanonicalEvent
+
+from ..compliance.audit import record_audit_event
 
 
 def record_transition(
@@ -66,4 +67,30 @@ def record_timeline_event(
             "pl": payload or {},
             "now": datetime.utcnow(),
         },
+    )
+
+
+def record_compliance_event(
+    db: Session,
+    tenant_id: UUID,
+    action: str,
+    actor_type: str,
+    actor_id: str,
+    patient_id: UUID | None = None,
+    resource_type: str | None = None,
+    resource_id: str | None = None,
+    details: dict | None = None,
+    ip_address: str | None = None,
+) -> None:
+    record_audit_event(
+        db=db,
+        tenant_id=tenant_id,
+        action=action,
+        actor_type=actor_type,
+        actor_id=actor_id,
+        patient_id=patient_id,
+        resource_type=resource_type,
+        resource_id=resource_id,
+        details=details,
+        ip_address=ip_address,
     )

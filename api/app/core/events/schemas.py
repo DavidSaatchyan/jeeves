@@ -2,24 +2,25 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
 
-EVENT_TYPES = {
-    # Shopify / WISMO
-    "order_created",
-    "order_updated",
-    "order_fulfilled",
-    "order_cancelled",
-    "customer_created",
-    "customer_updated",
-    "fulfillment_created",
-    "tracking_updated",
+EVENT_TYPES: set[str] = {
     # Workflow runtime
     "workflow_timeout",
     "manual_escalation",
+    # Medical event types (Phase 5)
+    "appointment_requested",
+    "patient_message_received",
+    # Marketing & Follow-up (Phase 6)
+    "campaign_scheduled",
+    "campaign_event",
+    "followup_due",
+    "visit_completed",
+    "patient_responded",
+    "nurture_due",
 }
 
 

@@ -12,7 +12,7 @@ Test widget channel is excluded from all counters at the channel level.
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from fastapi import HTTPException, status
 

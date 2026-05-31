@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 
@@ -41,11 +42,9 @@ async def fire_outgoing_webhooks(db: Session, tenant_id, user_id: str, event: st
     body = json.dumps(payload, ensure_ascii=False)
     headers = {"Content-Type": "application/json"}
     if cfg.outgoing_secret:
-        from ...webhooks import compute_outgoing_signature
-        from ...crypto import decrypt
         try:
-            secret = decrypt(cfg.outgoing_secret)
-            headers["X-Jeeves-Signature"] = compute_outgoing_signature(secret, body)
+            secret = cfg.outgoing_secret
+            headers["X-Jeeves-Signature"] = hashlib.sha256((secret + body).encode()).hexdigest()
         except Exception:
             pass
 

@@ -55,3 +55,88 @@ def render_lost_package(context: dict[str, Any]) -> dict[str, str]:
             "We sincerely apologize for this experience.\n\n- Your Support Team"
         ),
     }
+
+
+def render_campaign_first_contact(context: dict[str, Any]) -> dict[str, str]:
+    name = context.get("patient_name", "there")
+    clinic = context.get("clinic_name", "our clinic")
+    service = context.get("service", "health services")
+    return {
+        "subject": f"Special offer from {clinic}",
+        "body": (
+            f"Hi {name}! This is {clinic}. We have some great news about our {service}. "
+            f"Would you like to learn more? Reply STOP to opt out."
+        ),
+    }
+
+
+def render_campaign_nurture(context: dict[str, Any]) -> dict[str, str]:
+    name = context.get("patient_name", "there")
+    clinic = context.get("clinic_name", "our clinic")
+    return {
+        "subject": f"Follow-up from {clinic}",
+        "body": (
+            f"Hi {name}! Just following up on our previous message. "
+            f"At {clinic}, we care about your health. "
+            f"Would you like to schedule a visit? Reply STOP to opt out."
+        ),
+    }
+
+
+def render_followup_day1(context: dict[str, Any]) -> dict[str, str]:
+    name = context.get("patient_name", "there")
+    clinic = context.get("clinic_name", "your clinic")
+    return {
+        "subject": f"How are you feeling? — {clinic}",
+        "body": (
+            f"Hi {name}! Just checking in after your recent visit to {clinic}. "
+            f"How are you feeling today? Reply STOP to opt out."
+        ),
+    }
+
+
+def render_followup_day7(context: dict[str, Any]) -> dict[str, str]:
+    name = context.get("patient_name", "there")
+    return {
+        "subject": "One week check-in",
+        "body": (
+            f"Hi {name}! It's been a week since your visit. "
+            f"We hope you're doing well. Any concerns or questions? Reply STOP to opt out."
+        ),
+    }
+
+
+def render_followup_day30(context: dict[str, Any]) -> dict[str, str]:
+    name = context.get("patient_name", "there")
+    clinic = context.get("clinic_name", "your clinic")
+    return {
+        "subject": "One month check-in",
+        "body": (
+            f"Hi {name}! It's been a month since your visit to {clinic}. "
+            f"How are you feeling? Are you satisfied with your progress? Reply STOP to opt out."
+        ),
+    }
+
+
+def render_medication_adherence(context: dict[str, Any]) -> dict[str, str]:
+    name = context.get("patient_name", "there")
+    return {
+        "subject": "Medication reminder",
+        "body": (
+            f"Hi {name}! Just a friendly reminder to take your medications as prescribed. "
+            f"Are you having any trouble with your treatment plan? Reply STOP to opt out."
+        ),
+    }
+
+
+def render_satisfaction_survey(context: dict[str, Any]) -> dict[str, str]:
+    name = context.get("patient_name", "there")
+    clinic = context.get("clinic_name", "your clinic")
+    return {
+        "subject": f"We value your feedback — {clinic}",
+        "body": (
+            f"Hi {name}! We'd love your feedback about your experience at {clinic}. "
+            f"On a scale of 1-10, how likely are you to recommend us? "
+            f"Reply STOP to opt out."
+        ),
+    }

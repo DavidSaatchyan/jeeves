@@ -14,19 +14,34 @@ from ..models import NativeConnector
 
 logger = logging.getLogger(__name__)
 
-_PROVIDERS = frozenset({"shopify"})
+_PROVIDERS: frozenset[str] = frozenset({
+    "zoho", "hubspot", "salesforce", "custom_api",
+})
 
 
 def get_credentials(tenant_id: Any, provider: str, db: Session) -> dict:
-    """Fetch and decrypt per-tenant credentials from NativeConnector.
+    """Fetch per-tenant credentials.
 
-    Raises:
-        ValueError: if provider is unsupported
-        ConnectorError: if no connector found or decryption fails
+    CRM providers read from CrmConnection.config (JSONB).
+    Other providers read from NativeConnector.credentials (encrypted).
     """
     provider = provider.lower()
     if provider not in _PROVIDERS:
         raise ValueError(f"Unsupported provider: {provider}")
+
+    if provider in {"zoho", "hubspot", "salesforce", "custom_api"}:
+        from ..models import CrmConnection
+        conn = db.query(CrmConnection).filter(
+            CrmConnection.tenant_id == tenant_id,
+            CrmConnection.provider == provider,
+        ).first()
+        if not conn or conn.status != "connected":
+            raise ConnectorError(
+                provider=provider,
+                operation="get_credentials",
+                message=f"No connected {provider} connector found for tenant",
+            )
+        return dict(conn.config or {})
 
     connector = db.query(NativeConnector).filter(
         NativeConnector.tenant_id == tenant_id,

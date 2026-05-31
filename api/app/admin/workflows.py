@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 
-from ..models import Conversation, Customer, Escalation, Tenant, TimelineEvent, Workflow
+from ..models import Conversation, Tenant, TimelineEvent, Workflow
 from .deps import get_admin_tenant
 from .router import router
 
@@ -103,35 +103,12 @@ def api_workflow_escalate(
     wf.status = "escalated"
     wf.updated_at = datetime.utcnow()
 
-    customer_uuid = None
-    if wf.customer_id:
-        try:
-            cid = uuid_mod.UUID(wf.customer_id)
-            if db.query(Customer.id).filter(Customer.id == cid).first():
-                customer_uuid = cid
-        except (ValueError, TypeError):
-            pass
-
-    if customer_uuid:
-        esc = Escalation(
-            tenant_id=tenant.id,
-            workflow_id=wf_id,
-            customer_id=customer_uuid,
-            escalation_reason="Manual escalation from admin",
-            severity="high",
-            status="OPEN",
-        )
-        db.add(esc)
-        db.flush()
-
     conv = db.query(Conversation).filter(
         Conversation.workflow_id == wf_id,
         Conversation.status.in_(["active", "waiting"]),
     ).first()
     if conv:
         conv.status = "handoff_requested"
-        if customer_uuid and esc:
-            conv.escalation_id = esc.id
 
     db.commit()
-    return {"ok": True, "message": "Workflow escalated"}
+    return {"ok": True, "message": "Workflow escalated (placeholder)"}

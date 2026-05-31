@@ -79,6 +79,7 @@ _LIMITS = {
     "register": (3, 3600),   # 3 per hour
     "chat": (20, 60),        # 20 per minute
     "widget": (20, 60),      # 20 per minute
+    "whatsapp": (30, 60),    # 30 per minute per WA ID
 }
 
 

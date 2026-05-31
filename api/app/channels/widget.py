@@ -18,7 +18,7 @@ from ..moderation import moderate
 from ..rate_limit import check_rate_limit
 from ..schemas import ChatOut, WidgetChatIn
 from ..core.ai import simple_llm_response
-from ..config import get_settings
+from ..core.compliance.consent import ConsentManager
 from ..shared.inbox_writer import add_message, get_or_create_conversation
 
 router = APIRouter(tags=["widget"])
@@ -102,6 +102,18 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
     add_message(db, conv, "incoming", body.message, sender_type="customer")
     db.commit()
 
+    # Implied consent capture for new widget conversations
+    if conv.created_at == conv.updated_at:
+        ConsentManager.capture(
+            db=db,
+            patient_id=None,
+            consent_type="data_processing",
+            channel="widget",
+            consent_text="Implied consent via widget first message",
+            tenant_id=tenant.id,
+            ip_address=ip,
+        )
+
     # Load conversation history for LLM context
     from ..core.memory import get_conversation_history
     history = get_conversation_history(
@@ -110,85 +122,9 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
         db=db,
     )
 
-    # Intent classification — decide whether this is an order tracking inquiry,
-    # a knowledge base question, or general chat
-    from ..core.ai.intent_classifier import classify_intent
-    intent = await classify_intent(body.message, str(tenant.id), history=history)
+    # Load conversation history
 
-    if intent == "wismo":
-        # Order tracking inquiry → route to WISMO workflow
-        from uuid import UUID
-        from ..core.events.schemas import CanonicalEvent
-        from ..core.workflows.registry import route_event
-
-        ev = CanonicalEvent(
-            event_type="intent:wismo",
-            event_source="widget_chat",
-            tenant_id=str(tenant.id),
-            entity_type="chat",
-            entity_id=str(session_id),
-            payload={
-                "customer_id": body.user_id,
-                "message": body.message,
-                "history": history,
-            },
-        )
-        await route_event(ev, db)
-
-        latest = (
-            db.query(ChatLog)
-            .filter(
-                ChatLog.tenant_id == tenant.id,
-                ChatLog.user_id == body.user_id,
-                ChatLog.direction == "outgoing",
-                ChatLog.delivered == False,
-            )
-            .order_by(ChatLog.created_at.desc())
-            .first()
-        )
-        response_text = (
-            latest.response
-            if latest
-            else "I'm looking up your order information right now. I'll send you a notification as soon as I have an update!"
-        )
-        result = {"response": response_text, "latency_ms": 0, "escalated": False}
-
-    elif intent == "general":
-        # Simple greeting / small talk — no RAG needed
-        result = await simple_llm_response(tenant.id, body.message, conversation_history=history)
-
-    else:
-        # kb_query — RAG search + LLM response (existing flow)
-        import asyncio
-        try:
-            from ..core.ai.generator import translate_query
-            query = await translate_query(body.message)
-            from .. import rag
-            chunks = await asyncio.to_thread(rag.search, tenant.id, query)
-        except Exception:
-            chunks = []
-        context = "\n\n".join(c["text"] for c in chunks) if chunks else ""
-        if context:
-            system = (
-                "You are a support agent. Answer the user's question based ONLY on the context below. "
-                "If the context doesn't contain enough information, say you don't have that information "
-                "in your knowledge base and offer to connect with a specialist."
-            )
-            if history:
-                history_str = "\n".join(f"- {e['role']}: {e['content']}" for e in history)
-                system += f"\n\nConversation history:\n{history_str}"
-            system += f"\n\nContext:\n{context}"
-        else:
-            system = (
-                "You are a support agent. You do not have the information to answer this question "
-                "in your knowledge base. Respond that this information is not available and offer to "
-                "connect the user with a specialist."
-            )
-            if history:
-                history_str = "\n".join(f"- {e['role']}: {e['content']}" for e in history)
-                system += f"\n\nConversation history:\n{history_str}"
-
-        result = await simple_llm_response(tenant.id, body.message, system_override=system)
+    result = await simple_llm_response(tenant.id, body.message, conversation_history=history)
 
     log.response = result["response"]
     log.resolution = "resolved"
@@ -198,20 +134,8 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
     if log.channel != "test_widget":
         tenant.dialogs_used += 1
         tenant.resolved_count += 1
-    if intent == "wismo":
-        # Mark all outgoing messages as delivered — they're returned in the POST response
-        undelivered = db.execute(
-            select(Message).where(
-                Message.conversation_id == conv.id,
-                Message.direction == "outgoing",
-                Message.delivered == False,
-            )
-        ).scalars().all()
-        for m in undelivered:
-            m.delivered = True
-    else:
-        m = add_message(db, conv, "outgoing", result["response"], sender_type="bot")
-        m.delivered = True
+    m = add_message(db, conv, "outgoing", result["response"], sender_type="bot")
+    m.delivered = True
     db.commit()
 
     return ChatOut(

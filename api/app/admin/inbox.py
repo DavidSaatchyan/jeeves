@@ -2,14 +2,13 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Sequence
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, Query, Request
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import select, func, or_, text
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
 from ..core.timeline.recorder import record_transition
 from ..db import get_db
@@ -19,10 +18,8 @@ from ..models import (
     Communication,
     Conversation,
     Customer,
-    Escalation,
     Message,
     OperatorNote,
-    Subscription,
     Tenant,
     Workflow,
     WorkflowTransition,
@@ -476,11 +473,6 @@ def takeover_conversation(
             decision_reason=f"Operator {tenant.email} took over: {body.get('reason', 'manual takeover')}",
         )
 
-    if conv.escalation_id:
-        esc = db.get(Escalation, conv.escalation_id)
-        if esc:
-            esc.status = "ASSIGNED"
-
     db.commit()
     return {
         "ok": True,
@@ -515,11 +507,6 @@ def return_to_ai(
             text("UPDATE workflows SET status = 'active' WHERE id = :id AND status = 'paused'"),
             {"id": conv.workflow_id},
         )
-        if conv.escalation_id:
-            db.execute(
-                text("UPDATE escalations SET status = 'RESOLVED', resolved_at = :now WHERE id = :id AND status != 'CLOSED'"),
-                {"id": conv.escalation_id, "now": datetime.utcnow()},
-            )
 
     db.commit()
     return {"ok": True, "status": "active"}
@@ -652,43 +639,6 @@ def get_customer_workflows(
     ]
 
 
-@router.get("/api/customers/{customer_id}/subscriptions")
-def get_customer_subscriptions(
-    customer_id: UUID,
-    tenant: Tenant = Depends(get_admin_tenant),
-    db: Session = Depends(get_db),
-):
-    cust = db.scalar(
-        select(Customer).where(Customer.id == customer_id, Customer.tenant_id == tenant.id)
-    )
-    if not cust:
-        raise HTTPException(status_code=404, detail="Customer not found")
-    rows = (
-        db.execute(
-            select(Subscription)
-            .where(
-                Subscription.customer_id == customer_id,
-                Subscription.tenant_id == tenant.id,
-            )
-            .order_by(Subscription.created_at.desc())
-        )
-        .scalars()
-        .all()
-    )
-    return [
-        {
-            "id": str(s.id),
-            "plan_name": s.plan_name,
-            "status": s.status,
-            "mrr": s.mrr,
-            "currency": s.currency,
-            "renewal_date": s.renewal_date.isoformat() if s.renewal_date else None,
-            "started_at": s.started_at.isoformat() if s.started_at else None,
-        }
-        for s in rows
-    ]
-
-
 # ── Unified Timeline API ──
 
 
@@ -758,23 +708,6 @@ def get_conversation_history(
                 "status": c.delivery_status,
                 "created_at": c.created_at.isoformat(),
             })
-
-    # Escalations
-    escalations = db.execute(
-        select(Escalation)
-        .where(
-            Escalation.workflow_id == conv.workflow_id,
-            Escalation.tenant_id == tenant.id,
-        )
-        .order_by(Escalation.created_at.asc())
-    ).scalars().all() if conv.workflow_id else []
-    for e in escalations:
-        events.append({
-            "type": "escalation",
-            "reason": e.escalation_reason,
-            "severity": e.severity,
-            "created_at": e.created_at.isoformat(),
-        })
 
     # Sort all events by created_at
     events.sort(key=lambda e: e["created_at"])
@@ -913,7 +846,6 @@ async def inbox_events(
 ):
     import asyncio
     import json
-    from functools import partial
 
     from ..db import SessionLocal
 

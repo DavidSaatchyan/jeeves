@@ -88,6 +88,24 @@
 .conn-link:hover { filter: brightness(1.3); }
 </style>
 
+<div class="ch-tabs">
+  <button class="ch-tab active" data-agent="appointment" onclick="selectAgent('appointment')">
+    <span class="ch-tab-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+    Appointment Manager
+    <span class="ch-tab-badge" style="color:var(--cyan);font-size:10px" id="count-appointment">0</span>
+  </button>
+  <button class="ch-tab" data-agent="marketing" onclick="selectAgent('marketing')">
+    <span class="ch-tab-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 18H2a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2z"/><polyline points="11 12 8 12 8 9 11 9"/><path d="M16 9h3v3h-3z"/></svg></span>
+    Marketing Funnel
+    <span class="ch-tab-badge" style="color:var(--amber);font-size:10px" id="count-marketing">0</span>
+  </button>
+  <button class="ch-tab" data-agent="followup" onclick="selectAgent('followup')">
+    <span class="ch-tab-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+    Patient Follow-up
+    <span class="ch-tab-badge" style="color:var(--green);font-size:10px" id="count-followup">0</span>
+  </button>
+</div>
+
 <div id="agentPanels"></div>
 {% endblock %}
 
@@ -95,16 +113,45 @@
 <script>
 function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&gt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-var WISMO = { id:'wismo', name:'WISMO', subtitle:'Order Tracking', color:'#22d3ee',
-  icon:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
-  tagline:'Agent tracks every Shopify order and tells customers exactly where it is — no support tickets needed.',
-  states:['INQUIRY_DETECTED','VALIDATING_IDENTITY','RETRIEVING_SHIPMENT','CLASSIFYING_RISK','RESPONSE_SENT','RESOLVED','LOST'] };
+var AGENTS = [
+  {
+    id: 'appointment', name: 'Appointment Manager', subtitle: 'Booking & Scheduling',
+    color: '#22d3ee',
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+    tagline: 'Manages appointment booking, reminders, rescheduling, and no-show detection.',
+    states: ['AWAITING_INTENT','CHECKING_SCHEDULE','OFFERING_SLOTS','CONFIRMING','BOOKED','REMINDER_SENT','ARRIVED','NO_SHOW','COMPLETED','CANCELLED']
+  },
+  {
+    id: 'marketing', name: 'Marketing Funnel', subtitle: 'Campaigns & Lead Nurturing',
+    color: '#f59e0b',
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 18H2a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2z"/><polyline points="11 12 8 12 8 9 11 9"/><path d="M16 9h3v3h-3z"/></svg>',
+    tagline: 'Automates marketing campaigns, lead qualification, and patient conversion tracking.',
+    states: ['LEAD_CAPTURED','QUALIFYING','NURTURING','APPOINTMENT_BOOKED','FOLLOW_UP','CONVERTED','LOST','ESCALATED']
+  },
+  {
+    id: 'followup', name: 'Patient Follow-up', subtitle: 'Post-Visit Care',
+    color: '#22a67e',
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+    tagline: 'Post-visit wellness checks, medication adherence pings, and satisfaction surveys.',
+    states: ['VISIT_COMPLETED','DAY_1_CHECK','DAY_7_CHECK','DAY_30_CHECK','MEDICATION_ADHERENCE','SATISFACTION_SURVEY','CLOSED','ESCALATED']
+  }
+];
 
-function renderStats(total, completed, inProgress, escalated, failed) {
+var currentAgent = window.location.hash ? window.location.hash.slice(1) : 'appointment';
+
+function selectAgent(agentId) {
+  currentAgent = agentId;
+  document.querySelectorAll('.ch-tab').forEach(function(t){ t.classList.remove('active'); });
+  var tab = document.querySelector('.ch-tab[data-agent="'+agentId+'"]');
+  if(tab) tab.classList.add('active');
+  renderCurrentAgent();
+}
+
+function renderStats(total, active, completed, escalated, failed) {
   return '<div class="kpi-strip">' +
     '<div class="kpi-item"><span class="kpi-dot" style="background:#6868a0"></span><span class="kpi-n">' + total + '</span><span class="kpi-l">Total</span></div>' +
     '<div class="kpi-item"><span class="kpi-dot" style="background:#22c55e"></span><span class="kpi-n">' + completed + '</span><span class="kpi-l">Resolved</span></div>' +
-    '<div class="kpi-item"><span class="kpi-dot" style="background:#22d3ee"></span><span class="kpi-n">' + inProgress + '</span><span class="kpi-l">In Progress</span></div>' +
+    '<div class="kpi-item"><span class="kpi-dot" style="background:#22d3ee"></span><span class="kpi-n">' + active + '</span><span class="kpi-l">Active</span></div>' +
     '<div class="kpi-item"><span class="kpi-dot" style="background:#f59e0b"></span><span class="kpi-n">' + escalated + '</span><span class="kpi-l">Escalated</span></div>' +
     '<div class="kpi-item"><span class="kpi-dot" style="background:#ef4444"></span><span class="kpi-n">' + failed + '</span><span class="kpi-l">Failed</span></div>' +
     '</div>';
@@ -123,142 +170,95 @@ function renderStateDistribution(agent, wfs) {
   agent.states.forEach(function(s){
     var c = counts[s] || 0;
     if (c === 0) return;
-    var cls = s === 'LOST' || s === 'RESOLVED' ? 'terminal' : 'active';
-    h += '<div class="state-bar"><div class="dot '+cls+'"></div><span class="count">'+c+'</span><span class="name">'+s.charAt(0)+s.slice(1).toLowerCase().replace(/_/g,' ')+'</span></div>';
+    var cls = s === 'CLOSED' || s === 'CONVERTED' || s === 'COMPLETED' ? 'terminal' : 'active';
+    h += '<div class="state-bar"><div class="state-dot '+cls+'"></div><span class="count">'+c+'</span><span class="name">'+s.charAt(0)+s.slice(1).toLowerCase().replace(/_/g,' ')+'</span></div>';
   });
   return h + '</div></div>';
 }
 
-function renderPolicySettings(policies, disabled) {
-  var wp = policies.wismo || {};
-  var d = disabled ? ' disabled' : '';
-  var autoNotify = wp.auto_notify !== false;
-  var threshold = wp.auto_notify_threshold || 'delayed';
-  var channels = wp.notification_channels || ['widget'];
-  var delayDays = wp.escalation_delay_days || 7;
-  var autoEscalate = wp.auto_escalate_lost !== false;
-  var maxNotif = wp.max_notifications_per_workflow || 3;
-  var maxSilent = wp.max_silent_tracking_days || 14;
-
-  return '<div class="policy-section"><h3>Settings</h3>' +
-    '<div class="policy-row"><div><div class="policy-label">Auto-notify customers</div><div class="policy-desc">Send proactive tracking updates via selected channels</div></div><div class="policy-control"><div class="policy-toggle' + d + ' ' + (autoNotify ? 'on' : '') + '" id="pol-autoNotify" ' + (disabled ? '' : 'onclick="togglePolicy(\'auto_notify\')"') + '></div></div></div>' +
-    '<div class="policy-row"><div><div class="policy-label">Notify from status</div><div class="policy-desc">Minimum tracking status to trigger notification</div></div><div class="policy-control"><select id="pol-threshold"' + d + ' onchange="savePolicy()"><option value="delayed"' + (threshold === 'delayed' ? ' selected' : '') + '>Only delays & lost</option><option value="lost"' + (threshold === 'lost' ? ' selected' : '') + '>Lost packages only</option><option value="all"' + (threshold === 'all' ? ' selected' : '') + '>All tracking updates</option></select></div></div>' +
-    '<div class="policy-row"><div><div class="policy-label">Notification channels</div><div class="policy-desc">Where to send proactive notifications</div></div><div class="policy-control" style="display:flex;align-items:center;gap:6px">' +
-    '<span class="tag-chk' + d + ' ' + (channels.indexOf('widget') !== -1 ? 'on' : '') + '" data-channel="widget" onclick="toggleChannel(this)">Widget</span>' +
-    '<span class="tag-chk' + d + ' ' + (channels.indexOf('email') !== -1 ? 'on' : '') + '" data-channel="email" onclick="toggleChannel(this)">Email</span></div></div>' +
-    '<div class="policy-row"><div><div class="policy-label">Escalate after delay (days)</div><div class="policy-desc">Auto-escalate if tracking shows delayed beyond this</div></div><div class="policy-control"><input type="number" id="pol-escalationDays" value="' + delayDays + '" min="1" max="30"' + d + ' onchange="savePolicy()"></div></div>' +
-    '<div class="policy-row"><div><div class="policy-label">Auto-escalate lost packages</div><div class="policy-desc">Escalate immediately when carrier marks as lost</div></div><div class="policy-control"><div class="policy-toggle' + d + ' ' + (autoEscalate ? 'on' : '') + '" id="pol-autoEscalate" ' + (disabled ? '' : 'onclick="togglePolicy(\'auto_escalate_lost\')"') + '></div></div></div>' +
-    '<div class="policy-row"><div><div class="policy-label">Max notifications per workflow</div><div class="policy-desc">Stop sending after this many notifications</div></div><div class="policy-control"><input type="number" id="pol-maxNotif" value="' + maxNotif + '" min="1" max="20"' + d + ' onchange="savePolicy()"></div></div>' +
-    '<div class="policy-row"><div><div class="policy-label">Max silent tracking days</div><div class="policy-desc">Escalate if no tracking update for this long</div></div><div class="policy-control"><input type="number" id="pol-maxSilent" value="' + maxSilent + '" min="1" max="60"' + d + ' onchange="savePolicy()"></div></div>' +
-    (disabled ? '' : '<div class="policy-hint">Changes are saved automatically.</div>') + '</div>';
+function renderPolicySettings() {
+  return '<div class="policy-section"><h3>Settings</h3><p class="muted">Configuration coming soon.</p></div>';
 }
 
-function renderAgentPanel(agent, enabled, shopifyConnected, total, completed, inProgress, escalated, failed, wfs, policies) {
+function renderAgentPanel(agent, enabled, total, active, completed, escalated, failed, wfs) {
   var h = '<div class="ch-panel active"><div class="agent-hero" style="border-left-color:' + agent.color + '"><div class="agent-hero-header">' +
     '<div class="agent-hero-logo" style="background:rgba(' + hexToRgb(agent.color) + ',0.12);color:' + agent.color + '">' + agent.icon + '</div>' +
     '<div class="agent-hero-title"><div class="agent-name">' + agent.name + '</div><div class="agent-subtitle">' + agent.subtitle + '</div></div>' +
     '<div style="margin-left:auto;display:flex;align-items:center;gap:10px">' +
-    '<span class="pill ' + (enabled ? 'ok' : 'muted') + '" style="font-size:11px" id="statusBadge">' + (enabled ? 'Active' : 'Disabled') + '</span>';
+    '<span class="pill ' + (enabled ? 'ok' : 'muted') + '" style="font-size:11px" id="statusBadge-' + agent.id + '">' + (enabled ? 'Active' : 'Disabled') + '</span>' +
+    '<div class="toggle-wrapper"><div class="toggle mini ' + (enabled ? 'on' : '') + '" id="mainToggle-' + agent.id + '" onclick="toggleAgent(\'' + agent.id + '\')"></div></div>' +
+    '</div></div><div class="agent-hero-tagline">' + agent.tagline + '</div>';
 
-  // Toggle — not clickable if Shopify not connected
-  if (!shopifyConnected) {
-    h += '<div class="toggle-wrapper tip-trigger"><div class="toggle mini disabled" id="mainToggle"></div>' +
-      '<div class="tip-pop">Connect Shopify first to enable WISMO</div></div>';
-    h += '<div class="conn-warn" style="margin-top:12px;font-size:13px;color:var(--amber)">⚠ <a href="/admin/connections" class="conn-link">Connect Shopify</a> to start tracking orders.</div>';
-  } else {
-    h += '<div class="toggle-wrapper"><div class="toggle mini ' + (enabled ? 'on' : '') + '" id="mainToggle" onclick="toggleWismo()"></div></div>';
-  }
-
-  h += '</div></div><div class="agent-hero-tagline">' + agent.tagline + '</div>';
-
-  if (shopifyConnected) {
-    h += '<div class="agent-hero-section"><div class="agent-hero-label">How it works</div><div class="agent-hero-text">Order inquiries from your widget are classified by AI, fulfillment data is pulled from Shopify, tracking status is analyzed, and customers get real-time responses — no human needed for 70-80% of cases.</div></div>';
-  }
-
-  h += renderStats(total, completed, inProgress, escalated, failed);
+  h += renderStats(total, active, completed, escalated, failed);
   h += renderStateDistribution(agent, wfs);
-  h += renderPolicySettings(policies, !shopifyConnected);
+  h += renderPolicySettings();
 
   return h + '</div>';
 }
 
-function renderAll(workflows, policies, shopifyConnected) {
-  var ew = policies.enabled_workflows || {};
-  var enabled = 'wismo' in ew ? ew.wismo !== false : true;
-  var wfs = workflows.filter(function(w){ return w.workflow_type === 'wismo'; });
-  var total = wfs.length;
-  var inProgress = wfs.filter(function(w){ return w.status === 'active' || w.status === 'paused'; }).length;
-  var completed = wfs.filter(function(w){ return w.status === 'completed'; }).length;
-  var escalated = wfs.filter(function(w){ return w.status === 'escalated'; }).length;
-  var failed = wfs.filter(function(w){ return w.status === 'failed' || w.current_state === 'FAILED' || w.current_state === 'CANCELLED' || w.current_state === 'LOST'; }).length;
-  document.getElementById('agentPanels').innerHTML = renderAgentPanel(WISMO, enabled, shopifyConnected, total, completed, inProgress, escalated, failed, wfs, policies);
-}
-
 function hexToRgb(h){ var r = parseInt(h.slice(1, 3), 16), g = parseInt(h.slice(3, 5), 16), b = parseInt(h.slice(5, 7), 16); return r + ',' + g + ',' + b; }
 
-// ─── WISMO enable/disable ───────────────────────────────────────
-async function toggleWismo() {
-  try {
-    var pols = await api('/admin/api/policies');
-    var ew = pols.enabled_workflows || {};
-    var currentlyOn = 'wismo' in ew ? ew.wismo !== false : true;
+function renderCurrentAgent() {
+  var agent = AGENTS.find(function(a){ return a.id === currentAgent; });
+  if (!agent) return;
 
-    ew.wismo = currentlyOn ? false : true;
+  var wfs = allWorkflows.filter(function(w){ return w.workflow_type === agent.id; });
+  var total = wfs.length;
+  var active = wfs.filter(function(w){ return w.status === 'active' || w.status === 'paused'; }).length;
+  var completed = wfs.filter(function(w){ return w.status === 'completed'; }).length;
+  var escalated = wfs.filter(function(w){ return w.status === 'escalated'; }).length;
+  var failed = wfs.filter(function(w){ return w.status === 'failed' || w.current_state === 'FAILED' || w.current_state === 'CANCELLED'; }).length;
+
+  var ew = policies.enabled_workflows || {};
+  var enabled = agent.id in ew ? ew[agent.id] !== false : true;
+
+  document.getElementById('agentPanels').innerHTML = renderAgentPanel(agent, enabled, total, active, completed, escalated, failed, wfs);
+}
+
+var allWorkflows = [];
+var policies = {};
+
+async function toggleAgent(agentId) {
+  try {
+    var ew = policies.enabled_workflows || {};
+    var currentlyOn = agentId in ew ? ew[agentId] !== false : true;
+    ew[agentId] = currentlyOn ? false : true;
     await api('/admin/api/policies/enabled_workflows', {method: 'PUT', body: ew});
-    var toggle = document.getElementById('mainToggle');
-    var badge = document.getElementById('statusBadge');
-    if (toggle) { toggle.classList.toggle('on'); }
-    if (badge) {
-      var isOn = 'wismo' in ew ? ew.wismo !== false : true;
-      badge.textContent = isOn ? 'Active' : 'Disabled';
-      badge.className = 'pill ' + (isOn ? 'ok' : 'muted');
-    }
+    policies.enabled_workflows = ew;
+    renderCurrentAgent();
   } catch(e) { alert('Error: ' + e.message); }
 }
 
-// ─── Policy save ────────────────────────────────────────────────
-function readPolicy() {
-  return {
-    auto_notify: document.getElementById('pol-autoNotify') ? document.getElementById('pol-autoNotify').classList.contains('on') : true,
-    auto_notify_threshold: document.getElementById('pol-threshold') ? document.getElementById('pol-threshold').value : 'delayed',
-    notification_channels: Array.from(document.querySelectorAll('#policySection .tag-chk.on')).map(function(el){ return el.dataset.channel; }),
-    escalation_delay_days: parseInt(document.getElementById('pol-escalationDays')?.value || '7'),
-    auto_escalate_lost: document.getElementById('pol-autoEscalate') ? document.getElementById('pol-autoEscalate').classList.contains('on') : true,
-    max_notifications_per_workflow: parseInt(document.getElementById('pol-maxNotif')?.value || '3'),
-    max_silent_tracking_days: parseInt(document.getElementById('pol-maxSilent')?.value || '14'),
-  };
-}
-
-function togglePolicy(key) {
-  var el = document.getElementById('pol-' + key.charAt(0).toUpperCase() + key.slice(1));
-  if (el) el.classList.toggle('on');
-  savePolicy();
-}
-
-function toggleChannel(el) {
-  if (el.classList.contains('disabled')) return;
-  el.classList.toggle('on');
-  savePolicy();
-}
-
-async function savePolicy() {
-  try {
-    await api('/admin/api/policies/wismo', {method: 'PUT', body: readPolicy()});
-  } catch(e) { /* silent */ }
-}
-
-// ─── Load all ───────────────────────────────────────────────────
 async function loadAll() {
   try {
-    var [policies, wfData, integrations] = await Promise.all([
+    var [policiesData, wfData] = await Promise.all([
       api('/admin/api/policies'),
-      api('/admin/api/workflows?limit=200'),
-      api('/admin/api/integrations'),
+      api('/admin/api/workflows?limit=500'),
     ]);
-    var shopifyConnected = (integrations.native_connectors || []).some(function(c){ return c.provider === 'shopify' && c.status === 'connected'; });
-    renderAll(wfData.workflows || [], policies, shopifyConnected);
+    policies = policiesData;
+    allWorkflows = wfData.workflows || [];
+
+    // Update tab badges
+    ['appointment','marketing','followup'].forEach(function(t){
+      var badge = document.getElementById('count-'+t);
+      if(badge) {
+        var c = allWorkflows.filter(function(w){ return w.workflow_type === t && (w.status === 'active' || w.status === 'paused'); }).length;
+        badge.textContent = c;
+      }
+    });
+
+    // Select initial agent from hash or default
+    currentAgent = window.location.hash ? window.location.hash.slice(1) : 'appointment';
+    selectAgent(currentAgent);
   } catch(e) { document.getElementById('agentPanels').innerHTML = '<div class="card" style="text-align:center;padding:40px;color:var(--muted2)">Error loading agents: ' + esc(e.message) + '</div>'; }
 }
+
+// Listen for hash changes
+window.addEventListener('hashchange', function(){
+  var hash = window.location.hash ? window.location.hash.slice(1) : 'appointment';
+  if (hash !== currentAgent) selectAgent(hash);
+});
+
 loadAll();
 </script>
 {% endblock %}

@@ -12,9 +12,6 @@ _settings = get_settings()
 
 
 async def translate_query(query: str) -> str:
-    """Translate a user query to English for better RAG embedding matching.
-    Returns the original query unchanged on failure.
-    """
     prompt = (
         "Translate the following text to English. "
         "If it is already in English or is a code snippet, return it unchanged. "
@@ -74,7 +71,6 @@ async def generate_email(context: dict[str, Any], template_name: str) -> str:
 
 
 async def simple_llm_response(tenant_id, message: str, system_override=None, conversation_history: list[dict] | None = None) -> dict:
-    """Direct LLM call without agent tool loop (v2 replacement)."""
     import time
 
     start = time.monotonic()
@@ -132,3 +128,53 @@ async def generate_widget_message(context: dict[str, Any], template_name: str) -
         return parsed.get("message", "")
     except (json.JSONDecodeError, ValueError, TypeError):
         return ""
+
+
+async def generate_campaign_message(
+    tenant_id,
+    campaign_context: dict,
+    patient_name: str,
+    conversation_history: list[dict] | None = None,
+) -> str:
+    """Generate a personalized campaign message using LLM.
+
+    Temperature: 0.3. Fallback: static campaign template.
+    """
+    system_prompt = (
+        "You are a medical clinic marketing assistant. Generate a friendly, "
+        "professional campaign message for a patient. "
+        "Keep it concise (2-3 sentences). "
+        "Do NOT make specific medical claims or promises. "
+        "Include an opt-out notice at the end."
+    )
+    context_str = json.dumps(campaign_context)
+    user_msg = (
+        f"Campaign context: {context_str}\n"
+        f"Patient name: {patient_name}\n\n"
+        f"Generate a personalized campaign message."
+    )
+    history = conversation_history or []
+
+    try:
+        from openai import AsyncOpenAI
+
+        client = AsyncOpenAI(api_key=_settings.openai_api_key)
+        messages = [{"role": "system", "content": system_prompt}]
+        messages.extend(history)
+        messages.append({"role": "user", "content": user_msg})
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            temperature=0.3,
+            max_tokens=200,
+        )
+        text = response.choices[0].message.content or ""
+        if text:
+            return text
+    except Exception as e:
+        logger.error("campaign message generation failed: %s", e)
+
+    return (
+        f"Hi {patient_name}! We have some great health services available for you. "
+        f"Would you like to learn more? Reply STOP to opt out."
+    )

@@ -1,7 +1,6 @@
 """Runtime config: env vars + config.yaml."""
 from __future__ import annotations
 
-import os
 import sys
 from functools import lru_cache
 from pathlib import Path
@@ -35,10 +34,15 @@ class Settings(BaseSettings):
     hubspot_client_secret: str = ""
     hubspot_redirect_uri: str = "http://localhost:8000/crm/oauth/hubspot/callback"
     fernet_key: str = ""
-    sendgrid_api_key: str = ""
-    resend_api_key: str = ""
-    shopify_shop: str = ""
-    shopify_access_token: str = ""
+    # Compliance / data governance
+    compliance_gdpr_enabled: bool = True
+    compliance_hipaa_enabled: bool = False
+    compliance_audit_retention_days: int = 1095        # 3 years
+    compliance_consent_auto_renew_days: int = 365
+    compliance_data_residency: str = "auto"             # auto | eu | us
+    consent_required_channels: str = "whatsapp,widget"
+    phi_log_level: str = "INFO"
+    data_retention_default_days: int = 730
 
     class Config:
         env_file = ".env"

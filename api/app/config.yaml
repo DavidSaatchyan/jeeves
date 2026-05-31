@@ -1,3 +1,42 @@
+compliance:
+  retention:
+    audit_log: 1095
+    consent_log: 2190
+    messages: 730
+    patient_records: 3650
+    appointments: 1095
+  phi_patterns:
+    phone: '\+\d{7,15}'
+    email: '\S+@\S+'
+    name: '\b[A-Z][a-z]+\s[A-Z][a-z]+\b'
+
+booking:
+  slot_duration_minutes: 30
+  buffer_minutes: 5
+  max_slots_to_offer: 5
+  default_start_hour: 9
+  default_end_hour: 17
+  reminders:
+    send_24h: true
+    send_2h: true
+    no_show_window_minutes: 30
+
+marketing:
+  enabled: true
+  max_campaigns_per_patient_per_month: 4
+  cooldown_days_between_campaigns: 7
+  nurture_sequence_length: 3
+  nurture_days_between_steps: 3
+
+followup:
+  enabled: true
+  day_1_delay_hours: 24
+  day_7_delay_days: 7
+  day_30_delay_days: 30
+  medication_adherence_delay_days: 14
+  satisfaction_survey_delay_days: 7
+  escalate_on_negative_response: true
+
 policies:
   retry:
     max_attempts: 3
@@ -6,7 +45,7 @@ policies:
   communication:
     max_outreach_per_workflow: 3
     cooldown_between_messages: 24
-    allowed_channels: [email, widget]
+    allowed_channels: [email, widget, whatsapp]
   escalation:
     frustration_threshold: medium
     max_failures_before_escalation: 3
