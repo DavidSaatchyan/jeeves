@@ -130,7 +130,7 @@ class TestGetAvailableSlots:
         assert slots == []
 
     def test_with_pabau_adapter(self, mock_db: MagicMock, tenant_id: UUID):
-        with patch("app.integrations.resolver.get_crm_adapter") as mock_fn:
+        with patch("app.core.booking.slot_manager.get_crm_adapter") as mock_fn:
             adapter = MagicMock()
             adapter.search_available_slots.return_value = [
                 {"start_time": "2026-06-01T09:00:00", "end_time": "2026-06-01T09:30:00", "provider_name": "Dr. Smith"},

@@ -66,6 +66,15 @@ class AbstractCrmConnector(ABC):
     ) -> dict:
         ...
 
+    # Practitioners / Services
+    @abstractmethod
+    def get_practitioners(self) -> list[dict[str, Any]]:
+        ...
+
+    @abstractmethod
+    def get_services(self) -> list[dict[str, Any]]:
+        ...
+
     @abstractmethod
     def search_available_slots(self, doctor_id: str, date: str) -> list[dict[str, Any]]:
         ...

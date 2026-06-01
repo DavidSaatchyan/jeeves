@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from ...integrations.resolver import get_crm_adapter
+from ...models import AppointmentCache
 from .slot_manager import get_available_slots, generate_slots, Slot
 from .scheduler import SlotAlreadyBookedError, AppointmentNotFoundError
 
@@ -21,8 +22,6 @@ def book_appointment(
     reason: str | None = None,
     source: str = "whatsapp",
 ):
-    from ...models import AppointmentCache
-
     adapter = get_crm_adapter(tenant_id, db)
     if not adapter:
         raise RuntimeError("CRM is not configured. Set up an integration first.")
@@ -55,8 +54,6 @@ def cancel_appointment(
     appointment_id: UUID,
     reason: str | None = None,
 ) -> bool:
-    from ...models import AppointmentCache
-
     cache = db.get(AppointmentCache, appointment_id)
     if not cache:
         return False
@@ -79,8 +76,6 @@ def reschedule_appointment(
     new_end: datetime,
     new_provider_name: str | None = None,
 ):
-    from ...models import AppointmentCache
-
     cache = db.get(AppointmentCache, appointment_id)
     if not cache:
         raise AppointmentNotFoundError(f"Appointment {appointment_id} not found")

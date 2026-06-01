@@ -8,6 +8,7 @@ Verify:   GET  /channels/whatsapp/webhook  (Meta challenge)
 """
 from __future__ import annotations
 
+import logging
 import uuid
 
 import httpx
@@ -22,6 +23,7 @@ from ..core.compliance.consent import ConsentManager
 from ..rate_limit import check_rate_limit
 from ..moderation import moderate
 from ..core.ai import classify_intent
+from ..integrations.resolver import get_crm_adapter
 
 WHATSAPP_API = "https://graph.facebook.com/v17.0/{phone_number_id}/messages"
 
@@ -68,8 +70,10 @@ async def _send_message(phone_number_id: str, access_token: str, wa_id: str, tex
         return r.json()
 
 
+logger = logging.getLogger("jeeves.whatsapp")
+
+
 def _maybe_crm_bridge(db: Session, tenant_id, wa_id: str, text: str, contact_name: str | None) -> None:
-    from ..integrations.resolver import get_crm_adapter
     adapter = get_crm_adapter(tenant_id, db)
     if not adapter:
         return
@@ -82,8 +86,8 @@ def _maybe_crm_bridge(db: Session, tenant_id, wa_id: str, text: str, contact_nam
                 "last_name": parts[1] if len(parts) > 1 else "User",
                 "phone": wa_id,
             })
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("CRM bridge failed for tenant %s: %s", tenant_id, exc)
 
 
 @router.get("/webhook")

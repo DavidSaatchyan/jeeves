@@ -94,6 +94,9 @@ class ClinikoConnector(AbstractCrmConnector):
 
     # Appointment Types
 
+    def get_services(self) -> list[dict[str, Any]]:
+        return self.get_appointment_types()
+
     def get_appointment_types(self) -> list[dict[str, Any]]:
         """Fetch all appointment types from Cliniko."""
         result = self._request("GET", "/appointment_types", params={"per_page": "100"})

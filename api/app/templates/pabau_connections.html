@@ -9,11 +9,6 @@
     <span id="statusBadge" class="pill {{ 'ok' if connected else 'muted' }}">{{ 'Connected' if connected else 'Disconnected' }}</span>
   </div>
 
-  <label>Provider</label>
-  <select id="crmProvider">
-    <option value="pabau" {{ 'selected' if crm_provider == 'pabau' else '' }}>Pabau</option>
-  </select>
-
   <label>API Key</label>
   <input id="apiKey" type="password" placeholder="api_key" value="{{ api_key }}">
 
@@ -64,13 +59,12 @@ function showMsg(text, type){
 }
 
 async function saveConfig(){
-  var provider = document.getElementById('crmProvider').value;
   var key = document.getElementById('apiKey').value.trim();
   var cid = document.getElementById('companyId').value.trim();
   var wh = document.getElementById('webhookSecret').value.trim();
   if(!key || !cid){ showMsg('API Key and Company ID are required'); return; }
   try {
-    await api('/admin/api/crm/configure', {method:'POST', body:{api_key:key, company_id:cid, webhook_secret:wh, crm_provider:provider}});
+    await api('/admin/api/crm/configure', {method:'POST', body:{api_key:key, company_id:cid, webhook_secret:wh, crm_provider:'pabau'}});
     showMsg('Saved', 'ok');
     location.reload();
   } catch(e) { showMsg(e.message); }

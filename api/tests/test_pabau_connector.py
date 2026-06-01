@@ -145,6 +145,61 @@ class TestPabauRequest:
                 c._request("GET", "/patients")
 
 
+# ── Practitioners & Services ──────────────────────────────────────────────────────────────
+
+
+class TestPabauPractitioners:
+    def test_get_practitioners_returns_list(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={"items": [{"id": "s1", "name": "Dr A"}]}) as mock:
+            result = c.get_practitioners()
+        assert result == [{"id": "s1", "name": "Dr A"}]
+        mock.assert_called_once_with("GET", "/staff", params={"limit": 100})
+
+    def test_get_practitioners_extracts_data(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={"data": [{"id": "s2"}]}):
+            result = c.get_practitioners()
+        assert result == [{"id": "s2"}]
+
+    def test_get_practitioners_returns_plain_list(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value=[{"id": "s3"}]):
+            result = c.get_practitioners()
+        assert result == [{"id": "s3"}]
+
+    def test_get_practitioners_empty(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={}):
+            result = c.get_practitioners()
+        assert result == []
+
+    def test_get_services_returns_list(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={"items": [{"id": "svc1", "name": "Consultation"}]}) as mock:
+            result = c.get_services()
+        assert result == [{"id": "svc1", "name": "Consultation"}]
+        mock.assert_called_once_with("GET", "/services", params={"limit": 100})
+
+    def test_get_services_extracts_data(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={"data": [{"id": "svc2"}]}):
+            result = c.get_services()
+        assert result == [{"id": "svc2"}]
+
+    def test_get_services_returns_plain_list(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value=[{"id": "svc3"}]):
+            result = c.get_services()
+        assert result == [{"id": "svc3"}]
+
+    def test_get_services_empty(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={}):
+            result = c.get_services()
+        assert result == []
+
+
 # ── Patients ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -167,14 +222,21 @@ class TestPabauPatients:
         with patch.object(c, "_request", return_value=[{"id": "p1", "email": "a@b.com"}]) as mock:
             result = c.find_patient(email="a@b.com")
         assert result == {"id": "p1", "email": "a@b.com"}
-        mock.assert_called_once_with("GET", "/patients", params={"search": "a@b.com"})
+        mock.assert_called_once_with("GET", "/patients", params={"email": "a@b.com", "limit": "1"})
 
     def test_find_patient_by_phone(self):
         c = _make_connector()
         with patch.object(c, "_request", return_value=[{"id": "p1", "phone": "+123"}]) as mock:
             result = c.find_patient(phone="+123")
         assert result == {"id": "p1", "phone": "+123"}
-        mock.assert_called_once_with("GET", "/patients", params={"search": "+123"})
+        mock.assert_called_once_with("GET", "/patients", params={"phone": "+123", "limit": "1"})
+
+    def test_find_patient_by_both(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value=[{"id": "p1"}]) as mock:
+            result = c.find_patient(email="a@b.com", phone="+123")
+        assert result == {"id": "p1"}
+        mock.assert_called_once_with("GET", "/patients", params={"email": "a@b.com", "phone": "+123", "limit": "1"})
 
     def test_find_patient_no_params_returns_none(self):
         c = _make_connector()
@@ -186,6 +248,12 @@ class TestPabauPatients:
         with patch.object(c, "_request", return_value=[]):
             result = c.find_patient(email="x@y.com")
         assert result is None
+
+    def test_find_patient_dict_response_with_items(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={"items": [{"id": "p1"}]}):
+            result = c.find_patient(email="a@b.com")
+        assert result == {"id": "p1"}
 
     def test_create_patient(self):
         c = _make_connector()
@@ -261,6 +329,24 @@ class TestPabauAppointments:
         with patch.object(c, "_request", return_value={"items": []}) as mock:
             c.list_appointments("tid")
         mock.assert_called_once_with("GET", "/appointments", params={"offset": 0, "limit": 50})
+
+    def test_list_appointments_normalizes_flat_dict(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={"appointments": [{"id": "a1"}], "total": 1}):
+            result = c.list_appointments("tid")
+        assert result == {"items": [{"id": "a1"}], "total": 1}
+
+    def test_list_appointments_normalizes_data_dict(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={"data": [{"id": "a2"}], "total_entries": 5}):
+            result = c.list_appointments("tid")
+        assert result == {"items": [{"id": "a2"}], "total": 5}
+
+    def test_list_appointments_passthrough_items(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={"items": [{"id": "a3"}], "total": 3}):
+            result = c.list_appointments("tid")
+        assert result == {"items": [{"id": "a3"}], "total": 3}
 
     def test_get_patient_appointments_from_dict(self):
         c = _make_connector()

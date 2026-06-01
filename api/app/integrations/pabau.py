@@ -56,6 +56,24 @@ class PabauConnector(AbstractCrmConnector):
         except httpx.RequestError as e:
             raise ConnectorError("pabau", "request", str(e))
 
+    # Practitioners
+
+    def get_practitioners(self) -> list[dict[str, Any]]:
+        result = self._request("GET", "/staff", params={"limit": 100})
+        if isinstance(result, dict):
+            return result.get("items", result.get("data", []))
+        if isinstance(result, list):
+            return result
+        return []
+
+    def get_services(self) -> list[dict[str, Any]]:
+        result = self._request("GET", "/services", params={"limit": 100})
+        if isinstance(result, dict):
+            return result.get("items", result.get("data", []))
+        if isinstance(result, list):
+            return result
+        return []
+
     # Patients
 
     def get_patient(self, patient_id: str) -> dict[str, Any] | None:
@@ -65,14 +83,16 @@ class PabauConnector(AbstractCrmConnector):
             return None
 
     def find_patient(self, email: str | None = None, phone: str | None = None) -> dict[str, Any] | None:
-        params = {}
+        params: dict[str, str] = {}
         if email:
-            params["search"] = email
-        elif phone:
-            params["search"] = phone
-        else:
+            params["email"] = email
+        if phone:
+            params["phone"] = phone
+        if not params:
             return None
-        results = self._request("GET", "/patients", params=params)
+        results = self._request("GET", "/patients", params={**params, "limit": "1"})
+        if isinstance(results, dict):
+            return results.get("items", results.get("data", [None]))[0]
         if isinstance(results, list) and len(results) > 0:
             return results[0]
         return None
@@ -128,7 +148,12 @@ class PabauConnector(AbstractCrmConnector):
             params["date_to"] = date_to
         if patient_id:
             params["patient_id"] = patient_id
-        return self._request("GET", "/appointments", params=params)
+        result = self._request("GET", "/appointments", params=params)
+        if isinstance(result, dict) and "items" not in result:
+            data = result.get("appointments") or result.get("data") or []
+            total = result.get("total") or result.get("total_entries") or 0
+            return {"items": data, "total": total}
+        return result
 
     def get_patient_appointments(self, patient_id: str) -> list[dict[str, Any]]:
         result = self._request("GET", "/appointments", params={"patient_id": patient_id, "limit": 100})

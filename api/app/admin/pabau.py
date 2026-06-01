@@ -54,6 +54,7 @@ def configure_crm(
         "api_key": data.api_key,
         "company_id": data.company_id,
         "webhook_secret": data.webhook_secret,
+        "shard": data.shard,
     }
     tenant.crm_provider = data.crm_provider
     db.flush()

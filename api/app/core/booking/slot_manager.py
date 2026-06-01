@@ -8,6 +8,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from ...config import get_yaml_config
+from ...integrations.resolver import get_crm_adapter
 from ...models import Provider
 
 
@@ -101,8 +102,6 @@ def get_available_slots(
     day: date | None = None,
     limit: int = 10,
 ) -> list[Slot]:
-    from ...integrations.resolver import get_crm_adapter
-
     adapter = get_crm_adapter(tenant_id, db)
     if not adapter:
         return []

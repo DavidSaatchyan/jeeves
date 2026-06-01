@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import hashlib
-import hmac
 import json
 import logging
 import uuid
@@ -25,14 +23,6 @@ def _get_tenant(db: Session, tenant_id: uuid.UUID | str) -> Tenant | None:
     if isinstance(tenant_id, str):
         tenant_id = uuid.UUID(tenant_id)
     return db.get(Tenant, tenant_id)
-
-
-def _verify(payload: bytes, signature: str, config: dict[str, Any]) -> bool:
-    secret = config.get("webhook_secret", "")
-    if not secret:
-        return True
-    expected = hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
-    return hmac.compare_digest(expected, signature)
 
 
 def _upsert_patient(db: Session, tenant_id: uuid.UUID, data: dict[str, Any]) -> Patient:
@@ -123,7 +113,6 @@ async def _process_webhook(
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
 
-    config = dict(tenant.crm_config or {})
     payload_bytes = await request.body()
     signature = ""
     for hdr in sig_headers:
@@ -131,17 +120,17 @@ async def _process_webhook(
         if signature:
             break
 
-    if not _verify(payload_bytes, signature, config):
+    adapter = get_crm_adapter_for_tenant(tenant)
+    if not adapter:
+        raise HTTPException(status_code=502, detail="CRM adapter not available")
+
+    if not adapter.verify_webhook_signature(payload_bytes, signature):
         raise HTTPException(status_code=401, detail="Invalid signature")
 
     try:
         payload_data = json.loads(payload_bytes)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON")
-
-    adapter = get_crm_adapter_for_tenant(tenant)
-    if not adapter:
-        raise HTTPException(status_code=502, detail="CRM adapter not available")
 
     try:
         event = adapter.parse_webhook_event(payload_data)
