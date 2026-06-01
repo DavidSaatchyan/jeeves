@@ -170,6 +170,49 @@ class ZohoCRMAdapter(AbstractCrmConnector):
         except CrmNotFoundError:
             return []
 
+    def get_appointment(self, appt_id: str) -> dict[str, Any] | None:
+        try:
+            result = self._api_request("GET", f"/crm/v7/Appointments__s/{appt_id}")
+            if isinstance(result, list) and result:
+                return result[0]
+            return result if isinstance(result, dict) else None
+        except CrmNotFoundError:
+            return None
+
+    def list_appointments(
+        self,
+        tenant_id: str,
+        status: str | None = None,
+        provider: str | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+        patient_id: str | None = None,
+        offset: int = 0,
+        limit: int = 50,
+    ) -> dict:
+        criteria: list[str] = []
+        if status:
+            criteria.append(f"Status:equals:{status}")
+        if provider:
+            criteria.append(f"Provider_Name:equals:{provider}")
+        if patient_id:
+            criteria.append(f"Patient_ID:equals:{patient_id}")
+        if date_from:
+            criteria.append(f"Start_Time:greater_or_equal:{date_from}")
+        if date_to:
+            criteria.append(f"Start_Time:less_or_equal:{date_to}")
+
+        path = "/crm/v7/Appointments__s"
+        if criteria:
+            path += f"/search?criteria=({','.join(criteria)})"
+
+        try:
+            result = self._api_request("GET", path)
+            items = result if isinstance(result, list) else []
+            return {"total": len(items), "items": items[offset:offset + limit]}
+        except CrmNotFoundError:
+            return {"total": 0, "items": []}
+
     # ── Slots ────────────────────────────────────────────────────
 
     def search_available_slots(self, doctor_id: str, date: str) -> list[dict[str, Any]]:

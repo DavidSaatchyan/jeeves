@@ -137,6 +137,18 @@ class TestCreateAppointment:
             adapter.create_appointment("42", {"provider_name": "Dr. X", "start_time": "T1", "end_time": "T2"})
 
 
+class TestGetAppointment:
+    def test_raises_not_implemented(self, adapter: HubSpotAdapter):
+        with pytest.raises(CrmConnectionError, match="does not support appointment listing"):
+            adapter.get_appointment("a1")
+
+
+class TestListAppointments:
+    def test_raises_not_implemented(self, adapter: HubSpotAdapter):
+        with pytest.raises(CrmConnectionError, match="does not support appointment listing"):
+            adapter.list_appointments("t1")
+
+
 class TestSearchAvailableSlots:
     def test_returns_empty_list(self, adapter: HubSpotAdapter):
         result = adapter.search_available_slots("doc1", "2025-01-01")

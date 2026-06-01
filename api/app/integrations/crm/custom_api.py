@@ -122,6 +122,50 @@ class CustomApiAdapter(AbstractCrmConnector):
         except CrmNotFoundError:
             return []
 
+    def get_appointment(self, appt_id: str) -> dict[str, Any] | None:
+        path = self._ep("get_appointment", f"/appointments/{appt_id}")
+        try:
+            result = self._request("GET", path)
+            return self._maybe_mask(result) if isinstance(result, dict) else None
+        except CrmNotFoundError:
+            return None
+
+    def list_appointments(
+        self,
+        tenant_id: str,
+        status: str | None = None,
+        provider: str | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+        patient_id: str | None = None,
+        offset: int = 0,
+        limit: int = 50,
+    ) -> dict:
+        path = self._ep("list_appointments", "/appointments")
+        params = {}
+        if status:
+            params["status"] = status
+        if provider:
+            params["provider"] = provider
+        if date_from:
+            params["date_from"] = date_from
+        if date_to:
+            params["date_to"] = date_to
+        if patient_id:
+            params["patient_id"] = patient_id
+        params["offset"] = str(offset)
+        params["limit"] = str(limit)
+        try:
+            qs = "&".join(f"{k}={v}" for k, v in params.items())
+            result = self._request("GET", f"{path}?{qs}")
+            if isinstance(result, dict):
+                return result
+            if isinstance(result, list):
+                return {"total": len(result), "items": result}
+            return {"total": 0, "items": []}
+        except CrmNotFoundError:
+            return {"total": 0, "items": []}
+
     def search_available_slots(self, doctor_id: str, date: str) -> list[dict[str, Any]]:
         path = self._ep("search_available_slots", f"/slots?doctor_id={doctor_id}&date={date}")
         try:

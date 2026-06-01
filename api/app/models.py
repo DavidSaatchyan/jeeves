@@ -468,6 +468,32 @@ class Appointment(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
+class AppointmentCache(Base):
+    """Local cache for appointment operational state.
+    Source of truth is always the external CRM.
+    """
+    __tablename__ = "appointment_cache"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    patient_id = Column(UUID(as_uuid=True), ForeignKey("patients.id"), nullable=False, index=True)
+    external_id = Column(Text, nullable=False, index=True)  # CRM record ID
+
+    # Operational state (NOT source of truth)
+    status = Column(String(32), default="scheduled")         # cached for AI workflow
+    slot_token = Column(String(64))                          # optimistic lock
+    reminder_sent_24h = Column(Boolean, default=False)        # reminder state
+    reminder_sent_2h = Column(Boolean, default=False)         # reminder state
+    consent_id = Column(UUID(as_uuid=True), nullable=True)   # compliance ref
+    source = Column(String(32), default="whatsapp")          # how it was created
+
+    # Cache metadata
+    cached_at = Column(DateTime, default=datetime.utcnow)
+    last_synced_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
 class ConsentLog(Base):
     """Immutable consent journal (GDPR Art. 7)."""
     __tablename__ = "consent_logs"

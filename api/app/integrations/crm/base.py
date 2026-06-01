@@ -57,6 +57,26 @@ class AbstractCrmConnector(ABC):
     def get_patient_appointments(self, patient_id: str) -> list[dict[str, Any]]:
         ...
 
+    @abstractmethod
+    def get_appointment(self, appt_id: str) -> dict[str, Any] | None:
+        """Get single appointment by external CRM ID."""
+        ...
+
+    @abstractmethod
+    def list_appointments(
+        self,
+        tenant_id: str,
+        status: str | None = None,
+        provider: str | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+        patient_id: str | None = None,
+        offset: int = 0,
+        limit: int = 50,
+    ) -> dict:
+        """List appointments with filters. Returns dict with total + items."""
+        ...
+
     # ── Slots / Scheduling ──────────────────────────────────────
 
     @abstractmethod

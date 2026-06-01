@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from ...crypto import ConnectorError
 from ...db import get_db
-from ...models import Appointment, AuditLog, CrmConnection, Patient
+from ...models import AppointmentCache, AuditLog, CrmConnection, Patient
 
 logger = logging.getLogger("jeeves.crm.webhooks")
 
@@ -78,37 +78,35 @@ def _upsert_patient(
     return patient
 
 
-def _upsert_appointment(
+def _sync_appointment_from_webhook(
     db: Session, tenant_id: uuid.UUID, patient_id: uuid.UUID, data: dict[str, Any]
-) -> Appointment:
+) -> AppointmentCache:
     external_id = str(data.get("id", ""))
-    appt = None
+    cache = None
     if external_id:
-        appt = db.query(Appointment).filter(
-            Appointment.tenant_id == tenant_id,
-            Appointment.external_id == external_id,
+        cache = db.query(AppointmentCache).filter(
+            AppointmentCache.tenant_id == tenant_id,
+            AppointmentCache.external_id == external_id,
         ).first()
 
-    if appt:
-        appt.status = data.get("status", appt.status)
-        appt.updated_at = datetime.utcnow()
+    if cache:
+        cache.status = data.get("status", cache.status)
+        cache.last_synced_at = datetime.utcnow()
+        cache.updated_at = datetime.utcnow()
     else:
-        from dateutil import parser as dateparser
-        appt = Appointment(
+        cache = AppointmentCache(
             id=uuid.uuid4(),
             tenant_id=tenant_id,
             patient_id=patient_id,
             external_id=external_id,
-            provider_name=data.get("provider_name", ""),
-            start_time=dateparser.parse(data["start_time"]) if data.get("start_time") else datetime.utcnow(),
-            end_time=dateparser.parse(data["end_time"]) if data.get("end_time") else datetime.utcnow(),
             status=data.get("status", "scheduled"),
-            reason=data.get("reason"),
+            cached_at=datetime.utcnow(),
+            last_synced_at=datetime.utcnow(),
         )
-        db.add(appt)
+        db.add(cache)
 
     db.flush()
-    return appt
+    return cache
 
 
 @router.post("/zoho")
@@ -184,7 +182,7 @@ def _handle_webhook(
         ).first()
         if not patient:
             raise HTTPException(status_code=404, detail="Linked patient not found. Sync patient first.")
-        appt = _upsert_appointment(db, conn.tenant_id, patient.id, resource)
+        appt = _sync_appointment_from_webhook(db, conn.tenant_id, patient.id, resource)
         _log_audit(db, conn.tenant_id, patient.id, f"crm_{provider}", f"{event_type}", "appointment", str(appt.id))
         return {"ok": True, "entity": "appointment", "id": str(appt.id)}
 

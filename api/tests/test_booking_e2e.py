@@ -9,7 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.models import Appointment, Provider, Tenant
+from app.models import Appointment, AppointmentCache, Provider, Tenant
 from app.core.booking import (
     Slot,
     get_available_slots,
@@ -28,7 +28,11 @@ REF_DT = datetime(2026, 6, 1, 9, 0, 0)
 
 @pytest.fixture
 def mock_db():
-    return MagicMock(spec=Session)
+    m = MagicMock(spec=Session)
+    crm_query = MagicMock()
+    crm_query.filter.return_value.first.return_value = None
+    m.query.return_value = crm_query
+    return m
 
 
 @pytest.fixture
@@ -456,6 +460,155 @@ class TestAdminAPI:
         resp = client.post(f"/admin/api/appointments/{sample_appointment.id}/cancel")
         assert resp.status_code == 200
         assert resp.json()["ok"] is True
+
+
+class TestCrmPassThrough:
+    """CRM pass-through path in admin API (Phase B/C)."""
+
+    def test_crm_pass_through_list_appointments(
+        self, client: TestClient, mock_db: MagicMock,
+    ):
+        mock_adapter = MagicMock()
+        mock_adapter.list_appointments.return_value = {
+            "total": 2,
+            "items": [
+                {"id": "crm_1", "patient_id": str(uuid4()), "provider_name": "Dr. CRM",
+                 "start_time": "2026-06-01T09:00", "end_time": "2026-06-01T09:30", "status": "scheduled"},
+                {"id": "crm_2", "patient_id": str(uuid4()), "provider_name": "Dr. CRM",
+                 "start_time": "2026-06-01T10:00", "end_time": "2026-06-01T10:30", "status": "scheduled"},
+            ],
+        }
+        with patch("app.admin.appointments._get_crm_adapter", return_value=mock_adapter):
+            resp = client.get("/admin/api/appointments")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["total"] == 2
+        assert "appointments" in data
+        assert len(data["appointments"]) == 2
+        assert data["appointments"][0]["provider_name"] == "Dr. CRM"
+        mock_adapter.list_appointments.assert_called_once()
+
+    def test_crm_pass_through_get_appointment(
+        self, client: TestClient, mock_db: MagicMock, tenant_id: UUID,
+    ):
+        cache_entry = MagicMock(spec=AppointmentCache)
+        cache_entry.external_id = "crm_ext_1"
+        cache_entry.tenant_id = tenant_id
+        mock_db.execute.return_value.scalar_one_or_none.return_value = cache_entry
+
+        mock_adapter = MagicMock()
+        mock_adapter.get_appointment.return_value = {
+            "id": "crm_ext_1",
+            "external_id": "crm_ext_1",
+            "patient_id": str(tenant_id),
+            "provider_name": "Dr. CRM",
+            "start_time": "2026-06-01T09:00",
+            "end_time": "2026-06-01T09:30",
+            "status": "scheduled",
+        }
+        with patch("app.admin.appointments._get_crm_adapter", return_value=mock_adapter):
+            resp = client.get(f"/admin/api/appointments/{uuid4()}")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["external_id"] == "crm_ext_1"
+        assert data["provider_name"] == "Dr. CRM"
+
+    def test_crm_pass_through_list_slots(
+        self, client: TestClient, mock_db: MagicMock,
+    ):
+        mock_adapter = MagicMock()
+        mock_adapter.search_available_slots.return_value = [
+            {"start_time": "2026-06-01T09:00", "end_time": "2026-06-01T09:30",
+             "provider_name": "Dr. CRM", "slot_token": "crm_slot_1"},
+        ]
+        with patch("app.admin.appointments._get_crm_adapter", return_value=mock_adapter):
+            resp = client.get("/admin/api/appointments/slots?date=2026-06-01")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data["slots"]) == 1
+        assert data["slots"][0]["provider_name"] == "Dr. CRM"
+        mock_adapter.search_available_slots.assert_called_once()
+
+    def test_crm_pass_through_create_appointment(
+        self, client: TestClient, mock_db: MagicMock,
+    ):
+        mock_adapter = MagicMock()
+        mock_adapter.create_appointment.return_value = {
+            "id": "crm_new_1",
+            "patient_id": str(uuid4()),
+            "provider_name": "Dr. CRM",
+            "start_time": "2026-06-01T11:00",
+            "end_time": "2026-06-01T11:30",
+            "status": "scheduled",
+        }
+        with patch("app.admin.appointments._get_crm_adapter", return_value=mock_adapter):
+            resp = client.post("/admin/api/appointments", json={
+                "patient_id": str(uuid4()),
+                "provider_name": "Dr. CRM",
+                "start_time": "2026-06-01T11:00",
+                "end_time": "2026-06-01T11:30",
+                "reason": "CRM test",
+            })
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["id"] == "crm_new_1"
+        assert data["provider_name"] == "Dr. CRM"
+        mock_adapter.create_appointment.assert_called_once()
+
+    def test_crm_pass_through_update_appointment(
+        self, client: TestClient, mock_db: MagicMock,
+    ):
+        cache_entry = MagicMock(spec=AppointmentCache)
+        cache_entry.id = uuid4()
+        cache_entry.tenant_id = uuid4()
+        cache_entry.external_id = "crm_ext_upd"
+        cache_entry.status = "scheduled"
+        cache_entry.patient_id = uuid4()
+        cache_entry.source = "crm_sync"
+        cache_entry.updated_at = datetime.utcnow()
+        mock_db.get.return_value = cache_entry
+
+        mock_adapter = MagicMock()
+        with patch("app.admin.appointments._get_crm_adapter", return_value=mock_adapter):
+            resp = client.patch(f"/admin/api/appointments/{cache_entry.id}", json={"status": "confirmed"})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["external_id"] == "crm_ext_upd"
+        assert data["status"] == "confirmed"
+        mock_adapter.update_appointment.assert_called_once_with("crm_ext_upd", {"status": "confirmed"})
+        assert cache_entry.status == "confirmed"
+
+    def test_crm_pass_through_cancel_appointment(
+        self, client: TestClient, mock_db: MagicMock,
+    ):
+        cache_entry = MagicMock(spec=AppointmentCache)
+        cache_entry.id = uuid4()
+        cache_entry.tenant_id = uuid4()
+        cache_entry.external_id = "crm_ext_cancel"
+        mock_db.get.return_value = cache_entry
+
+        mock_adapter = MagicMock()
+        with patch("app.admin.appointments._get_crm_adapter", return_value=mock_adapter):
+            resp = client.post(f"/admin/api/appointments/{cache_entry.id}/cancel", json={"reason": "CRM test"})
+        assert resp.status_code == 200
+        assert resp.json()["ok"] is True
+        mock_adapter.cancel_appointment.assert_called_once_with("crm_ext_cancel")
+
+    def test_fallback_to_local_when_no_crm(
+        self, client: TestClient, mock_db: MagicMock,
+        sample_appointment: Appointment, tenant_id: UUID,
+    ):
+        count_result = MagicMock()
+        count_result.scalar.return_value = 1
+        rows_result = MagicMock()
+        rows_result.scalars.return_value.all.return_value = [sample_appointment]
+        mock_db.execute.side_effect = [count_result, rows_result]
+        with patch("app.admin.appointments._get_crm_adapter", return_value=None):
+            resp = client.get("/admin/api/appointments")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["total"] == 1
+        assert data["appointments"][0]["provider_name"] == "Dr. Smith"
 
 
 class TestAdminAuthGuard:

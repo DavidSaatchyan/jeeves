@@ -15,7 +15,7 @@
 
 | Страница | Действие | Причина |
 |----------|----------|---------|
-| `base.html` | Update branding + nav | "AI Support Agent" → "AI Patient Communication", sidebar: новые агенты |
+| `base.html` | Update branding + nav | "AI Support Agent" → "AI Communication & Support", sidebar: новые агенты |
 | `agents.html` | Rewrite — medical agents | WISMO/Assist → Appointment Manager + Marketing + Follow-up |
 | `connections.html` | Minor update | Уже переписан на CRM — только фикс терминологии |
 | `knowledge.html` | Reframe catalog | "Product Catalog" → "Services Catalog", SKU/price/stock → procedure/service |
@@ -122,7 +122,7 @@ templates/ → core/, channels/, integrations/  (templates NEVER call backend di
 ### 4.1. Обновить `templates/base.html` — Branding + Navigation
 
 **Изменения:**
-1. Brand name: "AI Support Agent" → "AI Patient Communication"
+1. Brand name: "AI Support Agent" → "AI Communication & Support"
 2. Sidebar: добавить новые пункты навигации:
    - **Appointments** — между Inbox и Knowledge
    - **Campaigns** — после Assistants секции
@@ -335,7 +335,7 @@ Services Catalog:
 - "order" (в контексте клиники) → "visit" или "appointment"
 - "shop" → "clinic"
 - "store" → "clinic"
-- "AI Support Agent" → "AI Patient Communication Platform"
+- "AI Support Agent" → "AI Communication & Support Platform"
 
 **Проверка:**
 - Ни одна страница не содержит "Shopify", "WISMO", "e-commerce" в видимом тексте
@@ -377,7 +377,7 @@ from . import (
 
 ## 6. Definition of Done
 
-1. `base.html` — brand: "AI Patient Communication Platform", sidebar: Inbox, Appointments (NEW), Knowledge, Channels, Connections, Assistants (3 agents), Campaigns, Compliance, Account
+1. `base.html` — brand: "AI Communication & Support Platform", sidebar: Inbox, Appointments (NEW), Knowledge, Channels, Connections, Assistants (3 agents), Campaigns, Compliance, Account
 2. `agents.html` — 3 tabbed agent panels: Appointment Manager, Marketing Funnel, Patient Follow-up — каждый с KPI, state distribution, policy settings
 3. `connections.html` — 4 CRM providers (Zoho, HubSpot, Salesforce, Custom API) с Connect/Test/Disconnect/Sync Now
 4. `knowledge.html` — Documents + Services Catalog (procedure code, department, duration, fee, availability вместо SKU/price/stock)

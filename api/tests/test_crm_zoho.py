@@ -271,6 +271,79 @@ class TestCreateAppointment:
         assert body["data"][0]["Status"] == "Scheduled"
 
 
+class TestGetAppointment:
+    def test_success(self, adapter: ZohoCRMAdapter, mock_httpx_request: MagicMock):
+        adapter._access_token = "tok"
+        adapter._token_expires_at = time.time() + 3600
+        mock_httpx_request.return_value = _mock_response(json_data={"data": [{"id": "a1", "Status": "Scheduled"}]})
+        result = adapter.get_appointment("a1")
+        assert result == {"id": "a1", "Status": "Scheduled"}
+
+    def test_not_found_returns_none(self, adapter: ZohoCRMAdapter, mock_httpx_request: MagicMock):
+        adapter._access_token = "tok"
+        adapter._token_expires_at = time.time() + 3600
+        mock_httpx_request.return_value = _mock_response(status_code=404, text="not found")
+        result = adapter.get_appointment("missing")
+        assert result is None
+
+    def test_non_list_result_returns_as_is(self, adapter: ZohoCRMAdapter, mock_httpx_request: MagicMock):
+        adapter._access_token = "tok"
+        adapter._token_expires_at = time.time() + 3600
+        mock_httpx_request.return_value = _mock_response(json_data={"id": "a2", "Status": "Completed"})
+        result = adapter.get_appointment("a2")
+        assert result == {"id": "a2", "Status": "Completed"}
+
+
+class TestListAppointments:
+    def test_success(self, adapter: ZohoCRMAdapter, mock_httpx_request: MagicMock):
+        adapter._access_token = "tok"
+        adapter._token_expires_at = time.time() + 3600
+        mock_httpx_request.return_value = _mock_response(json_data={"data": [{"id": "a1"}, {"id": "a2"}]})
+        result = adapter.list_appointments("t1")
+        assert result["total"] == 2
+
+    def test_empty(self, adapter: ZohoCRMAdapter, mock_httpx_request: MagicMock):
+        adapter._access_token = "tok"
+        adapter._token_expires_at = time.time() + 3600
+        mock_httpx_request.return_value = _mock_response(json_data={"data": []})
+        result = adapter.list_appointments("t1")
+        assert result["total"] == 0
+        assert result["items"] == []
+
+    def test_not_found_returns_empty(self, adapter: ZohoCRMAdapter, mock_httpx_request: MagicMock):
+        adapter._access_token = "tok"
+        adapter._token_expires_at = time.time() + 3600
+        mock_httpx_request.return_value = _mock_response(status_code=404, text="not found")
+        result = adapter.list_appointments("t1")
+        assert result["total"] == 0
+        assert result["items"] == []
+
+    def test_filters_by_status(self, adapter: ZohoCRMAdapter, mock_httpx_request: MagicMock):
+        adapter._access_token = "tok"
+        adapter._token_expires_at = time.time() + 3600
+        mock_httpx_request.return_value = _mock_response(json_data={"data": [{"id": "a1"}]})
+        adapter.list_appointments("t1", status="Scheduled")
+        called_path = mock_httpx_request.call_args[0][1]
+        assert "Status:equals:Scheduled" in called_path
+
+    def test_filters_by_date_range(self, adapter: ZohoCRMAdapter, mock_httpx_request: MagicMock):
+        adapter._access_token = "tok"
+        adapter._token_expires_at = time.time() + 3600
+        mock_httpx_request.return_value = _mock_response(json_data={"data": [{"id": "a1"}]})
+        adapter.list_appointments("t1", date_from="2026-01-01", date_to="2026-01-31")
+        called_path = mock_httpx_request.call_args[0][1]
+        assert "Start_Time:greater_or_equal:2026-01-01" in called_path
+        assert "Start_Time:less_or_equal:2026-01-31" in called_path
+
+    def test_respects_offset_and_limit(self, adapter: ZohoCRMAdapter, mock_httpx_request: MagicMock):
+        adapter._access_token = "tok"
+        adapter._token_expires_at = time.time() + 3600
+        mock_httpx_request.return_value = _mock_response(json_data={"data": [{"id": "a1"}, {"id": "a2"}, {"id": "a3"}]})
+        result = adapter.list_appointments("t1", offset=1, limit=1)
+        assert len(result["items"]) == 1
+        assert result["items"][0]["id"] == "a2"
+
+
 class TestCancelAppointment:
     def test_success_returns_true(self, adapter: ZohoCRMAdapter, mock_httpx_request: MagicMock):
         adapter._access_token = "tok"

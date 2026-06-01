@@ -25,6 +25,8 @@ class TestAbstractCrmConnector:
             "update_appointment",
             "cancel_appointment",
             "get_patient_appointments",
+            "get_appointment",
+            "list_appointments",
             "search_available_slots",
             "verify_webhook_signature",
             "parse_webhook_event",
@@ -76,6 +78,23 @@ class TestAbstractCrmConnector:
         hints = get_type_hints(AbstractCrmConnector.get_patient_appointments)
         assert hints["patient_id"] is str
         assert hints["return"] == list[dict[str, Any]]
+
+    def test_get_appointment_signature(self):
+        hints = get_type_hints(AbstractCrmConnector.get_appointment)
+        assert hints["appt_id"] is str
+        assert hints["return"] == dict[str, Any] | None
+
+    def test_list_appointments_signature(self):
+        hints = get_type_hints(AbstractCrmConnector.list_appointments)
+        assert hints["tenant_id"] is str
+        assert hints["status"] == str | None
+        assert hints["provider"] == str | None
+        assert hints["date_from"] == str | None
+        assert hints["date_to"] == str | None
+        assert hints["patient_id"] == str | None
+        assert hints["offset"] is int
+        assert hints["limit"] is int
+        assert hints["return"] is dict
 
     def test_search_available_slots_signature(self):
         hints = get_type_hints(AbstractCrmConnector.search_available_slots)

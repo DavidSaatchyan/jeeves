@@ -135,26 +135,25 @@ class TestUpsertPatient:
         mock_db.flush.assert_called_once()
 
 
-# ── _upsert_appointment ────────────────────────────────────────────────
+# ── _sync_appointment_from_webhook ────────────────────────────────────
 
 
-class TestUpsertAppointment:
-    def test_creates_new_appointment(self, mock_db: MagicMock, tenant_id: uuid.UUID):
+class TestSyncAppointmentFromWebhook:
+    def test_creates_new_cache_entry(self, mock_db: MagicMock, tenant_id: uuid.UUID):
         q = mock_db.query
         q.return_value.filter.return_value.first.return_value = None
-        mock_appt_instance = MagicMock(name="appt_instance")
-        mock_appt_instance.id = uuid.uuid4()
-        with patch.object(wh, "Appointment", return_value=mock_appt_instance):
-            with patch("dateutil.parser.parse", return_value=MagicMock()):
-                result = wh._upsert_appointment(mock_db, tenant_id, uuid.uuid4(), {"id": "a1", "provider_name": "Dr. X", "start_time": "2025-01-01T10:00", "end_time": "2025-01-01T10:30"})
-                assert result is mock_appt_instance
+        mock_cache_instance = MagicMock(name="cache_instance")
+        mock_cache_instance.id = uuid.uuid4()
+        with patch.object(wh, "AppointmentCache", return_value=mock_cache_instance):
+            result = wh._sync_appointment_from_webhook(mock_db, tenant_id, uuid.uuid4(), {"id": "a1", "status": "scheduled"})
+            assert result is mock_cache_instance
 
-    def test_updates_existing_appointment(self, mock_db: MagicMock, tenant_id: uuid.UUID):
-        existing = MagicMock(name="existing_appt")
+    def test_updates_existing_cache_entry(self, mock_db: MagicMock, tenant_id: uuid.UUID):
+        existing = MagicMock(name="existing_cache")
         existing.status = "scheduled"
         q = mock_db.query
         q.return_value.filter.return_value.first.return_value = existing
-        wh._upsert_appointment(mock_db, tenant_id, uuid.uuid4(), {"id": "a1", "status": "completed"})
+        wh._sync_appointment_from_webhook(mock_db, tenant_id, uuid.uuid4(), {"id": "a1", "status": "completed"})
         assert existing.status == "completed"
         mock_db.flush.assert_called_once()
 
@@ -178,16 +177,15 @@ class TestHandleWebhook:
         mock_adapter.parse_webhook_event.return_value = {"event": "appointment.created", "resource": {"id": "a1", "patient_id": "ext_p1", "provider_name": "Dr. X", "start_time": "2025-01-01T10:00", "end_time": "2025-01-01T10:30"}}
         mock_found_patient = MagicMock(name="found_patient")
         mock_found_patient.id = uuid.uuid4()
-        mock_appt_instance = MagicMock(name="appt_instance")
-        mock_appt_instance.id = uuid.uuid4()
+        mock_cache_instance = MagicMock(name="cache_instance")
+        mock_cache_instance.id = uuid.uuid4()
         mock_db = MagicMock()
         q = mock_db.query
         q.return_value.filter.return_value.filter.return_value.first.side_effect = [mock_conn, mock_found_patient]
         with patch("app.integrations.crm.get_crm_adapter", return_value=mock_adapter):
             with patch.object(wh, "_verify_signature", return_value=True):
-                with patch.object(wh, "Appointment", return_value=mock_appt_instance):
-                    with patch("dateutil.parser.parse", return_value=MagicMock()):
-                        result = wh._handle_webhook("zoho", json.dumps({"id": "a1"}).encode(), mock_request, mock_db, tenant_id)
+                with patch.object(wh, "AppointmentCache", return_value=mock_cache_instance):
+                    result = wh._handle_webhook("zoho", json.dumps({"id": "a1"}).encode(), mock_request, mock_db, tenant_id)
         assert result["ok"] is True
         assert result["entity"] == "appointment"
 

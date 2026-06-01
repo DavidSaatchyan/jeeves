@@ -70,6 +70,22 @@ class HubSpotAdapter(AbstractCrmConnector):
     def get_patient_appointments(self, patient_id: str) -> list[dict[str, Any]]:
         raise CrmConnectionError(self.provider, "get_patient_appointments", "Not implemented for HubSpot")
 
+    def get_appointment(self, appt_id: str) -> dict[str, Any] | None:
+        raise CrmConnectionError(self.provider, "get_appointment", "HubSpot does not support appointment listing. Use Zoho or a dedicated CRM.")
+
+    def list_appointments(
+        self,
+        tenant_id: str,
+        status: str | None = None,
+        provider: str | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+        patient_id: str | None = None,
+        offset: int = 0,
+        limit: int = 50,
+    ) -> dict:
+        raise CrmConnectionError(self.provider, "list_appointments", "HubSpot does not support appointment listing. Use Zoho or a dedicated CRM.")
+
     def search_available_slots(self, doctor_id: str, date: str) -> list[dict[str, Any]]:
         return []
 
