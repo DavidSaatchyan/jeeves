@@ -162,12 +162,21 @@ def _run_alembic_migrations() -> None:
 
     # Ensure all ORM tables exist after Alembic (migration may rename tables, e.g. appointments → appointments_archive)
     from .models import Base
-    from sqlalchemy import inspect
+    from sqlalchemy import inspect, text
     inspector = inspect(engine)
     existing_tables = set(inspector.get_table_names())
     for table in Base.metadata.tables.values():
         if table.name not in existing_tables:
             table.create(bind=engine, checkfirst=True)
+
+    # Self-heal: add config column to crm_connections if Phase 2 migration
+    # (faa41bd54658) was stamped without running on production.
+    if "crm_connections" in existing_tables:
+        db_columns = {c["name"] for c in inspector.get_columns("crm_connections")}
+        for col, typ in [("config", "JSONB"), ("last_sync_at", "TIMESTAMP"), ("webhook_secret", "TEXT")]:
+            if col not in db_columns and engine.dialect.name == "postgresql":
+                engine.execute(text(f"ALTER TABLE crm_connections ADD COLUMN {col} {typ} NULL"))
+                logging.info("Self-heal: added column %s to crm_connections", col)
 
 
 @app.on_event("startup")
