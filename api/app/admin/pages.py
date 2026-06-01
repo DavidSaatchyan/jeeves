@@ -85,11 +85,6 @@ def knowledge_page(request: Request, tenant: Tenant = Depends(get_admin_tenant))
     return templates.TemplateResponse(request, "knowledge.html", context=ctx)
 
 
-@router.get("/appointments", response_class=HTMLResponse)
-def appointments_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "appointments.html", context=_ctx(request))
-
-
 @router.get("/channels", response_class=HTMLResponse)
 def channels_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
     return templates.TemplateResponse(request, "channels.html", context=_ctx(request))

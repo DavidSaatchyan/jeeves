@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from ..crypto import ConnectorError, decrypt, encrypt
 from ..db import get_db
-from ..models import CrmConnection, NativeConnector, Tenant
+from ..models import CalendarConnection, CrmConnection, NativeConnector, Tenant
 from .deps import _ctx, get_admin_tenant
 from .router import router
 
@@ -19,11 +19,13 @@ _CONNECTOR_FIELDS: dict[str, list[str]] = {
     "zoho": ["client_id", "client_secret", "refresh_token", "accounts_domain", "api_domain"],
     "hubspot": ["access_token", "portal_id"],
     "custom_api": ["base_url", "auth_type", "auth_credentials", "endpoint_mapping"],
+    "google_calendar": [],
 }
 _WEBHOOK_EVENTS: dict[str, list[str]] = {
     "zoho": ["Contacts.create", "Contacts.edit", "Appointments__s.create", "Appointments__s.edit"],
     "hubspot": ["contact.creation", "contact.deletion", "meeting.created", "meeting.deleted"],
     "custom_api": ["*"],
+    "google_calendar": [],
 }
 
 
@@ -105,9 +107,26 @@ def api_integrations(
             "updated_at": c.updated_at.isoformat() if c.updated_at else None,
         })
 
+    cal_result = []
+    for c in db.query(CalendarConnection).filter(CalendarConnection.tenant_id == tenant.id).all():
+        cal_result.append({
+            "id": str(c.id),
+            "provider": "google_calendar",
+            "status": c.status or "disconnected",
+            "config_mask": {},
+            "has_webhook_secret": False,
+            "webhook_url": None,
+            "webhook_events": [],
+            "connector_fields": [],
+            "calendar_id": c.calendar_id,
+            "created_at": c.created_at.isoformat() if c.created_at else None,
+            "updated_at": c.updated_at.isoformat() if c.updated_at else None,
+        })
+
     return {
         "native_connectors": result,
         "crm_connections": crm_result,
+        "calendar_connections": cal_result,
         "webhook_base_url": webhook_base,
         "providers": list(_CONNECTOR_FIELDS.keys()),
     }

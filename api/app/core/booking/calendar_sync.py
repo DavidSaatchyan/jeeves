@@ -1,24 +1,16 @@
-"""Calendar sync — Phase 5 stub. Full implementation in Phase 6+.
-
-Interface documented for future Google/Outlook/etc integration.
-"""
+"""Calendar sync — stubs for future bi-directional sync."""
 
 from __future__ import annotations
 
 import logging
 from uuid import UUID
 
-from ...models import Appointment
-
 logger = logging.getLogger(__name__)
 
 
-async def push_to_calendar(appointment: Appointment, provider: str = "google") -> str | None:
+async def push_to_calendar(appointment_id: UUID | None, provider: str = "google") -> str | None:
     """Push appointment to external calendar. Returns external event ID or None."""
-    logger.info(
-        "calendar sync stub: push appointment %s to %s (would create event)",
-        appointment.id, provider,
-    )
+    logger.info("calendar sync stub: push appointment %s to %s (would create event)", appointment_id, provider)
     return None
 
 

@@ -99,19 +99,41 @@ var PROVIDERS = [
     ],
     docUrl: '',
     docLabel: 'API docs',
+  },
+  {
+    id: 'google_calendar',
+    name: 'Google Calendar',
+    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+    color: '#4285F4',
+    desc: 'Calendar sync — проверка слотов и создание записей',
+    fields: [],
+    whLabel: '',
+    whPlaceholder: '',
+    events: [],
+    setupSteps: [
+      'Нажмите "Подключить" для авторизации доступа к Google Календарю',
+      'Вы будете перенаправлены на страницу входа Google',
+      'После авторизации вернитесь на эту страницу',
+    ],
+    docUrl: 'https://developers.google.com/calendar/api',
+    docLabel: 'Google Calendar API docs',
   }
 ];
 
 var CRM_PROVIDERS = ['zoho', 'hubspot', 'salesforce', 'custom_api'];
+var CALENDAR_PROVIDERS = ['google_calendar'];
 function isCrmProvider(p) { return CRM_PROVIDERS.indexOf(p) !== -1; }
+function isCalendarProvider(p) { return CALENDAR_PROVIDERS.indexOf(p) !== -1; }
 
 // ── Render provider tabs and panels ──────────────────────────
 function renderProviders(data) {
   var connectors = data.native_connectors || [];
   var crmConnectors = data.crm_connections || [];
+  var calendarConnectors = data.calendar_connections || [];
   var lookup = {};
   connectors.forEach(function(c){ lookup[c.provider] = c; });
   crmConnectors.forEach(function(c){ lookup[c.provider] = c; });
+  calendarConnectors.forEach(function(c){ lookup[c.provider] = c; });
 
   // Tabs
   var tabsHtml = PROVIDERS.map(function(p, i){
@@ -156,11 +178,11 @@ function renderProviders(data) {
 
       '<div class="ch-body">' +
 
-        // Credentials
-        '<div class="ch-card"><h3>API Credentials</h3>' + fieldsHtml + '</div>' +
+        // Credentials (hidden for OAuth providers like calendar)
+        (p.fields.length ? '<div class="ch-card"><h3>API Credentials</h3>' + fieldsHtml + '</div>' : '') +
 
-        // Webhook configuration
-        '<div class="ch-card"><h3>Webhook Configuration</h3>' +
+        // Webhook configuration (hidden for providers with no events)
+        (p.events.length ? '<div class="ch-card"><h3>Webhook Configuration</h3>' +
 
           '<div class="field-row"><label>' + p.whLabel + '</label>' +
           '<input id="wh-' + p.id + '" type="password" placeholder="' + p.whPlaceholder + '"' +
@@ -176,17 +198,17 @@ function renderProviders(data) {
           '<div class="wh-instructions"><h4>Setup instructions</h4>' + stepsHtml + '</div>' +
           '<a href="' + p.docUrl + '" target="_blank" class="doc-link">📖 ' + esc(p.docLabel) + '</a>' +
 
-        '</div>' +
+        '</div>' : '') +
 
         // Actions
         '<div class="ch-actions">' +
           '<button onclick="connectProvider(\'' + p.id + '\')" id="conn-' + p.id + '" class="accent">' + (connected ? 'Update' : 'Connect') + '</button>' +
-          '<button onclick="testProvider(\'' + p.id + '\')" id="test-' + p.id + '" class="ghost" ' + (connected ? '' : 'disabled') + '>Test connection</button>' +
-          '<button onclick="syncProvider(\'' + p.id + '\')" id="sync-' + p.id + '" class="ghost" ' + (connected ? '' : 'style="display:none"') + '>Sync Now</button>' +
+          (isCalendarProvider(p.id) ? '' : '<button onclick="testProvider(\'' + p.id + '\')" id="test-' + p.id + '" class="ghost" ' + (connected ? '' : 'disabled') + '>Test connection</button>') +
+          (isCalendarProvider(p.id) ? '' : '<button onclick="syncProvider(\'' + p.id + '\')" id="sync-' + p.id + '" class="ghost" ' + (connected ? '' : 'style="display:none"') + '>Sync Now</button>') +
           '<button onclick="disconnectProvider(\'' + p.id + '\')" id="disc-' + p.id + '" class="ghost danger" ' + (connected ? '' : 'style="display:none"') + '>Disconnect</button>' +
           '<span class="whstatus-badge" id="whstatus-' + p.id + '">' +
             (connected ? '<span class="pill ok" style="font-size:9px">Connected</span>' : '') +
-            (whSecret ? '<span class="pill ok" style="font-size:9px;margin-left:4px">Webhook ✓</span>' : (connected ? '<span class="pill warn" style="font-size:9px;margin-left:4px">No webhook secret</span>' : '')) +
+            (whSecret ? '<span class="pill ok" style="font-size:9px;margin-left:4px">Webhook ✓</span>' : (connected && p.events.length ? '<span class="pill warn" style="font-size:9px;margin-left:4px">No webhook secret</span>' : '')) +
           '</span>' +
         '</div>' +
         '<div class="err-msg" id="msg-' + p.id + '"></div>' +
@@ -252,6 +274,21 @@ function validateProvider(p, creds){
 }
 
 function connectProvider(p){
+  if (isCalendarProvider(p)) {
+    showMsg(p, 'Redirecting to Google…');
+    fetch('/admin/calendar/connect/google')
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (data.authorization_url) {
+          window.location.href = data.authorization_url;
+        } else {
+          showMsg(p, 'Error: ' + JSON.stringify(data));
+        }
+      })
+      .catch(function(e){ showMsg(p, e.message); });
+    return;
+  }
+
   var creds = getCreds(p);
   var err = validateProvider(p, creds);
   if(err){ showMsg(p, err); return; }
@@ -287,6 +324,12 @@ function syncProvider(p){
 
 function disconnectProvider(p){
   if(!confirm('Disconnect '+p+'? This will stop all related workflows.')) return;
+  if (isCalendarProvider(p)) {
+    api('/admin/api/calendar/disconnect', {method:'POST'})
+      .then(function(){ showMsg(p, 'Disconnected', 'ok'); loadProviders(); })
+      .catch(function(e){ showMsg(p, e.message); });
+    return;
+  }
   var path = (isCrmProvider(p) ? '/crm/' : '/integrations/native/') + p;
   api(path, {method:'DELETE'})
     .then(function(){ showMsg(p, 'Disconnected', 'ok'); loadProviders(); })

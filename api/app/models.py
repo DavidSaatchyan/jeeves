@@ -443,31 +443,6 @@ class Patient(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
-class Appointment(Base):
-    """Patient appointment record."""
-    __tablename__ = "appointments"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    patient_id = Column(UUID(as_uuid=True), ForeignKey("patients.id"), nullable=False, index=True)
-    external_id = Column(Text)                              # CRM appointment ID
-    provider_name = Column(Text, nullable=False)
-    provider_specialty = Column(Text)
-    department = Column(Text)
-    start_time = Column(DateTime, nullable=False)
-    end_time = Column(DateTime, nullable=False)
-    status = Column(String(32), nullable=False, default="scheduled")
-    reason = Column(Text)
-    notes = Column(Text)
-    source = Column(String(32), default="whatsapp")
-    slot_token = Column(String(64))
-    reminder_sent_24h = Column(Boolean, default=False)
-    reminder_sent_2h = Column(Boolean, default=False)
-    consent_id = Column(UUID(as_uuid=True), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-
 class AppointmentCache(Base):
     """Local cache for appointment operational state.
     Source of truth is always the external CRM.
@@ -543,6 +518,23 @@ class CrmConnection(Base):
     status = Column(String(16), nullable=False, default="disconnected")  # connected | disconnected | error
     last_sync_at = Column(DateTime)
     webhook_secret = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class CalendarConnection(Base):
+    """Calendar provider connection config (Google Calendar, Outlook, etc.)."""
+    __tablename__ = "calendar_connections"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    provider = Column(String(32), nullable=False)             # google | outlook
+    access_token = Column(Text, nullable=False)
+    refresh_token = Column(Text)
+    token_expiry = Column(DateTime)
+    calendar_id = Column(String(256))                         # default "primary" or specific calendar
+    config = Column(JSONB, default=dict)                      # provider-specific settings
+    status = Column(String(16), nullable=False, default="disconnected")  # connected | disconnected | error
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 

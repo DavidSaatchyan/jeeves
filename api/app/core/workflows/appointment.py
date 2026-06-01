@@ -177,81 +177,36 @@ class AppointmentWorkflow(Workflow):
             await self.transition("NO_SHOW", event, db, reason="no_show_detected")
 
     async def _confirm_booking(self, event: CanonicalEvent, db: Session) -> None:
-        from ...models import AppointmentCache, CrmConnection
+        from ..booking import book_appointment
+        from ..booking.scheduler import SlotAlreadyBookedError
+        from ..calendar import CalendarProviderError
 
         payload = event.payload or {}
-        conn = db.query(CrmConnection).filter(
-            CrmConnection.tenant_id == self.tenant_id,
-            CrmConnection.status == "connected",
-        ).first()
 
-        if conn:
-            from ...integrations.crm import get_crm_adapter
-            adapter = get_crm_adapter(conn.provider, conn.config)
-            crm_result = adapter.create_appointment(
-                patient_id=str(payload.get("patient_id", "")),
-                data={
-                    "provider_name": payload.get("provider_name", ""),
-                    "start_time": str(payload.get("start_time", "")),
-                    "end_time": str(payload.get("end_time", "")),
-                    "reason": payload.get("reason"),
-                    "source": payload.get("source", "whatsapp"),
-                },
-            )
-            cache = AppointmentCache(
+        try:
+            appt = book_appointment(
+                db=db,
                 tenant_id=self.tenant_id,
                 patient_id=payload.get("patient_id"),
-                external_id=str(crm_result.get("id", "")),
-                status="scheduled",
                 slot_token=payload.get("slot_token", ""),
+                provider_name=payload.get("provider_name", ""),
+                start_time=payload.get("start_time"),
+                end_time=payload.get("end_time"),
+                reason=payload.get("reason"),
                 source=payload.get("source", "whatsapp"),
             )
-            db.add(cache)
-            db.flush()
-            await self.transition("BOOKED", event, db, reason=f"booked_in_crm_{cache.id}")
-        else:
-            from ..booking import book_appointment
-            from ..booking.scheduler import SlotAlreadyBookedError
-
-            try:
-                appt = book_appointment(
-                    db=db,
-                    tenant_id=self.tenant_id,
-                    patient_id=payload.get("patient_id"),
-                    slot_token=payload.get("slot_token", ""),
-                    provider_name=payload.get("provider_name", ""),
-                    start_time=payload.get("start_time"),
-                    end_time=payload.get("end_time"),
-                    reason=payload.get("reason"),
-                    source=payload.get("source", "whatsapp"),
-                )
-                await self.transition("BOOKED", event, db, reason=f"booked_appointment_{appt.id}")
-            except SlotAlreadyBookedError:
-                await self.transition("OFFERING_SLOTS", event, db, reason="slot_already_booked")
+            await self.transition("BOOKED", event, db, reason=f"booked_{appt.id}")
+        except SlotAlreadyBookedError:
+            await self.transition("OFFERING_SLOTS", event, db, reason="slot_already_booked")
+        except CalendarProviderError as e:
+            logger.error("booking failed: %s", e)
+            await self.transition("ESCALATED", event, db, reason="no_calendar_configured")
 
     async def _cancel_booking(self, event: CanonicalEvent, db: Session) -> None:
-        from ...models import AppointmentCache, CrmConnection
+        from ..booking import cancel_appointment
 
         payload = event.payload or {}
-        conn = db.query(CrmConnection).filter(
-            CrmConnection.tenant_id == self.tenant_id,
-            CrmConnection.status == "connected",
-        ).first()
-
-        if conn:
-            appointment_id = payload.get("appointment_id")
-            if appointment_id:
-                cache = db.get(AppointmentCache, appointment_id)
-                if cache and cache.external_id:
-                    from ...integrations.crm import get_crm_adapter
-                    adapter = get_crm_adapter(conn.provider, conn.config)
-                    adapter.cancel_appointment(cache.external_id)
-                    cache.status = "cancelled"
-                    db.flush()
-        else:
-            from ..booking import cancel_appointment
-
-            appointment_id = payload.get("appointment_id")
-            if appointment_id:
-                cancel_appointment(db, appointment_id, reason=payload.get("reason"))
+        appointment_id = payload.get("appointment_id")
+        if appointment_id:
+            cancel_appointment(db, appointment_id, reason=payload.get("reason"))
         await self.transition("CANCELLED", event, db, reason="cancelled")

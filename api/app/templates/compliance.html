@@ -41,7 +41,6 @@
     <div id="consentDetails" style="font-size:13px"></div>
     <div class="flex gap-sm mt-16" id="consentButtons">
       <button class="green sm" onclick="grantMarketingConsent()">Grant Marketing Consent</button>
-      <button class="cyan sm" onclick="grantAppointmentConsent()">Grant Appointment Consent</button>
       <button class="ghost sm danger" onclick="revokeConsent()">Revoke Consent</button>
     </div>
     <div id="consentMsg" class="err-msg mt-12"></div>
@@ -63,8 +62,6 @@
         <option value="consent_granted">Consent Granted</option>
         <option value="consent_revoked">Consent Revoked</option>
         <option value="message_sent">Message Sent</option>
-        <option value="appointment_booked">Appointment Booked</option>
-        <option value="appointment_cancelled">Appointment Cancelled</option>
         <option value="phi_accessed">PHI Accessed</option>
         <option value="data_exported">Data Exported</option>
         <option value="data_deleted">Data Deleted</option>
@@ -172,7 +169,6 @@ async function searchConsent() {
 function getSearchPatientId() { return document.getElementById('consentSearchId').value.trim(); }
 
 async function grantMarketingConsent() { await grantConsent('marketing', 'whatsapp'); }
-async function grantAppointmentConsent() { await grantConsent('appointment', 'whatsapp'); }
 
 async function grantConsent(consentType, channel) {
   var pid = getSearchPatientId();

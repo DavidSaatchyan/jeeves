@@ -5,11 +5,10 @@ from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from uuid import UUID
 
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ...config import get_yaml_config
-from ...models import Appointment, Provider
+from ...models import Provider
 
 
 @dataclass
@@ -104,6 +103,7 @@ def get_available_slots(
 ) -> list[Slot]:
     from ...models import CrmConnection
 
+    # 1. Try CRM
     conn = db.query(CrmConnection).filter(
         CrmConnection.tenant_id == tenant_id,
         CrmConnection.status == "connected",
@@ -128,41 +128,30 @@ def get_available_slots(
                 for s in crm_slots
             ][:limit]
 
-    cfg = get_yaml_config()
-    booking_cfg = cfg.get("booking", {})
-    slot_duration = booking_cfg.get("slot_duration_minutes", 30)
-    buffer_minutes = booking_cfg.get("buffer_minutes", 5)
+    # 2. Try Calendar provider
+    from ..calendar import get_calendar_provider
 
-    query = select(Provider).where(
-        Provider.tenant_id == tenant_id,
-    )
-    if provider_name:
-        query = query.where(Provider.name == provider_name)
-    if specialty:
-        query = query.where(Provider.specialty == specialty)
-    providers = db.execute(query).scalars().all()
+    calendar = get_calendar_provider(tenant_id, db)
+    if calendar:
+        import asyncio
 
-    target_day = day or date.today()
-    all_slots: list[Slot] = []
+        target_date = (day or date.today()).isoformat()
+        cfg = get_yaml_config()
+        booking_cfg = cfg.get("booking", {})
+        slot_duration = booking_cfg.get("slot_duration_minutes", 30)
+        buffer_minutes = booking_cfg.get("buffer_minutes", 5)
+        hours_start = booking_cfg.get("default_start_hour", 9)
+        hours_end = booking_cfg.get("default_end_hour", 17)
 
-    booked_map: dict[str, list[tuple[datetime, datetime]]] = {}
+        calendar_id = provider_name or "primary"
+        cal_slots = asyncio.run(calendar.get_available_slots(
+            calendar_id=calendar_id,
+            date_str=target_date,
+            slot_duration_minutes=slot_duration,
+            buffer_minutes=buffer_minutes,
+            working_hours_start=f"{hours_start:02d}:00",
+            working_hours_end=f"{hours_end:02d}:00",
+        ))
+        return cal_slots[:limit]
 
-    for prov in providers:
-        appt_rows = db.execute(
-            select(Appointment).where(
-                Appointment.tenant_id == tenant_id,
-                Appointment.provider_name == prov.name,
-                Appointment.status.in_(["scheduled", "confirmed", "arrived", "in_progress"]),
-            )
-        ).scalars().all()
-
-        booked_map[prov.name] = [
-            (a.start_time, a.end_time) for a in appt_rows
-            if a.start_time.date() == target_day
-        ]
-
-        slots = generate_slots(prov, target_day, booked_map[prov.name], slot_duration, buffer_minutes)
-        all_slots.extend(slots)
-
-    all_slots.sort(key=lambda s: s.start)
-    return all_slots[:limit]
+    return []

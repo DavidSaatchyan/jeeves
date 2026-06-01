@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     hubspot_client_id: str = ""
     hubspot_client_secret: str = ""
     hubspot_redirect_uri: str = "http://localhost:8000/crm/oauth/hubspot/callback"
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_redirect_uri: str = "http://localhost:8000/admin/calendar/oauth/google/callback"
     fernet_key: str = ""
     # Compliance / data governance
     compliance_gdpr_enabled: bool = True
