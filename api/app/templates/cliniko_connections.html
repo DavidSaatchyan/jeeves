@@ -1,0 +1,97 @@
+<!doctype html>
+{% extends "base.html" %}
+{% block body %}
+<h1>Cliniko</h1>
+<p class="page-desc">Configure your Cliniko integration. Cliniko is a practice management system for healthcare practitioners.</p>
+
+<div class="int-card">
+  <div class="flex" style="align-items:center;gap:14px">
+    <div class="int-logo" style="background:rgba(34,166,126,0.12);color:#22a67e;font-size:18px;font-weight:800">C</div>
+    <div>
+      <div class="int-name">Cliniko</div>
+      <div class="int-desc">Patients, appointments, and scheduling via the Cliniko API</div>
+    </div>
+    {% if connected %}
+    <span class="pill ok" style="margin-left:auto">Connected</span>
+    {% else %}
+    <span class="pill muted" style="margin-left:auto">Not Connected</span>
+    {% endif %}
+  </div>
+
+  <div class="int-inputs" style="margin-top:12px">
+    <label>API Key</label>
+    <input type="password" id="api_key" value="{{ api_key }}" placeholder="cliniko_api_key"/>
+
+    <label>Shard</label>
+    <select id="shard">
+      <option value="au1" {% if shard == "au1" %}selected{% endif %}>au1 — Australia</option>
+      <option value="eu1" {% if shard == "eu1" %}selected{% endif %}>eu1 — Europe</option>
+      <option value="us1" {% if shard == "us1" %}selected{% endif %}>us1 — United States</option>
+      <option value="ca1" {% if shard == "ca1" %}selected{% endif %}>ca1 — Canada</option>
+      <option value="uk1" {% if shard == "uk1" %}selected{% endif %}>uk1 — United Kingdom</option>
+      <option value="nz1" {% if shard == "nz1" %}selected{% endif %}>nz1 — New Zealand</option>
+      <option value="sg1" {% if shard == "sg1" %}selected{% endif %}>sg1 — Singapore</option>
+    </select>
+
+    <label>Webhook Secret</label>
+    <input type="text" id="webhook_secret" value="{{ webhook_secret }}" placeholder="Optional"/>
+  </div>
+
+  <div class="flex" style="margin-top:16px">
+    <button class="accent" onclick="saveCliniko()">Save &amp; Connect</button>
+    <button class="ghost" onclick="testCliniko()">Test Connection</button>
+    <button class="ghost danger" onclick="disconnectCliniko()" {% if not connected %}disabled{% endif %}>Disconnect</button>
+  </div>
+  <div id="clinikoMsg" class="err-msg" style="margin-top:10px"></div>
+</div>
+
+<div class="help">
+  <h3>About Cliniko</h3>
+  <p>To connect Cliniko:</p>
+  <p><strong>1.</strong> Go to Cliniko → <em>My Info</em> → <em>Manage API keys</em> and create an API key.</p>
+  <p><strong>2.</strong> Select your data shard (e.g. <code>au1</code> for Australia, <code>eu1</code> for Europe).</p>
+  <p><strong>3.</strong> Set your webhook URL to <code>{{ request.base_url }}integrations/webhooks/cliniko/{{ tenant_id }}</code>.</p>
+</div>
+
+<script>
+async function saveCliniko() {
+  const api_key = document.getElementById('api_key').value.trim();
+  const shard = document.getElementById('shard').value;
+  const webhook_secret = document.getElementById('webhook_secret').value.trim();
+  if (!api_key) { showMsg('clinikoMsg', 'API Key is required', 'err'); return; }
+  try {
+    await api('/admin/api/cliniko/configure', {
+      method: 'POST',
+      body: { api_key, shard, webhook_secret },
+    });
+    showMsg('clinikoMsg', 'Saved!', 'ok');
+    setTimeout(() => location.reload(), 1000);
+  } catch(e) {
+    showMsg('clinikoMsg', e.message, 'err');
+  }
+}
+async function testCliniko() {
+  try {
+    const r = await api('/admin/api/cliniko/test', { method: 'POST' });
+    showMsg('clinikoMsg', r.message || 'Connection OK', 'ok');
+  } catch(e) {
+    showMsg('clinikoMsg', e.message, 'err');
+  }
+}
+async function disconnectCliniko() {
+  if (!confirm('Disconnect Cliniko?')) return;
+  try {
+    await api('/admin/api/cliniko/disconnect', { method: 'POST' });
+    showMsg('clinikoMsg', 'Disconnected', 'ok');
+    setTimeout(() => location.reload(), 1000);
+  } catch(e) {
+    showMsg('clinikoMsg', e.message, 'err');
+  }
+}
+function showMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.style.color = type === 'ok' ? '#22a67e' : '#e5484d';
+}
+</script>
+{% endblock %}

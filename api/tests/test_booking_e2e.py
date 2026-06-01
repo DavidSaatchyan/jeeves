@@ -34,7 +34,8 @@ def mock_db(tenant_id: UUID):
     m = MagicMock(spec=Session)
     tenant = MagicMock(spec=Tenant)
     tenant.id = tenant_id
-    tenant.pabau_config = {"api_key": "test_key", "company_id": "123"}
+    tenant.crm_config = {"api_key": "test_key", "company_id": "123"}
+    tenant.crm_provider = "pabau"
     m.get.return_value = tenant
     return m
 
@@ -51,7 +52,8 @@ def mock_db_no_pabau(tenant_id: UUID):
     m = MagicMock(spec=Session)
     tenant = MagicMock(spec=Tenant)
     tenant.id = tenant_id
-    tenant.pabau_config = {}
+    tenant.crm_config = {}
+    tenant.crm_provider = "pabau"
     m.get.return_value = tenant
     return m
 
@@ -128,12 +130,12 @@ class TestGetAvailableSlots:
         assert slots == []
 
     def test_with_pabau_adapter(self, mock_db: MagicMock, tenant_id: UUID):
-        with patch("app.integrations.pabau.PabauConnector") as mock_cls:
+        with patch("app.integrations.resolver.get_crm_adapter") as mock_fn:
             adapter = MagicMock()
             adapter.search_available_slots.return_value = [
                 {"start_time": "2026-06-01T09:00:00", "end_time": "2026-06-01T09:30:00", "provider_name": "Dr. Smith"},
             ]
-            mock_cls.return_value = adapter
+            mock_fn.return_value = adapter
             slots = get_available_slots(mock_db, tenant_id, day=REF_DATE)
             assert len(slots) == 1
             assert slots[0].provider_name == "Dr. Smith"
@@ -143,10 +145,10 @@ class TestGetAvailableSlots:
 
 class TestBookAppointment:
     def test_with_pabau(self, mock_db: MagicMock, tenant_id: UUID):
-        with patch("app.integrations.pabau.PabauConnector") as mock_cls:
+        with patch("app.core.booking.get_crm_adapter") as mock_fn:
             adapter = MagicMock()
             adapter.create_appointment.return_value = {"id": "pabau_001"}
-            mock_cls.return_value = adapter
+            mock_fn.return_value = adapter
             result = book_appointment(
                 db=mock_db, tenant_id=tenant_id, patient_id=uuid4(),
                 slot_token="tok1", provider_name="Dr. Smith",
@@ -158,7 +160,7 @@ class TestBookAppointment:
             mock_db.flush.assert_called_once()
 
     def test_without_pabau_raises_error(self, mock_db_no_pabau: MagicMock, tenant_id: UUID):
-        with pytest.raises(RuntimeError, match="Pabau is not configured"):
+        with pytest.raises(RuntimeError, match="CRM is not configured"):
             book_appointment(
                 db=mock_db_no_pabau, tenant_id=tenant_id, patient_id=uuid4(),
                 slot_token="tok1", provider_name="Dr. Smith",
@@ -171,9 +173,9 @@ class TestBookAppointment:
 class TestCancelAppointment:
     def test_with_pabau(self, mock_db_with_cache: MagicMock, tenant_id: UUID, sample_cache: AppointmentCache):
         mock_db = mock_db_with_cache
-        with patch("app.integrations.pabau.PabauConnector") as mock_cls:
+        with patch("app.core.booking.get_crm_adapter") as mock_fn:
             adapter = MagicMock()
-            mock_cls.return_value = adapter
+            mock_fn.return_value = adapter
             result = cancel_appointment(mock_db, sample_cache.id)
             assert result is True
             assert sample_cache.status == "cancelled"
@@ -189,9 +191,9 @@ class TestCancelAppointment:
 class TestRescheduleAppointment:
     def test_with_pabau(self, mock_db_with_cache: MagicMock, tenant_id: UUID, sample_cache: AppointmentCache):
         mock_db = mock_db_with_cache
-        with patch("app.integrations.pabau.PabauConnector") as mock_cls:
+        with patch("app.core.booking.get_crm_adapter") as mock_fn:
             adapter = MagicMock()
-            mock_cls.return_value = adapter
+            mock_fn.return_value = adapter
             new_start = REF_DT + timedelta(hours=2)
             new_end = new_start + timedelta(minutes=30)
             result = reschedule_appointment(mock_db, sample_cache.id, "tok2", new_start, new_end)

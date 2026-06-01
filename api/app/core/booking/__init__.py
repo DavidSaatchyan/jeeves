@@ -5,17 +5,9 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
+from ...integrations.resolver import get_crm_adapter
 from .slot_manager import get_available_slots, generate_slots, Slot
 from .scheduler import SlotAlreadyBookedError, AppointmentNotFoundError
-
-
-def _get_pabau_adapter(tenant_id: UUID, db: Session):
-    from ...models import Tenant
-    tenant = db.get(Tenant, tenant_id)
-    if not tenant or not tenant.pabau_config:
-        return None
-    from ...integrations.pabau import PabauConnector
-    return PabauConnector(tenant.pabau_config)
 
 
 def book_appointment(
@@ -31,9 +23,9 @@ def book_appointment(
 ):
     from ...models import AppointmentCache
 
-    adapter = _get_pabau_adapter(tenant_id, db)
+    adapter = get_crm_adapter(tenant_id, db)
     if not adapter:
-        raise RuntimeError("Pabau is not configured. Set up Pabau integration first.")
+        raise RuntimeError("CRM is not configured. Set up an integration first.")
 
     crm_result = adapter.create_appointment(
         patient_id=str(patient_id),
@@ -69,7 +61,7 @@ def cancel_appointment(
     if not cache:
         return False
 
-    adapter = _get_pabau_adapter(cache.tenant_id, db)
+    adapter = get_crm_adapter(cache.tenant_id, db)
     if adapter and cache.external_id:
         adapter.cancel_appointment(cache.external_id)
         cache.status = "cancelled"
@@ -93,7 +85,7 @@ def reschedule_appointment(
     if not cache:
         raise AppointmentNotFoundError(f"Appointment {appointment_id} not found")
 
-    adapter = _get_pabau_adapter(cache.tenant_id, db)
+    adapter = get_crm_adapter(cache.tenant_id, db)
     if adapter and cache.external_id:
         adapter.update_appointment(cache.external_id, {
             "start_time": new_start.isoformat(),
@@ -105,7 +97,7 @@ def reschedule_appointment(
         db.flush()
         return cache
 
-    raise RuntimeError("Pabau is not configured. Set up Pabau integration first.")
+    raise RuntimeError("CRM is not configured. Set up an integration first.")
 
 
 __all__ = [

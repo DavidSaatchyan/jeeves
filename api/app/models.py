@@ -42,8 +42,9 @@ class Tenant(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     dialogs_used = Column(Integer, default=0, nullable=False)  # for billing FR-8
     resolved_count = Column(Integer, default=0, nullable=False)
-    # Pabau integration config (EU-only)
-    pabau_config = Column(JSONB, default=dict)
+    # CRM integration config (provider-agnostic)
+    crm_provider = Column(String(50), default="pabau", nullable=False)
+    crm_config = Column(JSONB, default=dict)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 

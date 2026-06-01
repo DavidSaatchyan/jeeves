@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     knowledge_dir: str = "/app/knowledge"
     config_path: str = "/app/config.yaml"
     pabau_api_key: str = ""
+    cliniko_api_key: str = ""
+    cliniko_user_agent: str = "Jeeves (devs@jeeves.ai)"
     fernet_key: str = ""
     # Compliance / data governance
     compliance_gdpr_enabled: bool = True

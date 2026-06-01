@@ -77,3 +77,7 @@ class AbstractCrmConnector(ABC):
     @abstractmethod
     def parse_webhook_event(self, payload: dict[str, Any]) -> dict[str, Any]:
         ...
+
+    @abstractmethod
+    def test_connection(self) -> bool:
+        ...

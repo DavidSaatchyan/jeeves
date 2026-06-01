@@ -101,27 +101,26 @@ def get_available_slots(
     day: date | None = None,
     limit: int = 10,
 ) -> list[Slot]:
-    from ...models import Tenant
+    from ...integrations.resolver import get_crm_adapter
 
-    tenant = db.get(Tenant, tenant_id)
-    if tenant and tenant.pabau_config:
-        from ...integrations.pabau import PabauConnector
-        adapter = PabauConnector(tenant.pabau_config)
-        target_date = (day or date.today()).isoformat()
-        crm_slots = adapter.search_available_slots(
-            doctor_id=provider_name or "",
-            date=target_date,
-        )
-        if isinstance(crm_slots, list):
-            return [
-                Slot(
-                    start=datetime.fromisoformat(s.get("start_time", s.get("start", ""))) if s.get("start_time") or s.get("start") else datetime.utcnow(),
-                    end=datetime.fromisoformat(s.get("end_time", s.get("end", ""))) if s.get("end_time") or s.get("end") else datetime.utcnow(),
-                    provider_name=s.get("provider_name", provider_name or ""),
-                    provider_specialty=s.get("provider_specialty"),
-                    slot_token=s.get("slot_token", ""),
-                )
-                for s in crm_slots
-            ][:limit]
+    adapter = get_crm_adapter(tenant_id, db)
+    if not adapter:
+        return []
+    target_date = (day or date.today()).isoformat()
+    crm_slots = adapter.search_available_slots(
+        doctor_id=provider_name or "",
+        date=target_date,
+    )
+    if isinstance(crm_slots, list):
+        return [
+            Slot(
+                start=datetime.fromisoformat(s.get("start_time", s.get("start", ""))) if s.get("start_time") or s.get("start") else datetime.utcnow(),
+                end=datetime.fromisoformat(s.get("end_time", s.get("end", ""))) if s.get("end_time") or s.get("end") else datetime.utcnow(),
+                provider_name=s.get("provider_name", provider_name or ""),
+                provider_specialty=s.get("provider_specialty"),
+                slot_token=s.get("slot_token", ""),
+            )
+            for s in crm_slots
+        ][:limit]
 
     return []

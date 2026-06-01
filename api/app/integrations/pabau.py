@@ -143,6 +143,15 @@ class PabauConnector(AbstractCrmConnector):
     def search_available_slots(self, doctor_id: str, date: str) -> list[dict[str, Any]]:
         return []
 
+    # Connection test
+
+    def test_connection(self) -> bool:
+        try:
+            self._request("GET", "/patients", params={"limit": 1})
+            return True
+        except Exception:
+            return False
+
     # Webhooks
 
     def verify_webhook_signature(self, payload: bytes, signature: str) -> bool:

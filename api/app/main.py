@@ -12,7 +12,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 
 from . import admin, auth, knowledge, routes_chat
-from .integrations.webhooks import router as pabau_webhooks_router
+from .integrations.webhooks import router as crm_webhooks_router
 from .channels import widget as widget_channel
 from .channels import whatsapp as whatsapp_channel
 from .config import get_settings
@@ -236,5 +236,5 @@ app.include_router(knowledge.router)
 app.include_router(widget_channel.router)
 app.include_router(whatsapp_channel.router)
 app.include_router(admin.router)
-app.include_router(pabau_webhooks_router)
+app.include_router(crm_webhooks_router)
 

@@ -12,77 +12,79 @@ from .router import templates, router
 from ..models import Tenant
 
 
-class CrmConfigUpdate(BaseModel):
+class ClinikoConfigUpdate(BaseModel):
     api_key: str
-    company_id: str = ""
+    shard: str = "au1"
     webhook_secret: str = ""
-    shard: str = ""
-    crm_provider: str = "pabau"
 
 
-@router.get("/pabau", response_class=HTMLResponse)
-def pabau_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
+@router.get("/cliniko", response_class=HTMLResponse)
+def cliniko_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
     config = tenant.crm_config or {}
-    provider = tenant.crm_provider or "pabau"
-    return templates.TemplateResponse(request, "pabau_connections.html", {
+    provider = tenant.crm_provider or ""
+    is_cliniko = provider == "cliniko"
+    return templates.TemplateResponse(request, "cliniko_connections.html", {
         "request": request,
         "tenant_id": tenant.id,
-        "connected": bool(config.get("api_key")),
+        "connected": is_cliniko and bool(config.get("api_key")),
         "api_key": config.get("api_key", ""),
-        "company_id": config.get("company_id", ""),
+        "shard": config.get("shard", "au1"),
         "webhook_secret": config.get("webhook_secret", ""),
-        "crm_provider": provider,
     })
 
 
-@router.get("/api/crm/status")
-def crm_status(tenant: Tenant = Depends(get_admin_tenant)):
+@router.get("/api/cliniko/status")
+def cliniko_status(tenant: Tenant = Depends(get_admin_tenant)):
     config = tenant.crm_config or {}
+    provider = tenant.crm_provider or ""
     return {
-        "connected": bool(config.get("api_key")),
-        "provider": tenant.crm_provider or "pabau",
+        "connected": provider == "cliniko" and bool(config.get("api_key")),
+        "provider": provider,
     }
 
 
-@router.post("/api/crm/configure")
-def configure_crm(
-    data: CrmConfigUpdate,
+@router.post("/api/cliniko/configure")
+def configure_cliniko(
+    data: ClinikoConfigUpdate,
     db: Session = Depends(get_db),
     tenant: Tenant = Depends(get_admin_tenant),
 ):
     tenant.crm_config = {
         "api_key": data.api_key,
-        "company_id": data.company_id,
+        "shard": data.shard,
         "webhook_secret": data.webhook_secret,
+        "user_agent": "Jeeves (devs@jeeves.ai)",
     }
-    tenant.crm_provider = data.crm_provider
+    tenant.crm_provider = "cliniko"
     db.flush()
     return {"ok": True}
 
 
-@router.post("/api/crm/test")
-def test_crm(tenant: Tenant = Depends(get_admin_tenant)):
+@router.post("/api/cliniko/test")
+def test_cliniko(tenant: Tenant = Depends(get_admin_tenant)):
     config = tenant.crm_config or {}
-    provider = tenant.crm_provider or "pabau"
     if not config.get("api_key"):
-        raise HTTPException(status_code=400, detail=f"{provider.title()} not configured")
+        raise HTTPException(status_code=400, detail="Cliniko not configured")
+    if tenant.crm_provider != "cliniko":
+        raise HTTPException(status_code=400, detail="Cliniko is not the active provider")
     adapter = get_crm_adapter_for_tenant(tenant)
     if not adapter:
         raise HTTPException(status_code=400, detail="Could not create adapter")
     try:
         ok = adapter.test_connection()
         if ok:
-            return {"ok": True, "message": f"Connected to {provider.title()} API"}
+            return {"ok": True, "message": "Connected to Cliniko API"}
         raise HTTPException(status_code=502, detail="Connection failed")
     except Exception as e:
         raise HTTPException(status_code=502, detail=str(e))
 
 
-@router.post("/api/crm/disconnect")
-def disconnect_crm(
+@router.post("/api/cliniko/disconnect")
+def disconnect_cliniko(
     db: Session = Depends(get_db),
     tenant: Tenant = Depends(get_admin_tenant),
 ):
     tenant.crm_config = {}
+    tenant.crm_provider = "pabau"
     db.flush()
     return {"ok": True}

@@ -12,12 +12,13 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from .exceptions import ConnectorError
+from .resolver import get_crm_adapter_for_tenant
 from ..db import get_db
 from ..models import AppointmentCache, AuditLog, Patient, Tenant
 
-logger = logging.getLogger("jeeves.webhooks.pabau")
+logger = logging.getLogger("jeeves.webhooks")
 
-router = APIRouter(prefix="/integrations/webhooks", tags=["pabau-webhooks"])
+router = APIRouter(prefix="/integrations/webhooks", tags=["webhooks"])
 
 
 def _get_tenant(db: Session, tenant_id: uuid.UUID | str) -> Tenant | None:
@@ -94,32 +95,41 @@ def _sync_appointment(db: Session, tenant_id: uuid.UUID, patient_id: uuid.UUID, 
     return cache
 
 
-def _log_audit(db: Session, tenant_id: uuid.UUID, patient_id: uuid.UUID | None, action: str, resource_type: str, resource_id: str) -> None:
+def _log_audit(db: Session, tenant_id: uuid.UUID, patient_id: uuid.UUID | None, action: str, resource_type: str, resource_id: str, source: str = "webhook") -> None:
     entry = AuditLog(
         id=uuid.uuid4(),
         tenant_id=tenant_id,
         patient_id=patient_id,
         actor_type="system",
-        actor_id="webhook/pabau",
+        actor_id=f"webhook/{source}",
         action=action,
         resource_type=resource_type,
         resource_id=resource_id,
-        details={"source": "pabau_webhook"},
+        details={"source": f"{source}_webhook"},
         timestamp=datetime.utcnow(),
     )
     db.add(entry)
     db.flush()
 
 
-@router.post("/pabau/{tenant_id}")
-async def webhook(tenant_id: str, request: Request, db: Session = Depends(get_db)):
+async def _process_webhook(
+    tenant_id: str,
+    request: Request,
+    db: Session,
+    source: str,
+    sig_headers: list[str],
+) -> dict:
     tenant = _get_tenant(db, tenant_id)
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
 
-    config = dict(tenant.pabau_config or {})
+    config = dict(tenant.crm_config or {})
     payload_bytes = await request.body()
-    signature = request.headers.get("X-Webhook-Signature", request.headers.get("X-Pabau-Signature", ""))
+    signature = ""
+    for hdr in sig_headers:
+        signature = request.headers.get(hdr, "")
+        if signature:
+            break
 
     if not _verify(payload_bytes, signature, config):
         raise HTTPException(status_code=401, detail="Invalid signature")
@@ -129,8 +139,9 @@ async def webhook(tenant_id: str, request: Request, db: Session = Depends(get_db
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON")
 
-    from .pabau import PabauConnector
-    adapter = PabauConnector(config)
+    adapter = get_crm_adapter_for_tenant(tenant)
+    if not adapter:
+        raise HTTPException(status_code=502, detail="CRM adapter not available")
 
     try:
         event = adapter.parse_webhook_event(payload_data)
@@ -142,7 +153,7 @@ async def webhook(tenant_id: str, request: Request, db: Session = Depends(get_db
 
     if "patient" in event_type.lower() or "contact" in event_type.lower():
         patient = _upsert_patient(db, tenant.id, resource)
-        _log_audit(db, tenant.id, patient.id, f"pabau_{event_type}", "patient", str(patient.id))
+        _log_audit(db, tenant.id, patient.id, f"{source}_{event_type}", "patient", str(patient.id), source)
         return {"ok": True, "entity": "patient", "id": str(patient.id)}
 
     if "appointment" in event_type.lower():
@@ -154,8 +165,18 @@ async def webhook(tenant_id: str, request: Request, db: Session = Depends(get_db
         if not patient:
             raise HTTPException(status_code=404, detail="Linked patient not found")
         appt = _sync_appointment(db, tenant.id, patient.id, resource)
-        _log_audit(db, tenant.id, patient.id, f"pabau_{event_type}", "appointment", str(appt.id))
+        _log_audit(db, tenant.id, patient.id, f"{source}_{event_type}", "appointment", str(appt.id), source)
         return {"ok": True, "entity": "appointment", "id": str(appt.id)}
 
-    logger.info("pabau webhook: unhandled event type %s", event_type)
+    logger.info("%s webhook: unhandled event type %s", source, event_type)
     return {"ok": True, "event": event_type, "handled": False}
+
+
+@router.post("/pabau/{tenant_id}")
+async def pabau_webhook(tenant_id: str, request: Request, db: Session = Depends(get_db)):
+    return await _process_webhook(tenant_id, request, db, "pabau", ["X-Webhook-Signature", "X-Pabau-Signature"])
+
+
+@router.post("/cliniko/{tenant_id}")
+async def cliniko_webhook(tenant_id: str, request: Request, db: Session = Depends(get_db)):
+    return await _process_webhook(tenant_id, request, db, "cliniko", ["X-Cliniko-Signature", "X-Webhook-Signature"])
