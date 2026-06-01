@@ -30,12 +30,7 @@ class Settings(BaseSettings):
     public_base_url: str = "http://localhost:8000"
     knowledge_dir: str = "/app/knowledge"
     config_path: str = "/app/config.yaml"
-    hubspot_client_id: str = ""
-    hubspot_client_secret: str = ""
-    hubspot_redirect_uri: str = "http://localhost:8000/crm/oauth/hubspot/callback"
-    google_client_id: str = ""
-    google_client_secret: str = ""
-    google_redirect_uri: str = "http://localhost:8000/admin/calendar/oauth/google/callback"
+    pabau_api_key: str = ""
     fernet_key: str = ""
     # Compliance / data governance
     compliance_gdpr_enabled: bool = True

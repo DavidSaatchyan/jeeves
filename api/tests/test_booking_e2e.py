@@ -1,4 +1,4 @@
-"""End-to-end tests for the booking/appointment flow (Calendar/CRM passthrough)."""
+"""End-to-end tests for the booking/appointment flow (Pabau-only)."""
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models import AppointmentCache, CrmConnection, Provider, Tenant
+from app.models import AppointmentCache, Provider, Tenant
 from app.core.booking import (
     Slot,
     get_available_slots,
@@ -19,32 +19,41 @@ from app.core.booking import (
     SlotAlreadyBookedError,
     AppointmentNotFoundError,
 )
-from app.core.calendar import CalendarProviderError
 
 REF_DATE = date(2026, 6, 1)
 REF_DT = datetime(2026, 6, 1, 9, 0, 0)
 
 
 @pytest.fixture
-def mock_db():
+def tenant_id() -> UUID:
+    return uuid4()
+
+
+@pytest.fixture
+def mock_db(tenant_id: UUID):
     m = MagicMock(spec=Session)
-    crm_query = MagicMock()
-    crm_query.filter.return_value.first.return_value = None
-    m.query.return_value = crm_query
-    m.get.return_value = None
+    tenant = MagicMock(spec=Tenant)
+    tenant.id = tenant_id
+    tenant.pabau_config = {"api_key": "test_key", "company_id": "123"}
+    m.get.return_value = tenant
     return m
 
 
 @pytest.fixture
-def mock_crm_conn(mock_db: MagicMock, tenant_id: UUID) -> CrmConnection:
-    conn = MagicMock(spec=CrmConnection)
-    conn.provider = "zoho"
-    conn.status = "connected"
-    conn.config = {}
-    crm_query = MagicMock()
-    crm_query.filter.return_value.first.return_value = conn
-    mock_db.query.return_value = crm_query
-    return conn
+def mock_db_with_cache(mock_db: MagicMock, sample_cache: AppointmentCache):
+    tenant = mock_db.get.return_value
+    mock_db.get.side_effect = [sample_cache, tenant]
+    return mock_db
+
+
+@pytest.fixture
+def mock_db_no_pabau(tenant_id: UUID):
+    m = MagicMock(spec=Session)
+    tenant = MagicMock(spec=Tenant)
+    tenant.id = tenant_id
+    tenant.pabau_config = {}
+    m.get.return_value = tenant
+    return m
 
 
 @pytest.fixture
@@ -66,7 +75,7 @@ def sample_cache(tenant_id: UUID) -> AppointmentCache:
     c.id = uuid4()
     c.tenant_id = tenant_id
     c.patient_id = uuid4()
-    c.external_id = "crm_evt_001"
+    c.external_id = "pabau_001"
     c.status = "scheduled"
     c.slot_token = "token_123"
     c.source = "whatsapp"
@@ -114,76 +123,44 @@ class TestSlotGeneration:
 # ── Get Available Slots ───────────────────────────────────────────────────
 
 class TestGetAvailableSlots:
-    def test_no_backend_returns_empty(self, mock_db: MagicMock, tenant_id: UUID):
-        slots = get_available_slots(mock_db, tenant_id, day=REF_DATE)
+    def test_no_pabau_returns_empty(self, mock_db_no_pabau: MagicMock, tenant_id: UUID):
+        slots = get_available_slots(mock_db_no_pabau, tenant_id, day=REF_DATE)
         assert slots == []
 
-    def test_with_crm_adapter(self, mock_db: MagicMock, mock_crm_conn: CrmConnection, tenant_id: UUID):
-        with patch("app.integrations.crm.get_crm_adapter") as mock_adapter:
+    def test_with_pabau_adapter(self, mock_db: MagicMock, tenant_id: UUID):
+        with patch("app.integrations.pabau.PabauConnector") as mock_cls:
             adapter = MagicMock()
             adapter.search_available_slots.return_value = [
                 {"start_time": "2026-06-01T09:00:00", "end_time": "2026-06-01T09:30:00", "provider_name": "Dr. Smith"},
             ]
-            mock_adapter.return_value = adapter
+            mock_cls.return_value = adapter
             slots = get_available_slots(mock_db, tenant_id, day=REF_DATE)
             assert len(slots) == 1
             assert slots[0].provider_name == "Dr. Smith"
-
-    def test_with_calendar_provider(self, mock_db: MagicMock, tenant_id: UUID):
-        expected = [
-            Slot(start=REF_DT, end=REF_DT + timedelta(minutes=30), provider_name="primary", provider_specialty=None, slot_token="tok1"),
-        ]
-        async def mock_async(*args, **kwargs):
-            return expected
-        mock_cal = MagicMock()
-        mock_cal.get_available_slots = mock_async
-        with patch("app.core.calendar.get_calendar_provider") as mock_get_cal:
-            mock_get_cal.return_value = mock_cal
-            slots = get_available_slots(mock_db, tenant_id, day=REF_DATE)
-            assert len(slots) == 1
 
 
 # ── Book Appointment ──────────────────────────────────────────────────────
 
 class TestBookAppointment:
-    def test_with_crm_adapter(self, mock_db: MagicMock, mock_crm_conn: CrmConnection, tenant_id: UUID):
-        with patch("app.integrations.crm.get_crm_adapter") as mock_adapter:
+    def test_with_pabau(self, mock_db: MagicMock, tenant_id: UUID):
+        with patch("app.integrations.pabau.PabauConnector") as mock_cls:
             adapter = MagicMock()
-            adapter.create_appointment.return_value = {"id": "crm_001"}
-            mock_adapter.return_value = adapter
+            adapter.create_appointment.return_value = {"id": "pabau_001"}
+            mock_cls.return_value = adapter
             result = book_appointment(
                 db=mock_db, tenant_id=tenant_id, patient_id=uuid4(),
                 slot_token="tok1", provider_name="Dr. Smith",
                 start_time=REF_DT, end_time=REF_DT + timedelta(minutes=30),
             )
             assert isinstance(result, AppointmentCache)
-            assert result.external_id == "crm_001"
+            assert result.external_id == "pabau_001"
             mock_db.add.assert_called_once()
             mock_db.flush.assert_called_once()
 
-    def test_with_calendar_provider(self, mock_db: MagicMock, tenant_id: UUID):
-        with (
-            patch("app.core.booking.get_calendar_provider") as mock_get_cal,
-            patch("asyncio.run") as mock_run,
-        ):
-            mock_cal = MagicMock()
-            event = MagicMock()
-            event.external_id = "gcal_001"
-            mock_cal.create_event.return_value = event
-            mock_get_cal.return_value = mock_cal
-            mock_run.return_value = event
-            result = book_appointment(
-                db=mock_db, tenant_id=tenant_id, patient_id=uuid4(),
-                slot_token="tok1", provider_name="Dr. Smith",
-                start_time=REF_DT, end_time=REF_DT + timedelta(minutes=30),
-            )
-            assert isinstance(result, AppointmentCache)
-            assert result.external_id == "gcal_001"
-
-    def test_without_backend_raises_error(self, mock_db: MagicMock, tenant_id: UUID):
-        with pytest.raises(CalendarProviderError):
+    def test_without_pabau_raises_error(self, mock_db_no_pabau: MagicMock, tenant_id: UUID):
+        with pytest.raises(RuntimeError, match="Pabau is not configured"):
             book_appointment(
-                db=mock_db, tenant_id=tenant_id, patient_id=uuid4(),
+                db=mock_db_no_pabau, tenant_id=tenant_id, patient_id=uuid4(),
                 slot_token="tok1", provider_name="Dr. Smith",
                 start_time=REF_DT, end_time=REF_DT + timedelta(minutes=30),
             )
@@ -192,27 +169,14 @@ class TestBookAppointment:
 # ── Cancel Appointment ────────────────────────────────────────────────────
 
 class TestCancelAppointment:
-    def test_with_crm_adapter(self, mock_db: MagicMock, mock_crm_conn: CrmConnection, tenant_id: UUID, sample_cache: AppointmentCache):
-        mock_db.get.return_value = sample_cache
-        with patch("app.integrations.crm.get_crm_adapter") as mock_adapter:
+    def test_with_pabau(self, mock_db_with_cache: MagicMock, tenant_id: UUID, sample_cache: AppointmentCache):
+        mock_db = mock_db_with_cache
+        with patch("app.integrations.pabau.PabauConnector") as mock_cls:
             adapter = MagicMock()
-            mock_adapter.return_value = adapter
+            mock_cls.return_value = adapter
             result = cancel_appointment(mock_db, sample_cache.id)
             assert result is True
             assert sample_cache.status == "cancelled"
-
-    def test_with_calendar_provider(self, mock_db: MagicMock, tenant_id: UUID, sample_cache: AppointmentCache):
-        mock_db.get.return_value = sample_cache
-        with (
-            patch("app.core.booking.get_calendar_provider") as mock_get_cal,
-            patch("asyncio.run") as mock_run,
-        ):
-            mock_cal = MagicMock()
-            mock_cal.cancel_event.return_value = True
-            mock_get_cal.return_value = mock_cal
-            mock_run.return_value = True
-            result = cancel_appointment(mock_db, sample_cache.id)
-            assert result is True
 
     def test_not_found_returns_false(self, mock_db: MagicMock, tenant_id: UUID):
         mock_db.get.return_value = None
@@ -223,32 +187,16 @@ class TestCancelAppointment:
 # ── Reschedule Appointment ────────────────────────────────────────────────
 
 class TestRescheduleAppointment:
-    def test_with_crm_adapter(self, mock_db: MagicMock, mock_crm_conn: CrmConnection, tenant_id: UUID, sample_cache: AppointmentCache):
-        mock_db.get.return_value = sample_cache
-        with patch("app.integrations.crm.get_crm_adapter") as mock_adapter:
+    def test_with_pabau(self, mock_db_with_cache: MagicMock, tenant_id: UUID, sample_cache: AppointmentCache):
+        mock_db = mock_db_with_cache
+        with patch("app.integrations.pabau.PabauConnector") as mock_cls:
             adapter = MagicMock()
-            mock_adapter.return_value = adapter
+            mock_cls.return_value = adapter
             new_start = REF_DT + timedelta(hours=2)
             new_end = new_start + timedelta(minutes=30)
             result = reschedule_appointment(mock_db, sample_cache.id, "tok2", new_start, new_end)
             assert result is not None
             adapter.update_appointment.assert_called_once()
-
-    def test_with_calendar_provider(self, mock_db: MagicMock, tenant_id: UUID, sample_cache: AppointmentCache):
-        mock_db.get.return_value = sample_cache
-        with (
-            patch("app.core.booking.get_calendar_provider") as mock_get_cal,
-            patch("asyncio.run") as mock_run,
-        ):
-            mock_cal = MagicMock()
-            event = MagicMock()
-            mock_cal.update_event.return_value = event
-            mock_get_cal.return_value = mock_cal
-            mock_run.return_value = event
-            new_start = REF_DT + timedelta(hours=2)
-            new_end = new_start + timedelta(minutes=30)
-            result = reschedule_appointment(mock_db, sample_cache.id, "tok2", new_start, new_end)
-            assert result is not None
 
     def test_not_found_raises_error(self, mock_db: MagicMock, tenant_id: UUID):
         mock_db.get.return_value = None
@@ -266,10 +214,5 @@ class TestErrorTypes:
 
     def test_appointment_not_found_error(self):
         err = AppointmentNotFoundError("test")
-        assert isinstance(err, Exception)
-        assert str(err) == "test"
-
-    def test_calendar_provider_error(self):
-        err = CalendarProviderError("test")
         assert isinstance(err, Exception)
         assert str(err) == "test"

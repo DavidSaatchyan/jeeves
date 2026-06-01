@@ -101,16 +101,12 @@ def get_available_slots(
     day: date | None = None,
     limit: int = 10,
 ) -> list[Slot]:
-    from ...models import CrmConnection
+    from ...models import Tenant
 
-    # 1. Try CRM
-    conn = db.query(CrmConnection).filter(
-        CrmConnection.tenant_id == tenant_id,
-        CrmConnection.status == "connected",
-    ).first()
-    if conn:
-        from ...integrations.crm import get_crm_adapter
-        adapter = get_crm_adapter(conn.provider, conn.config)
+    tenant = db.get(Tenant, tenant_id)
+    if tenant and tenant.pabau_config:
+        from ...integrations.pabau import PabauConnector
+        adapter = PabauConnector(tenant.pabau_config)
         target_date = (day or date.today()).isoformat()
         crm_slots = adapter.search_available_slots(
             doctor_id=provider_name or "",
@@ -127,31 +123,5 @@ def get_available_slots(
                 )
                 for s in crm_slots
             ][:limit]
-
-    # 2. Try Calendar provider
-    from ..calendar import get_calendar_provider
-
-    calendar = get_calendar_provider(tenant_id, db)
-    if calendar:
-        import asyncio
-
-        target_date = (day or date.today()).isoformat()
-        cfg = get_yaml_config()
-        booking_cfg = cfg.get("booking", {})
-        slot_duration = booking_cfg.get("slot_duration_minutes", 30)
-        buffer_minutes = booking_cfg.get("buffer_minutes", 5)
-        hours_start = booking_cfg.get("default_start_hour", 9)
-        hours_end = booking_cfg.get("default_end_hour", 17)
-
-        calendar_id = provider_name or "primary"
-        cal_slots = asyncio.run(calendar.get_available_slots(
-            calendar_id=calendar_id,
-            date_str=target_date,
-            slot_duration_minutes=slot_duration,
-            buffer_minutes=buffer_minutes,
-            working_hours_start=f"{hours_start:02d}:00",
-            working_hours_end=f"{hours_end:02d}:00",
-        ))
-        return cal_slots[:limit]
 
     return []

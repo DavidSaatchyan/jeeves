@@ -69,11 +69,13 @@ async def _send_message(phone_number_id: str, access_token: str, wa_id: str, tex
 
 
 def _maybe_crm_bridge(db: Session, tenant_id, wa_id: str, text: str, contact_name: str | None) -> None:
-    from ..integrations.credentials import get_credentials
+    from ..models import Tenant
+    tenant = db.get(Tenant, tenant_id)
+    if not tenant or not tenant.pabau_config:
+        return
     try:
-        config = get_credentials(tenant_id, "zoho", db)
-        from ..integrations.crm import get_crm_adapter
-        adapter = get_crm_adapter("zoho", config)
+        from ..integrations.pabau import PabauConnector
+        adapter = PabauConnector(tenant.pabau_config)
         patient = adapter.find_patient(phone=wa_id)
         if not patient:
             parts = (contact_name or "WhatsApp User").split(None, 1)

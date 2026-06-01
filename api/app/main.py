@@ -12,9 +12,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 
 from . import admin, auth, knowledge, routes_chat
+from .integrations.webhooks import router as pabau_webhooks_router
 from .channels import widget as widget_channel
 from .channels import whatsapp as whatsapp_channel
-from .integrations.crm.webhooks import router as crm_webhooks_router
 from .config import get_settings
 from .db import engine
 from sqlalchemy import text
@@ -162,22 +162,12 @@ def _run_alembic_migrations() -> None:
 
     # Ensure all ORM tables exist after Alembic (migration may rename tables, e.g. appointments → appointments_archive)
     from .models import Base
-    from sqlalchemy import inspect, text
+    from sqlalchemy import inspect
     inspector = inspect(engine)
     existing_tables = set(inspector.get_table_names())
     for table in Base.metadata.tables.values():
         if table.name not in existing_tables:
             table.create(bind=engine, checkfirst=True)
-
-    # Self-heal: add config column to crm_connections if Phase 2 migration
-    # (faa41bd54658) was stamped without running on production.
-    if "crm_connections" in existing_tables:
-        db_columns = {c["name"] for c in inspector.get_columns("crm_connections")}
-        for col, typ in [("config", "JSONB"), ("last_sync_at", "TIMESTAMP"), ("webhook_secret", "TEXT")]:
-            if col not in db_columns and engine.dialect.name == "postgresql":
-                with engine.begin() as conn:
-                    conn.execute(text(f"ALTER TABLE crm_connections ADD COLUMN {col} {typ} NULL"))
-                logging.info("Self-heal: added column %s to crm_connections", col)
 
 
 @app.on_event("startup")
@@ -246,5 +236,5 @@ app.include_router(knowledge.router)
 app.include_router(widget_channel.router)
 app.include_router(whatsapp_channel.router)
 app.include_router(admin.router)
-app.include_router(crm_webhooks_router)
+app.include_router(pabau_webhooks_router)
 

@@ -42,6 +42,8 @@ class Tenant(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     dialogs_used = Column(Integer, default=0, nullable=False)  # for billing FR-8
     resolved_count = Column(Integer, default=0, nullable=False)
+    # Pabau integration config (EU-only)
+    pabau_config = Column(JSONB, default=dict)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
@@ -401,20 +403,6 @@ class AIInteraction(Base):
 # Phase 1: PolicySet model removed — will be rebuilt for medical in later phases
 
 
-class NativeConnector(Base):
-    """Third-party connector credentials (CRM, etc.)."""
-    __tablename__ = "native_connectors"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    provider = Column(String(32), nullable=False)
-    status = Column(String(16), nullable=False, default="connected")
-    credentials = Column(Text, nullable=False)
-    meta = Column(JSONB, default=dict)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-
 # Phase 1: NotificationPreferences model removed
 
 
@@ -503,38 +491,6 @@ class Provider(Base):
     email = Column(Text)
     phone = Column(Text)
     schedule = Column(JSONB, default=dict)                  # availability rules
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-
-class CrmConnection(Base):
-    """CRM provider connection config."""
-    __tablename__ = "crm_connections"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    provider = Column(String(32), nullable=False)             # zoho | hubspot | salesforce | custom_api
-    config = Column(JSONB, default=dict)                     # encrypted credentials, endpoints, mappings
-    status = Column(String(16), nullable=False, default="disconnected")  # connected | disconnected | error
-    last_sync_at = Column(DateTime)
-    webhook_secret = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-
-class CalendarConnection(Base):
-    """Calendar provider connection config (Google Calendar, Outlook, etc.)."""
-    __tablename__ = "calendar_connections"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    provider = Column(String(32), nullable=False)             # google | outlook
-    access_token = Column(Text, nullable=False)
-    refresh_token = Column(Text)
-    token_expiry = Column(DateTime)
-    calendar_id = Column(String(256))                         # default "primary" or specific calendar
-    config = Column(JSONB, default=dict)                      # provider-specific settings
-    status = Column(String(16), nullable=False, default="disconnected")  # connected | disconnected | error
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Pabau Integration</h1>
+<p class="page-desc">Connect your Pabau account to manage patients and appointments. Pabau is the single integration for EU clinics — EMR, scheduling, invoicing, and marketing CRM.</p>
+
+<div class="card" id="configCard">
+  <div class="card-header">
+    <h2>API Configuration</h2>
+    <span id="statusBadge" class="pill {{ 'ok' if connected else 'muted' }}">{{ 'Connected' if connected else 'Disconnected' }}</span>
+  </div>
+
+  <label>API Key</label>
+  <input id="apiKey" type="password" placeholder="pabau_api_key" value="{{ api_key }}">
+
+  <label>Company ID</label>
+  <input id="companyId" type="text" placeholder="12345" value="{{ company_id }}">
+
+  <label>Webhook Secret <span class="muted2">(optional, for webhook verification)</span></label>
+  <input id="webhookSecret" type="password" placeholder="hmac_secret">
+
+  <div class="ch-actions mt-20">
+    <button onclick="saveConfig()" class="accent" id="saveBtn">Save</button>
+    <button onclick="testConnection()" class="ghost" id="testBtn">Test connection</button>
+    <button onclick="disconnect()" class="ghost danger" id="discBtn" {% if not connected %}style="display:none"{% endif %}>Disconnect</button>
+    <span id="msg" class="err-msg" style="display:inline;margin-left:12px"></div>
+  </div>
+
+</div>
+
+<div class="help">
+  <h3>How to get your API credentials</h3>
+  <p>1. Log in to your <strong>Pabau</strong> account as an admin.</p>
+  <p>2. Go to <strong>Settings → Integrations → API Keys</strong>.</p>
+  <p>3. Generate a new API key with scopes: <code>patients.read</code>, <code>patients.write</code>, <code>appointments.read</code>, <code>appointments.write</code>.</p>
+  <p>4. Copy the API key and your Company ID (found in Settings → Account).</p>
+  <p>5. Webhook URL: <code>{{ request.url.scheme }}://{{ request.url.host }}/integrations/webhooks/pabau/{{ tenant_id }}</code></p>
+</div>
+
+<div class="card">
+  <h2>Webhook Events</h2>
+  <p class="muted">Pabau sends webhooks for these events. Set up in Pabau Settings → Webhooks.</p>
+  <div class="wh-events-list mt-12">
+    <code>patient.created</code>
+    <code>patient.updated</code>
+    <code>appointment.created</code>
+    <code>appointment.updated</code>
+    <code>appointment.cancelled</code>
+  </div>
+</div>
+{% endblock %}
+
+{% block tail %}
+<script>
+function showMsg(text, type){
+  var el = document.getElementById('msg');
+  el.textContent = text;
+  el.style.color = type === 'ok' ? 'var(--green)' : 'var(--red)';
+  setTimeout(function(){ if(type==='ok') el.textContent=''; }, 3000);
+}
+
+async function saveConfig(){
+  var key = document.getElementById('apiKey').value.trim();
+  var cid = document.getElementById('companyId').value.trim();
+  var wh = document.getElementById('webhookSecret').value.trim();
+  if(!key || !cid){ showMsg('API Key and Company ID are required'); return; }
+  try {
+    await api('/admin/api/pabau/configure', {method:'POST', body:{api_key:key, company_id:cid, webhook_secret:wh}});
+    showMsg('Saved', 'ok');
+    location.reload();
+  } catch(e) { showMsg(e.message); }
+}
+
+async function testConnection(){
+  try {
+    var r = await api('/admin/api/pabau/test', {method:'POST'});
+    showMsg(r.message || 'OK', 'ok');
+  } catch(e) { showMsg(e.message); }
+}
+
+async function disconnect(){
+  if(!confirm('Disconnect Pabau? This will stop all patient sync and appointment workflows.')) return;
+  try {
+    await api('/admin/api/pabau/disconnect', {method:'POST'});
+    showMsg('Disconnected', 'ok');
+    location.reload();
+  } catch(e) { showMsg(e.message); }
+}
+</script>
+{% endblock %}

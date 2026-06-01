@@ -86,15 +86,17 @@ class TestSendMessage:
 # ── _maybe_crm_bridge ───────────────────────────────────────────────────────────────────
 
 class TestMaybeCrmBridge:
+    def _make_tenant(self, config=None, use_default=True):
+        tenant = MagicMock()
+        tenant.pabau_config = config if not use_default else {"api_key": "test", "company_id": "123"}
+        return tenant
+
     def test_creates_new_patient(self, mock_db):
-        mock_db.get.return_value = MagicMock()
+        mock_db.get.return_value = self._make_tenant()
         mock_adapter = MagicMock()
         mock_adapter.find_patient.return_value = None
 
-        with (
-            patch("app.integrations.credentials.get_credentials", return_value={"key": "val"}),
-            patch("app.integrations.crm.get_crm_adapter", return_value=mock_adapter),
-        ):
+        with patch("app.integrations.pabau.PabauConnector", return_value=mock_adapter):
             _maybe_crm_bridge(mock_db, uuid4(), "+15551112222", "Hello", "John Doe")
 
         mock_adapter.find_patient.assert_called_once_with(phone="+15551112222")
@@ -105,25 +107,21 @@ class TestMaybeCrmBridge:
         })
 
     def test_skips_if_patient_exists(self, mock_db):
+        mock_db.get.return_value = self._make_tenant()
         mock_adapter = MagicMock()
         mock_adapter.find_patient.return_value = {"id": "existing_patient"}
 
-        with (
-            patch("app.integrations.credentials.get_credentials", return_value={"key": "val"}),
-            patch("app.integrations.crm.get_crm_adapter", return_value=mock_adapter),
-        ):
+        with patch("app.integrations.pabau.PabauConnector", return_value=mock_adapter):
             _maybe_crm_bridge(mock_db, uuid4(), "+15551112222", "Hello", "John")
 
         mock_adapter.create_patient.assert_not_called()
 
     def test_handles_no_contact_name(self, mock_db):
+        mock_db.get.return_value = self._make_tenant()
         mock_adapter = MagicMock()
         mock_adapter.find_patient.return_value = None
 
-        with (
-            patch("app.integrations.credentials.get_credentials", return_value={"key": "val"}),
-            patch("app.integrations.crm.get_crm_adapter", return_value=mock_adapter),
-        ):
+        with patch("app.integrations.pabau.PabauConnector", return_value=mock_adapter):
             _maybe_crm_bridge(mock_db, uuid4(), "+15551112222", "Hello", None)
 
         mock_adapter.create_patient.assert_called_once_with({
@@ -132,31 +130,32 @@ class TestMaybeCrmBridge:
             "phone": "+15551112222",
         })
 
-    def test_silently_handles_credentials_error(self, mock_db):
-        with (
-            patch("app.integrations.credentials.get_credentials", side_effect=Exception("No Zoho creds")),
-            patch("app.integrations.crm.get_crm_adapter"),
-        ):
+    def test_skips_if_no_pabau_config(self, mock_db):
+        mock_db.get.return_value = self._make_tenant(use_default=False)
+        with patch("app.integrations.pabau.PabauConnector") as mock_cls:
             _maybe_crm_bridge(mock_db, uuid4(), "+15551112222", "Hello", "John")
+        mock_cls.assert_not_called()
+
+    def test_skips_if_empty_pabau_config(self, mock_db):
+        mock_db.get.return_value = self._make_tenant(config={}, use_default=False)
+        with patch("app.integrations.pabau.PabauConnector") as mock_cls:
+            _maybe_crm_bridge(mock_db, uuid4(), "+15551112222", "Hello", "John")
+        mock_cls.assert_not_called()
 
     def test_silently_handles_adapter_error(self, mock_db):
+        mock_db.get.return_value = self._make_tenant()
         mock_adapter = MagicMock()
-        mock_adapter.find_patient.side_effect = Exception("CRM timeout")
+        mock_adapter.find_patient.side_effect = Exception("Pabau timeout")
 
-        with (
-            patch("app.integrations.credentials.get_credentials", return_value={"key": "val"}),
-            patch("app.integrations.crm.get_crm_adapter", return_value=mock_adapter),
-        ):
+        with patch("app.integrations.pabau.PabauConnector", return_value=mock_adapter):
             _maybe_crm_bridge(mock_db, uuid4(), "+15551112222", "Hello", "John")
 
     def test_single_name_uses_user_fallback(self, mock_db):
+        mock_db.get.return_value = self._make_tenant()
         mock_adapter = MagicMock()
         mock_adapter.find_patient.return_value = None
 
-        with (
-            patch("app.integrations.credentials.get_credentials", return_value={"key": "val"}),
-            patch("app.integrations.crm.get_crm_adapter", return_value=mock_adapter),
-        ):
+        with patch("app.integrations.pabau.PabauConnector", return_value=mock_adapter):
             _maybe_crm_bridge(mock_db, uuid4(), "+15551112222", "Hello", "Alice")
 
         mock_adapter.create_patient.assert_called_once_with({

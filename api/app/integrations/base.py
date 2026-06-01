@@ -5,30 +5,22 @@ from typing import Any
 
 
 class AbstractCrmConnector(ABC):
-    """Abstract base for all CRM adapters.
-
-    Each adapter implements the methods below. Adapters that have a signed BAA
-    (e.g. Zoho, Salesforce) may pass PHI through; those without (HubSpot) MUST
-    return empty data or raise for PHI-sensitive operations.
-    """
+    """Abstract base for CRM adapters."""
 
     provider: str
-    phi_safe: bool = False  # True if BAA is signed and PHI transfer is allowed
+    phi_safe: bool = False
 
     @abstractmethod
     def __init__(self, config: dict[str, Any]) -> None:
         ...
 
-    # ── Patients ────────────────────────────────────────────────
-
+    # Patients
     @abstractmethod
     def get_patient(self, patient_id: str) -> dict[str, Any] | None:
         ...
 
     @abstractmethod
-    def find_patient(
-        self, email: str | None = None, phone: str | None = None
-    ) -> dict[str, Any] | None:
+    def find_patient(self, email: str | None = None, phone: str | None = None) -> dict[str, Any] | None:
         ...
 
     @abstractmethod
@@ -39,8 +31,7 @@ class AbstractCrmConnector(ABC):
     def update_patient(self, patient_id: str, data: dict[str, Any]) -> dict[str, Any]:
         ...
 
-    # ── Appointments ────────────────────────────────────────────
-
+    # Appointments
     @abstractmethod
     def create_appointment(self, patient_id: str, data: dict[str, Any]) -> dict[str, Any]:
         ...
@@ -59,7 +50,6 @@ class AbstractCrmConnector(ABC):
 
     @abstractmethod
     def get_appointment(self, appt_id: str) -> dict[str, Any] | None:
-        """Get single appointment by external CRM ID."""
         ...
 
     @abstractmethod
@@ -74,16 +64,11 @@ class AbstractCrmConnector(ABC):
         offset: int = 0,
         limit: int = 50,
     ) -> dict:
-        """List appointments with filters. Returns dict with total + items."""
         ...
-
-    # ── Slots / Scheduling ──────────────────────────────────────
 
     @abstractmethod
     def search_available_slots(self, doctor_id: str, date: str) -> list[dict[str, Any]]:
         ...
-
-    # ── Webhooks ─────────────────────────────────────────────────
 
     @abstractmethod
     def verify_webhook_signature(self, payload: bytes, signature: str) -> bool:
