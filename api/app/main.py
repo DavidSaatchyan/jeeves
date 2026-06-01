@@ -175,7 +175,8 @@ def _run_alembic_migrations() -> None:
         db_columns = {c["name"] for c in inspector.get_columns("crm_connections")}
         for col, typ in [("config", "JSONB"), ("last_sync_at", "TIMESTAMP"), ("webhook_secret", "TEXT")]:
             if col not in db_columns and engine.dialect.name == "postgresql":
-                engine.execute(text(f"ALTER TABLE crm_connections ADD COLUMN {col} {typ} NULL"))
+                with engine.begin() as conn:
+                    conn.execute(text(f"ALTER TABLE crm_connections ADD COLUMN {col} {typ} NULL"))
                 logging.info("Self-heal: added column %s to crm_connections", col)
 
 
