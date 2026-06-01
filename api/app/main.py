@@ -160,6 +160,15 @@ def _run_alembic_migrations() -> None:
         else:
             logging.exception("Alembic migration failed — check database connectivity and migration files")
 
+    # Ensure all ORM tables exist after Alembic (migration may rename tables, e.g. appointments → appointments_archive)
+    from .models import Base
+    from sqlalchemy import inspect
+    inspector = inspect(engine)
+    existing_tables = set(inspector.get_table_names())
+    for table in Base.metadata.tables.values():
+        if table.name not in existing_tables:
+            table.create(bind=engine, checkfirst=True)
+
 
 @app.on_event("startup")
 def on_startup() -> None:
