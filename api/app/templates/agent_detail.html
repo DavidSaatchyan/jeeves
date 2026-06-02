@@ -152,11 +152,8 @@
 
       <!-- Channels -->
       <div class="config-panel" id="panel-channels">
-        <p style="font-size:13px;color:var(--muted2);margin-bottom:16px">Connect communication channels.</p>
-        <div class="chk-list">
-          <label class="chk-row"><input type="checkbox" id="ch-whatsapp"> WhatsApp</label>
-          <label class="chk-row"><input type="checkbox" id="ch-widget"> Web Widget</label>
-        </div>
+        <p style="font-size:13px;color:var(--muted2);margin-bottom:16px">Connect communication channels. Configure channels in <a href="/admin/integrations">Integrations</a> first.</p>
+        <div class="chk-list" id="channelsList"></div>
         <button class="btn" onclick="saveChannels()" style="margin-top:12px">Save Channels</button>
       </div>
     </div>
@@ -243,9 +240,34 @@ function applyConfig(cfg) {
   document.getElementById('rule-depth').value = rules.booking_depth_days ?? 14;
   document.getElementById('rule-duplicates').checked = rules.prevent_duplicates !== false;
 
-  const ch = cfg.channels || {};
-  document.getElementById('ch-whatsapp').checked = ch.whatsapp === true;
-  document.getElementById('ch-widget').checked = ch.widget === true;
+  loadAvailableChannels(cfg.channels || {});
+}
+
+let _availableChannels = [];
+
+async function loadAvailableChannels(selected) {
+  try {
+    const data = await api('/admin/api/integrations/available');
+    _availableChannels = data.channels || [];
+  } catch (e) {
+    _availableChannels = [];
+  }
+  renderChannels(selected);
+}
+
+function renderChannels(selected) {
+  const list = document.getElementById('channelsList');
+  if (!_availableChannels.length) {
+    list.innerHTML = '<p style="color:var(--muted2);font-size:13px">No channels configured. Go to <a href="/admin/integrations">Integrations</a> to set up channels.</p>';
+    return;
+  }
+  list.innerHTML = _availableChannels.map(ch => `
+    <label class="chk-row">
+      <input type="checkbox" data-channel="${ch.id}" ${selected[ch.id] === true ? 'checked' : ''} ${!ch.connected ? 'disabled' : ''}>
+      ${esc(ch.label)}
+      ${!ch.connected ? '<span style="font-size:11px;color:var(--muted2);margin-left:auto">Not connected</span>' : ''}
+    </label>
+  `).join('');
 }
 
 // ── Save personality ─────────────────────────────────────────────
@@ -319,10 +341,10 @@ async function saveKnowledge() {
 // ── Save channels ────────────────────────────────────────────────
 async function saveChannels() {
   try {
-    const body = {
-      whatsapp: document.getElementById('ch-whatsapp').checked,
-      widget: document.getElementById('ch-widget').checked,
-    };
+    const body = {};
+    document.querySelectorAll('#channelsList input[type="checkbox"]').forEach(cb => {
+      body[cb.dataset.channel] = cb.checked;
+    });
     await api(`/admin/api/agents/${AGENT_ID}/channels`, { method: 'PUT', body });
     showToast('Channels saved');
   } catch (e) { showToast('Error: ' + e.message, true); }
@@ -391,10 +413,10 @@ async function publishAgent() {
     };
     const folderIds = [];
     document.querySelectorAll('#knowledgeList input[type="checkbox"]:checked').forEach(cb => folderIds.push(cb.value));
-    const channels = {
-      whatsapp: document.getElementById('ch-whatsapp').checked,
-      widget: document.getElementById('ch-widget').checked,
-    };
+    const channels = {};
+    document.querySelectorAll('#channelsList input[type="checkbox"]').forEach(cb => {
+      channels[cb.dataset.channel] = cb.checked;
+    });
 
     await api(`/admin/api/agents/${AGENT_ID}/publish`, {
       method: 'POST',

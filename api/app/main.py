@@ -15,6 +15,7 @@ from . import admin, auth, knowledge, routes_chat
 from .integrations.webhooks import router as crm_webhooks_router
 from .channels import widget as widget_channel
 from .channels import whatsapp as whatsapp_channel
+from .channels import instagram as instagram_channel
 from .config import get_settings
 from .db import engine
 from sqlalchemy import text
@@ -250,6 +251,7 @@ app.include_router(routes_chat.router)
 app.include_router(knowledge.router)
 app.include_router(widget_channel.router)
 app.include_router(whatsapp_channel.router)
+app.include_router(instagram_channel.router)
 app.include_router(admin.router)
 app.include_router(crm_webhooks_router)
 

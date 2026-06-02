@@ -35,35 +35,32 @@ def client(mock_tenant):
 class TestCrmStatus:
     def test_returns_not_connected_when_empty(self, client, mock_tenant):
         mock_tenant.crm_config = {}
-        resp = client.get("/admin/api/crm/status")
+        resp = client.get("/admin/api/integrations")
         assert resp.status_code == 200
-        assert resp.json()["connected"] is False
+        pabau = [i for i in resp.json()["integrations"] if i["id"] == "pabau"][0]
+        assert pabau["status"] == "not_configured"
 
     def test_returns_connected_when_configured(self, client, mock_tenant):
         mock_tenant.crm_config = {"api_key": "k"}
-        resp = client.get("/admin/api/crm/status")
-        assert resp.status_code == 200
-        assert resp.json()["connected"] is True
-
-    def test_returns_provider(self, client, mock_tenant):
         mock_tenant.crm_provider = "pabau"
-        resp = client.get("/admin/api/crm/status")
-        assert resp.json()["provider"] == "pabau"
+        resp = client.get("/admin/api/integrations")
+        assert resp.status_code == 200
+        pabau = [i for i in resp.json()["integrations"] if i["id"] == "pabau"][0]
+        assert pabau["status"] == "connected"
 
 
 class TestCrmTestConnection:
     def test_returns_not_configured_when_no_api_key(self, client, mock_tenant):
         mock_tenant.crm_config = {}
-        resp = client.post("/admin/api/crm/test")
+        resp = client.post("/admin/api/integrations/crm/test")
         assert resp.status_code == 400
-        assert "not configured" in resp.json()["detail"]
 
     def test_returns_ok_when_connection_succeeds(self, client, mock_tenant):
         mock_tenant.crm_config = {"api_key": "k"}
         mock_adapter = MagicMock()
         mock_adapter.test_connection.return_value = True
-        with patch("app.admin.pabau.get_crm_adapter_for_tenant", return_value=mock_adapter):
-            resp = client.post("/admin/api/crm/test")
+        with patch("app.admin.integrations_hub.get_crm_adapter_for_tenant", return_value=mock_adapter):
+            resp = client.post("/admin/api/integrations/crm/test")
         assert resp.status_code == 200
         assert resp.json()["ok"] is True
 
@@ -71,62 +68,39 @@ class TestCrmTestConnection:
         mock_tenant.crm_config = {"api_key": "k"}
         mock_adapter = MagicMock()
         mock_adapter.test_connection.return_value = False
-        with patch("app.admin.pabau.get_crm_adapter_for_tenant", return_value=mock_adapter):
-            resp = client.post("/admin/api/crm/test")
+        with patch("app.admin.integrations_hub.get_crm_adapter_for_tenant", return_value=mock_adapter):
+            resp = client.post("/admin/api/integrations/crm/test")
         assert resp.status_code == 502
 
     def test_returns_502_on_exception(self, client, mock_tenant):
         mock_tenant.crm_config = {"api_key": "k"}
         mock_adapter = MagicMock()
         mock_adapter.test_connection.side_effect = RuntimeError("fail")
-        with patch("app.admin.pabau.get_crm_adapter_for_tenant", return_value=mock_adapter):
-            resp = client.post("/admin/api/crm/test")
+        with patch("app.admin.integrations_hub.get_crm_adapter_for_tenant", return_value=mock_adapter):
+            resp = client.post("/admin/api/integrations/crm/test")
         assert resp.status_code == 502
 
     def test_returns_400_when_no_adapter(self, client, mock_tenant):
         mock_tenant.crm_config = {"api_key": "k"}
-        with patch("app.admin.pabau.get_crm_adapter_for_tenant", return_value=None):
-            resp = client.post("/admin/api/crm/test")
+        with patch("app.admin.integrations_hub.get_crm_adapter_for_tenant", return_value=None):
+            resp = client.post("/admin/api/integrations/crm/test")
         assert resp.status_code == 400
 
 
 class TestConfigureCrm:
-    def test_saves_shard(self, client, mock_tenant):
-        resp = client.post("/admin/api/crm/configure", json={
-            "api_key": "key123",
-            "company_id": "cid456",
-            "webhook_secret": "whsec",
-            "shard": "eu1",
-            "crm_provider": "pabau",
+    def test_saves_pabau_config(self, client, mock_tenant):
+        resp = client.post("/admin/api/integrations/crm/configure", json={
+            "provider": "pabau", "api_key": "key123", "company_id": "cid456",
         })
         assert resp.status_code == 200
-        assert resp.json() == {"ok": True}
-        assert mock_tenant.crm_config["shard"] == "eu1"
-
-    def test_saves_api_key(self, client, mock_tenant):
-        resp = client.post("/admin/api/crm/configure", json={
-            "api_key": "newkey",
-            "company_id": "cid",
-            "webhook_secret": "",
-            "shard": "",
-            "crm_provider": "pabau",
-        })
-        assert resp.status_code == 200
-        assert mock_tenant.crm_config["api_key"] == "newkey"
-
-    def test_saves_crm_provider(self, client, mock_tenant):
-        resp = client.post("/admin/api/crm/configure", json={
-            "api_key": "k",
-            "company_id": "",
-            "webhook_secret": "",
-            "shard": "",
-            "crm_provider": "cliniko",
-        })
-        assert resp.status_code == 200
-        assert mock_tenant.crm_provider == "cliniko"
+        assert mock_tenant.crm_config["api_key"] == "key123"
+        assert mock_tenant.crm_config["company_id"] == "cid456"
+        assert mock_tenant.crm_provider == "pabau"
 
     def test_disconnect_clears_config(self, client, mock_tenant):
         mock_tenant.crm_config = {"api_key": "old"}
-        resp = client.post("/admin/api/crm/disconnect")
+        mock_tenant.crm_provider = "pabau"
+        resp = client.post("/admin/api/integrations/crm/disconnect")
         assert resp.status_code == 200
         assert mock_tenant.crm_config == {}
+        assert mock_tenant.crm_provider == "pabau"

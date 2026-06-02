@@ -3,8 +3,6 @@ from __future__ import annotations
 from fastapi import Depends, Form, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from sqlalchemy.orm import Session
-
 from ..auth.tokens import issue_tokens
 from ..db import get_db
 from ..models import Tenant
@@ -85,38 +83,9 @@ def knowledge_page(request: Request, tenant: Tenant = Depends(get_admin_tenant))
     return templates.TemplateResponse(request, "knowledge.html", context=ctx)
 
 
-@router.get("/channels", response_class=HTMLResponse)
-def channels_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "channels.html", context=_ctx(request))
-
-
 @router.get("/account", response_class=HTMLResponse)
 def account_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
     return templates.TemplateResponse(request, "account.html", context=_ctx(request))
 
 
-# ── Channels API ─────────────────────────────────────────────
-
-
-@router.get("/api/channels")
-def api_channels(
-    tenant: Tenant = Depends(get_admin_tenant),
-    db: Session = Depends(get_db),
-):
-    from ..channels.registry import list_all_configs
-    return {"channels": list_all_configs(db, tenant.id)}
-
-
-@router.post("/api/channels/{channel_type}")
-def admin_save_channel(
-    channel_type: str,
-    body: dict,
-    tenant: Tenant = Depends(get_admin_tenant),
-    db: Session = Depends(get_db),
-):
-    config = body.get("config", {})
-    status = body.get("status", "active")
-    from ..channels.registry import upsert_channel
-    upsert_channel(db, tenant.id, channel_type, config, status)
-    db.commit()
-    return {"ok": True, "channel_type": channel_type, "status": status}
+# (Channels API moved to integrations_hub.py)

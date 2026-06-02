@@ -275,10 +275,11 @@ class TestChannelConfigCrud:
 
         result = list_all_configs(mock_db, uuid4())
 
-        assert len(result) == 2
+        assert len(result) == 3
         by_type = {r["channel_type"]: r for r in result}
         assert by_type["web_widget"]["status"] == "not_configured"
         assert by_type["whatsapp"]["status"] == "not_configured"
+        assert by_type["instagram"]["status"] == "not_configured"
 
     def test_list_all_configs_with_whatsapp(self, mock_db):
         from datetime import datetime
@@ -294,7 +295,7 @@ class TestChannelConfigCrud:
 
         result = list_all_configs(mock_db, uuid4())
 
-        assert len(result) == 2
+        assert len(result) == 3
         whatsapp = [r for r in result if r["channel_type"] == "whatsapp"][0]
         assert whatsapp["status"] == "active"
         assert whatsapp["config_mask"]["phone_number_id"] == "123"

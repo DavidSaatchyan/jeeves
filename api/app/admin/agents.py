@@ -162,10 +162,7 @@ def api_agent_channels_save(
     db: Session = Depends(get_db),
 ):
     cfg = dict(tenant.agent_config or {})
-    cfg["channels"] = {
-        "whatsapp": body.get("whatsapp"),
-        "widget": body.get("widget"),
-    }
+    cfg["channels"] = {k: v for k, v in body.items()}
     tenant.agent_config = cfg
     db.commit()
     return {"ok": True}

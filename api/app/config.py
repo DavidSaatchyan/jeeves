@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     cliniko_api_key: str = ""
     cliniko_user_agent: str = "Jeeves (devs@jeeves.ai)"
     fernet_key: str = ""
+    facebook_app_id: str = ""
+    facebook_app_secret: str = ""
+    facebook_redirect_uri: str = ""
     # Compliance / data governance
     compliance_gdpr_enabled: bool = True
     compliance_hipaa_enabled: bool = False

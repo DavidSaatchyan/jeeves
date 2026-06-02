@@ -46,7 +46,7 @@ async function loadAgents() {
   try {
     const [agentsData, channelsData] = await Promise.all([
       api('/admin/api/agents'),
-      api('/admin/api/channels'),
+      api('/admin/api/integrations/available'),
     ]);
 
     const grid = document.getElementById('agentGrid');
@@ -59,11 +59,15 @@ async function loadAgents() {
         : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
 
       // Channel icons
-      const wa = (channelsData.channels || []).find(c => c.channel_type === 'whatsapp');
-      const wd = (channelsData.channels || []).find(c => c.channel_type === 'widget');
+      const chMap = {};
+      (channelsData.channels || []).forEach(c => { chMap[c.id] = c; });
+      const wa = chMap['whatsapp'];
+      const wd = chMap['web_widget'];
+      const ig = chMap['instagram'];
       const channelHtml = `<div class="channel-icons">
-        <div class="agent-card-channel ${wa && wa.status === 'active' ? 'active' : ''}" title="WhatsApp">💬</div>
-        <div class="agent-card-channel ${wd && wd.status === 'active' ? 'active' : ''}" title="Widget">🌐</div>
+        <div class="agent-card-channel ${wa && wa.connected ? 'active' : ''}" title="WhatsApp">💬</div>
+        <div class="agent-card-channel ${ig && ig.connected ? 'active' : ''}" title="Instagram">📷</div>
+        <div class="agent-card-channel ${wd && wd.connected ? 'active' : ''}" title="Widget">🌐</div>
       </div>`;
 
       // Stats

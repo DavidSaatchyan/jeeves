@@ -10,16 +10,18 @@ from sqlalchemy.orm import Session
 
 from ..models import ChannelConfig
 
-SUPPORTED_CHANNELS = {"web_widget", "whatsapp"}
+SUPPORTED_CHANNELS = {"web_widget", "whatsapp", "instagram"}
 
 CHANNEL_LABELS = {
     "web_widget": "Website Widget",
     "whatsapp": "WhatsApp",
+    "instagram": "Instagram",
 }
 
 CHANNEL_DESCRIPTIONS = {
     "web_widget": "Chat widget embedded on your website",
     "whatsapp": "WhatsApp Business Cloud API — requires Meta developer account",
+    "instagram": "Instagram Direct Messages via Meta Graph API",
 }
 
 
