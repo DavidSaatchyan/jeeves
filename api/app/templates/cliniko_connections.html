@@ -79,6 +79,7 @@ function setState(connected, apiKey) {
   connectBtn.textContent = connected ? 'Reconnect' : 'Connect';
   connectBtn.disabled = false;
   disconnectBtn.textContent = 'Disconnect';
+  disconnectBtn.disabled = false;
   disconnectBtn.style.display = connected ? '' : 'none';
   apiKeyInput.disabled = false;
   if (connected && apiKey) apiKeyInput.value = apiKey;
@@ -121,7 +122,6 @@ async function connectCliniko() {
     });
     if (r.connected) {
       setState(true, key);
-      showMsg('Connected!', 'ok');
     } else {
       setState(false);
       showMsg(r.message || 'Connection failed', 'err');
