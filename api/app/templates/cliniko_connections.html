@@ -11,7 +11,7 @@
       <div class="int-name">Cliniko</div>
       <div class="int-desc">Patients, appointments, and scheduling via the Cliniko API</div>
     </div>
-    <span id="statusPill" class="pill {{ 'ok' if connected else 'muted' }}" style="margin-left:auto">{{ 'Connected' if connected else 'Not Connected' }}</span>
+    <span id="statusPill" class="pill {{ 'ok' if connected else 'muted' }}" style="margin-left:auto;min-width:100px;text-align:center">{{ 'Connected' if connected else 'Not Connected' }}</span>
   </div>
 
   <div class="int-inputs" style="margin-top:12px">
@@ -23,7 +23,7 @@
     <button id="connectBtn" class="accent">{{ 'Reconnect' if connected else 'Connect' }}</button>
     <button id="disconnectBtn" class="ghost danger" {% if not connected %}disabled{% endif %}>Disconnect</button>
   </div>
-  <div id="clinikoMsg" class="err-msg" style="margin-top:10px"></div>
+  <div id="clinikoMsg" style="margin-top:10px;font-size:13px;min-height:20px"></div>
 </div>
 
 <div class="help">
@@ -47,61 +47,63 @@ function showMsg(text, type) {
   msg.style.color = type === 'ok' ? '#22a67e' : '#e5484d';
 }
 
-function setConnected(connected, apiKey) {
+function setState(connected, apiKey) {
   statusPill.textContent = connected ? 'Connected' : 'Not Connected';
   statusPill.className = 'pill ' + (connected ? 'ok' : 'muted');
   connectBtn.textContent = connected ? 'Reconnect' : 'Connect';
+  connectBtn.disabled = false;
   disconnectBtn.disabled = !connected;
+  apiKeyInput.disabled = false;
   if (connected && apiKey) apiKeyInput.value = apiKey;
 }
 
-function setBusy(busy, label) {
+function setBusy(busy) {
   connectBtn.disabled = busy;
   disconnectBtn.disabled = busy;
   apiKeyInput.disabled = busy;
-  if (busy && label) connectBtn.textContent = label;
+}
+
+function showError(text) {
+  showMsg(text, 'err');
+  setState(false);
+  connectBtn.textContent = 'Connect';
 }
 
 async function connectCliniko() {
   const key = apiKeyInput.value.trim();
   if (!key) { showMsg('API Key is required', 'err'); return; }
   msg.textContent = '';
-  const prevLabel = connectBtn.textContent;
-  setBusy(true, 'Connecting...');
+  connectBtn.textContent = 'Connecting...';
+  setBusy(true);
   try {
     const r = await api('/admin/api/cliniko/configure', {
       method: 'POST',
       body: { api_key: key },
     });
     if (r.connected) {
-      setConnected(true, key);
-      showMsg(r.message || 'Connected!', 'ok');
+      setState(true, key);
+      showMsg('Connected!', 'ok');
     } else {
-      setConnected(false);
-      showMsg(r.message || 'Connection failed', 'err');
+      showError(r.message || 'Connection failed');
     }
   } catch(e) {
-    setConnected(false);
-    showMsg(e.message, 'err');
-  } finally {
-    setBusy(false);
-    if (connectBtn.textContent === 'Connecting...') connectBtn.textContent = prevLabel;
+    showError(e.message);
   }
 }
 
 async function disconnectCliniko() {
   if (!confirm('Disconnect Cliniko?')) return;
   msg.textContent = '';
-  setBusy(true, 'Disconnecting...');
+  disconnectBtn.textContent = 'Disconnecting...';
+  setBusy(true);
   try {
     await api('/admin/api/cliniko/disconnect', { method: 'POST' });
     apiKeyInput.value = '';
-    setConnected(false);
+    setState(false);
     showMsg('Disconnected', 'ok');
   } catch(e) {
-    showMsg(e.message, 'err');
-  } finally {
-    setBusy(false);
+    showError(e.message);
+    disconnectBtn.textContent = 'Disconnect';
   }
 }
 </script>
