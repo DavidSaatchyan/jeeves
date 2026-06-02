@@ -58,7 +58,14 @@ def configure_cliniko(
     tenant.crm_provider = "cliniko"
     db.flush()
     db.commit()
-    return {"ok": True}
+
+    try:
+        adapter = get_crm_adapter_for_tenant(tenant)
+        if adapter and adapter.test_connection():
+            return {"ok": True, "connected": True, "message": "Connected to Cliniko API"}
+        return {"ok": True, "connected": False, "message": "Saved but connection failed — check API key and shard"}
+    except Exception as e:
+        return {"ok": True, "connected": False, "message": f"Saved but connection failed: {e}"}
 
 
 @router.post("/api/cliniko/test")

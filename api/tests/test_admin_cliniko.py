@@ -33,42 +33,82 @@ def client(mock_tenant):
 
 
 class TestConfigureCliniko:
+    def _patch_adapter(self, connected: bool = True):
+        mock_adapter = MagicMock()
+        mock_adapter.test_connection.return_value = connected
+        return patch("app.admin.cliniko.get_crm_adapter_for_tenant", return_value=mock_adapter)
+
     def test_saves_api_key_and_shard(self, client, mock_tenant):
-        resp = client.post("/admin/api/cliniko/configure", json={
-            "api_key": "cliniko-key-123",
-            "shard": "eu1",
-            "webhook_secret": "whsec",
-        })
+        with self._patch_adapter():
+            resp = client.post("/admin/api/cliniko/configure", json={
+                "api_key": "cliniko-key-123",
+                "shard": "eu1",
+                "webhook_secret": "whsec",
+            })
         assert resp.status_code == 200
-        assert resp.json() == {"ok": True}
+        assert resp.json()["ok"] is True
         assert mock_tenant.crm_config["api_key"] == "cliniko-key-123"
         assert mock_tenant.crm_config["shard"] == "eu1"
         assert mock_tenant.crm_config["webhook_secret"] == "whsec"
 
     def test_sets_crm_provider(self, client, mock_tenant):
-        resp = client.post("/admin/api/cliniko/configure", json={
-            "api_key": "k",
-            "shard": "au1",
-            "webhook_secret": "",
-        })
+        with self._patch_adapter():
+            resp = client.post("/admin/api/cliniko/configure", json={
+                "api_key": "k",
+                "shard": "au1",
+                "webhook_secret": "",
+            })
         assert resp.status_code == 200
         assert mock_tenant.crm_provider == "cliniko"
 
     def test_default_shard_is_au1(self, client, mock_tenant):
-        client.post("/admin/api/cliniko/configure", json={
-            "api_key": "k",
-            "shard": "au1",
-            "webhook_secret": "",
-        })
+        with self._patch_adapter():
+            client.post("/admin/api/cliniko/configure", json={
+                "api_key": "k",
+                "shard": "au1",
+                "webhook_secret": "",
+            })
         assert mock_tenant.crm_config["shard"] == "au1"
 
     def test_sets_user_agent(self, client, mock_tenant):
-        client.post("/admin/api/cliniko/configure", json={
-            "api_key": "k",
-            "shard": "au1",
-            "webhook_secret": "",
-        })
+        with self._patch_adapter():
+            client.post("/admin/api/cliniko/configure", json={
+                "api_key": "k",
+                "shard": "au1",
+                "webhook_secret": "",
+            })
         assert "Jeeves" in mock_tenant.crm_config["user_agent"]
+
+    def test_returns_connected_true_when_test_passes(self, client, mock_tenant):
+        with self._patch_adapter(connected=True):
+            resp = client.post("/admin/api/cliniko/configure", json={
+                "api_key": "k",
+                "shard": "au1",
+                "webhook_secret": "",
+            })
+        assert resp.json()["connected"] is True
+        assert "Connected" in resp.json()["message"]
+
+    def test_returns_connected_false_when_test_fails(self, client, mock_tenant):
+        with self._patch_adapter(connected=False):
+            resp = client.post("/admin/api/cliniko/configure", json={
+                "api_key": "k",
+                "shard": "au1",
+                "webhook_secret": "",
+            })
+        assert resp.json()["connected"] is False
+        assert "failed" in resp.json()["message"].lower()
+
+    def test_returns_connected_false_on_exception(self, client, mock_tenant):
+        mock_adapter = MagicMock()
+        mock_adapter.test_connection.side_effect = RuntimeError("API unreachable")
+        with patch("app.admin.cliniko.get_crm_adapter_for_tenant", return_value=mock_adapter):
+            resp = client.post("/admin/api/cliniko/configure", json={
+                "api_key": "k",
+                "shard": "au1",
+                "webhook_secret": "",
+            })
+        assert resp.json()["connected"] is False
 
 
 class TestClinikoStatus:

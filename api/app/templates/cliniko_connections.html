@@ -60,12 +60,16 @@ async function saveCliniko() {
   const webhook_secret = document.getElementById('webhook_secret').value.trim();
   if (!api_key) { showMsg('clinikoMsg', 'API Key is required', 'err'); return; }
   try {
-    await api('/admin/api/cliniko/configure', {
+    const r = await api('/admin/api/cliniko/configure', {
       method: 'POST',
       body: { api_key, shard, webhook_secret },
     });
-    showMsg('clinikoMsg', 'Saved!', 'ok');
-    setTimeout(() => location.reload(), 1000);
+    if (r.connected) {
+      showMsg('clinikoMsg', r.message || 'Connected!', 'ok');
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      showMsg('clinikoMsg', r.message || 'Saved but connection failed', 'err');
+    }
   } catch(e) {
     showMsg('clinikoMsg', e.message, 'err');
   }
