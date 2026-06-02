@@ -58,6 +58,7 @@ def configure_crm(
     }
     tenant.crm_provider = data.crm_provider
     db.flush()
+    db.commit()
     return {"ok": True}
 
 
@@ -75,6 +76,8 @@ def test_crm(tenant: Tenant = Depends(get_admin_tenant)):
         if ok:
             return {"ok": True, "message": f"Connected to {provider.title()} API"}
         raise HTTPException(status_code=502, detail="Connection failed")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=502, detail=str(e))
 
@@ -86,4 +89,5 @@ def disconnect_crm(
 ):
     tenant.crm_config = {}
     db.flush()
+    db.commit()
     return {"ok": True}

@@ -57,6 +57,7 @@ def configure_cliniko(
     }
     tenant.crm_provider = "cliniko"
     db.flush()
+    db.commit()
     return {"ok": True}
 
 
@@ -75,6 +76,8 @@ def test_cliniko(tenant: Tenant = Depends(get_admin_tenant)):
         if ok:
             return {"ok": True, "message": "Connected to Cliniko API"}
         raise HTTPException(status_code=502, detail="Connection failed")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=502, detail=str(e))
 
@@ -87,4 +90,5 @@ def disconnect_cliniko(
     tenant.crm_config = {}
     tenant.crm_provider = "pabau"
     db.flush()
+    db.commit()
     return {"ok": True}
