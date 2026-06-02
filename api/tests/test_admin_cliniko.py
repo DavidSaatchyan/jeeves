@@ -180,13 +180,45 @@ class TestDisconnectCliniko:
         assert mock_tenant.crm_provider == "pabau"
 
 
+class TestShardFromKey:
+    def test_extracts_shard_from_key_suffix(self):
+        from app.admin.cliniko import _shard_from_key
+        assert _shard_from_key("base64stuff-au5") == "au5"
+
+    def test_returns_none_when_no_dash(self):
+        from app.admin.cliniko import _shard_from_key
+        assert _shard_from_key("justakey") is None
+
+    def test_returns_none_when_unknown_shard(self):
+        from app.admin.cliniko import _shard_from_key
+        assert _shard_from_key("base64stuff-zz9") is None
+
+    def test_returns_none_when_too_short(self):
+        from app.admin.cliniko import _shard_from_key
+        assert _shard_from_key("ab") is None
+
+
 class TestDiscoverShard:
-    def test_returns_shard_when_one_succeeds(self):
-        from app.admin.cliniko import _discover_shard, _try_shard
+    def test_uses_shard_from_key_when_valid(self):
+        from app.admin.cliniko import _discover_shard
+        with patch("app.admin.cliniko._try_shard", return_value=True) as mock_try:
+            result = _discover_shard("base64stuff-au4")
+        assert result == "au4"
+        mock_try.assert_called_once_with("base64stuff-au4", "au4")
+
+    def test_falls_back_to_probe_when_no_suffix(self):
+        from app.admin.cliniko import _discover_shard
         with patch("app.admin.cliniko._try_shard") as mock_try:
-            mock_try.side_effect = lambda k, s: s == "eu1"
-            result = _discover_shard("key")
-        assert result == "eu1"
+            mock_try.side_effect = lambda k, s: s == "ca1"
+            result = _discover_shard("justkey")
+        assert result == "ca1"
+
+    def test_falls_back_to_probe_when_suffix_shard_fails(self):
+        from app.admin.cliniko import _discover_shard
+        with patch("app.admin.cliniko._try_shard") as mock_try:
+            mock_try.side_effect = lambda k, s: s == "ca1"
+            result = _discover_shard("base64stuff-au1")
+        assert result == "ca1"
 
     def test_returns_none_when_all_fail(self):
         from app.admin.cliniko import _discover_shard

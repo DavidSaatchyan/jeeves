@@ -15,7 +15,8 @@ from .deps import get_admin_tenant
 from .router import templates, router
 from ..models import Tenant
 
-_CLINIKO_SHARDS = ["au1", "eu1", "us1", "ca1", "uk1", "nz1", "sg1"]
+_CLINIKO_SHARDS = ["au1", "au2", "au3", "au4", "au5", "eu1", "us1", "ca1", "uk1", "nz1", "sg1"]
+_KNOWN_SHARDS = set(_CLINIKO_SHARDS)
 
 
 class ClinikoConfigUpdate(BaseModel):
@@ -36,7 +37,20 @@ def _try_shard(api_key: str, shard: str) -> bool:
         return False
 
 
+def _shard_from_key(api_key: str) -> str | None:
+    """Extract shard from last 3 chars after dash (e.g. '...-au5' → 'au5')."""
+    if len(api_key) >= 4 and api_key[-4] == "-":
+        candidate = api_key[-3:]
+        if candidate in _KNOWN_SHARDS:
+            return candidate
+    return None
+
+
 def _discover_shard(api_key: str) -> str | None:
+    shard = _shard_from_key(api_key)
+    if shard and _try_shard(api_key, shard):
+        return shard
+
     with ThreadPoolExecutor(max_workers=len(_CLINIKO_SHARDS)) as ex:
         future_map = {ex.submit(_try_shard, api_key, s): s for s in _CLINIKO_SHARDS}
         for f in as_completed(future_map):
