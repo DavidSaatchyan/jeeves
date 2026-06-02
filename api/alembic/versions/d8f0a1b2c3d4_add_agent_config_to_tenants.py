@@ -32,10 +32,14 @@ def _has_column(table: str, column: str) -> bool:
 def upgrade() -> None:
     if _has_column("tenants", "agent_config"):
         return
-    op.add_column(
-        "tenants",
-        sa.Column("agent_config", JSONB(astext_type=sa.Text()), nullable=True),
-    )
+    try:
+        op.add_column(
+            "tenants",
+            sa.Column("agent_config", JSONB(astext_type=sa.Text()), nullable=True),
+        )
+    except Exception:
+        if not _has_column("tenants", "agent_config"):
+            raise
 
 
 def downgrade() -> None:

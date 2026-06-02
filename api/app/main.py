@@ -135,6 +135,18 @@ async def dynamic_cors(request: Request, call_next):
     return response
 
 
+def _ensure_missing_columns(engine) -> None:
+    """Add columns that migrations may have missed (stamp fallback path)."""
+    from sqlalchemy import inspect as sa_inspect
+    inspector = sa_inspect(engine)
+    cols = {c["name"] for c in inspector.get_columns("tenants")}
+    if "agent_config" not in cols:
+        from sqlalchemy import text
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE tenants ADD COLUMN agent_config JSONB"))
+        logging.info("Added missing column tenants.agent_config via fallback")
+
+
 def _run_alembic_migrations() -> None:
     """Apply Alembic migrations on startup. Uses the alembic/ directory from the api package."""
     alembic_cfg = Config(Path(__file__).parent.parent / "alembic.ini")
@@ -150,6 +162,8 @@ def _run_alembic_migrations() -> None:
             if "tenants" in inspector.get_table_names():
                 command.stamp(alembic_cfg, "head")
                 logging.info("Existing DB detected — stamped alembic to head without re-running migrations")
+                # Ensure required columns exist after stamping
+                _ensure_missing_columns(engine)
             else:
                 logging.exception("Alembic migration failed — unexpected duplicate table without tenants")
         elif "can't render element of type" in error_str or "jsonb" in error_str.lower():
