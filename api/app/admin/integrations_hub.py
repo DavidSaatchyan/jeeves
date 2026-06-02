@@ -73,7 +73,7 @@ def api_integrations(
             "status": "connected" if crm_connected and crm_provider == "cliniko" else "not_configured",
             "meta": {
                 "shard": crm_config.get("shard", ""),
-                "api_key": (crm_config.get("api_key", "")[:8] + "…") if crm_config.get("api_key") else "",
+                "api_key": crm_config.get("api_key", "") or "",
             },
         },
         {
@@ -89,21 +89,21 @@ def api_integrations(
             "id": "whatsapp",
             "name": "WhatsApp",
             "category": "channel",
-            "status": channel_map.get("whatsapp", {}).get("status", "not_configured"),
+            "status": "connected" if channel_map.get("whatsapp", {}).get("status") == "active" else channel_map.get("whatsapp", {}).get("status", "not_configured"),
             "meta": channel_map.get("whatsapp", {}).get("config_mask", {}),
         },
         {
             "id": "instagram",
             "name": "Instagram",
             "category": "channel",
-            "status": channel_map.get("instagram", {}).get("status", "not_configured"),
+            "status": "connected" if channel_map.get("instagram", {}).get("status") == "active" else channel_map.get("instagram", {}).get("status", "not_configured"),
             "meta": channel_map.get("instagram", {}).get("config_mask", {}),
         },
         {
             "id": "widget",
             "name": "Web Widget",
             "category": "channel",
-            "status": channel_map.get("web_widget", {}).get("status", "not_configured"),
+            "status": "connected" if channel_map.get("web_widget", {}).get("status") == "active" else channel_map.get("web_widget", {}).get("status", "not_configured"),
             "meta": channel_map.get("web_widget", {}).get("config_mask", {}),
         },
     ]
