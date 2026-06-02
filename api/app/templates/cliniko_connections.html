@@ -20,25 +20,11 @@
 
   <div class="int-inputs" style="margin-top:12px">
     <label>API Key</label>
-    <input type="password" id="api_key" value="{{ api_key }}" placeholder="cliniko_api_key"/>
-
-    <label>Shard</label>
-    <select id="shard">
-      <option value="au1" {% if shard == "au1" %}selected{% endif %}>au1 — Australia</option>
-      <option value="eu1" {% if shard == "eu1" %}selected{% endif %}>eu1 — Europe</option>
-      <option value="us1" {% if shard == "us1" %}selected{% endif %}>us1 — United States</option>
-      <option value="ca1" {% if shard == "ca1" %}selected{% endif %}>ca1 — Canada</option>
-      <option value="uk1" {% if shard == "uk1" %}selected{% endif %}>uk1 — United Kingdom</option>
-      <option value="nz1" {% if shard == "nz1" %}selected{% endif %}>nz1 — New Zealand</option>
-      <option value="sg1" {% if shard == "sg1" %}selected{% endif %}>sg1 — Singapore</option>
-    </select>
-
-    <label>Webhook Secret</label>
-    <input type="text" id="webhook_secret" value="{{ webhook_secret }}" placeholder="Optional"/>
+    <input type="password" id="api_key" value="{{ api_key if connected else '' }}" placeholder="cliniko_api_key"/>
   </div>
 
   <div class="flex" style="margin-top:16px">
-    <button class="accent" onclick="connectCliniko()">Connect</button>
+    <button class="accent" onclick="connectCliniko()">{{ 'Reconnect' if connected else 'Connect' }}</button>
     <button class="ghost danger" onclick="disconnectCliniko()" {% if not connected %}disabled{% endif %}>Disconnect</button>
   </div>
   <div id="clinikoMsg" class="err-msg" style="margin-top:10px"></div>
@@ -48,26 +34,24 @@
   <h3>About Cliniko</h3>
   <p>To connect Cliniko:</p>
   <p><strong>1.</strong> Go to Cliniko → <em>My Info</em> → <em>Manage API keys</em> and create an API key.</p>
-  <p><strong>2.</strong> Select your data shard (e.g. <code>au1</code> for Australia, <code>eu1</code> for Europe).</p>
+  <p><strong>2.</strong> Paste the API key above and click <strong>Connect</strong>. The shard is detected automatically.</p>
   <p><strong>3.</strong> Set your webhook URL to <code>{{ request.base_url }}integrations/webhooks/cliniko/{{ tenant_id }}</code>.</p>
 </div>
 
 <script>
 async function connectCliniko() {
   const api_key = document.getElementById('api_key').value.trim();
-  const shard = document.getElementById('shard').value;
-  const webhook_secret = document.getElementById('webhook_secret').value.trim();
   if (!api_key) { showMsg('clinikoMsg', 'API Key is required', 'err'); return; }
   try {
     const r = await api('/admin/api/cliniko/configure', {
       method: 'POST',
-      body: { api_key, shard, webhook_secret },
+      body: { api_key },
     });
     if (r.connected) {
       showMsg('clinikoMsg', r.message || 'Connected!', 'ok');
       setTimeout(() => location.reload(), 1500);
     } else {
-      showMsg('clinikoMsg', r.message || 'Saved but connection failed', 'err');
+      showMsg('clinikoMsg', r.message || 'Connection failed', 'err');
     }
   } catch(e) {
     showMsg('clinikoMsg', e.message, 'err');

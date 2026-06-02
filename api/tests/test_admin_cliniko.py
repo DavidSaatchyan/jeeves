@@ -26,6 +26,7 @@ def client(mock_tenant):
 
     _app.dependency_overrides.clear()
     from app.admin.deps import get_admin_tenant
+
     _app.dependency_overrides[get_admin_tenant] = _override
     with TestClient(_app) as c:
         yield c
@@ -33,82 +34,70 @@ def client(mock_tenant):
 
 
 class TestConfigureCliniko:
-    def _patch_adapter(self, connected: bool = True):
-        mock_adapter = MagicMock()
-        mock_adapter.test_connection.return_value = connected
-        return patch("app.admin.cliniko.get_crm_adapter_for_tenant", return_value=mock_adapter)
+    def _patch_discover(self, shard: str | None = "au1"):
+        return patch("app.admin.cliniko._discover_shard", return_value=shard)
 
-    def test_saves_api_key_and_shard(self, client, mock_tenant):
-        with self._patch_adapter():
+    def test_saves_api_key_and_detected_shard(self, client, mock_tenant):
+        with self._patch_discover("eu1"):
             resp = client.post("/admin/api/cliniko/configure", json={
                 "api_key": "cliniko-key-123",
-                "shard": "eu1",
-                "webhook_secret": "whsec",
             })
         assert resp.status_code == 200
         assert resp.json()["ok"] is True
         assert mock_tenant.crm_config["api_key"] == "cliniko-key-123"
         assert mock_tenant.crm_config["shard"] == "eu1"
-        assert mock_tenant.crm_config["webhook_secret"] == "whsec"
 
     def test_sets_crm_provider(self, client, mock_tenant):
-        with self._patch_adapter():
+        with self._patch_discover():
             resp = client.post("/admin/api/cliniko/configure", json={
                 "api_key": "k",
-                "shard": "au1",
-                "webhook_secret": "",
             })
         assert resp.status_code == 200
         assert mock_tenant.crm_provider == "cliniko"
 
-    def test_default_shard_is_au1(self, client, mock_tenant):
-        with self._patch_adapter():
-            client.post("/admin/api/cliniko/configure", json={
-                "api_key": "k",
-                "shard": "au1",
-                "webhook_secret": "",
-            })
-        assert mock_tenant.crm_config["shard"] == "au1"
-
     def test_sets_user_agent(self, client, mock_tenant):
-        with self._patch_adapter():
+        with self._patch_discover():
             client.post("/admin/api/cliniko/configure", json={
                 "api_key": "k",
-                "shard": "au1",
-                "webhook_secret": "",
             })
         assert "Jeeves" in mock_tenant.crm_config["user_agent"]
 
-    def test_returns_connected_true_when_test_passes(self, client, mock_tenant):
-        with self._patch_adapter(connected=True):
+    def test_returns_connected_true_when_discovered(self, client, mock_tenant):
+        with self._patch_discover("au1"):
             resp = client.post("/admin/api/cliniko/configure", json={
                 "api_key": "k",
-                "shard": "au1",
-                "webhook_secret": "",
             })
         assert resp.json()["connected"] is True
         assert "Connected" in resp.json()["message"]
 
-    def test_returns_connected_false_when_test_fails(self, client, mock_tenant):
-        with self._patch_adapter(connected=False):
+    def test_returns_connected_false_when_no_shard_discovered(self, client, mock_tenant):
+        with self._patch_discover(None):
             resp = client.post("/admin/api/cliniko/configure", json={
                 "api_key": "k",
-                "shard": "au1",
-                "webhook_secret": "",
             })
+        assert resp.status_code == 200
         assert resp.json()["connected"] is False
         assert "failed" in resp.json()["message"].lower()
 
-    def test_returns_connected_false_on_exception(self, client, mock_tenant):
-        mock_adapter = MagicMock()
-        mock_adapter.test_connection.side_effect = RuntimeError("API unreachable")
-        with patch("app.admin.cliniko.get_crm_adapter_for_tenant", return_value=mock_adapter):
-            resp = client.post("/admin/api/cliniko/configure", json={
+    def test_does_not_save_when_discovery_fails(self, client, mock_tenant):
+        with self._patch_discover(None):
+            client.post("/admin/api/cliniko/configure", json={
                 "api_key": "k",
-                "shard": "au1",
-                "webhook_secret": "",
             })
-        assert resp.json()["connected"] is False
+        assert mock_tenant.crm_config == {}
+        assert mock_tenant.crm_provider == ""
+
+    def test_rejects_empty_api_key(self, client, mock_tenant):
+        resp = client.post("/admin/api/cliniko/configure", json={
+            "api_key": "",
+        })
+        assert resp.status_code == 400
+        assert "required" in resp.json()["detail"].lower()
+        assert mock_tenant.crm_config == {}
+
+    def test_rejects_missing_api_key(self, client, mock_tenant):
+        resp = client.post("/admin/api/cliniko/configure", json={})
+        assert resp.status_code == 422  # Pydantic validation
 
 
 class TestClinikoStatus:
@@ -189,3 +178,31 @@ class TestDisconnectCliniko:
         assert resp.status_code == 200
         assert mock_tenant.crm_config == {}
         assert mock_tenant.crm_provider == "pabau"
+
+
+class TestDiscoverShard:
+    def test_returns_shard_when_one_succeeds(self):
+        from app.admin.cliniko import _discover_shard, _try_shard
+        with patch("app.admin.cliniko._try_shard") as mock_try:
+            mock_try.side_effect = lambda k, s: s == "eu1"
+            result = _discover_shard("key")
+        assert result == "eu1"
+
+    def test_returns_none_when_all_fail(self):
+        from app.admin.cliniko import _discover_shard
+        with patch("app.admin.cliniko._try_shard", return_value=False):
+            result = _discover_shard("key")
+        assert result is None
+
+    def test_try_shard_correct_url_and_auth(self):
+        from app.admin.cliniko import _try_shard
+        with patch("app.admin.cliniko.httpx.get") as mock_get:
+            mock_get.return_value.status_code = 200
+            result = _try_shard("test-key", "eu1")
+        assert result is True
+        url = mock_get.call_args[0][0]
+        assert "eu1" in url
+        assert "/practitioners" in url
+        headers = mock_get.call_args[1]["headers"]
+        assert "Basic" in headers["Authorization"]
+        assert "Jeeves" in headers["User-Agent"]

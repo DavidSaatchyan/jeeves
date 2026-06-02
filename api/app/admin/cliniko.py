@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import base64
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import httpx
 from fastapi import Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
@@ -11,11 +15,34 @@ from .deps import get_admin_tenant
 from .router import templates, router
 from ..models import Tenant
 
+_CLINIKO_SHARDS = ["au1", "eu1", "us1", "ca1", "uk1", "nz1", "sg1"]
+
 
 class ClinikoConfigUpdate(BaseModel):
     api_key: str
-    shard: str = "au1"
-    webhook_secret: str = ""
+
+
+def _try_shard(api_key: str, shard: str) -> bool:
+    encoded = base64.b64encode(f"{api_key}:".encode()).decode()
+    headers = {
+        "Authorization": f"Basic {encoded}",
+        "Accept": "application/json",
+        "User-Agent": "Jeeves (devs@jeeves.ai)",
+    }
+    try:
+        r = httpx.get(f"https://api.{shard}.cliniko.com/v1/practitioners", headers=headers, timeout=10)
+        return r.status_code == 200
+    except httpx.RequestError:
+        return False
+
+
+def _discover_shard(api_key: str) -> str | None:
+    with ThreadPoolExecutor(max_workers=len(_CLINIKO_SHARDS)) as ex:
+        future_map = {ex.submit(_try_shard, api_key, s): s for s in _CLINIKO_SHARDS}
+        for f in as_completed(future_map):
+            if f.result():
+                return future_map[f]
+    return None
 
 
 @router.get("/cliniko", response_class=HTMLResponse)
@@ -27,9 +54,6 @@ def cliniko_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
         "request": request,
         "tenant_id": tenant.id,
         "connected": is_cliniko and bool(config.get("api_key")),
-        "api_key": config.get("api_key", ""),
-        "shard": config.get("shard", "au1"),
-        "webhook_secret": config.get("webhook_secret", ""),
     })
 
 
@@ -49,23 +73,23 @@ def configure_cliniko(
     db: Session = Depends(get_db),
     tenant: Tenant = Depends(get_admin_tenant),
 ):
+    api_key = data.api_key.strip()
+    if not api_key:
+        raise HTTPException(status_code=400, detail="API Key is required")
+
+    shard = _discover_shard(api_key)
+    if not shard:
+        return {"ok": True, "connected": False, "message": "Connection failed — check API key"}
+
     tenant.crm_config = {
-        "api_key": data.api_key,
-        "shard": data.shard,
-        "webhook_secret": data.webhook_secret,
+        "api_key": api_key,
+        "shard": shard,
         "user_agent": "Jeeves (devs@jeeves.ai)",
     }
     tenant.crm_provider = "cliniko"
     db.flush()
     db.commit()
-
-    try:
-        adapter = get_crm_adapter_for_tenant(tenant)
-        if adapter and adapter.test_connection():
-            return {"ok": True, "connected": True, "message": "Connected to Cliniko API"}
-        return {"ok": True, "connected": False, "message": "Saved but connection failed — check API key and shard"}
-    except Exception as e:
-        return {"ok": True, "connected": False, "message": f"Saved but connection failed: {e}"}
+    return {"ok": True, "connected": True, "message": "Connected to Cliniko API"}
 
 
 @router.post("/api/cliniko/test")
