@@ -43,7 +43,11 @@
   .modal-step { margin-bottom: 20px; }
   .modal-step-label { font-size: 12px; font-weight: 600; color: var(--muted2); margin-bottom: 4px; }
   .modal-step input, .modal-step select { width: 100%; padding: 15px 14px; padding-right: 48px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; box-sizing: border-box; text-overflow: ellipsis; }
-  .modal-step input:focus { border-color: var(--accent); outline: none; }
+  .modal-step input.err { border-color: var(--red); box-shadow: 0 0 0 1px var(--red); }
+  .modal-step input.ok { border-color: #34d399; box-shadow: 0 0 0 1px #34d399; }
+  .modal-step-hint { font-size: 12px; color: var(--muted2); margin-top: -12px; margin-bottom: 16px; line-height: 1.5; }
+  .modal-step-hint a { color: var(--accent); text-decoration: underline; cursor: pointer; }
+  .modal-step-hint a:hover { opacity: .8; }
   .modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
   .modal-actions button { padding: 8px 20px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; font-size: 13px; transition: all .15s; font-weight: 500; }
   .modal-actions button:hover { border-color: var(--accent); color: var(--accent); }
@@ -103,10 +107,11 @@
 <div class="modal-overlay" id="crmModal">
   <div class="modal-box">
     <button class="hub-modal-close" onclick="closeModal('crmModal')">✕</button>
-    <div class="modal-title" id="crmModalTitle">Connect CRM</div>
+    <div class="modal-title"><span id="crmModalIcon"></span><span id="crmModalTitle">Connect CRM</span></div>
     <div class="modal-step" id="crmApiKeyStep">
       <div class="modal-step-label">API Key</div>
       <div class="input-wrap"><input type="password" id="crmApiKey" placeholder="Paste your API key"><button class="eye-btn" onclick="toggleEye('crmApiKey',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      <p class="modal-step-hint">Paste your API key to sync patients and appointments. <a href="https://help.cliniko.com" target="_blank">Where can I find it?</a></p>
     </div>
     <div class="modal-step" id="crmCompanyIdStep" style="display:none">
       <div class="modal-step-label">Company ID</div>
@@ -374,7 +379,12 @@ let crmProvider = 'cliniko';
 function openCrmModal(provider) {
   crmProvider = provider;
   const isCliniko = provider === 'cliniko';
-  document.getElementById('crmModalTitle').textContent = isCliniko ? 'Cliniko' : 'Pabau';
+  const titleEl = document.getElementById('crmModalTitle');
+  const iconEl = document.getElementById('crmModalIcon');
+  titleEl.textContent = isCliniko ? 'Cliniko' : 'Pabau';
+  iconEl.innerHTML = isCliniko
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="#22a67e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;vertical-align:middle;margin-right:8px"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="#5e6ad2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;vertical-align:middle;margin-right:8px"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>';
   document.getElementById('crmApiKeyStep').style.display = '';
   document.getElementById('crmCompanyIdStep').style.display = isCliniko ? 'none' : '';
   document.getElementById('crmWebhookStep').style.display = isCliniko ? 'none' : '';
@@ -384,21 +394,19 @@ function openCrmModal(provider) {
   btn.textContent = 'Connect';
   btn.className = 'primary';
   const apiKeyInput = document.getElementById('crmApiKey');
+  apiKeyInput.className = '';
   const int = _integrations.find(i => i.id === provider);
   if (int && int.status === 'connected') {
     const meta = int.meta || {};
     apiKeyInput.value = meta.api_key || '';
-    apiKeyInput.type = 'text';
-    apiKeyInput.title = apiKeyInput.value;
-    document.getElementById('crmCompanyId').value = meta.company_id || '';
     btn.textContent = 'Save';
   } else {
     apiKeyInput.value = '';
-    apiKeyInput.type = 'password';
-    apiKeyInput.title = '';
     document.getElementById('crmCompanyId').value = '';
     document.getElementById('crmWebhookSecret').value = '';
   }
+  apiKeyInput.type = 'password';
+  apiKeyInput.title = apiKeyInput.value;
   openModal('crmModal');
 }
 
@@ -406,27 +414,32 @@ async function connectCrm() {
   const btn = document.getElementById('crmConnectBtn');
   btn.disabled = true;
   btn.textContent = 'Connecting...';
+  const apiKeyInput = document.getElementById('crmApiKey');
+  apiKeyInput.className = '';
   const result = document.getElementById('crmResult');
   result.style.display = 'none';
   try {
-    const body = { provider: crmProvider, api_key: document.getElementById('crmApiKey').value };
+    const body = { provider: crmProvider, api_key: apiKeyInput.value };
     if (crmProvider === 'pabau') {
       body.company_id = document.getElementById('crmCompanyId').value;
       body.webhook_secret = document.getElementById('crmWebhookSecret').value;
     }
     const data = await api('/admin/api/integrations/crm/configure', { method: 'POST', body });
     if (data.connected) {
-      showResult('crmResult', 'Connected successfully!', true);
+      apiKeyInput.className = 'ok';
+      showResult('crmResult', '✓ Connected successfully!', true);
       btn.textContent = 'Connected';
       btn.disabled = true;
       loadIntegrations();
     } else {
-      showResult('crmResult', data.message || 'Connection failed', false);
+      apiKeyInput.className = 'err';
+      showResult('crmResult', '✗ ' + (data.message || 'Invalid API key. Please check and try again.'), false);
       btn.disabled = false;
       btn.textContent = 'Connect';
     }
   } catch (e) {
-    showResult('crmResult', e.message, false);
+    apiKeyInput.className = 'err';
+    showResult('crmResult', '✗ ' + e.message, false);
     btn.disabled = false;
     btn.textContent = 'Connect';
   }
