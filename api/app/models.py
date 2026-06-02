@@ -45,6 +45,7 @@ class Tenant(Base):
     # CRM integration config (provider-agnostic)
     crm_provider = Column(String(50), default="pabau", nullable=False)
     crm_config = Column(JSONB, default=dict)
+    agent_config = Column(JSONB, default=dict)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 

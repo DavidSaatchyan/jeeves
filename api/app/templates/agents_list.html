@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block body %}
+<style>
+  .agent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
+  .agent-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 12px; cursor: pointer; transition: all .15s; }
+  .agent-card:hover { border-color: var(--border-bright); background: rgba(255,255,255,0.03); }
+  .agent-card-top { display: flex; align-items: flex-start; gap: 14px; }
+  .agent-card-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .agent-card-info { flex: 1; min-width: 0; }
+  .agent-card-name { font-size: 16px; font-weight: 600; }
+  .agent-card-desc { font-size: 13px; color: var(--muted2); margin-top: 2px; line-height: 1.5; }
+  .agent-card-meta { display: flex; align-items: center; gap: 12px; margin-top: 6px; flex-wrap: wrap; }
+  .agent-card-stat { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+  .agent-card-channel { width: 20px; height: 20px; border-radius: 4px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 12px; opacity: .5; }
+  .agent-card-channel.active { opacity: 1; background: rgba(91,192,222,0.12); }
+  .agent-card-lock { padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; color: var(--muted2); text-align: center; }
+  .toggle-wrap { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .toggle-switch { width: 36px; height: 20px; border-radius: 10px; background: var(--border); cursor: pointer; position: relative; transition: background .15s; }
+  .toggle-switch.on { background: var(--cyan); }
+  .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
+  .toggle-switch.on::after { transform: translateX(16px); }
+  .channel-icons { display: flex; gap: 4px; }
+</style>
+
+<h2 style="font-size:20px;font-weight:700;margin-bottom:20px">Agents</h2>
+<p style="font-size:14px;color:var(--muted2);margin-bottom:24px">Configure and manage your AI agents</p>
+
+<div class="agent-grid" id="agentGrid"></div>
+{% endblock %}
+
+{% block tail %}
+<script>
+async function toggleAgent(agentId, current) {
+  try {
+    await api(`/admin/api/agents/${agentId}/toggle`, {
+      method: 'POST',
+      body: { enabled: !current },
+    });
+    loadAgents();
+  } catch (e) {
+    console.error('toggle failed', e);
+  }
+}
+
+async function loadAgents() {
+  try {
+    const [agentsResp, channelsResp] = await Promise.all([
+      api('/admin/api/agents'),
+      api('/admin/api/channels'),
+    ]);
+    const agentsData = await agentsResp.json();
+    const channelsData = await channelsResp.json();
+
+    const grid = document.getElementById('agentGrid');
+    grid.innerHTML = agentsData.agents.map(a => {
+      const isIncoming = a.agent_id === 'incoming_line';
+      const iconBg = isIncoming ? 'rgba(91,192,222,0.12)' : 'rgba(107,114,128,0.12)';
+      const iconColor = isIncoming ? 'var(--cyan)' : 'var(--muted2)';
+      const iconSvg = isIncoming
+        ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+        : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+
+      // Channel icons
+      const wa = (channelsData.channels || []).find(c => c.channel_type === 'whatsapp');
+      const wd = (channelsData.channels || []).find(c => c.channel_type === 'widget');
+      const channelHtml = `<div class="channel-icons">
+        <div class="agent-card-channel ${wa && wa.status === 'active' ? 'active' : ''}" title="WhatsApp">💬</div>
+        <div class="agent-card-channel ${wd && wd.status === 'active' ? 'active' : ''}" title="Widget">🌐</div>
+      </div>`;
+
+      // Stats
+      const statHtml = isIncoming
+        ? `<span class="agent-card-stat" id="stat-${a.agent_id}">— conversations this month</span>`
+        : '';
+
+      const cardContent = a.enabled === false
+        ? `<div class="agent-card-lock">This agent is currently disabled. Enable it to start configuring.</div>`
+        : '';
+
+      return `<div class="agent-card" onclick="window.location.href='/admin/agents/${a.agent_id}'">
+        <div class="agent-card-top">
+          <div class="agent-card-icon" style="background:${iconBg};color:${iconColor}">${iconSvg}</div>
+          <div class="agent-card-info">
+            <div class="agent-card-name">${a.agent_id === 'incoming_line' ? 'Incoming Line' : a.agent_id}</div>
+            <div class="agent-card-desc">${a.description || ''}</div>
+            <div class="agent-card-meta">
+              ${channelHtml}
+              ${statHtml}
+            </div>
+          </div>
+          <div class="toggle-wrap">
+            <div class="toggle-switch ${a.enabled !== false ? 'on' : ''}" onclick="event.stopPropagation();toggleAgent('${a.agent_id}', ${a.enabled !== false})"></div>
+          </div>
+        </div>
+        ${cardContent}
+      </div>`;
+    }).join('');
+
+    // Load stats
+    if (agentsData.agents.some(a => a.agent_id === 'incoming_line')) {
+      try {
+        const statResp = await api('/admin/api/agents/incoming_line/stats');
+        const statData = await statResp.json();
+        const el = document.getElementById('stat-incoming_line');
+        if (el) el.textContent = `${statData.conversations_this_month || 0} conversations this month`;
+      } catch (e) { /* ignore */ }
+    }
+
+  } catch (e) {
+    document.getElementById('agentGrid').innerHTML = `<div class="card" style="padding:40px;text-align:center;color:var(--muted2)">Error loading agents: ${e.message}</div>`;
+  }
+}
+
+loadAgents();
+</script>
+{% endblock %}

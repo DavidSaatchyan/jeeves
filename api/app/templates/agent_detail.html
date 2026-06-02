@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+{% block body %}
+<style>
+  .agent-detail-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+  .agent-detail-back { font-size: 13px; color: var(--muted2); text-decoration: none; display: flex; align-items: center; gap: 4px; }
+  .agent-detail-back:hover { color: var(--text); }
+  .agent-detail-title { font-size: 20px; font-weight: 700; }
+  .agent-detail-subtitle { font-size: 13px; color: var(--muted2); }
+
+  /* Two-panel layout */
+  .agent-layout { display: flex; gap: 0; min-height: 600px; }
+  .agent-left { flex: 0 0 62%; border-right: 1px solid var(--border); padding-right: 0; }
+  .agent-right { flex: 0 0 38%; padding-left: 0; }
+
+  /* Left panel tabs */
+  .config-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 0; }
+  .config-tab { padding: 12px 18px; font-size: 13px; font-weight: 500; color: var(--muted2); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; transition: all .1s; }
+  .config-tab:hover { color: var(--text); }
+  .config-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  .config-panels { padding: 20px; }
+  .config-panel { display: none; }
+  .config-panel.active { display: block; }
+
+  .form-group { margin-bottom: 18px; }
+  .form-label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: var(--muted2); margin-bottom: 6px; }
+  .form-input, .form-select, .form-textarea { width: 100%; max-width: 480px; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 14px; }
+  .form-textarea { min-height: 100px; resize: vertical; font-family: inherit; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--accent); }
+  .form-hint { font-size: 11px; color: var(--muted2); margin-top: 4px; }
+
+  .radio-group { display: flex; gap: 16px; flex-wrap: wrap; }
+  .radio-group label { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+  .radio-group input[type="radio"] { accent-color: var(--accent); }
+
+  .chk-list { display: flex; flex-direction: column; gap: 6px; }
+  .chk-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 14px; }
+  .chk-row input[type="checkbox"] { accent-color: var(--accent); }
+
+  .rule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .rule-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px; }
+  .rule-label { font-size: 12px; font-weight: 600; color: var(--text); display: block; margin-bottom: 4px; }
+  .rule-desc { font-size: 11px; color: var(--muted2); margin-bottom: 8px; }
+  .rule-card input[type="number"] { width: 80px; padding: 6px 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-size: 13px; }
+
+  .btn { padding: 8px 18px; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
+  .btn:hover { filter: brightness(1.1); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { background: rgba(255,255,255,0.04); }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+  .btn-group { display: flex; gap: 8px; margin-top: 16px; }
+
+  /* Right panel — Playground */
+  .playground { display: flex; flex-direction: column; height: 100%; padding: 20px; }
+  .playground h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .playground-desc { font-size: 12px; color: var(--muted2); margin-bottom: 12px; }
+  .playground-messages { flex: 1; min-height: 300px; max-height: 450px; overflow-y: auto; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .msg { max-width: 85%; padding: 8px 12px; border-radius: 10px; font-size: 13px; line-height: 1.5; }
+  .msg.user { align-self: flex-end; background: var(--accent); color: #fff; }
+  .msg.assistant { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); }
+  .msg.fact { align-self: flex-start; font-size: 11px; color: var(--muted2); background: transparent; border: none; padding: 2px 0; }
+
+  .playground-input-row { display: flex; gap: 6px; margin-top: 10px; }
+  .playground-input-row input { flex: 1; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 13px; }
+  .playground-input-row input:focus { outline: none; border-color: var(--accent); }
+  .playground-input-row button { padding: 8px 16px; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
+  .playground-input-row button:disabled { opacity: .5; cursor: default; }
+
+  .playground-actions { display: flex; gap: 6px; margin-top: 10px; }
+  .playground-actions button { font-size: 12px; }
+</style>
+
+<div class="agent-detail-header">
+  <a href="/admin/agents" class="agent-detail-back">← Agents</a>
+  <div>
+    <div class="agent-detail-title" id="agentTitle">{{ agent_id }}</div>
+    <div class="agent-detail-subtitle">Configure your agent's personality, skills, and channels</div>
+  </div>
+</div>
+
+<div class="agent-layout">
+  <!-- LEFT: 4 tabs -->
+  <div class="agent-left">
+    <div class="config-tabs">
+      <button class="config-tab active" data-tab="personality">Personality</button>
+      <button class="config-tab" data-tab="skills">Skills</button>
+      <button class="config-tab" data-tab="knowledge">Knowledge</button>
+      <button class="config-tab" data-tab="channels">Channels</button>
+    </div>
+
+    <div class="config-panels">
+      <!-- Personality -->
+      <div class="config-panel active" id="panel-personality">
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input class="form-input" id="cfg-name" placeholder="e.g. Sarah">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Gender</label>
+          <div class="radio-group">
+            <label><input type="radio" name="gender" value="female"> Female</label>
+            <label><input type="radio" name="gender" value="male"> Male</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tone of Voice</label>
+          <div class="radio-group">
+            <label><input type="radio" name="tov" value="expert"> Expert</label>
+            <label><input type="radio" name="tov" value="friendly"> Friendly</label>
+            <label><input type="radio" name="tov" value="humorous"> Humorous</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">System Prompt</label>
+          <textarea class="form-textarea" id="cfg-system-prompt" placeholder="System prompt for the AI"></textarea>
+        </div>
+        <button class="btn" onclick="savePersonality()">Save Personality</button>
+      </div>
+
+      <!-- Skills -->
+      <div class="config-panel" id="panel-skills">
+        <h4 style="font-size:13px;font-weight:600;margin-bottom:12px">Capabilities</h4>
+        <div class="chk-list" id="skillsList"></div>
+
+        <h4 style="font-size:13px;font-weight:600;margin:20px 0 12px">Hard Rules</h4>
+        <div class="rule-grid" id="rulesGrid">
+          <div class="rule-card">
+            <label class="rule-label" for="rule-min-hours">Min Hours Before</label>
+            <div class="rule-desc">Minimum hours before appointment</div>
+            <input type="number" id="rule-min-hours" min="0" max="72" value="2">
+          </div>
+          <div class="rule-card">
+            <label class="rule-label" for="rule-depth">Booking Depth</label>
+            <div class="rule-desc">Max days into future</div>
+            <input type="number" id="rule-depth" min="1" max="365" value="14">
+          </div>
+          <div class="rule-card">
+            <label class="rule-label" for="rule-duplicates">Prevent Duplicates</label>
+            <div class="rule-desc">Block duplicate bookings</div>
+            <input type="checkbox" id="rule-duplicates" checked style="accent-color:var(--accent);margin-top:4px">
+          </div>
+        </div>
+        <button class="btn" onclick="saveSkills()" style="margin-top:16px">Save Skills</button>
+      </div>
+
+      <!-- Knowledge -->
+      <div class="config-panel" id="panel-knowledge">
+        <p style="font-size:13px;color:var(--muted2);margin-bottom:16px">Select folders the agent can search for answers.</p>
+        <div class="chk-list" id="knowledgeList"></div>
+        <button class="btn" onclick="saveKnowledge()" style="margin-top:12px">Save Knowledge Sources</button>
+      </div>
+
+      <!-- Channels -->
+      <div class="config-panel" id="panel-channels">
+        <p style="font-size:13px;color:var(--muted2);margin-bottom:16px">Connect communication channels.</p>
+        <div class="chk-list">
+          <label class="chk-row"><input type="checkbox" id="ch-whatsapp"> WhatsApp</label>
+          <label class="chk-row"><input type="checkbox" id="ch-widget"> Web Widget</label>
+        </div>
+        <button class="btn" onclick="saveChannels()" style="margin-top:12px">Save Channels</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Playground (always visible) -->
+  <div class="agent-right">
+    <div class="playground">
+      <h3>Playground</h3>
+      <div class="playground-desc">Test the agent with a sample message.</div>
+      <div class="playground-messages" id="playgroundMessages">
+        <div class="msg assistant">Hello! I'm the AI assistant. Send me a message to test.</div>
+      </div>
+      <div class="playground-input-row">
+        <input id="playgroundInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendPlayground()">
+        <button id="playgroundSendBtn" onclick="sendPlayground()">Send</button>
+      </div>
+      <div class="playground-actions">
+        <button class="btn btn-sm btn-outline" onclick="refreshPlayground()">🔄 Refresh Agent</button>
+        <button class="btn btn-sm" onclick="publishAgent()">📢 Publish</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block tail %}
+<script>
+const AGENT_ID = '{{ agent_id }}';
+
+// ── Tab switching ────────────────────────────────────────────────
+document.querySelectorAll('.config-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.config-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.config-panel').forEach(p => p.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('panel-' + this.dataset.tab).classList.add('active');
+    if (this.dataset.tab === 'knowledge') loadKnowledgeTree();
+  });
+});
+
+// ── Load config ──────────────────────────────────────────────────
+let currentConfig = {};
+
+async function loadConfig() {
+  try {
+    const resp = await api(`/admin/api/agents/${AGENT_ID}/config`);
+    currentConfig = await resp.json();
+    applyConfig(currentConfig);
+  } catch (e) {
+    console.error('loadConfig failed', e);
+  }
+}
+
+function applyConfig(cfg) {
+  const p = cfg.personality || {};
+  document.getElementById('cfg-name').value = p.name || '';
+  const genderRadio = document.querySelector('input[name="gender"][value="' + (p.gender || 'female') + '"]');
+  if (genderRadio) genderRadio.checked = true;
+  const tovRadio = document.querySelector('input[name="tov"][value="' + (p.tov || 'friendly') + '"]');
+  if (tovRadio) tovRadio.checked = true;
+  document.getElementById('cfg-system-prompt').value = p.system_prompt || '';
+
+  const skills = cfg.skills || {};
+  const caps = skills.capabilities || {};
+  const rules = skills.hard_rules || {};
+
+  const skillDefs = [
+    { id: 'search_slots', label: 'Search Available Slots' },
+    { id: 'hold_slot', label: 'Hold Slot (10 min)' },
+    { id: 'create_booking', label: 'Create Booking' },
+    { id: 'reschedule', label: 'Reschedule' },
+    { id: 'cancel', label: 'Cancel' },
+  ];
+
+  const skillsHtml = skillDefs.map(s => `
+    <label class="chk-row">
+      <input type="checkbox" data-skill="${s.id}" ${caps[s.id] !== false ? 'checked' : ''}>
+      ${s.label}
+    </label>
+  `).join('');
+  document.getElementById('skillsList').innerHTML = skillsHtml;
+
+  document.getElementById('rule-min-hours').value = rules.min_hours_before ?? 2;
+  document.getElementById('rule-depth').value = rules.booking_depth_days ?? 14;
+  document.getElementById('rule-duplicates').checked = rules.prevent_duplicates !== false;
+
+  const ch = cfg.channels || {};
+  document.getElementById('ch-whatsapp').checked = ch.whatsapp === true;
+  document.getElementById('ch-widget').checked = ch.widget === true;
+}
+
+// ── Save personality ─────────────────────────────────────────────
+async function savePersonality() {
+  try {
+    const gender = document.querySelector('input[name="gender"]:checked');
+    const tov = document.querySelector('input[name="tov"]:checked');
+    const body = {
+      name: document.getElementById('cfg-name').value,
+      gender: gender ? gender.value : 'female',
+      tov: tov ? tov.value : 'friendly',
+      system_prompt: document.getElementById('cfg-system-prompt').value,
+    };
+    await api(`/admin/api/agents/${AGENT_ID}/config`, { method: 'PUT', body });
+    showToast('Personality saved');
+  } catch (e) { showToast('Error: ' + e.message, true); }
+}
+
+// ── Save skills ──────────────────────────────────────────────────
+async function saveSkills() {
+  try {
+    const caps = {};
+    document.querySelectorAll('#skillsList input[type="checkbox"]').forEach(cb => {
+      caps[cb.dataset.skill] = cb.checked;
+    });
+    const body = {
+      capabilities: caps,
+      hard_rules: {
+        min_hours_before: parseInt(document.getElementById('rule-min-hours').value) || 2,
+        booking_depth_days: parseInt(document.getElementById('rule-depth').value) || 14,
+        prevent_duplicates: document.getElementById('rule-duplicates').checked,
+      },
+    };
+    await api(`/admin/api/agents/${AGENT_ID}/skills`, { method: 'PUT', body });
+    showToast('Skills saved');
+  } catch (e) { showToast('Error: ' + e.message, true); }
+}
+
+// ── Knowledge tree ───────────────────────────────────────────────
+let knowledgeFiles = [];
+
+async function loadKnowledgeTree() {
+  try {
+    const resp = await api('/admin/api/knowledge/tree');
+    const data = await resp.json();
+    knowledgeFiles = data.files || [];
+    const selected = currentConfig.knowledge_folders || [];
+    const html = knowledgeFiles.map(f => `
+      <label class="chk-row">
+        <input type="checkbox" value="${f.id}" ${selected.includes(f.id) ? 'checked' : ''}>
+        ${esc(f.filename)}
+        <span style="font-size:11px;color:var(--muted2);margin-left:auto">${f.file_type || ''}</span>
+      </label>
+    `).join('');
+    document.getElementById('knowledgeList').innerHTML = html || '<p style="color:var(--muted2);font-size:13px">No knowledge files uploaded yet.</p>';
+  } catch (e) {
+    document.getElementById('knowledgeList').innerHTML = '<p style="color:var(--muted2);font-size:13px">Error loading knowledge tree.</p>';
+  }
+}
+
+async function saveKnowledge() {
+  try {
+    const checked = [];
+    document.querySelectorAll('#knowledgeList input[type="checkbox"]:checked').forEach(cb => {
+      checked.push(cb.value);
+    });
+    await api(`/admin/api/agents/${AGENT_ID}/knowledge`, { method: 'PUT', body: { folder_ids: checked } });
+    showToast('Knowledge sources saved');
+  } catch (e) { showToast('Error: ' + e.message, true); }
+}
+
+// ── Save channels ────────────────────────────────────────────────
+async function saveChannels() {
+  try {
+    const body = {
+      whatsapp: document.getElementById('ch-whatsapp').checked,
+      widget: document.getElementById('ch-widget').checked,
+    };
+    await api(`/admin/api/agents/${AGENT_ID}/channels`, { method: 'PUT', body });
+    showToast('Channels saved');
+  } catch (e) { showToast('Error: ' + e.message, true); }
+}
+
+// ── Playground ───────────────────────────────────────────────────
+async function sendPlayground() {
+  const input = document.getElementById('playgroundInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  const messagesDiv = document.getElementById('playgroundMessages');
+  messagesDiv.innerHTML += `<div class="msg user">${esc(msg)}</div>`;
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+  const btn = document.getElementById('playgroundSendBtn');
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    const resp = await api(`/admin/api/agents/${AGENT_ID}/playground`, {
+      method: 'POST',
+      body: { message: msg },
+    });
+    const data = await resp.json();
+    messagesDiv.innerHTML += `<div class="msg assistant">${esc(data.response || '(no response)')}</div>`;
+    const facts = [];
+    if (data.intent) facts.push(`Intent: ${esc(data.intent)}`);
+    if (data.latency_ms != null) facts.push(`${data.latency_ms}ms`);
+    if (data.escalate) facts.push('⚠ Escalated');
+    if (facts.length) {
+      messagesDiv.innerHTML += `<div class="msg fact">${facts.join(' · ')}</div>`;
+    }
+  } catch (e) {
+    messagesDiv.innerHTML += `<div class="msg fact" style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send';
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+}
+
+function refreshPlayground() {
+  document.getElementById('playgroundMessages').innerHTML = '<div class="msg assistant">Reloaded with current config. Send a message to test.</div>';
+}
+
+async function publishAgent() {
+  try {
+    const personality = {
+      name: document.getElementById('cfg-name').value,
+      gender: document.querySelector('input[name="gender"]:checked')?.value || 'female',
+      tov: document.querySelector('input[name="tov"]:checked')?.value || 'friendly',
+      system_prompt: document.getElementById('cfg-system-prompt').value,
+    };
+    const caps = {};
+    document.querySelectorAll('#skillsList input[type="checkbox"]').forEach(cb => {
+      caps[cb.dataset.skill] = cb.checked;
+    });
+    const skills = {
+      capabilities: caps,
+      hard_rules: {
+        min_hours_before: parseInt(document.getElementById('rule-min-hours').value) || 2,
+        booking_depth_days: parseInt(document.getElementById('rule-depth').value) || 14,
+        prevent_duplicates: document.getElementById('rule-duplicates').checked,
+      },
+    };
+    const folderIds = [];
+    document.querySelectorAll('#knowledgeList input[type="checkbox"]:checked').forEach(cb => folderIds.push(cb.value));
+    const channels = {
+      whatsapp: document.getElementById('ch-whatsapp').checked,
+      widget: document.getElementById('ch-widget').checked,
+    };
+
+    await api(`/admin/api/agents/${AGENT_ID}/publish`, {
+      method: 'POST',
+      body: { personality, skills, knowledge_folders: folderIds, channels },
+    });
+    showToast('Agent published and enabled');
+  } catch (e) { showToast('Error: ' + e.message, true); }
+}
+
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+}
+
+function showToast(msg, isError) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;bottom:24px;right:24px;padding:10px 18px;border-radius:8px;font-size:13px;z-index:999;background:${isError ? 'var(--red)' : 'var(--green)'};color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.3)`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+loadConfig();
+</script>
+{% endblock %}

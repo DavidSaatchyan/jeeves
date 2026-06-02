@@ -15,7 +15,12 @@ from .router import SESSION_COOKIE, router, templates
 @router.get("", response_class=HTMLResponse)
 @router.get("/", response_class=HTMLResponse)
 def home(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return RedirectResponse(url="/admin/agents", status_code=status.HTTP_302_FOUND)
+    return RedirectResponse(url="/admin/dashboard", status_code=status.HTTP_302_FOUND)
+
+
+@router.get("/dashboard", response_class=HTMLResponse)
+def dashboard_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
+    return templates.TemplateResponse(request, "dashboard.html", context=_ctx(request))
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -71,11 +76,6 @@ def settings_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
 @router.get("/connections", response_class=HTMLResponse)
 def connections_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
     return templates.TemplateResponse(request, "connections.html", context=_ctx(request))
-
-
-@router.get("/agents", response_class=HTMLResponse)
-def agents_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "agents.html", context=_ctx(request))
 
 
 @router.get("/knowledge", response_class=HTMLResponse)

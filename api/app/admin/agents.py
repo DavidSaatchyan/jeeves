@@ -1,23 +1,29 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
-from fastapi import Depends, Query
+from fastapi import Depends, Query, Request
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from ..agents.default_config import get_default_agent_config
+from ..agents.incoming_line import IncomingLineAgent
+from ..agents.registry import list_agents
 from ..db import get_db
 from ..models import (
     AIInteraction,
+    ChatLog,
     Communication,
+    FileRecord,
     Tenant,
     TimelineEvent,
     Workflow,
     WorkflowTransition,
 )
-from .deps import get_admin_tenant
-from .router import router
+from .deps import _ctx, get_admin_tenant
+from .router import router, templates
 
 
 class _QueueActionBody(BaseModel):
@@ -27,6 +33,283 @@ class _QueueActionBody(BaseModel):
 class _PolicyUpdateBody(BaseModel):
     section: str
     values: dict = {}
+
+
+# ── SSR pages ────────────────────────────────────────────────────
+
+
+@router.get("/agents", response_class=HTMLResponse)
+def agents_list_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
+    return templates.TemplateResponse(request, "agents_list.html", context=_ctx(request))
+
+
+@router.get("/agents/{agent_id}", response_class=HTMLResponse)
+def agent_detail_page(
+    request: Request,
+    agent_id: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+):
+    ctx = _ctx(request)
+    ctx["agent_id"] = agent_id
+    ctx["agent_config"] = tenant.agent_config or get_default_agent_config()
+    return templates.TemplateResponse(request, "agent_detail.html", context=ctx)
+
+
+# ── API: list agents ──────────────────────────────────────────────
+
+
+@router.get("/api/agents")
+def api_agents(tenant: Tenant = Depends(get_admin_tenant)):
+    registered = list_agents()
+    cfg = tenant.agent_config or {}
+    return {
+        "agents": [
+            {
+                "agent_id": a.agent_id,
+                "description": a.description,
+                "enabled": cfg.get("enabled", True),
+            }
+            for a in registered
+        ],
+    }
+
+
+# ── API: get config ──────────────────────────────────────────────
+
+
+@router.get("/api/agents/{agent_id}/config")
+def api_agent_config(
+    agent_id: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+):
+    cfg = tenant.agent_config or {}
+    defaults = get_default_agent_config()
+    merged = dict(defaults)
+    merged.update(cfg)
+    for section in ("personality", "skills", "channels"):
+        if section in defaults:
+            s = merged.setdefault(section, {})
+            for k, v in defaults[section].items():
+                s.setdefault(k, v)
+    return merged
+
+
+# ── API: save personality ────────────────────────────────────────
+
+
+@router.put("/api/agents/{agent_id}/config")
+def api_agent_config_save(
+    agent_id: str,
+    body: dict,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    cfg = dict(tenant.agent_config or {})
+    personality = cfg.setdefault("personality", {})
+    for k in ("name", "gender", "tov", "system_prompt"):
+        if k in body:
+            personality[k] = body[k]
+    tenant.agent_config = cfg
+    db.commit()
+    return {"ok": True}
+
+
+# ── API: save skills ──────────────────────────────────────────────
+
+
+@router.put("/api/agents/{agent_id}/skills")
+def api_agent_skills_save(
+    agent_id: str,
+    body: dict,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    cfg = dict(tenant.agent_config or {})
+    cfg["skills"] = {
+        "capabilities": body.get("capabilities", {}),
+        "hard_rules": body.get("hard_rules", {}),
+    }
+    tenant.agent_config = cfg
+    db.commit()
+    return {"ok": True}
+
+
+# ── API: save knowledge folders ──────────────────────────────────
+
+
+@router.put("/api/agents/{agent_id}/knowledge")
+def api_agent_knowledge_save(
+    agent_id: str,
+    body: dict,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    cfg = dict(tenant.agent_config or {})
+    cfg["knowledge_folders"] = body.get("folder_ids", [])
+    tenant.agent_config = cfg
+    db.commit()
+    return {"ok": True}
+
+
+# ── API: save channels ────────────────────────────────────────────
+
+
+@router.put("/api/agents/{agent_id}/channels")
+def api_agent_channels_save(
+    agent_id: str,
+    body: dict,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    cfg = dict(tenant.agent_config or {})
+    cfg["channels"] = {
+        "whatsapp": body.get("whatsapp"),
+        "widget": body.get("widget"),
+    }
+    tenant.agent_config = cfg
+    db.commit()
+    return {"ok": True}
+
+
+# ── API: toggle ───────────────────────────────────────────────────
+
+
+@router.post("/api/agents/{agent_id}/toggle")
+def api_agent_toggle(
+    agent_id: str,
+    body: dict,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    cfg = dict(tenant.agent_config or {})
+    cfg["enabled"] = body.get("enabled", True)
+    tenant.agent_config = cfg
+    db.commit()
+    return {"ok": True, "enabled": cfg["enabled"]}
+
+
+# ── API: publish ──────────────────────────────────────────────────
+
+
+@router.post("/api/agents/{agent_id}/publish")
+def api_agent_publish(
+    agent_id: str,
+    body: dict,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    cfg = dict(tenant.agent_config or {})
+    if "personality" in body:
+        cfg["personality"] = body["personality"]
+    if "skills" in body:
+        cfg["skills"] = body["skills"]
+    if "knowledge_folders" in body:
+        cfg["knowledge_folders"] = body["knowledge_folders"]
+    if "channels" in body:
+        cfg["channels"] = body["channels"]
+    cfg["enabled"] = True
+    tenant.agent_config = cfg
+    db.commit()
+    return {"ok": True, "message": "Agent published and enabled"}
+
+
+# ── API: playground ──────────────────────────────────────────────
+
+
+@router.post("/api/agents/{agent_id}/playground")
+async def api_agent_playground(
+    agent_id: str,
+    body: dict,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    import time
+
+    message = body.get("message", "")
+    config_override = body.get("config_override")
+    t0 = time.monotonic()
+
+    if config_override:
+        from ..agents.default_config import get_default_agent_config
+        defaults = get_default_agent_config()
+        merged = dict(defaults)
+        merged.update(config_override)
+        for section in ("personality", "skills", "channels"):
+            if section in defaults:
+                s = merged.setdefault(section, {})
+                for k, v in defaults[section].items():
+                    s.setdefault(k, v)
+        original = tenant.agent_config
+        tenant.agent_config = merged
+        db.flush()
+        try:
+            agent = IncomingLineAgent()
+            result = await agent.handle(
+                tenant_id=str(tenant.id),
+                customer_id="__playground__",
+                message=message,
+                db=db,
+            )
+        finally:
+            tenant.agent_config = original
+            db.rollback()
+    else:
+        agent = IncomingLineAgent()
+        result = await agent.handle(
+            tenant_id=str(tenant.id),
+            customer_id="__playground__",
+            message=message,
+            db=db,
+        )
+
+    latency_ms = int((time.monotonic() - t0) * 1000)
+    return {
+        "response": result.response,
+        "intent": result.intent,
+        "escalate": result.escalate,
+        "latency_ms": latency_ms,
+        "steps": [{"icon": "🤖", "label": "Ответ ИИ", "detail": result.response or ""}],
+    }
+
+
+# ── API: stats ────────────────────────────────────────────────────
+
+
+@router.get("/api/agents/{agent_id}/stats")
+def api_agent_stats(
+    agent_id: str,
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    month_start = date.today().replace(day=1)
+    total = db.query(ChatLog).filter(
+        ChatLog.tenant_id == tenant.id,
+        ChatLog.created_at >= month_start,
+    ).count()
+    return {"conversations_this_month": total}
+
+
+# ── API: knowledge tree ──────────────────────────────────────────
+
+
+@router.get("/api/knowledge/tree")
+def api_knowledge_tree(
+    tenant: Tenant = Depends(get_admin_tenant),
+    db: Session = Depends(get_db),
+):
+    files = db.query(FileRecord).filter(
+        FileRecord.tenant_id == tenant.id,
+        FileRecord.status == "ready",
+    ).order_by(FileRecord.filename).all()
+    return {
+        "files": [
+            {"id": str(f.id), "filename": f.filename, "file_type": f.file_type}
+            for f in files
+        ],
+    }
+
+
+# ── Old workflow routes (keep as-is) ─────────────────────────────
 
 
 @router.get("/api/agents/{agent_type}/feed")
