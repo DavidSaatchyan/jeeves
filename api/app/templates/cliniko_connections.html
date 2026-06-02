@@ -17,8 +17,8 @@
   <div class="int-inputs" style="margin-top:12px">
     <label>API Key</label>
     <div style="position:relative">
-      <input type="password" id="api_key" value="{{ api_key if connected else '' }}" placeholder="QM9qbG1u...abc-au1 — полностью из Cliniko" style="padding-right:40px"/>
-      <span id="eyeBtn" onclick="toggleKey()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;line-height:1;color:var(--muted2);user-select:none;display:flex">
+      <input type="password" id="api_key" value="{{ api_key if connected else '' }}" placeholder="QM9qbG1u...abc-au1" style="padding-right:40px" oninput="toggleEye()" onfocus="toggleEye()" onblur="toggleEye()"/>
+      <span id="eyeBtn" onclick="toggleKey()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;line-height:1;color:var(--muted2);user-select:none;display:none">
         <svg id="eyeOpen" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         <svg id="eyeClosed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/></svg>
       </span>
@@ -68,6 +68,11 @@ function showMsg(text, type) {
   msg.style.color = type === 'ok' ? 'var(--green)' : 'var(--red)';
 }
 
+function toggleEye() {
+  const eye = $('eyeBtn');
+  eye.style.display = apiKeyInput.value ? 'flex' : 'none';
+}
+
 function setState(connected, apiKey) {
   statusPill.textContent = connected ? 'Connected' : 'Not Connected';
   statusPill.className = 'pill ' + (connected ? 'ok' : 'muted');
@@ -77,6 +82,7 @@ function setState(connected, apiKey) {
   disconnectBtn.style.display = connected ? '' : 'none';
   apiKeyInput.disabled = false;
   if (connected && apiKey) apiKeyInput.value = apiKey;
+  toggleEye();
 }
 
 function toggleKey() {
@@ -99,6 +105,8 @@ function setBusy(busy) {
   disconnectBtn.disabled = busy;
   apiKeyInput.disabled = busy;
 }
+
+toggleEye();
 
 async function connectCliniko() {
   const key = apiKeyInput.value.trim();
