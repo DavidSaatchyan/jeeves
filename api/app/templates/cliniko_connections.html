@@ -20,8 +20,8 @@
   </div>
 
   <div class="flex" style="margin-top:16px">
-    <button id="connectBtn" class="accent">{{ 'Reconnect' if connected else 'Connect' }}</button>
-    <button id="disconnectBtn" class="ghost danger" {% if not connected %}disabled{% endif %}>Disconnect</button>
+    <button id="connectBtn" class="accent" onclick="connectCliniko()">{{ 'Reconnect' if connected else 'Connect' }}</button>
+    <button id="disconnectBtn" class="ghost danger" onclick="disconnectCliniko()" {% if not connected %}disabled{% endif %}>Disconnect</button>
   </div>
   <div id="clinikoMsg" style="margin-top:10px;font-size:13px;min-height:20px"></div>
 </div>
