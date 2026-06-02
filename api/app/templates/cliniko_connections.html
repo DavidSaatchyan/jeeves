@@ -38,8 +38,7 @@
   </div>
 
   <div class="flex" style="margin-top:16px">
-    <button class="accent" onclick="saveCliniko()">Save &amp; Connect</button>
-    <button class="ghost" onclick="testCliniko()">Test Connection</button>
+    <button class="accent" onclick="connectCliniko()">Connect</button>
     <button class="ghost danger" onclick="disconnectCliniko()" {% if not connected %}disabled{% endif %}>Disconnect</button>
   </div>
   <div id="clinikoMsg" class="err-msg" style="margin-top:10px"></div>
@@ -54,7 +53,7 @@
 </div>
 
 <script>
-async function saveCliniko() {
+async function connectCliniko() {
   const api_key = document.getElementById('api_key').value.trim();
   const shard = document.getElementById('shard').value;
   const webhook_secret = document.getElementById('webhook_secret').value.trim();
@@ -70,14 +69,6 @@ async function saveCliniko() {
     } else {
       showMsg('clinikoMsg', r.message || 'Saved but connection failed', 'err');
     }
-  } catch(e) {
-    showMsg('clinikoMsg', e.message, 'err');
-  }
-}
-async function testCliniko() {
-  try {
-    const r = await api('/admin/api/cliniko/test', { method: 'POST' });
-    showMsg('clinikoMsg', r.message || 'Connection OK', 'ok');
   } catch(e) {
     showMsg('clinikoMsg', e.message, 'err');
   }
