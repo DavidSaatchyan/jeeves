@@ -203,8 +203,7 @@ let currentConfig = {};
 
 async function loadConfig() {
   try {
-    const resp = await api(`/admin/api/agents/${AGENT_ID}/config`);
-    currentConfig = await resp.json();
+    currentConfig = await api(`/admin/api/agents/${AGENT_ID}/config`);
     applyConfig(currentConfig);
   } catch (e) {
     console.error('loadConfig failed', e);
@@ -290,8 +289,7 @@ let knowledgeFiles = [];
 
 async function loadKnowledgeTree() {
   try {
-    const resp = await api('/admin/api/knowledge/tree');
-    const data = await resp.json();
+    const data = await api('/admin/api/knowledge/tree');
     knowledgeFiles = data.files || [];
     const selected = currentConfig.knowledge_folders || [];
     const html = knowledgeFiles.map(f => `
@@ -346,11 +344,10 @@ async function sendPlayground() {
   btn.textContent = '...';
 
   try {
-    const resp = await api(`/admin/api/agents/${AGENT_ID}/playground`, {
+    const data = await api(`/admin/api/agents/${AGENT_ID}/playground`, {
       method: 'POST',
       body: { message: msg },
     });
-    const data = await resp.json();
     messagesDiv.innerHTML += `<div class="msg assistant">${esc(data.response || '(no response)')}</div>`;
     const facts = [];
     if (data.intent) facts.push(`Intent: ${esc(data.intent)}`);

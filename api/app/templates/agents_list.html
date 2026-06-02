@@ -44,12 +44,10 @@ async function toggleAgent(agentId, current) {
 
 async function loadAgents() {
   try {
-    const [agentsResp, channelsResp] = await Promise.all([
+    const [agentsData, channelsData] = await Promise.all([
       api('/admin/api/agents'),
       api('/admin/api/channels'),
     ]);
-    const agentsData = await agentsResp.json();
-    const channelsData = await channelsResp.json();
 
     const grid = document.getElementById('agentGrid');
     grid.innerHTML = agentsData.agents.map(a => {
@@ -99,8 +97,7 @@ async function loadAgents() {
     // Load stats
     if (agentsData.agents.some(a => a.agent_id === 'incoming_line')) {
       try {
-        const statResp = await api('/admin/api/agents/incoming_line/stats');
-        const statData = await statResp.json();
+        const statData = await api('/admin/api/agents/incoming_line/stats');
         const el = document.getElementById('stat-incoming_line');
         if (el) el.textContent = `${statData.conversations_this_month || 0} conversations this month`;
       } catch (e) { /* ignore */ }
