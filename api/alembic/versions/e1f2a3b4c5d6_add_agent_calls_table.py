@@ -44,7 +44,7 @@ def upgrade() -> None:
         sa.Column("message", sa.Text(), nullable=True),
         sa.Column("intent", sa.String(64), nullable=True),
         sa.Column("response", sa.Text(), nullable=True),
-        sa.Column("escalate", sa.Boolean(), server_default=sa.text("0")),
+        sa.Column("escalate", sa.Boolean(), server_default=sa.text("false")),
         sa.Column("actions", sa.JSON(), nullable=True),
         sa.Column("latency_ms", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
