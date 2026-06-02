@@ -11,11 +11,7 @@
       <div class="int-name">Cliniko</div>
       <div class="int-desc">Patients, appointments, and scheduling via the Cliniko API</div>
     </div>
-    {% if connected %}
-    <span class="pill ok" style="margin-left:auto">Connected</span>
-    {% else %}
-    <span class="pill muted" style="margin-left:auto">Not Connected</span>
-    {% endif %}
+    <span id="statusPill" class="pill {{ 'ok' if connected else 'muted' }}" style="margin-left:auto">{{ 'Connected' if connected else 'Not Connected' }}</span>
   </div>
 
   <div class="int-inputs" style="margin-top:12px">
@@ -24,8 +20,8 @@
   </div>
 
   <div class="flex" style="margin-top:16px">
-    <button class="accent" onclick="connectCliniko()">{{ 'Reconnect' if connected else 'Connect' }}</button>
-    <button class="ghost danger" onclick="disconnectCliniko()" {% if not connected %}disabled{% endif %}>Disconnect</button>
+    <button id="connectBtn" class="accent">{{ 'Reconnect' if connected else 'Connect' }}</button>
+    <button id="disconnectBtn" class="ghost danger" {% if not connected %}disabled{% endif %}>Disconnect</button>
   </div>
   <div id="clinikoMsg" class="err-msg" style="margin-top:10px"></div>
 </div>
@@ -39,38 +35,74 @@
 </div>
 
 <script>
+const $ = id => document.getElementById(id);
+const statusPill = $('statusPill');
+const apiKeyInput = $('api_key');
+const connectBtn = $('connectBtn');
+const disconnectBtn = $('disconnectBtn');
+const msg = $('clinikoMsg');
+
+function showMsg(text, type) {
+  msg.textContent = text;
+  msg.style.color = type === 'ok' ? '#22a67e' : '#e5484d';
+}
+
+function setConnected(connected, apiKey) {
+  statusPill.textContent = connected ? 'Connected' : 'Not Connected';
+  statusPill.className = 'pill ' + (connected ? 'ok' : 'muted');
+  connectBtn.textContent = connected ? 'Reconnect' : 'Connect';
+  disconnectBtn.disabled = !connected;
+  if (connected && apiKey) apiKeyInput.value = apiKey;
+}
+
+function setBusy(busy, label) {
+  connectBtn.disabled = busy;
+  disconnectBtn.disabled = busy;
+  apiKeyInput.disabled = busy;
+  if (busy && label) connectBtn.textContent = label;
+}
+
 async function connectCliniko() {
-  const api_key = document.getElementById('api_key').value.trim();
-  if (!api_key) { showMsg('clinikoMsg', 'API Key is required', 'err'); return; }
+  const key = apiKeyInput.value.trim();
+  if (!key) { showMsg('API Key is required', 'err'); return; }
+  msg.textContent = '';
+  const prevLabel = connectBtn.textContent;
+  setBusy(true, 'Connecting...');
   try {
     const r = await api('/admin/api/cliniko/configure', {
       method: 'POST',
-      body: { api_key },
+      body: { api_key: key },
     });
     if (r.connected) {
-      showMsg('clinikoMsg', r.message || 'Connected!', 'ok');
-      setTimeout(() => location.reload(), 1500);
+      setConnected(true, key);
+      showMsg(r.message || 'Connected!', 'ok');
     } else {
-      showMsg('clinikoMsg', r.message || 'Connection failed', 'err');
+      setConnected(false);
+      showMsg(r.message || 'Connection failed', 'err');
     }
   } catch(e) {
-    showMsg('clinikoMsg', e.message, 'err');
+    setConnected(false);
+    showMsg(e.message, 'err');
+  } finally {
+    setBusy(false);
+    if (connectBtn.textContent === 'Connecting...') connectBtn.textContent = prevLabel;
   }
 }
+
 async function disconnectCliniko() {
   if (!confirm('Disconnect Cliniko?')) return;
+  msg.textContent = '';
+  setBusy(true, 'Disconnecting...');
   try {
     await api('/admin/api/cliniko/disconnect', { method: 'POST' });
-    showMsg('clinikoMsg', 'Disconnected', 'ok');
-    setTimeout(() => location.reload(), 1000);
+    apiKeyInput.value = '';
+    setConnected(false);
+    showMsg('Disconnected', 'ok');
   } catch(e) {
-    showMsg('clinikoMsg', e.message, 'err');
+    showMsg(e.message, 'err');
+  } finally {
+    setBusy(false);
   }
-}
-function showMsg(id, text, type) {
-  const el = document.getElementById(id);
-  el.textContent = text;
-  el.style.color = type === 'ok' ? '#22a67e' : '#e5484d';
 }
 </script>
 {% endblock %}

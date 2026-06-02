@@ -68,6 +68,7 @@ def cliniko_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
         "request": request,
         "tenant_id": tenant.id,
         "connected": is_cliniko and bool(config.get("api_key")),
+        "api_key": config.get("api_key", ""),
     })
 
 
