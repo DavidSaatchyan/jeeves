@@ -14,6 +14,7 @@ from ..models import Patient, Tenant
 from ..rag import search as rag_search
 from .base import Agent, AgentAction, AgentResult
 from .default_config import get_default_agent_config
+from .registry import register
 
 logger = logging.getLogger("jeeves.agents.incoming_line")
 
@@ -216,3 +217,4 @@ class IncomingLineAgent(Agent):
 
 
 incoming_line = IncomingLineAgent()
+register(incoming_line)
