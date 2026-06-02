@@ -23,7 +23,22 @@
     <button id="connectBtn" class="accent" onclick="connectCliniko()">{{ 'Reconnect' if connected else 'Connect' }}</button>
     <button id="disconnectBtn" class="ghost danger" onclick="disconnectCliniko()" {% if not connected %}disabled{% endif %}>Disconnect</button>
   </div>
-  <div id="clinikoMsg" style="margin-top:10px;font-size:13px;min-height:20px"></div>
+  <div id="clinikoMsg" style="margin-top:10px;font-size:13px;min-height:20px;color:var(--red)"></div>
+</div>
+
+<div id="confirmOverlay" class="modal-overlay">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <h2>Disconnect Cliniko?</h2>
+    </div>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:20px;line-height:1.6">
+      The CRM provider will be reset to Pabau. The API key will be cleared.
+    </p>
+    <div class="flex" style="justify-content:flex-end;gap:10px">
+      <button class="ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="ghost danger" onclick="confirmDisconnect()">Disconnect</button>
+    </div>
+  </div>
 </div>
 
 <div class="help">
@@ -44,7 +59,7 @@ const msg = $('clinikoMsg');
 
 function showMsg(text, type) {
   msg.textContent = text;
-  msg.style.color = type === 'ok' ? '#22a67e' : '#e5484d';
+  msg.style.color = type === 'ok' ? 'var(--green)' : 'var(--red)';
 }
 
 function setState(connected, apiKey) {
@@ -52,6 +67,7 @@ function setState(connected, apiKey) {
   statusPill.className = 'pill ' + (connected ? 'ok' : 'muted');
   connectBtn.textContent = connected ? 'Reconnect' : 'Connect';
   connectBtn.disabled = false;
+  disconnectBtn.textContent = 'Disconnect';
   disconnectBtn.disabled = !connected;
   apiKeyInput.disabled = false;
   if (connected && apiKey) apiKeyInput.value = apiKey;
@@ -61,12 +77,6 @@ function setBusy(busy) {
   connectBtn.disabled = busy;
   disconnectBtn.disabled = busy;
   apiKeyInput.disabled = busy;
-}
-
-function showError(text) {
-  showMsg(text, 'err');
-  setState(false);
-  connectBtn.textContent = 'Connect';
 }
 
 async function connectCliniko() {
@@ -84,26 +94,35 @@ async function connectCliniko() {
       setState(true, key);
       showMsg('Connected!', 'ok');
     } else {
-      showError(r.message || 'Connection failed');
+      setState(false);
+      showMsg(r.message || 'Connection failed', 'err');
     }
   } catch(e) {
-    showError(e.message);
+    setState(false);
+    showMsg(e.message, 'err');
   }
 }
 
-async function disconnectCliniko() {
-  if (!confirm('Disconnect Cliniko?')) return;
-  msg.textContent = '';
+function disconnectCliniko() {
+  $('confirmOverlay').classList.add('show');
+}
+
+function closeConfirm() {
+  $('confirmOverlay').classList.remove('show');
+}
+
+async function confirmDisconnect() {
+  closeConfirm();
   disconnectBtn.textContent = 'Disconnecting...';
   setBusy(true);
+  msg.textContent = '';
   try {
     await api('/admin/api/cliniko/disconnect', { method: 'POST' });
     apiKeyInput.value = '';
     setState(false);
-    showMsg('Disconnected', 'ok');
   } catch(e) {
-    showError(e.message);
-    disconnectBtn.textContent = 'Disconnect';
+    setState(false);
+    showMsg(e.message, 'err');
   }
 }
 </script>
