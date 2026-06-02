@@ -162,8 +162,6 @@ def _run_alembic_migrations() -> None:
             if "tenants" in inspector.get_table_names():
                 command.stamp(alembic_cfg, "head")
                 logging.info("Existing DB detected — stamped alembic to head without re-running migrations")
-                # Ensure required columns exist after stamping
-                _ensure_missing_columns(engine)
             else:
                 logging.exception("Alembic migration failed — unexpected duplicate table without tenants")
         elif "can't render element of type" in error_str or "jsonb" in error_str.lower():
@@ -173,6 +171,9 @@ def _run_alembic_migrations() -> None:
             logging.info("Dev mode: created all tables via Base.metadata.create_all (bypassed alembic)")
         else:
             logging.exception("Alembic migration failed — check database connectivity and migration files")
+
+    # Ensure required columns exist that Alembic may have skipped (stamp fallback path)
+    _ensure_missing_columns(engine)
 
     # Ensure all ORM tables exist after Alembic (migration may rename tables, e.g. appointments → appointments_archive)
     from .models import Base
