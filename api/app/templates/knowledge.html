@@ -3,17 +3,6 @@
 <h1>Knowledge base</h1>
 <p class="page-desc">Memory system for AI agents.</p>
 
-<!-- ═══════════════ RAG SIMULATOR ═══════════════ -->
-<div id="simSection" class="sim-section">
-  <div class="sim-bar">
-    <input id="simQuery" type="text" class="sim-input" placeholder="Ask a question related to your knowledge base..." />
-    <button id="simBtn" class="btn sm" onclick="simulate()">Search</button>
-    <button id="simClearBtn" class="ghost sm" onclick="clearResults()" style="display:none">✕</button>
-  </div>
-  <div id="simResults" class="sim-results" style="display:none"></div>
-  <div id="simError" class="err-msg" style="display:none"></div>
-</div>
-
 <!-- ═══════════════ MAIN LAYOUT: SIDEBAR + CONTENT ═══════════════ -->
 <div class="kb-layout">
   <!-- ───── Left: Folder tree ───── -->
@@ -31,6 +20,16 @@
 
   <!-- ───── Right: Content ───── -->
   <main class="kb-main">
+    <!-- RAG Simulator -->
+    <div id="simSection" class="sim-section">
+      <div class="sim-bar">
+        <input id="simQuery" type="text" class="sim-input" placeholder="Ask a question related to your knowledge base..." />
+        <button id="simBtn" class="btn sm" onclick="simulate()">Search</button>
+        <button id="simClearBtn" class="ghost sm" onclick="clearResults()" style="display:none">✕</button>
+      </div>
+      <div id="simResults" class="sim-results" style="display:none"></div>
+      <div id="simError" class="err-msg" style="display:none"></div>
+    </div>
     <!-- Toolbar -->
     <div class="kb-toolbar">
       <span id="kbCurrentFolder" class="kb-current-folder">All files</span>
