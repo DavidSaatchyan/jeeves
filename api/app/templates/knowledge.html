@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>Knowledge base</h1>
-<p class="page-desc">AI memory system — documents, folders, and RAG testing.</p>
+<p class="page-desc">Knowledge base for AI agents — documents, folders, and RAG testing.</p>
 
 <!-- ═══════════════ RAG SIMULATOR ═══════════════ -->
 <div id="simSection" class="sim-section">
   <div class="sim-bar">
-    <input id="simQuery" type="text" class="sim-input" placeholder="Ask a question about your documents..." />
+    <input id="simQuery" type="text" class="sim-input" placeholder="Ask a question related to your knowledge base..." />
     <button id="simBtn" class="btn sm" onclick="simulate()">Search</button>
     <button id="simClearBtn" class="ghost sm" onclick="clearResults()" style="display:none">✕</button>
   </div>
