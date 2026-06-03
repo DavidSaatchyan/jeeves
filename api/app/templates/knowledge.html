@@ -3,15 +3,21 @@
 <h1>Knowledge base</h1>
 <p class="page-desc">AI memory system — documents, folders, and RAG testing.</p>
 
-<!-- ═══════════════ RAG SIMULATOR (sticky top) ═══════════════ -->
+<!-- ═══════════════ RAG SIMULATOR ═══════════════ -->
 <div id="simSection" class="sim-section">
   <div class="sim-bar">
     <input id="simQuery" type="text" class="sim-input" placeholder="Ask a question about your documents..." />
     <button id="simBtn" class="btn sm" onclick="simulate()">Search</button>
   </div>
   <div id="simResults" class="sim-results" style="display:none">
-    <div class="sim-answer" id="simAnswer"></div>
-    <div class="sim-sources" id="simSources"></div>
+    <div class="sim-answer" id="simAnswer">
+      <div class="sim-spinner" id="simSpinner" style="display:none"><span class="kb-spinner"></span> Thinking...</div>
+      <div class="sim-answer-text" id="simAnswerText"></div>
+    </div>
+    <details class="sim-details" id="simSourcesDetails">
+      <summary class="sim-summary"><span id="simSourcesSummary">Sources</span></summary>
+      <div id="simSources" class="sim-sources-list"></div>
+    </details>
   </div>
   <div id="simError" class="err-msg" style="display:none"></div>
 </div>
@@ -38,7 +44,7 @@
       <span id="kbCurrentFolder" class="kb-current-folder">All files</span>
       <div class="kb-toolbar-actions">
         <button class="btn sm" onclick="showUploadModal()">+ Upload</button>
-        <button class="ghost sm" onclick="toggleSimulator()">🔍 Test</button>
+        
       </div>
     </div>
 
@@ -237,15 +243,22 @@
 .sim-bar{display:flex;gap:8px}
 .sim-input{flex:1;padding:10px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:14px;outline:none}
 .sim-input:focus{border-color:var(--accent)}
-.sim-results{margin-top:16px;display:flex;flex-direction:column;gap:16px}
-.sim-answer{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:16px;font-size:14px;line-height:1.7;white-space:pre-wrap}
-.sim-sources-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);margin-bottom:8px}
-.sim-source{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;margin-bottom:6px}
-.sim-source-score{flex-shrink:0;font-weight:700;font-size:13px;min-width:40px;text-align:right;color:var(--accent)}
-.sim-source-body{flex:1;min-width:0}
-.sim-source-filename{font-weight:600;color:var(--text)}
-.sim-source-section{color:var(--muted2);font-size:11px}
-.sim-source-chunk{color:var(--muted);font-size:12px;margin-top:3px;white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.sim-results{max-height:420px;overflow-y:auto;margin-top:12px;opacity:1;transition:opacity .3s}
+.sim-answer{min-height:48px;position:relative}
+.sim-spinner{display:flex;align-items:center;gap:8px;padding:10px 0;font-size:13px;color:var(--muted)}
+.sim-answer-text{font-size:14px;line-height:1.7;white-space:pre-wrap;color:var(--text);padding:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius)}
+.sim-details{margin-top:8px}
+.sim-summary{font-size:12px;font-weight:600;color:var(--muted2);cursor:pointer;padding:6px 0;-webkit-user-select:none;user-select:none}
+.sim-summary:hover{color:var(--accent)}
+.sim-sources-list{display:flex;flex-direction:column;gap:4px;padding:4px 0}
+.sim-source{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:12px;border-radius:5px;cursor:pointer}
+.sim-source:hover{background:rgba(255,255,255,0.04)}
+.sim-source-score{flex-shrink:0;font-weight:700;font-size:11px;min-width:32px;text-align:right;color:var(--accent)}
+.sim-source-body{flex:1;min-width:0;display:flex;align-items:center;gap:6px}
+.sim-source-filename{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sim-source-section{color:var(--muted2);font-size:11px;flex-shrink:0}
+.sim-source-chunk{display:none;font-size:12px;color:var(--muted);white-space:pre-wrap;word-break:break-word;line-height:1.5;margin-left:40px;margin-top:2px;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:4px}
+.sim-source.expanded .sim-source-chunk{display:block}
 
 /* ── Drop zone ── */
 .drop{border:2px dashed var(--border);border-radius:var(--radius);padding:32px;text-align:center;cursor:pointer;transition:all .25s}
@@ -547,13 +560,6 @@ function closeChunkViewer(){
 // ════════════════════════════════════════════════
 // RAG SIMULATOR
 // ════════════════════════════════════════════════
-var _simVisible = false;
-function toggleSimulator(){
-  _simVisible = !_simVisible;
-  document.getElementById('simResults').style.display = _simVisible ? '' : 'none';
-  document.getElementById('simError').style.display = 'none';
-  if(_simVisible) document.getElementById('simQuery').focus();
-}
 
 async function simulate(){
   var query = document.getElementById('simQuery').value.trim();
@@ -563,22 +569,33 @@ async function simulate(){
   btn.textContent = 'Searching...';
   document.getElementById('simError').style.display = 'none';
   document.getElementById('simResults').style.display = '';
+  document.getElementById('simSpinner').style.display = 'flex';
+  document.getElementById('simAnswerText').textContent = '';
+  document.getElementById('simSources').innerHTML = '';
+  document.getElementById('simSourcesDetails').open = false;
 
   try {
     var data = await api('/knowledge/simulate', {method:'POST', body:{query:query, top_k:5}});
-    document.getElementById('simAnswer').innerHTML = '<strong>Answer:</strong><br>' + esc(data.answer);
-    var sourcesHtml = '<div class="sim-sources-title">Sources (' + (data.sources || []).length + ')</div>';
-    (data.sources || []).forEach(function(s){
-      sourcesHtml += '<div class="sim-source">';
-      sourcesHtml += '<div class="sim-source-score">' + (s.score ? (s.score * 100).toFixed(0) : '?') + '%</div>';
-      sourcesHtml += '<div class="sim-source-body">';
-      sourcesHtml += '<div class="sim-source-filename">' + esc(s.filename) + '</div>';
-      if(s.section) sourcesHtml += '<div class="sim-source-section">' + esc(s.section) + '</div>';
-      sourcesHtml += '<div class="sim-source-chunk">' + esc(s.chunk) + '</div>';
-      sourcesHtml += '</div></div>';
+    document.getElementById('simSpinner').style.display = 'none';
+    document.getElementById('simAnswerText').textContent = data.answer;
+
+    var n = (data.sources || []).length;
+    document.getElementById('simSourcesSummary').textContent = 'Sources (' + n + ')';
+    var html = '';
+    (data.sources || []).forEach(function(s, i){
+      html += '<div class="sim-source" onclick="this.classList.toggle(\'expanded\')">';
+      html += '<div class="sim-source-score">' + (s.score ? (s.score * 100).toFixed(0) : '?') + '%</div>';
+      html += '<div class="sim-source-body">';
+      html += '<span class="sim-source-filename" title="' + esc(s.filename) + '">' + esc(s.filename) + '</span>';
+      if(s.section) html += '<span class="sim-source-section">' + esc(s.section) + '</span>';
+      html += '</div>';
+      html += '<div class="sim-source-chunk">' + esc(s.chunk) + '</div>';
+      html += '</div>';
     });
-    document.getElementById('simSources').innerHTML = sourcesHtml;
+    document.getElementById('simSources').innerHTML = html;
+    if(n) document.getElementById('simSourcesDetails').open = true;
   } catch(e){
+    document.getElementById('simSpinner').style.display = 'none';
     document.getElementById('simError').style.display = '';
     document.getElementById('simError').textContent = 'Error: ' + e.message;
   }
