@@ -48,7 +48,7 @@ def mock_rag():
     patches = {
         "index_file": MagicMock(return_value=5),
         "search": MagicMock(return_value=[
-            {"text": "chunk1", "score": 0.9, "filename": "doc.txt", "distance": 0.1}
+            {"text": "chunk1", "score": 0.9, "filename": "doc.txt", "section": "", "distance": 0.1}
         ]),
         "delete_file": MagicMock(),
         "purge_orphans": MagicMock(return_value={"purged": 0}),
@@ -293,43 +293,43 @@ class TestDeleteFile:
         assert resp.status_code == 204
 
 
-# ── Chat ───────────────────────────────────────────────────────────────────
+# ── Simulate (RAG Simulator, replaces /knowledge/chat) ──────────────────────
 
 
-class TestChat:
-    def test_chat_with_context(self, client, mock_db, mock_rag, mock_openai_chat):
+class TestSimulate:
+    def test_simulate_with_context(self, client, mock_db, mock_rag, mock_openai_chat):
         mock_rag["search"].return_value = [
-            {"text": "Relevant context here.", "score": 0.95, "filename": "doc.txt", "distance": 0.05}
+            {"text": "Relevant context here.", "score": 0.95, "filename": "doc.txt", "section": "Test", "distance": 0.05}
         ]
 
-        resp = client.post("/knowledge/chat", json={"message": "What is this about?"})
+        resp = client.post("/knowledge/simulate", json={"query": "What is this about?", "top_k": 5})
         assert resp.status_code == 200
         data = resp.json()
-        assert data["response"] == "Mocked response."
+        assert data["answer"] == "Mocked response."
+        assert "sources" in data
 
-    def test_chat_without_context(self, client, mock_db, mock_rag, mock_openai_chat):
+    def test_simulate_without_context(self, client, mock_db, mock_rag, mock_openai_chat):
         mock_rag["search"].return_value = []
 
-        resp = client.post("/knowledge/chat", json={"message": "Tell me something."})
+        resp = client.post("/knowledge/simulate", json={"query": "Tell me something."})
         assert resp.status_code == 200
         data = resp.json()
-        assert data["response"] == "Mocked response."
+        assert data["answer"] == "Mocked response."
+        assert data["sources"] == []
 
-    def test_chat_empty_message(self, client, mock_db, mock_rag, mock_openai_chat):
+    def test_simulate_empty_query(self, client, mock_db, mock_rag, mock_openai_chat):
         mock_rag["search"].return_value = []
 
-        resp = client.post("/knowledge/chat", json={"message": ""})
-        assert resp.status_code == 200
+        resp = client.post("/knowledge/simulate", json={"query": ""})
+        assert resp.status_code == 400
 
-    def test_chat_openai_error(self, client, mock_db, mock_rag):
+    def test_simulate_openai_error(self, client, mock_db, mock_rag):
         mock_rag["search"].return_value = []
 
         with patch("openai.AsyncOpenAI") as mock_oa:
             mock_oa.return_value.chat.completions.create.side_effect = Exception("API error")
-            # Exception propagates through middleware as ExceptionGroup;
-            # global handler doesn't catch ExceptionGroup.
             with pytest.raises(Exception):
-                client.post("/knowledge/chat", json={"message": "Hi"})
+                client.post("/knowledge/simulate", json={"query": "Hi"})
 
 
 # ── Cleanup ────────────────────────────────────────────────────────────────

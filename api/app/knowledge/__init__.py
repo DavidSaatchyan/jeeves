@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, File
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -19,7 +19,7 @@ from ..auth.deps import get_current_tenant
 from .. import rag
 from ..config import get_settings
 from ..db import get_db, engine
-from ..models import FileRecord, Tenant
+from ..models import FileRecord, KnowledgeFolder, KnowledgeUrl, Tenant
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +85,7 @@ def _total_size(tenant_id: uuid.UUID) -> int:
 @router.post("/files", status_code=201)
 async def upload_file(
     file: UploadFile = File(...),
+    folder_id: uuid.UUID | None = Form(None),
     tenant: Tenant = Depends(get_current_tenant),
     db: Session = Depends(get_db),
 ):
@@ -121,11 +122,20 @@ async def upload_file(
     if _total_size(tenant.id) + len(data) > MAX_SIZE_MB * 1024 * 1024:
         raise HTTPException(413, f"Total knowledge size would exceed {MAX_SIZE_MB} MB")
 
+    if folder_id:
+        folder = db.execute(select(KnowledgeFolder).where(
+            KnowledgeFolder.id == folder_id,
+            KnowledgeFolder.tenant_id == tenant.id,
+        )).scalar_one_or_none()
+        if not folder:
+            raise HTTPException(404, "folder not found")
+
     dest.write_bytes(data)
 
     rec = FileRecord(
         id=file_id,
         tenant_id=tenant.id,
+        folder_id=folder_id,
         filename=safe_filename,
         s3_key=str(dest),
         status="processing",
@@ -137,38 +147,50 @@ async def upload_file(
 
     # Index asynchronously in background thread
     asyncio.create_task(_background_index(tenant.id, file_id, dest))
-    return {"id": str(file_id), "status": "processing", "chunks": 0}
+    return {"id": str(file_id), "status": "processing", "chunks": 0, "folder_id": str(folder_id) if folder_id else None}
 
 
-class _ChatIn(BaseModel):
-    message: str
+class _SimulateIn(BaseModel):
+    query: str
+    top_k: int = 5
 
 
-@router.post("/chat")
-async def chat(
-    body: _ChatIn,
+@router.post("/simulate")
+async def simulate(
+    body: _SimulateIn,
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    from .. import rag
-    from openai import AsyncOpenAI
+    if not body.query.strip():
+        raise HTTPException(400, "query is required")
 
-    import asyncio
-    chunks = await asyncio.to_thread(rag.search, tenant.id, body.message)
-    context = "\n\n".join(c["text"] for c in chunks) if chunks else ""
+    results = await asyncio.to_thread(rag.search, tenant.id, body.query, top_k=body.top_k)
+    context = "\n\n".join(r["text"] for r in results) if results else ""
 
     if context:
-        system = f"You are a support agent. Answer the user's question using ONLY the context below. If the context doesn't contain the answer, say you don't know.\n\nContext:\n{context}"
+        system_prompt = (
+            "You are a knowledge base assistant. Answer the user's question using ONLY the context below. "
+            "If the context doesn't contain the answer, say you don't know. "
+            "Be concise and factual.\n\nContext:\n" + context
+        )
     else:
-        system = "You are a support agent. Answer the user's question to the best of your ability."
+        system_prompt = "You are a knowledge base assistant. Answer the user's question to the best of your ability."
 
+    from openai import AsyncOpenAI
     client = AsyncOpenAI(api_key=_settings.openai_api_key)
     resp = await client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "system", "content": system}, {"role": "user", "content": body.message}],
+        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": body.query}],
         temperature=0.3,
         max_tokens=1000,
     )
-    return {"response": resp.choices[0].message.content or ""}
+    answer = resp.choices[0].message.content or ""
+
+    sources = [
+        {"chunk": r["text"][:500], "filename": r["filename"], "section": r["section"], "score": r["score"]}
+        for r in results
+    ]
+
+    return {"answer": answer, "sources": sources}
 
 
 @router.get("/files")
@@ -186,6 +208,7 @@ def list_files(
             "chunks_total": r.chunks_total or 0,
             "created_at": _iso_utc(r.created_at),
             "error": r.error,
+            "folder_id": str(r.folder_id) if r.folder_id else None,
         }
         for r in rows
     ]
@@ -243,4 +266,348 @@ def cleanup_chroma(
     return {"purge": p, "dedup": d}
 
 
+# ── Folder CRUD ──────────────────────────────────────────────────────────────
 
+
+class _FolderCreate(BaseModel):
+    name: str
+    parent_id: uuid.UUID | None = None
+
+
+class _FolderUpdate(BaseModel):
+    name: str | None = None
+    sort_order: int | None = None
+
+
+@router.get("/folders")
+def list_folders(
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    rows = db.execute(
+        select(KnowledgeFolder)
+        .where(KnowledgeFolder.tenant_id == tenant.id)
+        .order_by(KnowledgeFolder.sort_order, KnowledgeFolder.name)
+    ).scalars().all()
+    return [
+        {
+            "id": str(r.id),
+            "name": r.name,
+            "parent_id": str(r.parent_id) if r.parent_id else None,
+            "sort_order": r.sort_order or 0,
+        }
+        for r in rows
+    ]
+
+
+@router.post("/folders", status_code=201)
+def create_folder(
+    body: _FolderCreate,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    if body.parent_id:
+        parent = db.execute(select(KnowledgeFolder).where(
+            KnowledgeFolder.id == body.parent_id,
+            KnowledgeFolder.tenant_id == tenant.id,
+        )).scalar_one_or_none()
+        if not parent:
+            raise HTTPException(404, "parent folder not found")
+
+    existing = db.execute(select(KnowledgeFolder).where(
+        KnowledgeFolder.tenant_id == tenant.id,
+        KnowledgeFolder.name == body.name,
+        KnowledgeFolder.parent_id == body.parent_id,
+    )).scalar_one_or_none()
+    if existing:
+        raise HTTPException(409, "folder with same name already exists in this location")
+
+    f = KnowledgeFolder(tenant_id=tenant.id, name=body.name, parent_id=body.parent_id)
+    db.add(f)
+    db.commit()
+    return {"id": str(f.id), "name": f.name, "parent_id": str(f.parent_id) if f.parent_id else None}
+
+
+@router.patch("/folders/{folder_id}")
+def update_folder(
+    folder_id: uuid.UUID,
+    body: _FolderUpdate,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    f = db.execute(select(KnowledgeFolder).where(
+        KnowledgeFolder.id == folder_id, KnowledgeFolder.tenant_id == tenant.id,
+    )).scalar_one_or_none()
+    if not f:
+        raise HTTPException(404, "folder not found")
+    if body.name is not None:
+        f.name = body.name
+    if body.sort_order is not None:
+        f.sort_order = body.sort_order
+    db.commit()
+    return {"id": str(f.id), "name": f.name}
+
+
+@router.delete("/folders/{folder_id}", status_code=204)
+def delete_folder(
+    folder_id: uuid.UUID,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    f = db.execute(select(KnowledgeFolder).where(
+        KnowledgeFolder.id == folder_id, KnowledgeFolder.tenant_id == tenant.id,
+    )).scalar_one_or_none()
+    if not f:
+        raise HTTPException(404, "folder not found")
+    db.delete(f)
+    db.commit()
+
+
+# ── File-to-folder assignment ─────────────────────────────────────────────────
+
+
+class _FileMove(BaseModel):
+    folder_id: uuid.UUID | None = None
+
+
+@router.put("/files/{file_id}/folder")
+def move_file(
+    file_id: uuid.UUID,
+    body: _FileMove,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    rec = db.execute(select(FileRecord).where(
+        FileRecord.id == file_id, FileRecord.tenant_id == tenant.id,
+    )).scalar_one_or_none()
+    if not rec:
+        raise HTTPException(404, "file not found")
+    if body.folder_id:
+        folder = db.execute(select(KnowledgeFolder).where(
+            KnowledgeFolder.id == body.folder_id, KnowledgeFolder.tenant_id == tenant.id,
+        )).scalar_one_or_none()
+        if not folder:
+            raise HTTPException(404, "folder not found")
+    rec.folder_id = body.folder_id
+    db.commit()
+    return {"id": str(rec.id), "folder_id": str(rec.folder_id) if rec.folder_id else None}
+
+
+# ── File content ─────────────────────────────────────────────────────────────
+
+
+_TXT_EXT = {".txt", ".md"}
+
+
+@router.get("/files/{file_id}/content")
+def get_file_content(
+    file_id: uuid.UUID,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    rec = db.execute(select(FileRecord).where(
+        FileRecord.id == file_id, FileRecord.tenant_id == tenant.id,
+    )).scalar_one_or_none()
+    if not rec:
+        raise HTTPException(404, "file not found")
+
+    ext = Path(rec.filename).suffix.lower()
+    if ext not in _TXT_EXT:
+        raise HTTPException(400, f"Cannot display content for {ext} files inline")
+
+    file_path = Path(rec.s3_key) if rec.s3_key else None
+    if not file_path or not file_path.exists():
+        raise HTTPException(404, "file not found on disk")
+
+    return {"filename": rec.filename, "content": file_path.read_text(encoding="utf-8")}
+
+
+class _ContentUpdate(BaseModel):
+    content: str
+
+
+@router.put("/files/{file_id}/content")
+async def update_file_content(
+    file_id: uuid.UUID,
+    body: _ContentUpdate,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    rec = db.execute(select(FileRecord).where(
+        FileRecord.id == file_id, FileRecord.tenant_id == tenant.id,
+    )).scalar_one_or_none()
+    if not rec:
+        raise HTTPException(404, "file not found")
+
+    ext = Path(rec.filename).suffix.lower()
+    if ext not in _TXT_EXT:
+        raise HTTPException(400, f"Cannot edit {ext} files")
+
+    file_path = Path(rec.s3_key) if rec.s3_key else None
+    if not file_path:
+        raise HTTPException(404, "file path not found")
+
+    file_path.write_text(body.content, encoding="utf-8")
+
+    # Re-index: delete old chunks, re-index
+    try:
+        rag.delete_file(tenant.id, file_id)
+    except Exception:
+        pass
+
+    n = await asyncio.to_thread(rag.index_file, tenant.id, file_id, file_path)
+    rec.status = "ready"
+    rec.chunks_total = n
+    db.commit()
+
+    return {"id": str(file_id), "chunks": n}
+
+
+# ── File chunks ──────────────────────────────────────────────────────────────
+
+
+@router.get("/files/{file_id}/chunks")
+def list_file_chunks(
+    file_id: uuid.UUID,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    rec = db.execute(select(FileRecord).where(
+        FileRecord.id == file_id, FileRecord.tenant_id == tenant.id,
+    )).scalar_one_or_none()
+    if not rec:
+        raise HTTPException(404, "file not found")
+
+    chunks = rag.get_chunks_for_file(tenant.id, file_id)
+    return {"chunks": chunks, "total": len(chunks)}
+
+
+# ── URL import ────────────────────────────────────────────────────────────────
+
+
+class _UrlImportIn(BaseModel):
+    url: str
+    title: str | None = None
+    folder_id: uuid.UUID | None = None
+
+
+@router.post("/urls", status_code=201)
+def import_url(
+    body: _UrlImportIn,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    if not body.url.strip():
+        raise HTTPException(400, "url is required")
+
+    if body.folder_id:
+        folder = db.execute(select(KnowledgeFolder).where(
+            KnowledgeFolder.id == body.folder_id,
+            KnowledgeFolder.tenant_id == tenant.id,
+        )).scalar_one_or_none()
+        if not folder:
+            raise HTTPException(404, "folder not found")
+
+    rec = KnowledgeUrl(
+        tenant_id=tenant.id,
+        url=body.url,
+        title=body.title,
+        folder_id=body.folder_id,
+        status="pending",
+    )
+    db.add(rec)
+    db.commit()
+    return {"id": str(rec.id), "url": rec.url, "title": rec.title, "status": rec.status}
+
+
+@router.get("/urls")
+def list_urls(
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    rows = db.execute(
+        select(KnowledgeUrl)
+        .where(KnowledgeUrl.tenant_id == tenant.id)
+        .order_by(KnowledgeUrl.created_at.desc())
+    ).scalars().all()
+    return [
+        {
+            "id": str(r.id),
+            "url": r.url,
+            "title": r.title,
+            "status": r.status,
+            "folder_id": str(r.folder_id) if r.folder_id else None,
+            "chunks_total": r.chunks_total or 0,
+            "error": r.error,
+            "created_at": _iso_utc(r.created_at),
+        }
+        for r in rows
+    ]
+
+
+@router.delete("/urls/{url_id}", status_code=204)
+def delete_url(
+    url_id: uuid.UUID,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    rec = db.execute(select(KnowledgeUrl).where(
+        KnowledgeUrl.id == url_id, KnowledgeUrl.tenant_id == tenant.id,
+    )).scalar_one_or_none()
+    if not rec:
+        raise HTTPException(404, "url not found")
+
+    try:
+        rag.delete_file(tenant.id, url_id)
+    except Exception:
+        pass
+
+    db.delete(rec)
+    db.commit()
+
+
+# ── CRM price sync ────────────────────────────────────────────────────────────
+
+
+@router.post("/sync/prices")
+def sync_prices(
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    try:
+        from ..integrations.resolver import get_crm_adapter_for_tenant
+        adapter = get_crm_adapter_for_tenant(tenant.id)
+        if not adapter:
+            raise HTTPException(400, "No CRM adapter configured for this tenant")
+
+        services = adapter.get_services()
+        if not services:
+            return {"imported": 0, "errors": []}
+
+        products = []
+        for s in services:
+            products.append({
+                "id": str(s.get("id", "")),
+                "name": s.get("name", "Unnamed"),
+                "description": s.get("description", ""),
+                "price": s.get("price", 0),
+                "category": s.get("category", ""),
+                "stock_status": "in_stock",
+            })
+
+        batch_id = f"crm-sync-{tenant.id}-{datetime.now(timezone.utc).isoformat()}"
+        imported = rag.index_products(tenant.id, products, batch_id=batch_id)
+        return {"imported": imported, "errors": [], "batch_id": batch_id}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("CRM sync failed: %s", e)
+        raise HTTPException(502, f"CRM sync failed: {e}") from e
+
+
+@router.get("/sync/status")
+def sync_status(
+    tenant: Tenant = Depends(get_current_tenant),
+):
+    return {"last_sync": None, "status": "idle"}

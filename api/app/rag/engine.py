@@ -49,6 +49,34 @@ def delete_file(tenant_id: UUID | str, file_id: UUID | str):
         logger.error("delete failed: %s", e)
 
 
+def get_chunks_for_file(tenant_id: UUID | str, file_id: UUID | str) -> list[dict]:
+    """Return all chunks for a given file_id ordered by char_start."""
+    try:
+        col = _collection(tenant_id)
+        res = col.get(where={"file_id": str(file_id)}, include=["documents", "metadatas"])
+        docs = res.get("documents") or []
+        metas = res.get("metadatas") or []
+        ids = res.get("ids") or []
+        out = []
+        for i, (doc, meta, cid) in enumerate(zip(docs, metas, ids)):
+            meta = meta or {}
+            out.append({
+                "id": cid,
+                "index": i,
+                "text": doc,
+                "section": meta.get("section", ""),
+                "page": meta.get("page"),
+                "char_start": meta.get("char_start"),
+                "char_end": meta.get("char_end"),
+                "chunk_hash": meta.get("chunk_hash", ""),
+            })
+        out.sort(key=lambda x: (x["char_start"] is None, x["char_start"] or 0))
+        return out
+    except Exception as e:
+        logger.error("get_chunks_for_file failed: %s", e)
+        return []
+
+
 def search(
     tenant_id: UUID | str,
     query: str,

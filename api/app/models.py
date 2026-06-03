@@ -82,7 +82,33 @@ class FileRecord(Base, _TenantScoped, _CreatedAt):
     error = Column(Text)  # populated when status=failed
     file_type = Column(String(32), default="document", nullable=False)  # document, catalog, compatibility
     metadata_schema = Column(JSONB)  # CSV column mapping for structured imports
+    folder_id = Column(UUID(as_uuid=True), ForeignKey("knowledge_folders.id", ondelete="SET NULL"), nullable=True, index=True)
     # created_at inherited from _CreatedAt
+
+
+class KnowledgeFolder(Base, _TenantScoped, _CreatedAt, _UpdatedAt):
+    """Hierarchical folder structure for organizing knowledge base files."""
+    __tablename__ = "knowledge_folders"
+
+    name = Column(Text, nullable=False)
+    parent_id = Column(UUID(as_uuid=True), ForeignKey("knowledge_folders.id", ondelete="CASCADE"), nullable=True, index=True)
+    sort_order = Column(Integer, default=0)
+
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "name", "parent_id", name="uq_knowledge_folder_name_per_parent"),
+    )
+
+
+class KnowledgeUrl(Base, _TenantScoped, _CreatedAt):
+    """Imported URL for knowledge base web scraping."""
+    __tablename__ = "knowledge_urls"
+
+    url = Column(Text, nullable=False)
+    title = Column(Text)
+    status = Column(String(16), default="pending", nullable=False)  # pending | processing | ready | failed
+    folder_id = Column(UUID(as_uuid=True), ForeignKey("knowledge_folders.id", ondelete="SET NULL"), nullable=True, index=True)
+    chunks_total = Column(Integer, default=0)
+    error = Column(Text)
 
 
 # Phase 1: ProductCatalog, CatalogVariant, Compatibility removed — e-commerce concepts

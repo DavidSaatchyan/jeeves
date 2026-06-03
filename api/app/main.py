@@ -162,6 +162,20 @@ def _ensure_missing_columns(engine) -> None:
                 conn.execute(sa_text("ALTER TABLE conversations ADD COLUMN workflow_state VARCHAR(64)"))
             logging.info("Added missing column conversations.workflow_state via fallback")
 
+    # files table may be missing folder_id (new in Knowledge Base Phase 0)
+    if "files" in inspector.get_table_names():
+        file_cols = {c["name"] for c in inspector.get_columns("files")}
+        if "folder_id" not in file_cols:
+            try:
+                with engine.begin() as conn:
+                    conn.execute(sa_text("ALTER TABLE files ADD COLUMN folder_id UUID"))
+                logging.info("Added missing column files.folder_id via fallback")
+            except Exception:
+                # SQLite doesn't support UUID type natively; use String if PostgreSQL fails
+                with engine.begin() as conn:
+                    conn.execute(sa_text("ALTER TABLE files ADD COLUMN folder_id VARCHAR(36)"))
+                logging.info("Added missing column files.folder_id via fallback (SQLite compat)")
+
 
 def _run_alembic_migrations() -> None:
     """Apply Alembic migrations on startup. Uses the alembic/ directory from the api package."""

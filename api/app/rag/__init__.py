@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from .config import DISTANCE_THRESHOLD, EMBED_MODEL, EMBEDDING_VERSION, TOP_K
-from .engine import delete_file, index_file, search
+from .engine import delete_file, get_chunks_for_file, index_file, search
 from .maintenance import deduplicate_collection, purge_orphans
 from .products import delete_products_by_batch, index_products
 
@@ -14,6 +14,7 @@ __all__ = [
     "delete_file",
     "delete_products_by_batch",
     "deduplicate_collection",
+    "get_chunks_for_file",
     "index_file",
     "index_products",
     "purge_orphans",
