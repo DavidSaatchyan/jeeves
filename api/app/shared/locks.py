@@ -54,14 +54,6 @@ def lock_key_entity(entity_type: str, entity_id: str) -> str:
     return f"lock:entity:{entity_type}:{entity_id}"
 
 
-def lock_key_subscription(subscription_id: str) -> str:
-    return lock_key_entity("subscription", subscription_id)
-
-
-def lock_key_invoice(invoice_id: str) -> str:
-    return lock_key_entity("invoice", invoice_id)
-
-
 @asynccontextmanager
 async def workflow_lock(workflow_id: uuid.UUID) -> AsyncIterator[bool]:
     key = lock_key_workflow(workflow_id)

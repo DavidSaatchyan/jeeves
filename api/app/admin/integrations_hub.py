@@ -13,6 +13,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from ..core.activity_log import log_activity
 from ..channels.registry import get_channel, list_all_configs, upsert_channel
 from ..db import get_db
 from ..integrations.resolver import get_crm_adapter_for_tenant
@@ -195,6 +196,7 @@ def configure_crm(
 
     db.flush()
     db.commit()
+    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", f"Connected CRM: {provider.title()}", api_status="success")
     return {"ok": True, "connected": True, "message": f"Connected to {provider.title()}"}
 
 
@@ -230,6 +232,7 @@ def disconnect_crm(
     db: Session = Depends(get_db),
     tenant: Tenant = Depends(get_admin_tenant),
 ):
+    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", "Disconnected CRM", api_status="success")
     tenant.crm_config = {}
     tenant.crm_provider = "pabau"
     db.flush()
@@ -261,6 +264,7 @@ def configure_whatsapp(
     }
     upsert_channel(db, tenant.id, "whatsapp", config, status="active")
     db.commit()
+    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", "WhatsApp channel configured", api_status="success")
     return {"ok": True, "message": "WhatsApp configured and active"}
 
 
@@ -269,6 +273,7 @@ def disconnect_whatsapp(
     db: Session = Depends(get_db),
     tenant: Tenant = Depends(get_admin_tenant),
 ):
+    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", "WhatsApp channel disconnected", api_status="success")
     from ..channels.registry import delete_channel
     delete_channel(db, tenant.id, "whatsapp")
     db.commit()
@@ -335,6 +340,7 @@ def configure_instagram(
     }
     upsert_channel(db, tenant.id, "instagram", config, status="active")
     db.commit()
+    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", "Instagram channel configured", api_status="success")
     return {"ok": True, "message": "Instagram connected"}
 
 
@@ -343,6 +349,7 @@ def disconnect_instagram(
     db: Session = Depends(get_db),
     tenant: Tenant = Depends(get_admin_tenant),
 ):
+    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", "Instagram channel disconnected", api_status="success")
     from ..channels.registry import delete_channel
     delete_channel(db, tenant.id, "instagram")
     db.commit()

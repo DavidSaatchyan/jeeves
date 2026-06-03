@@ -14,12 +14,11 @@ from sqlalchemy.orm import Session
 
 from pydantic import BaseModel
 
-from ..chunking import file_sha256, sanitize_filename
+from ..rag.chunking import file_sha256, sanitize_filename
 from ..auth.deps import get_current_tenant
 from .. import rag
 from ..config import get_settings
 from ..db import get_db, engine
-from .catalog import import_catalog
 from ..models import FileRecord, Tenant
 
 logger = logging.getLogger(__name__)

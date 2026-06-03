@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>AI Activity Logs</h1>
+<p class="page-desc">Append-only audit trail of AI actions and system events.</p>
+
+<div class="card">
+  <div class="flex flex-wrap" style="gap:8px;margin-bottom:16px">
+    <input type="text" id="filterPatient" placeholder="Patient ref..." style="width:160px;font-size:12px;padding:6px 10px">
+    <select id="filterEvent" style="width:140px;font-size:12px;padding:6px 10px">
+      <option value="">All events</option>
+      <option value="handover">Handover</option>
+      <option value="booking_created">Booking Created</option>
+      <option value="booking_cancelled">Booking Cancelled</option>
+      <option value="error">Error</option>
+      <option value="config_change">Config Change</option>
+      <option value="message_sent">Message Sent</option>
+    </select>
+    <select id="filterStatus" style="width:120px;font-size:12px;padding:6px 10px">
+      <option value="">All status</option>
+      <option value="success">Success</option>
+      <option value="error">Error</option>
+      <option value="pending">Pending</option>
+    </select>
+    <button class="btn sm" onclick="loadLogs(1)">Search</button>
+    <button class="ghost sm" onclick="resetFilters()">Clear</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Time</th><th>Initiator</th><th>Event</th><th>Patient</th><th>Status</th><th>Description</th></tr>
+    </thead>
+    <tbody id="logsBody">
+      <tr><td colspan="6" class="muted" style="text-align:center;padding:32px">Loading...</td></tr>
+    </tbody>
+  </table>
+
+  <div class="flex" style="justify-content:center;margin-top:16px;gap:8px" id="pagination"></div>
+</div>
+{% endblock %}
+{% block tail %}
+<script>
+var currentPage = 1;
+
+async function loadLogs(page) {
+  currentPage = page || 1;
+  var params = new URLSearchParams();
+  var p = document.getElementById('filterPatient').value.trim();
+  var e = document.getElementById('filterEvent').value;
+  var s = document.getElementById('filterStatus').value;
+  if (p) params.set('patient', p);
+  if (e) params.set('event_type', e);
+  if (s) params.set('status', s);
+  params.set('page', currentPage);
+  params.set('per_page', '20');
+
+  try {
+    var data = await api('/admin/api/settings/logs?' + params.toString());
+    var logs = data.logs || [];
+    document.getElementById('logsBody').innerHTML = logs.length
+      ? logs.map(function(l){
+          var statusClass = l.api_status === 'success' ? 'ok' : l.api_status === 'error' ? 'err' : 'warn';
+          var time = l.created_at ? l.created_at.slice(0,19).replace('T',' ') : '—';
+          return '<tr>' +
+            '<td style="font-size:12px;white-space:nowrap;font-family:monospace">' + esc(time) + '</td>' +
+            '<td style="font-size:13px">' + esc(l.initiator) + '</td>' +
+            '<td><span class="pill cyan" style="font-size:10px">' + esc(l.event_type) + '</span></td>' +
+            '<td style="font-size:12px">' + esc(l.patient_reference || '—') + '</td>' +
+            '<td><span class="pill ' + statusClass + '" style="font-size:10px">' + esc(l.api_status) + '</span></td>' +
+            '<td style="font-size:12px;color:var(--muted2);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(l.description) + '</td>' +
+            '</tr>';
+        }).join('')
+      : '<tr><td colspan="6" class="muted" style="text-align:center;padding:32px">No logs found.</td></tr>';
+
+    // Pagination
+    var pg = document.getElementById('pagination');
+    var totalPages = data.pages || 1;
+    if (totalPages <= 1) { pg.innerHTML = ''; return; }
+    var html = '';
+    if (currentPage > 1) html += '<button class="ghost sm" onclick="loadLogs(' + (currentPage - 1) + ')">← Prev</button>';
+    html += '<span class="muted" style="font-size:12px;padding:0 8px">' + currentPage + ' / ' + totalPages + '</span>';
+    if (currentPage < totalPages) html += '<button class="ghost sm" onclick="loadLogs(' + (currentPage + 1) + ')">Next →</button>';
+    pg.innerHTML = html;
+
+  } catch(e) { document.getElementById('logsBody').innerHTML = '<tr><td colspan="6" class="err-msg" style="text-align:center;padding:32px">Error loading logs.</td></tr>'; }
+}
+
+function resetFilters() {
+  document.getElementById('filterPatient').value = '';
+  document.getElementById('filterEvent').value = '';
+  document.getElementById('filterStatus').value = '';
+  loadLogs(1);
+}
+
+loadLogs(1);
+</script>
+{% endblock %}

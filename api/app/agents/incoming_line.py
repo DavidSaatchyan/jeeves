@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from ..core.ai import classify_intent, simple_llm_response
 from ..core.booking import get_available_slots, book_appointment
 from ..integrations.resolver import get_crm_adapter_for_tenant
+from ..core.activity_log import log_activity
 from ..models import Patient, Tenant
 from ..rag import search as rag_search
 from .base import Agent, AgentAction, AgentResult
@@ -179,6 +180,7 @@ class IncomingLineAgent(Agent):
         logger.info("tenant=%s intent=%s msg=%.60s", tenant.id, intent, message)
 
         if intent == "emergency":
+            log_activity(db, tenant.id, "🤖 " + (config.get("personality", {}).get("name", "Agent")), "emergency", "Patient reported emergency", patient_reference=customer_id, api_status="success")
             return AgentResult(
                 response="If this is a medical emergency, please call your local emergency services immediately.",
                 escalate=True, intent=intent,
@@ -186,12 +188,14 @@ class IncomingLineAgent(Agent):
 
         if intent in ("kb_query",):
             response_text = await _handle_kb_query(message, str(tenant.id), config)
+            log_activity(db, tenant.id, "🤖 " + (config.get("personality", {}).get("name", "Agent")), "kb_query", f"Answered knowledge base query", patient_reference=customer_id, api_status="success")
             return AgentResult(response=response_text, intent=intent)
 
         if intent in ("appointment", "reschedule", "availability"):
             return await _handle_appointment(message, tenant, db, customer_id, config)
 
         if intent in ("cancel",):
+            log_activity(db, tenant.id, "🤖 " + (config.get("personality", {}).get("name", "Agent")), "cancel_request", "Patient requested cancellation", patient_reference=customer_id, api_status="success")
             return AgentResult(
                 response="To cancel an appointment, please provide your appointment details and I'll help you with that.",
                 intent=intent,
@@ -209,6 +213,7 @@ class IncomingLineAgent(Agent):
             system_override=system_prompt,
             conversation_history=history,
         )
+        log_activity(db, tenant.id, "🤖 " + (config.get("personality", {}).get("name", "Agent")), "message_sent", f"Responded to {intent} intent", patient_reference=customer_id, api_status="success" if result.get("response") else "error")
         return AgentResult(
             response=result.get("response"),
             escalate=result.get("escalated", False),

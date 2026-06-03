@@ -196,6 +196,8 @@ def on_startup() -> None:
     db = SessionLocal()
     try:
         build_channel_cache(db)
+        from .core.billing import seed_plans
+        seed_plans(db)
     finally:
         db.close()
 

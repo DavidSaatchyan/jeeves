@@ -14,8 +14,8 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..models import ChannelConfig, ChatLog, Conversation, ConversationRating, Message, Tenant
-from ..moderation import moderate
-from ..rate_limit import check_rate_limit
+from ..shared.moderation import moderate
+from ..shared.rate_limit import check_rate_limit
 from ..schemas import ChatOut, WidgetChatIn
 from ..core.ai import simple_llm_response
 from ..core.compliance.consent import ConsentManager

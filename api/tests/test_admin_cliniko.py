@@ -14,6 +14,7 @@ from app.models import Tenant
 def mock_tenant():
     t = MagicMock(spec=Tenant)
     t.id = uuid4()
+    t.email = "admin@test.com"
     t.crm_config = {}
     t.crm_provider = ""
     return t

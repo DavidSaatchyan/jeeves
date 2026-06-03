@@ -6,16 +6,10 @@ from fastapi import Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from .. import billing
 from ..db import get_db
 from ..models import ChatLog, ConversationRating, Tenant
 from .deps import get_admin_tenant
 from .router import router
-
-
-@router.get("/api/billing")
-def api_billing(tenant: Tenant = Depends(get_admin_tenant)):
-    return billing.usage(tenant)
 
 
 @router.get("/api/logs")

@@ -63,7 +63,7 @@ def mock_chunking():
     """Use side_effect so sanitize_filename transforms input instead of
     returning a hardcoded value — this lets extension-validation tests work."""
     def _sanitize(name):
-        from app.chunking import sanitize_filename as real_sf
+        from app.rag.chunking import sanitize_filename as real_sf
         return real_sf(name)
 
     with patch("app.knowledge.sanitize_filename", side_effect=_sanitize) as sf:

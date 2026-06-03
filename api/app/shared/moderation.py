@@ -35,7 +35,7 @@ def _get_openai_moderator():
         return _MODERATION_CACHE["moderator"]
     try:
         from openai import OpenAI
-        from .config import get_settings
+        from ..config import get_settings
         settings = get_settings()
         if not settings.openai_api_key:
             return None

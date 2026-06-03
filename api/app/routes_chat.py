@@ -12,8 +12,8 @@ from .core.ai import simple_llm_response
 from .core.communications.webhook_sender import fire_outgoing_webhooks
 from .db import get_db
 from .models import ChatLog, Tenant
-from .moderation import moderate
-from .rate_limit import check_rate_limit
+from .shared.moderation import moderate
+from .shared.rate_limit import check_rate_limit
 from .schemas import ChatIn, ChatOut
 from .shared.inbox_writer import add_message, get_or_create_conversation
 

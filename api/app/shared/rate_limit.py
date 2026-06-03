@@ -40,7 +40,7 @@ def _get_limiter():
     if _limiter is not None:
         return _limiter
     try:
-        from .config import get_settings
+        from ..config import get_settings
         settings = get_settings()
         if settings.redis_url:
             import redis

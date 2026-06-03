@@ -130,7 +130,7 @@ class ChannelConfig(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    channel_type = Column(String(32), nullable=False)  # web_widget, telegram, whatsapp, email, instagram
+    channel_type = Column(String(32), nullable=False)      # web_widget, whatsapp, instagram
     config = Column(JSONB, default=dict)              # channel-specific credentials and settings
     status = Column(String(16), default="inactive", nullable=False)  # active, inactive, error
     last_error = Column(Text)
@@ -537,3 +537,56 @@ class Campaign(Base):
     end_at = Column(DateTime)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+# ═══════════════════════════════════════════════════════════════
+# Phase 6: Settings & Billing Models
+# ═══════════════════════════════════════════════════════════════
+
+
+class TeamMember(Base):
+    """Company team member with role-based access."""
+    __tablename__ = "team_members"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
+    email = Column(String(255), nullable=False)
+    name = Column(String(255), nullable=True)
+    role = Column(String(32), nullable=False, default="operator")  # owner | manager | operator
+    invited_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    accepted_at = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "email", name="uq_team_members_tenant_email"),
+    )
+
+
+class BillingPlan(Base):
+    """Pre-defined billing plan with resource limits."""
+    __tablename__ = "billing_plans"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    name = Column(String(64), unique=True, nullable=False)  # free | starter | pro | enterprise
+    price_usd = Column(Integer, default=0, nullable=False)
+    resolved_limit = Column(Integer, default=10, nullable=False)
+    storage_limit_mb = Column(Integer, default=500, nullable=False)
+    agent_limit = Column(Integer, default=3, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class ActivityLog(Base):
+    """Append-only AI activity log (black box)."""
+    __tablename__ = "activity_logs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
+    initiator = Column(String(255), nullable=False)
+    event_type = Column(String(64), nullable=False)
+    description = Column(Text, nullable=False, default="")
+    patient_reference = Column(String(255), nullable=True)
+    crm_id = Column(String(128), nullable=True)
+    api_status = Column(String(32), nullable=False, default="success")  # success | error | pending
+    extra_meta = Column(JSONB, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)

@@ -9,9 +9,9 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..models import ChannelConfig, Tenant
 from ..shared.inbox_writer import add_message, get_or_create_conversation
-from ..core.ai import simple_llm_response, classify_intent
-from ..rate_limit import check_rate_limit
-from ..moderation import moderate
+from ..core.ai import simple_llm_response
+from ..shared.rate_limit import check_rate_limit
+from ..shared.moderation import moderate
 
 _IG_GRAPH_API = "https://graph.facebook.com/v22.0"
 logger = logging.getLogger("jeeves.instagram")

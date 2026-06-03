@@ -15,8 +15,9 @@ from __future__ import annotations
 from datetime import datetime
 
 from fastapi import HTTPException, status
+from sqlalchemy import func, select
 
-from .models import Tenant
+from ..models import ChatLog, FileRecord, Tenant
 
 PLANS = {
     "free":       {"price_usd": 0,   "resolved_limit": 10},
@@ -76,3 +77,41 @@ def usage(tenant: Tenant) -> dict:
         "overage_charge_usd": round(overage_charge, 2),
         "estimated_charge_usd": round(base_charge + overage_charge, 2),
     }
+
+
+def resource_usage(db, tenant_id):
+    """Return real usage stats for billing UI."""
+    dialog_used = db.execute(
+        select(func.count(ChatLog.id)).where(
+            ChatLog.tenant_id == tenant_id,
+            ChatLog.direction == "incoming",
+        )
+    ).scalar() or 0
+
+    storage_used = db.execute(
+        select(func.coalesce(func.sum(FileRecord.size_bytes), 0)).where(
+            FileRecord.tenant_id == tenant_id
+        )
+    ).scalar() or 0
+
+    return {
+        "dialogs": dialog_used,
+        "storage_bytes": storage_used,
+    }
+
+
+def seed_plans(db) -> None:
+    """Insert default billing plan rows if table is empty."""
+    from ..models import BillingPlan
+    existing = db.execute(select(func.count(BillingPlan.id))).scalar() or 0
+    if existing > 0:
+        return
+    plans = [
+        BillingPlan(name="free", price_usd=0, resolved_limit=10, storage_limit_mb=500, agent_limit=1),
+        BillingPlan(name="starter", price_usd=19, resolved_limit=500, storage_limit_mb=2000, agent_limit=3),
+        BillingPlan(name="pro", price_usd=49, resolved_limit=2000, storage_limit_mb=10000, agent_limit=10),
+        BillingPlan(name="enterprise", price_usd=149, resolved_limit=25000, storage_limit_mb=100000, agent_limit=100),
+    ]
+    for p in plans:
+        db.add(p)
+    db.commit()

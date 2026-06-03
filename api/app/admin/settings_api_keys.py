@@ -5,28 +5,20 @@ import uuid as uuid_mod
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from ..core.activity_log import log_activity
 from ..db import get_db
-
-from .. import billing
-from ..models import ApiKey, Tenant
-from .deps import get_admin_tenant
+from ..models import ApiKey, Tenant, TeamMember
+from .deps import get_admin_tenant, require_role
 from .router import router
 
 
-@router.get("/api/settings")
-def api_settings(
+@router.get("/api/settings/api-keys")
+def api_settings_list_keys(
     tenant: Tenant = Depends(get_admin_tenant),
     db: Session = Depends(get_db),
 ):
     keys = db.query(ApiKey).filter(ApiKey.tenant_id == tenant.id).order_by(ApiKey.created_at.desc()).all()
     return {
-        "workspace": {
-            "name": tenant.name,
-            "email": tenant.email,
-            "plan": "free",
-            "trial_ends": tenant.trial_ends.isoformat() if tenant.trial_ends else None,
-            "is_active": tenant.is_active,
-        },
         "api_keys": [
             {
                 "id": str(k.id),
@@ -38,23 +30,7 @@ def api_settings(
             }
             for k in keys
         ],
-        "notifications": {
-            "escalation_alerts": True,
-            "approval_alerts": True,
-            "workflow_failure_alerts": True,
-            "daily_summary": False,
-        },
-        "billing": billing.usage(tenant),
     }
-
-
-@router.put("/api/settings")
-def api_settings_update(
-    body: dict,
-    tenant: Tenant = Depends(get_admin_tenant),
-    db: Session = Depends(get_db),
-):
-    return {"ok": True, "message": "Settings updated (placeholder)"}
 
 
 @router.post("/api/settings/api-keys")
@@ -62,6 +38,7 @@ def api_settings_create_key(
     body: dict,
     tenant: Tenant = Depends(get_admin_tenant),
     db: Session = Depends(get_db),
+    _: TeamMember = Depends(require_role("owner")),
 ):
     import hashlib
     import secrets
@@ -72,6 +49,7 @@ def api_settings_create_key(
     key = ApiKey(tenant_id=tenant.id, name=name, key_hash=hashed, prefix=prefix)
     db.add(key)
     db.commit()
+    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", f"API key created: {name}", api_status="success")
     return {"ok": True, "raw_key": raw, "prefix": prefix, "name": name}
 
 
@@ -80,6 +58,7 @@ def api_settings_delete_key(
     key_id: str,
     tenant: Tenant = Depends(get_admin_tenant),
     db: Session = Depends(get_db),
+    _: TeamMember = Depends(require_role("owner")),
 ):
     try:
         kid = uuid_mod.UUID(key_id)
@@ -90,4 +69,5 @@ def api_settings_delete_key(
         raise HTTPException(status_code=404, detail="API key not found")
     db.delete(key)
     db.commit()
+    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", f"API key revoked: {key.name}", api_status="success")
     return {"ok": True, "message": "API key revoked"}

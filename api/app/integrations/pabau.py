@@ -13,7 +13,7 @@ from .exceptions import ConnectorAuthError, ConnectorError, ConnectorNotFoundErr
 
 logger = logging.getLogger("jeeves.pabau")
 
-_PABAU_API_BASE = "https://api.pabau.com"
+_PABAU_API_BASE = "https://api.oauth.pabau.com"
 
 
 class PabauConnector(AbstractCrmConnector):
@@ -29,15 +29,16 @@ class PabauConnector(AbstractCrmConnector):
         self.base_url = str(config.get("base_url", _PABAU_API_BASE)).rstrip("/")
 
     def _headers(self) -> dict[str, str]:
-        return {
-            "X-API-Key": self.api_key,
-            "X-Company-Id": self.company_id,
+        headers: dict[str, str] = {
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
+        if self.company_id:
+            headers["X-Company-Id"] = self.company_id
+        return headers
 
     def _request(self, method: str, path: str, **kwargs: Any) -> Any:
-        url = urljoin(self.base_url + "/", path.lstrip("/"))
+        url = urljoin(self.base_url + "/", f"{self.api_key}/{path.lstrip('/')}")
         try:
             r = httpx.request(method, url, headers=self._headers(), **kwargs, timeout=30)
             r.raise_for_status()

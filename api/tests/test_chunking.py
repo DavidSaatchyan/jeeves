@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from app.chunking import (
+from app.rag.chunking import (
     Chunk,
     build_chunks,
     file_sha256,

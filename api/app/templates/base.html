@@ -268,7 +268,7 @@ async function api(path, opts={}){
   const r = await fetch(path,{...opts,headers,credentials:'include',body: opts.body && !(opts.body instanceof FormData) ? JSON.stringify(opts.body):opts.body});
   if(r.status===204) return null;
   if(r.status===401){ location.href='/admin/login'; throw new Error('unauth'); }
-  if(r.status===402){ location.href='/admin/billing'; }
+  if(r.status===402){ location.href='/admin/settings/billing'; }
   const ct=r.headers.get('content-type')||''; const data = ct.includes('json')?await r.json():await r.text();
   if(!r.ok) throw new Error(typeof data==='string'?data:JSON.stringify(data));
   return data;
@@ -313,24 +313,26 @@ if(!token() && !location.pathname.endsWith('/login')){ location.href='/admin/log
 
     <div class="nav-section">
       <div class="nav-section-title">Settings</div>
-      <a href="/admin/settings" class="nav-link sub" data-path="/admin/settings">
+
+      <a href="/admin/settings/team" class="nav-link sub" data-path="/admin/settings/team" data-role="owner">
         <span class="nav-agent-icon" style="background:rgba(255,255,255,0.1);color:#aaa">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </span>
-        <span class="nav-link-text">Settings</span>
+        <span class="nav-link-text">Team</span>
       </a>
-      <a href="/admin/account" class="nav-link sub" data-path="/admin/account">
+      <a href="/admin/settings/billing" class="nav-link sub" data-path="/admin/settings/billing" data-role="owner">
         <span class="nav-agent-icon" style="background:rgba(255,255,255,0.1);color:#aaa">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         </span>
-        <span class="nav-link-text">Account</span>
+        <span class="nav-link-text">Billing</span>
       </a>
-      <a href="/admin/compliance" class="nav-link sub" data-path="/admin/compliance">
+      <a href="/admin/settings/logs" class="nav-link sub" data-path="/admin/settings/logs" data-role="owner,manager">
         <span class="nav-agent-icon" style="background:rgba(255,255,255,0.1);color:#aaa">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         </span>
-        <span class="nav-link-text">Compliance</span>
+        <span class="nav-link-text">Activity Logs</span>
       </a>
+
     </div>
   </nav>
 
@@ -351,6 +353,13 @@ if(!token() && !location.pathname.endsWith('/login')){ location.href='/admin/log
   var p = location.pathname.replace(/\/$/, '') || '/admin';
   document.querySelectorAll('aside a.nav-link[data-path]').forEach(function(a){
     if(a.getAttribute('data-path')===p) a.classList.add('active');
+  });
+
+  // Role-based sidebar filtering
+  var role = '{{ tenant_role }}' || 'owner';
+  document.querySelectorAll('aside a.nav-link[data-role]').forEach(function(a){
+    var allowed = (a.getAttribute('data-role') || '').split(',');
+    if(allowed.indexOf(role) === -1) a.style.display = 'none';
   });
 })();
 </script>

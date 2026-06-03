@@ -3,16 +3,7 @@ from __future__ import annotations
 
 from cryptography.fernet import Fernet, InvalidToken
 
-from .config import get_settings
-
-
-class ConnectorError(Exception):
-    def __init__(self, provider: str = "", operation: str = "", status_code: int | None = None, message: str = ""):
-        self.provider = provider
-        self.operation = operation
-        self.status_code = status_code
-        self.message = message
-        super().__init__(f"[{provider}:{operation}] {message}" + (f" (HTTP {status_code})" if status_code else ""))
+from ..config import get_settings
 
 
 def _fernet() -> Fernet:
@@ -30,4 +21,4 @@ def decrypt(ciphertext: str) -> str:
     try:
         return _fernet().decrypt(ciphertext.encode()).decode()
     except (InvalidToken, Exception) as e:
-        raise ConnectorError(operation="decrypt", message=str(e))
+        raise ValueError(f"Decryption failed: {e}")

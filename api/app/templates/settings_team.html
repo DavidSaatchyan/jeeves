@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Team & Roles</h1>
+<p class="page-desc">Invite team members and manage their permissions.</p>
+
+<div class="card">
+  <div class="card-header">
+    <h2>Team Members</h2>
+    <button class="btn ghost sm" onclick="showInviteModal()">+ Invite</button>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody id="teamBody">
+      <tr><td colspan="5" class="muted" style="text-align:center;padding:32px">Loading...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Role Permissions</h2>
+  <table>
+    <thead>
+      <tr><th>Feature</th><th>Owner</th><th>Manager</th><th>Operator</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Inbox</td><td>✓</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Knowledge Base</td><td>✓</td><td>✓</td><td>—</td></tr>
+      <tr><td>Agents</td><td>✓</td><td>✓</td><td>—</td></tr>
+      <tr><td>Integrations</td><td>✓</td><td>✓</td><td>—</td></tr>
+      <tr><td>Team Management</td><td>✓</td><td>—</td><td>—</td></tr>
+      <tr><td>Billing</td><td>✓</td><td>—</td><td>—</td></tr>
+      <tr><td>Compliance</td><td>✓</td><td>✓</td><td>—</td></tr>
+      <tr><td>Activity Logs</td><td>✓</td><td>✓</td><td>—</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!— Invite Modal —>
+<div class="modal-overlay" id="inviteModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Invite Team Member</h2>
+      <button class="hub-modal-close" onclick="closeInviteModal()">✕</button>
+    </div>
+    <label>Email</label>
+    <input type="email" id="inviteEmail" placeholder="colleague@company.com">
+    <label>Name</label>
+    <input type="text" id="inviteName" placeholder="Full name (optional)">
+    <label>Role</label>
+    <select id="inviteRole">
+      <option value="manager">Manager</option>
+      <option value="operator" selected>Operator</option>
+    </select>
+    <div class="mt-20 flex">
+      <button class="btn accent" onclick="inviteMember()">Send Invite</button>
+      <button class="ghost" onclick="closeInviteModal()">Cancel</button>
+    </div>
+    <div id="inviteError" class="err-msg" style="display:none"></div>
+  </div>
+</div>
+{% endblock %}
+{% block tail %}
+<script>
+async function loadTeam() {
+  try {
+    var data = await api('/admin/api/settings/team');
+    var members = data.members || [];
+    document.getElementById('teamBody').innerHTML = members.length
+      ? members.map(function(m){
+          var status = m.is_active ? '<span class="pill ok">Active</span>' : '<span class="pill warn">Invited</span>';
+          return '<tr>' +
+            '<td>' + esc(m.name || '—') + '</td>' +
+            '<td>' + esc(m.email) + '</td>' +
+            '<td><select onchange="changeRole(\'' + m.id + '\',this.value)" style="font-size:12px;padding:4px 8px;width:auto">' +
+              '<option value="owner"' + (m.role==='owner'?' selected':'') + '>Owner</option>' +
+              '<option value="manager"' + (m.role==='manager'?' selected':'') + '>Manager</option>' +
+              '<option value="operator"' + (m.role==='operator'?' selected':'') + '>Operator</option>' +
+            '</select></td>' +
+            '<td>' + status + '</td>' +
+            '<td><button class="ghost sm danger" onclick="removeMember(\'' + m.id + '\')">Remove</button></td>' +
+            '</tr>';
+        }).join('')
+      : '<tr><td colspan="5" class="muted" style="text-align:center;padding:32px">No team members yet.</td></tr>';
+  } catch(e) { document.getElementById('teamBody').innerHTML = '<tr><td colspan="5" class="err-msg" style="text-align:center;padding:32px">Error loading team.</td></tr>'; }
+}
+
+function showInviteModal() { document.getElementById('inviteModal').classList.add('show'); document.getElementById('inviteEmail').focus(); }
+function closeInviteModal() { document.getElementById('inviteModal').classList.remove('show'); document.getElementById('inviteError').style.display='none'; }
+
+async function inviteMember() {
+  var email = document.getElementById('inviteEmail').value.trim();
+  var name = document.getElementById('inviteName').value.trim();
+  var role = document.getElementById('inviteRole').value;
+  if (!email) { showError('Email is required'); return; }
+  try {
+    await api('/admin/api/settings/team/invite', { method: 'POST', body: { email: email, name: name, role: role } });
+    closeInviteModal();
+    document.getElementById('inviteEmail').value = '';
+    document.getElementById('inviteName').value = '';
+    loadTeam();
+  } catch(e) { showError(e.message); }
+}
+
+function showError(msg) {
+  var el = document.getElementById('inviteError');
+  el.textContent = msg;
+  el.style.display = '';
+}
+
+async function changeRole(id, role) {
+  try { await api('/admin/api/settings/team/' + id + '/role', { method: 'PUT', body: { role: role } }); }
+  catch(e) { alert('Error: ' + e.message); loadTeam(); }
+}
+
+async function removeMember(id) {
+  if (!confirm('Remove this team member?')) return;
+  try { await api('/admin/api/settings/team/' + id, { method: 'DELETE' }); loadTeam(); }
+  catch(e) { alert('Error: ' + e.message); }
+}
+
+loadTeam();
+</script>
+{% endblock %}

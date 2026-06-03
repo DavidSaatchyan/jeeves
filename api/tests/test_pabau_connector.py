@@ -25,7 +25,7 @@ class TestPabauConnectorInit:
         assert c.api_key == "test-key"
         assert c.company_id == "42"
         assert c.webhook_secret == "whsec_test"
-        assert c.base_url == "https://api.pabau.com"
+        assert c.base_url == "https://api.oauth.pabau.com"
 
     def test_custom_base_url(self):
         c = _make_connector(base_url="https://eu.pabau.com/")
@@ -57,7 +57,7 @@ class TestPabauRequest:
 
         assert result == {"id": 1, "name": "John"}
         mock_req.assert_called_once_with(
-            "GET", "https://api.pabau.com/patients/1",
+            "GET", "https://api.oauth.pabau.com/test-key/patients/1",
             headers=ANY, timeout=30,
         )
 
@@ -71,7 +71,7 @@ class TestPabauRequest:
             c._request("GET", "/test")
 
         headers = mock_req.call_args[1]["headers"]
-        assert headers["X-API-Key"] == "test-key"
+        assert "X-API-Key" not in headers
         assert headers["X-Company-Id"] == "42"
         assert headers["Content-Type"] == "application/json"
         assert headers["Accept"] == "application/json"

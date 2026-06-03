@@ -20,8 +20,8 @@ from ..models import ChannelConfig, ChatLog, Tenant
 from ..shared.inbox_writer import add_message, get_or_create_conversation
 from ..core.ai import simple_llm_response
 from ..core.compliance.consent import ConsentManager
-from ..rate_limit import check_rate_limit
-from ..moderation import moderate
+from ..shared.rate_limit import check_rate_limit
+from ..shared.moderation import moderate
 from ..core.ai import classify_intent
 from ..integrations.resolver import get_crm_adapter
 

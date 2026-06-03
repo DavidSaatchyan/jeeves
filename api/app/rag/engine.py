@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
-from .. import chunking
+from . import chunking
 from .client import _collection, embed_batch
 from .config import DISTANCE_THRESHOLD, TOP_K
 

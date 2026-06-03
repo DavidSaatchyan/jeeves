@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Billing & Usage</h1>
+<p class="page-desc">Your plan, resource usage, and billing information.</p>
+
+<div id="overageBanner" class="card" style="border-left:3px solid var(--danger);display:none;margin-bottom:16px">
+  <strong>⚠️ Overage Warning</strong>
+  <span id="overageText"></span>
+  <button class="btn accent sm" onclick="showPlanModal()" style="margin-left:auto">Upgrade</button>
+</div>
+
+<div class="card" style="border-left:3px solid var(--accent)">
+  <h2 style="text-transform:none;letter-spacing:0;color:var(--text);font-size:18px;margin-bottom:4px">Free Plan</h2>
+  <div style="font-size:36px;font-weight:800;margin-bottom:4px">$0<span style="font-size:14px;font-weight:500;color:var(--muted2)">/mo</span></div>
+  <div id="trialInfo" class="muted" style="font-size:13px"></div>
+  <div class="mt-16 flex">
+    <button class="btn accent" onclick="showPlanModal()">Upgrade Plan</button>
+    <button class="ghost" onclick="showAddonsModal()">Add-ons</button>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Dialogs</h2>
+    <div id="dialogUsage">
+      <div style="font-size:32px;font-weight:700" id="dialogUsed">—</div>
+      <div class="muted" style="font-size:12px;margin-bottom:12px">of <span id="dialogLimit">—</span> resolved this period</div>
+      <div class="status-bar" id="dialogBar"><div class="sb-segment" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Storage</h2>
+    <div id="storageUsage">
+      <div style="font-size:32px;font-weight:700" id="storageUsed">—</div>
+      <div class="muted" style="font-size:12px;margin-bottom:12px">of <span id="storageLimit">—</span> used</div>
+      <div class="status-bar" id="storageBar"><div class="sb-segment" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Active Agents</h2>
+    <div id="agentUsage">
+      <div style="font-size:32px;font-weight:700" id="agentUsed">—</div>
+      <div class="muted" style="font-size:12px;margin-bottom:12px">of <span id="agentLimit">—</span> enabled</div>
+      <div class="status-bar" id="agentBar"><div class="sb-segment" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Estimated Charge</h2>
+    <div id="chargeInfo">
+      <div style="font-size:32px;font-weight:700" id="estCharge">$0</div>
+      <div class="muted" style="font-size:12px">this billing period</div>
+    </div>
+  </div>
+</div>
+
+{% set plans = [
+  {"id":"free","label":"Free","price":0,"resolved":10,"storage":500,"agents":1},
+  {"id":"starter","label":"Starter","price":19,"resolved":500,"storage":2000,"agents":3},
+  {"id":"pro","label":"Pro","price":49,"resolved":2000,"storage":10000,"agents":10},
+  {"id":"enterprise","label":"Enterprise","price":149,"resolved":25000,"storage":100000,"agents":100},
+] %}
+
+<div id="planModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closePlanModal()">
+  <div class="modal" style="max-width:700px">
+    <div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 style="margin:0">Choose a Plan</h2>
+      <button class="ghost" onclick="closePlanModal()" style="font-size:20px;padding:4px 10px">&times;</button>
+    </div>
+    <div class="grid grid-2" style="gap:12px">
+      {% for p in plans %}
+      <div class="card plan-card" data-plan="{{ p.id }}" style="cursor:pointer;border:2px solid transparent;position:relative" onclick="selectPlan('{{ p.id }}')">
+        <div style="font-weight:700;font-size:18px;margin-bottom:4px">{{ p.label }}</div>
+        <div style="font-size:28px;font-weight:800">${{ p.price }}<span style="font-size:12px;font-weight:500;color:var(--muted2)">/mo</span></div>
+        <div class="muted" style="font-size:12px;margin-top:8px">
+          <div>✦ {{ p.resolved }} resolved dialogs</div>
+          <div>✦ {{ p.storage }} MB storage</div>
+          <div>✦ {{ p.agents }} agents</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="flex" style="justify-content:flex-end;margin-top:16px;gap:8px">
+      <button class="ghost" onclick="closePlanModal()">Cancel</button>
+      <button class="btn accent" id="confirmPlanBtn" disabled onclick="confirmPlan()">Select Plan</button>
+    </div>
+  </div>
+</div>
+
+<div id="addonsModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAddonsModal()">
+  <div class="modal" style="max-width:500px">
+    <div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 style="margin:0">Add-ons</h2>
+      <button class="ghost" onclick="closeAddonsModal()" style="font-size:20px;padding:4px 10px">&times;</button>
+    </div>
+    <div id="addonsEmpty" class="muted" style="text-align:center;padding:24px">No add-ons available yet.</div>
+    <div class="flex" style="justify-content:flex-end;margin-top:16px">
+      <button class="ghost" onclick="closeAddonsModal()">Close</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block tail %}
+<style>
+  .plan-card.selected { border-color:var(--accent) !important; }
+  .plan-card:hover { border-color:var(--accent); }
+</style>
+<script>
+var selectedPlan = null;
+
+function showPlanModal() {
+  selectedPlan = null;
+  document.getElementById('confirmPlanBtn').disabled = true;
+  document.querySelectorAll('.plan-card').forEach(function(el) { el.classList.remove('selected'); });
+  document.getElementById('planModal').style.display = 'flex';
+}
+
+function closePlanModal() {
+  document.getElementById('planModal').style.display = 'none';
+}
+
+function selectPlan(id) {
+  selectedPlan = id;
+  document.querySelectorAll('.plan-card').forEach(function(el) {
+    el.classList.toggle('selected', el.dataset.plan === id);
+  });
+  document.getElementById('confirmPlanBtn').disabled = false;
+}
+
+function confirmPlan() {
+  if (!selectedPlan) return;
+  api('/admin/api/settings/billing/change-plan', { method:'POST', body:{plan:selectedPlan} }).then(function() {
+    closePlanModal();
+    loadBilling();
+  }).catch(function(e) { alert('Failed to change plan: ' + e); });
+}
+
+function showAddonsModal() {
+  document.getElementById('addonsModal').style.display = 'flex';
+}
+
+function closeAddonsModal() {
+  document.getElementById('addonsModal').style.display = 'none';
+}
+
+async function loadBilling() {
+  try {
+    var data = await api('/admin/api/settings/billing');
+    var d = data.dialogs || {};
+    var s = data.storage || {};
+    var a = data.agents || {};
+
+    document.getElementById('dialogUsed').textContent = d.used || 0;
+    document.getElementById('dialogLimit').textContent = d.limit || 0;
+    var dpct = d.limit ? Math.min(100, Math.round((d.used / d.limit) * 100)) : 0;
+    document.getElementById('dialogBar').innerHTML = '<div class="sb-segment' + (dpct > 90 ? ' done' : '') + '" style="width:' + dpct + '%"></div>';
+
+    document.getElementById('storageUsed').textContent = (s.used_mb || 0) + ' MB';
+    document.getElementById('storageLimit').textContent = (s.limit_mb || 0) + ' MB';
+    var spct = s.limit ? Math.min(100, Math.round((s.used / s.limit) * 100)) : 0;
+    document.getElementById('storageBar').innerHTML = '<div class="sb-segment' + (spct > 90 ? ' done' : '') + '" style="width:' + spct + '%"></div>';
+
+    document.getElementById('agentUsed').textContent = a.used || 0;
+    document.getElementById('agentLimit').textContent = a.limit || 0;
+    var apct = a.limit ? Math.min(100, Math.round((a.used / a.limit) * 100)) : 0;
+    document.getElementById('agentBar').innerHTML = '<div class="sb-segment' + (apct > 90 ? ' done' : '') + '" style="width:' + apct + '%"></div>';
+
+    document.getElementById('estCharge').textContent = '$' + (data.estimated_charge_usd || 0).toFixed(2);
+
+    if (data.trial_days_left > 0) {
+      document.getElementById('trialInfo').textContent = data.trial_days_left + ' days left in trial';
+    } else {
+      document.getElementById('trialInfo').textContent = 'Trial ended';
+    }
+
+    var overageEl = document.getElementById('overageBanner');
+    var overageText = document.getElementById('overageText');
+    var overages = [];
+    if (dpct > 90) overages.push('Dialogs at ' + dpct + '%');
+    if (spct > 90) overages.push('Storage at ' + spct + '%');
+    if (overages.length > 0) {
+      overageEl.style.display = 'flex';
+      overageText.textContent = overages.join(', ') + ' — consider upgrading to avoid disruption.';
+    } else {
+      overageEl.style.display = 'none';
+    }
+  } catch(e) { console.error('billing error:', e); }
+}
+
+loadBilling();
+</script>
+{% endblock %}

@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 
 from ..config import get_yaml_config
 from ..db import get_db
-from ..models import Tenant
-from ..rate_limit import check_rate_limit
+from ..models import TeamMember, Tenant
+from ..shared.rate_limit import check_rate_limit
 from ..schemas import AuthOut, LoginIn, RefreshIn, RegisterIn, TokenOut
 from .deps import _get_client_ip
 from .passwords import prepare_password, validate_password_strength
@@ -39,6 +39,10 @@ def register(body: RegisterIn, request: Request, response: Response, db: Session
     db.add(tenant)
     db.commit()
     db.refresh(tenant)
+
+    owner = TeamMember(tenant_id=tenant.id, email=tenant.email, name=tenant.name, role="owner", accepted_at=datetime.utcnow())
+    db.add(owner)
+    db.commit()
 
     access, refresh = issue_tokens(tenant.id)
 

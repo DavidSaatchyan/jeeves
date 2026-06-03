@@ -18,7 +18,7 @@ def home(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
 
 @router.get("/dashboard", response_class=HTMLResponse)
 def dashboard_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "dashboard.html", context=_ctx(request))
+    return templates.TemplateResponse(request, "dashboard.html", context=_ctx(request, tenant=tenant))
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -66,26 +66,37 @@ def admin_logout():
     return response
 
 
+# ── Settings pages ─────────────────────────────────────────────
+
+@router.get("/settings/team", response_class=HTMLResponse)
+def settings_team_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
+    return templates.TemplateResponse(request, "settings_team.html", context=_ctx(request, tenant=tenant))
+
+
+@router.get("/settings/billing", response_class=HTMLResponse)
+def settings_billing_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
+    return templates.TemplateResponse(request, "settings_billing.html", context=_ctx(request, tenant=tenant))
+
+
+@router.get("/settings/logs", response_class=HTMLResponse)
+def settings_logs_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
+    return templates.TemplateResponse(request, "settings_logs.html", context=_ctx(request, tenant=tenant))
+
+
+# ── Legacy redirects ───────────────────────────────────────────
+
 @router.get("/settings", response_class=HTMLResponse)
-def settings_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "settings.html", context=_ctx(request))
+def settings_legacy_redirect():
+    return RedirectResponse(url="/admin/settings/team", status_code=status.HTTP_302_FOUND)
 
 
-@router.get("/connections", response_class=HTMLResponse)
-def connections_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "connections.html", context=_ctx(request))
-
+# ── Legacy pages ──────────────────────────────────────────────
 
 @router.get("/knowledge", response_class=HTMLResponse)
 def knowledge_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    ctx = _ctx(request)
+    ctx = _ctx(request, tenant=tenant)
     ctx["tenant_id"] = str(tenant.id)
     return templates.TemplateResponse(request, "knowledge.html", context=ctx)
 
 
-@router.get("/account", response_class=HTMLResponse)
-def account_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
-    return templates.TemplateResponse(request, "account.html", context=_ctx(request))
 
-
-# (Channels API moved to integrations_hub.py)
