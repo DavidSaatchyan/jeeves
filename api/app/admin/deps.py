@@ -70,14 +70,13 @@ def _ctx(request: Request, tenant: Tenant | None = None) -> dict:
         scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
         host = request.headers.get("x-forwarded-host", request.url.netloc)
         base = f"{scheme}://{host}"
-    ctx: dict = {"public_base_url": base}
-    if tenant:
-        ctx["tenant_role"] = _resolve_role(tenant)
-    return ctx
+    role = _resolve_role(tenant) if tenant else "owner"
+    return {"public_base_url": base, "tenant_role": role}
 
 
 def _resolve_role(tenant: Tenant) -> str:
     from ..db import SessionLocal
+    db: Session | None = None
     try:
         db = SessionLocal()
         member = db.query(TeamMember).filter(
@@ -88,7 +87,8 @@ def _resolve_role(tenant: Tenant) -> str:
     except Exception:
         return "owner"
     finally:
-        db.close()
+        if db is not None:
+            db.close()
 
 
 
