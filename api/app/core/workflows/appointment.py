@@ -4,10 +4,21 @@ import logging
 
 from sqlalchemy.orm import Session
 
+from ..ai.classify import classify
+from ..booking import book_appointment, cancel_appointment, get_available_slots
+from ..booking.scheduler import SlotAlreadyBookedError
 from ..events.schemas import CanonicalEvent
+from .registry import route_event
 from .runtime import Workflow
 
 logger = logging.getLogger(__name__)
+
+
+class CalendarProviderError(Exception):
+    """Calendar integration not configured — fallback to escalation."""
+
+
+
 
 APPOINTMENT_STATES: set[str] = {
     "STARTED",
@@ -77,28 +88,25 @@ class AppointmentWorkflow(Workflow):
             await self.transition("CLASSIFYING", event, db, reason="patient_message_received")
 
         elif state == "CLASSIFYING":
-            from ..ai.triage import triage_intent
             payload = event.payload or {}
-            result = await triage_intent(
+            result = await classify(
                 message=payload.get("message", ""),
-                conversation_history=payload.get("history"),
+                tenant_id=str(self.tenant_id),
+                history=payload.get("history"),
             )
-            intent = result.get("intent", "general_question")
-            urgency = result.get("urgency", "routine")
 
-            if urgency == "emergency":
+            if result.urgency == "emergency":
                 await self.transition("ESCALATED", event, db, reason="emergency_detected")
-            elif intent in ("book_appointment", "check_availability"):
-                await self.transition("CHECKING_SCHEDULE", event, db, reason=f"intent={intent}")
-            elif intent == "cancel_appointment":
+            elif result.triage_intent in ("book_appointment", "check_availability"):
+                await self.transition("CHECKING_SCHEDULE", event, db, reason=f"intent={result.triage_intent}")
+            elif result.triage_intent == "cancel_appointment":
                 await self.transition("CANCELLING", event, db, reason="patient_requested_cancel")
-            elif intent == "reschedule":
+            elif result.triage_intent == "reschedule":
                 await self.transition("RESCHEDULING", event, db, reason="patient_requested_reschedule")
             else:
-                await self.transition("AWAITING_INTENT", event, db, reason=f"unclear_intent={intent}")
+                await self.transition("AWAITING_INTENT", event, db, reason=f"unclear_intent={result.triage_intent}")
 
         elif state == "CHECKING_SCHEDULE":
-            from ..booking import get_available_slots
             payload = event.payload or {}
             tenant_id = event.tenant_id
             slots = get_available_slots(
@@ -152,8 +160,6 @@ class AppointmentWorkflow(Workflow):
             await self.transition("ARRIVED", event, db, reason="patient_arrived")
 
     async def _fire_visit_completed(self, event: CanonicalEvent, db: Session) -> None:
-        from .registry import route_event
-
         visit_event = CanonicalEvent(
             tenant_id=str(self.tenant_id),
             event_type="visit_completed",
@@ -177,10 +183,6 @@ class AppointmentWorkflow(Workflow):
             await self.transition("NO_SHOW", event, db, reason="no_show_detected")
 
     async def _confirm_booking(self, event: CanonicalEvent, db: Session) -> None:
-        from ..booking import book_appointment
-        from ..booking.scheduler import SlotAlreadyBookedError
-        from ..calendar import CalendarProviderError
-
         payload = event.payload or {}
 
         try:
@@ -203,8 +205,6 @@ class AppointmentWorkflow(Workflow):
             await self.transition("ESCALATED", event, db, reason="no_calendar_configured")
 
     async def _cancel_booking(self, event: CanonicalEvent, db: Session) -> None:
-        from ..booking import cancel_appointment
-
         payload = event.payload or {}
         appointment_id = payload.get("appointment_id")
         if appointment_id:

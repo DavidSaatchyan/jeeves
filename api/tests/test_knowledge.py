@@ -90,12 +90,37 @@ def mock_openai_chat():
         yield
 
 
+def _mock_db_execute_first(db: MagicMock, return_value):
+    """Set up mock_db.execute(...).scalars().order_by(...).first() = return_value."""
+    result = MagicMock()
+    scalars_result = MagicMock()
+    scalars_result.order_by.return_value.first.return_value = return_value
+    result.scalars.return_value = scalars_result
+    db.execute.return_value = result
+
+
+def _mock_db_execute_all(db: MagicMock, return_value):
+    """Set up mock_db.execute(...).scalars().all() = return_value."""
+    result = MagicMock()
+    scalars_result = MagicMock()
+    scalars_result.all.return_value = return_value
+    result.scalars.return_value = scalars_result
+    db.execute.return_value = result
+
+
+def _mock_db_execute_scalar_one_or_none(db: MagicMock, return_value):
+    """Set up mock_db.execute(...).scalar_one_or_none() = return_value."""
+    result = MagicMock()
+    result.scalar_one_or_none.return_value = return_value
+    db.execute.return_value = result
+
+
 # ── Upload tests ───────────────────────────────────────────────────────────
 
 
 class TestUploadFile:
     def test_upload_success(self, client, mock_db, mock_rag, mock_chunking, tmp_path):
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        _mock_db_execute_first(mock_db, None)
         mock_db.add.return_value = None
 
         with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
@@ -113,7 +138,7 @@ class TestUploadFile:
         fake_rec.id = uuid4()
         fake_rec.status = "ready"
         fake_rec.filename = "test.txt"
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = fake_rec
+        _mock_db_execute_first(mock_db, fake_rec)
 
         with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
             resp = client.post(
@@ -121,8 +146,7 @@ class TestUploadFile:
                 files={"file": ("test.txt", io.BytesIO(b"hello world"), "text/plain")},
             )
         assert resp.status_code == 201
-        data = resp.json()
-        assert data["duplicate"] is True
+        assert resp.json()["duplicate"] is True
 
     def test_upload_unsupported_extension(self, client, mock_db, mock_rag, mock_chunking):
         resp = client.post(
@@ -133,7 +157,7 @@ class TestUploadFile:
         assert "Unsupported" in resp.text
 
     def test_upload_too_large(self, client, mock_db, mock_rag, mock_chunking, tmp_path):
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        _mock_db_execute_first(mock_db, None)
 
         big_data = b"x" * (MAX_SIZE_MB * 1024 * 1024 + 1)
         with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
@@ -144,7 +168,7 @@ class TestUploadFile:
         assert resp.status_code == 413
 
     def test_upload_size_at_limit(self, client, mock_db, mock_rag, mock_chunking, tmp_path):
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        _mock_db_execute_first(mock_db, None)
 
         data_at_limit = b"x" * (MAX_SIZE_MB * 1024 * 1024)
         with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
@@ -155,7 +179,7 @@ class TestUploadFile:
         assert resp.status_code == 201
 
     def test_upload_no_filename(self, client, mock_db, mock_rag, mock_chunking, tmp_path):
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        _mock_db_execute_first(mock_db, None)
 
         with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
             resp = client.post(
@@ -166,7 +190,7 @@ class TestUploadFile:
         assert resp.status_code in (201, 422)
 
     def test_upload_background_index_called(self, client, mock_db, mock_rag, mock_chunking, tmp_path):
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        _mock_db_execute_first(mock_db, None)
 
         with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
             with patch("app.knowledge.asyncio.create_task") as mock_task:
@@ -183,7 +207,7 @@ class TestUploadFile:
 
 class TestListFiles:
     def test_list_empty(self, client, mock_db, mock_rag):
-        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        _mock_db_execute_all(mock_db, [])
         resp = client.get("/knowledge/files")
         assert resp.status_code == 200
         assert resp.json() == []
@@ -203,7 +227,7 @@ class TestListFiles:
             error="processing error",
             created_at=datetime(2025, 1, 2),
         )
-        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [f1, f2]
+        _mock_db_execute_all(mock_db, [f1, f2])
 
         resp = client.get("/knowledge/files")
         assert resp.status_code == 200
@@ -227,7 +251,7 @@ class TestDeleteFile:
         rec.tenant_id = uuid4()
         rec.s3_key = str(tmp_path / "test.txt")
 
-        mock_db.query.return_value.filter.return_value.first.return_value = rec
+        _mock_db_execute_scalar_one_or_none(mock_db, rec)
 
         resp = client.delete(f"/knowledge/files/{file_id}")
         assert resp.status_code == 204
@@ -236,7 +260,7 @@ class TestDeleteFile:
         mock_rag["delete_file"].assert_called_once()
 
     def test_delete_not_found(self, client, mock_db, mock_rag):
-        mock_db.query.return_value.filter.return_value.first.return_value = None
+        _mock_db_execute_scalar_one_or_none(mock_db, None)
         file_id = uuid4()
         resp = client.delete(f"/knowledge/files/{file_id}")
         assert resp.status_code == 404
@@ -249,7 +273,7 @@ class TestDeleteFile:
         rec.tenant_id = uuid4()
         rec.s3_key = str(tmp_path / "test.txt")
 
-        mock_db.query.return_value.filter.return_value.first.return_value = rec
+        _mock_db_execute_scalar_one_or_none(mock_db, rec)
         mock_rag["delete_file"].side_effect = Exception("Chroma error")
 
         resp = client.delete(f"/knowledge/files/{file_id}")
@@ -263,7 +287,7 @@ class TestDeleteFile:
         rec.tenant_id = uuid4()
         rec.s3_key = "/nonexistent/path/file.txt"
 
-        mock_db.query.return_value.filter.return_value.first.return_value = rec
+        _mock_db_execute_scalar_one_or_none(mock_db, rec)
 
         resp = client.delete(f"/knowledge/files/{file_id}")
         assert resp.status_code == 204
@@ -316,7 +340,7 @@ class TestCleanup:
         fid = uuid4()
         rec1 = MagicMock()
         rec1.id = fid
-        mock_db.query.return_value.filter.return_value.all.return_value = [rec1]
+        _mock_db_execute_all(mock_db, [rec1])
         mock_rag["purge_orphans"].return_value = {"total": 10, "removed": 2}
         mock_rag["deduplicate_collection"].return_value = {"total": 8, "removed": 1}
 
@@ -328,7 +352,7 @@ class TestCleanup:
         mock_rag["purge_orphans"].assert_called_once_with(ANY, {str(fid)})
 
     def test_cleanup_no_files(self, client, mock_db, mock_rag):
-        mock_db.query.return_value.filter.return_value.all.return_value = []
+        _mock_db_execute_all(mock_db, [])
         resp = client.post("/knowledge/cleanup")
         assert resp.status_code == 200
 
@@ -416,6 +440,5 @@ class TestAuthGuard:
         with TestClient(app) as c:
             resp = c.post("/knowledge/cleanup")
         assert resp.status_code in (401, 403)
-
 
 

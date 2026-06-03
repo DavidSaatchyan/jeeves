@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .exceptions import ConnectorError
@@ -30,10 +31,10 @@ def _upsert_patient(db: Session, tenant_id: uuid.UUID, data: dict[str, Any]) -> 
     if not external_id:
         raise HTTPException(status_code=400, detail="Patient external_id required")
 
-    patient = db.query(Patient).filter(
+    patient = db.execute(select(Patient).where(
         Patient.tenant_id == tenant_id,
         Patient.external_id == external_id,
-    ).first()
+    )).scalar_one_or_none()
 
     if patient:
         for field in ("first_name", "last_name", "email", "phone"):
@@ -60,10 +61,10 @@ def _sync_appointment(db: Session, tenant_id: uuid.UUID, patient_id: uuid.UUID, 
     external_id = str(data.get("id", ""))
     cache = None
     if external_id:
-        cache = db.query(AppointmentCache).filter(
+        cache = db.execute(select(AppointmentCache).where(
             AppointmentCache.tenant_id == tenant_id,
             AppointmentCache.external_id == external_id,
-        ).first()
+        )).scalar_one_or_none()
 
     if cache:
         cache.status = data.get("status", cache.status)
@@ -147,10 +148,10 @@ async def _process_webhook(
 
     if "appointment" in event_type.lower():
         patient_ext_id = str(resource.get("patient_id", ""))
-        patient = db.query(Patient).filter(
+        patient = db.execute(select(Patient).where(
             Patient.tenant_id == tenant.id,
             Patient.external_id == patient_ext_id,
-        ).first()
+        )).scalar_one_or_none()
         if not patient:
             raise HTTPException(status_code=404, detail="Linked patient not found")
         appt = _sync_appointment(db, tenant.id, patient.id, resource)

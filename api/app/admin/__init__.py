@@ -4,5 +4,17 @@ from . import agents, analytics, inbox, integrations_hub, logs, marketing, pages
 from .router import router
 
 __all__ = [
+    "agents",
+    "analytics",
+    "inbox",
+    "integrations_hub",
+    "logs",
+    "marketing",
+    "pages",
+    "settings_api_keys",
+    "settings_billing",
+    "settings_logs",
+    "settings_team",
+    "workflows",
     "router",
 ]

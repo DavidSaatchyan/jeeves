@@ -23,6 +23,7 @@ from .router import router, templates
 
 _CLINIKO_SHARDS = ["au1", "au2", "au3", "au4", "au5", "eu1", "us1", "ca1", "uk1", "nz1", "sg1"]
 _KNOWN_SHARDS = set(_CLINIKO_SHARDS)
+_executor = ThreadPoolExecutor(max_workers=4)
 
 
 # ── SSR page ────────────────────────────────────────────────────
@@ -141,11 +142,10 @@ def _discover_shard(api_key: str) -> str | None:
     shard = _shard_from_key(api_key)
     if shard and _try_shard(api_key, shard):
         return shard
-    with ThreadPoolExecutor(max_workers=len(_CLINIKO_SHARDS)) as ex:
-        future_map = {ex.submit(_try_shard, api_key, s): s for s in _CLINIKO_SHARDS}
-        for f in as_completed(future_map):
-            if f.result():
-                return future_map[f]
+    future_map = {_executor.submit(_try_shard, api_key, s): s for s in _CLINIKO_SHARDS}
+    for f in as_completed(future_map):
+        if f.result():
+            return future_map[f]
     return None
 
 
@@ -196,7 +196,7 @@ def configure_crm(
 
     db.flush()
     db.commit()
-    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", f"Connected CRM: {provider.title()}", api_status="success")
+    log_activity(db, tenant.id, tenant.email, "config_change", f"Connected CRM: {provider.title()}", api_status="success")
     return {"ok": True, "connected": True, "message": f"Connected to {provider.title()}"}
 
 
@@ -232,7 +232,7 @@ def disconnect_crm(
     db: Session = Depends(get_db),
     tenant: Tenant = Depends(get_admin_tenant),
 ):
-    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", "Disconnected CRM", api_status="success")
+    log_activity(db, tenant.id, tenant.email, "config_change", "Disconnected CRM", api_status="success")
     tenant.crm_config = {}
     tenant.crm_provider = "pabau"
     db.flush()
@@ -264,7 +264,7 @@ def configure_whatsapp(
     }
     upsert_channel(db, tenant.id, "whatsapp", config, status="active")
     db.commit()
-    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", "WhatsApp channel configured", api_status="success")
+    log_activity(db, tenant.id, tenant.email, "config_change", "WhatsApp channel configured", api_status="success")
     return {"ok": True, "message": "WhatsApp configured and active"}
 
 
@@ -273,7 +273,7 @@ def disconnect_whatsapp(
     db: Session = Depends(get_db),
     tenant: Tenant = Depends(get_admin_tenant),
 ):
-    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", "WhatsApp channel disconnected", api_status="success")
+    log_activity(db, tenant.id, tenant.email, "config_change", "WhatsApp channel disconnected", api_status="success")
     from ..channels.registry import delete_channel
     delete_channel(db, tenant.id, "whatsapp")
     db.commit()
@@ -340,7 +340,7 @@ def configure_instagram(
     }
     upsert_channel(db, tenant.id, "instagram", config, status="active")
     db.commit()
-    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", "Instagram channel configured", api_status="success")
+    log_activity(db, tenant.id, tenant.email, "config_change", "Instagram channel configured", api_status="success")
     return {"ok": True, "message": "Instagram connected"}
 
 
@@ -349,7 +349,7 @@ def disconnect_instagram(
     db: Session = Depends(get_db),
     tenant: Tenant = Depends(get_admin_tenant),
 ):
-    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", "Instagram channel disconnected", api_status="success")
+    log_activity(db, tenant.id, tenant.email, "config_change", "Instagram channel disconnected", api_status="success")
     from ..channels.registry import delete_channel
     delete_channel(db, tenant.id, "instagram")
     db.commit()
@@ -402,7 +402,7 @@ def instagram_callback(
 
         # Get Facebook Pages the user manages
         pages_resp = httpx.get(
-            f"https://graph.facebook.com/v22.0/me/accounts",
+            "https://graph.facebook.com/v22.0/me/accounts",
             params={"access_token": access_token},
             timeout=15,
         )

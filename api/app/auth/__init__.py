@@ -9,5 +9,6 @@ __all__ = [
     "decode_token",
     "get_current_tenant",
     "issue_tokens",
+    "routes",
     "router",
 ]

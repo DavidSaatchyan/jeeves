@@ -86,8 +86,6 @@ class Workflow(ABC):
             )
 
     async def expire(self, db: Session) -> None:
-        from ..events.schemas import CanonicalEvent
-
         ev = CanonicalEvent(
             event_type="workflow_timeout",
             event_source="workflow_runtime",
@@ -99,8 +97,6 @@ class Workflow(ABC):
         await self.transition("EXPIRED", ev, db, reason="workflow_expiration")
 
     async def escalate(self, db: Session, reason: str = "") -> None:
-        from ..events.schemas import CanonicalEvent
-
         ev = CanonicalEvent(
             event_type="manual_escalation",
             event_source="workflow_runtime",

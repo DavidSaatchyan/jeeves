@@ -4,14 +4,13 @@ import logging
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..models import ChannelConfig, Tenant
-from ..shared.inbox_writer import add_message, get_or_create_conversation
-from ..core.ai import simple_llm_response
-from ..shared.rate_limit import check_rate_limit
-from ..shared.moderation import moderate
+from ..agents.service import process_message
+from ..channels.registry import channel_cache
 
 _IG_GRAPH_API = "https://graph.facebook.com/v22.0"
 logger = logging.getLogger("jeeves.instagram")
@@ -20,13 +19,15 @@ router = APIRouter(prefix="/channels/instagram", tags=["instagram"])
 
 
 def _resolve_tenant(db: Session, ig_user_id: str) -> tuple[Tenant | None, ChannelConfig | None]:
+    entry = channel_cache.resolve_instagram(ig_user_id)
+    if entry:
+        tenant_id, config_id = entry
+        return db.get(Tenant, tenant_id), db.get(ChannelConfig, config_id)
     configs = (
-        db.query(ChannelConfig)
-        .filter(
+        db.execute(select(ChannelConfig).where(
             ChannelConfig.channel_type == "instagram",
             ChannelConfig.status == "active",
-        )
-        .all()
+        )).scalars().all()
     )
     for cfg in configs:
         if cfg.config.get("instagram_account_id"):
@@ -58,12 +59,10 @@ def verify_webhook(
     challenge = request.query_params.get("hub.challenge", "")
 
     configs = (
-        db.query(ChannelConfig)
-        .filter(
+        db.execute(select(ChannelConfig).where(
             ChannelConfig.channel_type == "instagram",
             ChannelConfig.status == "active",
-        )
-        .all()
+        )).scalars().all()
     )
     for cfg in configs:
         vt = cfg.config.get("verify_token", "")
@@ -85,7 +84,6 @@ async def handle_webhook(request: Request, db: Session = Depends(get_db)):
                 continue
             sender_id = msg.get("sender", {}).get("id", "")
             text = message.get("text", "")
-
             if not sender_id or not text:
                 continue
 
@@ -96,30 +94,23 @@ async def handle_webhook(request: Request, db: Session = Depends(get_db)):
             access_token = cfg.config.get("access_token", "")
             ig_account_id = cfg.config.get("instagram_account_id", "")
 
-            if not check_rate_limit("instagram", sender_id):
-                await _send_message(access_token, ig_account_id, sender_id,
-                    "Too many messages. Please slow down.")
-                continue
+            result = await process_message(
+                tenant_id=str(tenant.id),
+                customer_id=sender_id,
+                message=text,
+                channel="instagram",
+                db=db,
+            )
 
-            flagged, category = moderate(text)
-            if flagged:
+            if result.blocked:
                 await _send_message(access_token, ig_account_id, sender_id,
                     "Your message couldn't be processed due to content policy.")
                 continue
-
-            conversation = get_or_create_conversation(db, tenant.id, "instagram", sender_id)
-            add_message(db, conversation.id, "user", text, channel="instagram")
-
-            reply = simple_llm_response(
-                tenant=tenant,
-                db=db,
-                message=text,
-                channel="instagram",
-                contact_name=msg.get("sender", {}).get("name"),
-            )
-
-            await _send_message(access_token, ig_account_id, sender_id, reply)
-
-            add_message(db, conversation.id, "assistant", reply, channel="instagram")
+            if result.rate_limited:
+                await _send_message(access_token, ig_account_id, sender_id,
+                    "Too many messages. Please slow down.")
+                continue
+            if result.response:
+                await _send_message(access_token, ig_account_id, sender_id, result.response)
 
     return {"status": "ok"}

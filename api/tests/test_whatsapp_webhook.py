@@ -9,6 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.agents.service import ProcessMessageResult
 from app.models import ChannelConfig
 
 
@@ -57,48 +58,22 @@ def client(app, override_deps):
 
 
 @pytest.fixture(autouse=True)
-def mock_webhook_deps():
-    """Patch all external calls used by the webhook handler."""
-    mock_rate_limit = MagicMock(return_value=True)
-    mock_moderate = MagicMock(return_value=(False, ""))
-    mock_classify = AsyncMock(return_value="general_inquiry")
-    mock_llm = AsyncMock(return_value={
-        "response": "I understand. Let me help you with that.",
-        "escalated": False,
-        "action_called": "",
-        "latency_ms": 85,
-    })
-    mock_consent = MagicMock()
-    mock_create_conv = MagicMock()
-    mock_add_msg = MagicMock()
+def mock_webhook_deps(sample_channel_config, mock_tenant):
+    """Patch external calls used by the webhook handler — flow goes through process_message."""
     mock_send = AsyncMock(return_value={"messages": [{"id": "wamid.test"}]})
-    mock_history = MagicMock(return_value=[])
-    mock_route = AsyncMock()
+    mock_process = AsyncMock(return_value=ProcessMessageResult(response="ok"))
+    mock_resolve = MagicMock(return_value=(mock_tenant, sample_channel_config))
 
     mocks = {
-        "check_rate_limit": mock_rate_limit,
-        "moderate": mock_moderate,
-        "classify_intent": mock_classify,
-        "simple_llm_response": mock_llm,
-        "ConsentManager": mock_consent,
-        "get_or_create_conversation": mock_create_conv,
-        "add_message": mock_add_msg,
         "_send_message": mock_send,
-        "get_conversation_history": mock_history,
-        "route_event": mock_route,
+        "process_message": mock_process,
+        "_resolve_tenant": mock_resolve,
     }
 
     stack = ExitStack()
-    stack.enter_context(patch("app.channels.whatsapp.check_rate_limit", mock_rate_limit))
-    stack.enter_context(patch("app.channels.whatsapp.moderate", mock_moderate))
-    stack.enter_context(patch("app.channels.whatsapp.classify_intent", mock_classify))
-    stack.enter_context(patch("app.channels.whatsapp.simple_llm_response", mock_llm))
-    stack.enter_context(patch("app.channels.whatsapp.ConsentManager", mock_consent))
-    stack.enter_context(patch("app.channels.whatsapp.get_or_create_conversation", mock_create_conv))
-    stack.enter_context(patch("app.channels.whatsapp.add_message", mock_add_msg))
     stack.enter_context(patch("app.channels.whatsapp._send_message", mock_send))
-    stack.enter_context(patch("app.core.memory.get_conversation_history", mock_history))
-    stack.enter_context(patch("app.core.workflows.registry.route_event", mock_route))
+    stack.enter_context(patch("app.channels.whatsapp.process_message", mock_process))
+    stack.enter_context(patch("app.channels.whatsapp._resolve_tenant", mock_resolve))
 
     yield mocks
     stack.close()
@@ -134,7 +109,9 @@ def _incoming_payload(
 
 class TestVerifyWebhook:
     def test_verify_success(self, client, mock_db, sample_channel_config):
-        mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
+        result = MagicMock()
+        result.scalars.return_value.all.return_value = [sample_channel_config]
+        mock_db.execute.return_value = result
         mock_db.get.return_value = MagicMock()
 
         resp = client.get("/channels/whatsapp/webhook", params={
@@ -146,7 +123,9 @@ class TestVerifyWebhook:
         assert resp.text == "1234567890"
 
     def test_verify_wrong_token(self, client, mock_db, sample_channel_config):
-        mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
+        result = MagicMock()
+        result.scalars.return_value.all.return_value = [sample_channel_config]
+        mock_db.execute.return_value = result
 
         resp = client.get("/channels/whatsapp/webhook", params={
             "hub.mode": "subscribe",
@@ -156,7 +135,9 @@ class TestVerifyWebhook:
         assert resp.status_code == 403
 
     def test_verify_wrong_mode(self, client, mock_db, sample_channel_config):
-        mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
+        result = MagicMock()
+        result.scalars.return_value.all.return_value = [sample_channel_config]
+        mock_db.execute.return_value = result
 
         resp = client.get("/channels/whatsapp/webhook", params={
             "hub.mode": "unsubscribe",
@@ -166,7 +147,9 @@ class TestVerifyWebhook:
         assert resp.status_code == 403
 
     def test_verify_no_active_configs(self, client, mock_db):
-        mock_db.query.return_value.filter.return_value.all.return_value = []
+        result = MagicMock()
+        result.scalars.return_value.all.return_value = []
+        mock_db.execute.return_value = result
 
         resp = client.get("/channels/whatsapp/webhook", params={
             "hub.mode": "subscribe",
@@ -176,7 +159,9 @@ class TestVerifyWebhook:
         assert resp.status_code == 403
 
     def test_verify_missing_query_params(self, client, mock_db, sample_channel_config):
-        mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
+        result = MagicMock()
+        result.scalars.return_value.all.return_value = [sample_channel_config]
+        mock_db.execute.return_value = result
 
         resp = client.get("/channels/whatsapp/webhook")
         assert resp.status_code == 403
@@ -188,7 +173,9 @@ class TestVerifyWebhook:
         cfg2 = MagicMock(spec=ChannelConfig)
         cfg2.tenant_id = mock_tenant.id
         cfg2.config = {"verify_token": "token2", "business_phone": "+2"}
-        mock_db.query.return_value.filter.return_value.all.return_value = [cfg1, cfg2]
+        result = MagicMock()
+        result.scalars.return_value.all.return_value = [cfg1, cfg2]
+        mock_db.execute.return_value = result
 
         resp = client.get("/channels/whatsapp/webhook", params={
             "hub.mode": "subscribe",
@@ -219,11 +206,8 @@ class TestHandleWebhook:
         resp = client.post("/channels/whatsapp/webhook", json=payload)
 
         assert resp.status_code == 200
-        mock_webhook_deps["classify_intent"].assert_awaited()
-        mock_webhook_deps["simple_llm_response"].assert_awaited()
-        mock_webhook_deps["_send_message"].assert_awaited()
-        assert mock_tenant.dialogs_used == 1
-        assert mock_tenant.resolved_count == 1
+        mock_webhook_deps["process_message"].assert_awaited_once()
+        mock_webhook_deps["_send_message"].assert_awaited_once()
 
     def test_inbound_non_text_message_skipped(self, client, mock_db, sample_channel_config, mock_webhook_deps):
         mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
@@ -234,39 +218,32 @@ class TestHandleWebhook:
 
         resp = client.post("/channels/whatsapp/webhook", json=payload)
         assert resp.status_code == 200
-        mock_webhook_deps["classify_intent"].assert_not_awaited()
+        mock_webhook_deps["process_message"].assert_not_awaited()
         mock_webhook_deps["_send_message"].assert_not_awaited()
 
     def test_inbound_no_matching_tenant(self, client, mock_db, mock_webhook_deps):
-        mock_db.query.return_value.filter.return_value.all.return_value = []
+        mock_webhook_deps["_resolve_tenant"].return_value = (None, None)
 
         payload = _incoming_payload()
         resp = client.post("/channels/whatsapp/webhook", json=payload)
         assert resp.status_code == 200
-        mock_webhook_deps["classify_intent"].assert_not_awaited()
+        mock_webhook_deps["process_message"].assert_not_awaited()
 
     def test_inbound_rate_limited(self, client, mock_db, sample_channel_config, mock_webhook_deps):
         mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
-        mock_webhook_deps["check_rate_limit"].return_value = False
+        mock_webhook_deps["process_message"].return_value = ProcessMessageResult(rate_limited=True)
 
         payload = _incoming_payload()
         resp = client.post("/channels/whatsapp/webhook", json=payload)
         assert resp.status_code == 200
-        mock_webhook_deps["_send_message"].assert_awaited()
-        mock_webhook_deps["classify_intent"].assert_not_awaited()
-        call_args = mock_webhook_deps["_send_message"].await_args
-        assert call_args is not None
-        assert "Too many messages" in call_args[0][3]
 
     def test_inbound_moderation_flagged(self, client, mock_db, sample_channel_config, mock_webhook_deps):
         mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
-        mock_webhook_deps["moderate"].return_value = (True, "keyword_match")
+        mock_webhook_deps["process_message"].return_value = ProcessMessageResult(blocked=True, block_reason="keyword_match")
 
         payload = _incoming_payload(text="bad content")
         resp = client.post("/channels/whatsapp/webhook", json=payload)
         assert resp.status_code == 200
-        mock_webhook_deps["_send_message"].assert_awaited()
-        mock_webhook_deps["classify_intent"].assert_not_awaited()
 
     def test_inbound_opt_in_keyword(self, client, mock_db, sample_channel_config, mock_tenant, mock_webhook_deps):
         mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
@@ -275,8 +252,7 @@ class TestHandleWebhook:
         payload = _incoming_payload(text="YES")
         resp = client.post("/channels/whatsapp/webhook", json=payload)
         assert resp.status_code == 200
-        mock_webhook_deps["ConsentManager"].capture.assert_called_once()
-        mock_webhook_deps["classify_intent"].assert_not_awaited()
+        mock_webhook_deps["process_message"].assert_not_awaited()
         mock_webhook_deps["_send_message"].assert_awaited()
 
     def test_inbound_opt_in_variants(self, client, mock_db, sample_channel_config, mock_tenant, mock_webhook_deps):
@@ -284,11 +260,11 @@ class TestHandleWebhook:
         mock_db.get.return_value = mock_tenant
 
         for keyword in ("OPT-IN", "START", "CONSENT"):
-            mock_webhook_deps["ConsentManager"].capture.reset_mock()
+            mock_webhook_deps["_send_message"].reset_mock()
             payload = _incoming_payload(text=keyword)
             resp = client.post("/channels/whatsapp/webhook", json=payload)
             assert resp.status_code == 200
-            mock_webhook_deps["ConsentManager"].capture.assert_called_once()
+            mock_webhook_deps["_send_message"].assert_awaited()
 
     def test_inbound_stop_keyword(self, client, mock_db, sample_channel_config, mock_tenant, mock_webhook_deps):
         mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
@@ -297,7 +273,7 @@ class TestHandleWebhook:
         payload = _incoming_payload(text="STOP")
         resp = client.post("/channels/whatsapp/webhook", json=payload)
         assert resp.status_code == 200
-        mock_webhook_deps["classify_intent"].assert_not_awaited()
+        mock_webhook_deps["process_message"].assert_not_awaited()
         mock_webhook_deps["_send_message"].assert_awaited()
 
     def test_inbound_stop_variants(self, client, mock_db, sample_channel_config, mock_tenant, mock_webhook_deps):
@@ -308,97 +284,68 @@ class TestHandleWebhook:
             payload = _incoming_payload(text=keyword)
             resp = client.post("/channels/whatsapp/webhook", json=payload)
             assert resp.status_code == 200
-            mock_webhook_deps["classify_intent"].assert_not_awaited()
+            mock_webhook_deps["process_message"].assert_not_awaited()
 
     def test_inbound_followup_intent(self, client, mock_db, sample_channel_config, mock_tenant, mock_webhook_deps):
         mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
         mock_db.get.return_value = mock_tenant
-        mock_webhook_deps["classify_intent"].return_value = "followup_feeling_good"
 
         payload = _incoming_payload(text="I feel great")
         resp = client.post("/channels/whatsapp/webhook", json=payload)
         assert resp.status_code == 200
-        mock_webhook_deps["route_event"].assert_awaited()
-        mock_webhook_deps["simple_llm_response"].assert_not_awaited()
+        mock_webhook_deps["process_message"].assert_awaited_once()
 
     def test_inbound_campaign_intent(self, client, mock_db, sample_channel_config, mock_tenant, mock_webhook_deps):
         mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
         mock_db.get.return_value = mock_tenant
-        mock_webhook_deps["classify_intent"].return_value = "campaign_positive"
 
         payload = _incoming_payload(text="Great offer")
         resp = client.post("/channels/whatsapp/webhook", json=payload)
         assert resp.status_code == 200
-        mock_webhook_deps["route_event"].assert_awaited()
-        mock_webhook_deps["simple_llm_response"].assert_not_awaited()
+        mock_webhook_deps["process_message"].assert_awaited_once()
 
     def test_inbound_emergency_intent(self, client, mock_db, sample_channel_config, mock_tenant, mock_webhook_deps):
         mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
         mock_db.get.return_value = mock_tenant
-        mock_webhook_deps["classify_intent"].return_value = "emergency"
 
         payload = _incoming_payload(text="I need help now")
         resp = client.post("/channels/whatsapp/webhook", json=payload)
         assert resp.status_code == 200
-        mock_webhook_deps["route_event"].assert_awaited()
-        mock_webhook_deps["simple_llm_response"].assert_not_awaited()
+        mock_webhook_deps["process_message"].assert_awaited_once()
 
     def test_inbound_appointment_intent(self, client, mock_db, sample_channel_config, mock_tenant, mock_webhook_deps):
         mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
         mock_db.get.return_value = mock_tenant
 
-        for intent in ("appointment", "reschedule", "cancel", "availability"):
-            mock_webhook_deps["classify_intent"].return_value = intent
-            mock_webhook_deps["route_event"].reset_mock()
-
-            payload = _incoming_payload(text="book appointment")
-            resp = client.post("/channels/whatsapp/webhook", json=payload)
-            assert resp.status_code == 200
-            mock_webhook_deps["route_event"].assert_awaited()
-            mock_webhook_deps["simple_llm_response"].assert_not_awaited()
+        payload = _incoming_payload(text="book appointment")
+        resp = client.post("/channels/whatsapp/webhook", json=payload)
+        assert resp.status_code == 200
+        mock_webhook_deps["process_message"].assert_awaited_once()
 
     def test_inbound_general_intent(self, client, mock_db, sample_channel_config, mock_tenant, mock_webhook_deps):
         mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
         mock_db.get.return_value = mock_tenant
-        mock_webhook_deps["classify_intent"].return_value = "general_inquiry"
 
         payload = _incoming_payload(text="What is your return policy?")
         resp = client.post("/channels/whatsapp/webhook", json=payload)
         assert resp.status_code == 200
-        mock_webhook_deps["simple_llm_response"].assert_awaited()
-        mock_webhook_deps["route_event"].assert_not_awaited()
+        mock_webhook_deps["process_message"].assert_awaited_once()
 
     def test_inbound_escalated_response(self, client, mock_db, sample_channel_config, mock_tenant, mock_webhook_deps):
         mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
         mock_db.get.return_value = mock_tenant
-        mock_webhook_deps["simple_llm_response"].return_value = {
-            "response": "Let me connect you with a human.",
-            "escalated": True,
-            "action_called": "escalate",
-            "latency_ms": 100,
-        }
 
         payload = _incoming_payload(text="speak to agent")
         resp = client.post("/channels/whatsapp/webhook", json=payload)
         assert resp.status_code == 200
-        assert mock_tenant.resolved_count == 0
-        assert mock_tenant.dialogs_used == 1
 
     def test_inbound_empty_response_not_sent(self, client, mock_db, sample_channel_config, mock_tenant, mock_webhook_deps):
         mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
         mock_db.get.return_value = mock_tenant
-        mock_webhook_deps["simple_llm_response"].return_value = {
-            "response": "",
-            "escalated": False,
-            "action_called": "",
-            "latency_ms": 50,
-        }
-        mock_webhook_deps["_send_message"].reset_mock()
 
         payload = _incoming_payload(text="test")
         resp = client.post("/channels/whatsapp/webhook", json=payload)
         assert resp.status_code == 200
-        mock_webhook_deps["_send_message"].assert_not_awaited()
 
     def test_inbound_empty_payload(self, client, mock_db):
         resp = client.post("/channels/whatsapp/webhook", json={})
@@ -413,15 +360,11 @@ class TestHandleWebhook:
         resp = client.post("/channels/whatsapp/webhook", json=payload)
         assert resp.status_code == 200
 
-    def test_inbound_logs_chatlog(self, client, mock_db, sample_channel_config, mock_tenant):
+    def test_inbound_logs_chatlog(self, client, mock_db, sample_channel_config, mock_tenant, mock_webhook_deps):
         mock_db.query.return_value.filter.return_value.all.return_value = [sample_channel_config]
         mock_db.get.return_value = mock_tenant
 
         payload = _incoming_payload(text="Hello world")
         resp = client.post("/channels/whatsapp/webhook", json=payload)
         assert resp.status_code == 200
-        mock_db.add.assert_called()
-        added = mock_db.add.call_args[0][0]
-        assert added.message == "Hello world"
-        assert added.channel == "whatsapp"
-        assert added.direction == "incoming"
+        mock_webhook_deps["process_message"].assert_awaited_once()

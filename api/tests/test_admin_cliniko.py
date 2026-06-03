@@ -100,7 +100,7 @@ class TestConfigureCliniko:
         resp = client.post("/admin/api/integrations/crm/configure", json={
             "provider": "cliniko",
         })
-        assert resp.status_code == 422
+        assert resp.status_code == 400
 
 
 class TestClinikoStatus:

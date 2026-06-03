@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import base64
+import hashlib
+import hmac
 import logging
+from datetime import datetime
 from typing import Any
 from urllib.parse import urljoin
 
@@ -25,6 +28,7 @@ class ClinikoConnector(AbstractCrmConnector):
         self.api_key = str(config.get("api_key", ""))
         self.shard = str(config.get("shard", "au1"))
         self.user_agent = str(config.get("user_agent", "Jeeves (devs@jeeves.ai)"))
+        self.webhook_secret = str(config.get("webhook_secret", ""))
         self.base_url = _CLINIKO_API_BASE.format(shard=self.shard)
 
     def _auth_header(self) -> str:
@@ -85,13 +89,6 @@ class ClinikoConnector(AbstractCrmConnector):
             return result.get("practitioners", [])
         return []
 
-    def get_practitioner_by_id(self, practitioner_id: str) -> dict[str, Any] | None:
-        """Fetch a single practitioner by Cliniko ID."""
-        try:
-            return self._request("GET", f"/practitioners/{practitioner_id}")
-        except ConnectorNotFoundError:
-            return None
-
     # Appointment Types
 
     def get_services(self) -> list[dict[str, Any]]:
@@ -103,13 +100,6 @@ class ClinikoConnector(AbstractCrmConnector):
         if isinstance(result, dict):
             return result.get("appointment_types", [])
         return []
-
-    def get_appointment_type_by_id(self, type_id: str) -> dict[str, Any] | None:
-        """Fetch a single appointment type by Cliniko ID."""
-        try:
-            return self._request("GET", f"/appointment_types/{type_id}")
-        except ConnectorNotFoundError:
-            return None
 
     # Patients
 
@@ -174,7 +164,6 @@ class ClinikoConnector(AbstractCrmConnector):
 
     def cancel_appointment(self, appt_id: str) -> bool:
         try:
-            from datetime import datetime
             self._request("PUT", f"/individual_appointments/{appt_id}", json={
                 "cancelled_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
             })
@@ -236,7 +225,11 @@ class ClinikoConnector(AbstractCrmConnector):
     # Webhooks
 
     def verify_webhook_signature(self, payload: bytes, signature: str) -> bool:
-        return True
+        if not self.webhook_secret:
+            logger.warning("Cliniko webhook_secret not configured — rejecting webhook")
+            return False
+        expected = hmac.new(self.webhook_secret.encode(), payload, hashlib.sha256).hexdigest()
+        return hmac.compare_digest(expected, signature)
 
     def parse_webhook_event(self, payload: dict[str, Any]) -> dict[str, Any]:
         event_type = payload.get("event", "unknown")

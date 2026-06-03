@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 from fastapi import Depends
-from sqlalchemy import func
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -21,9 +21,7 @@ def api_analytics(
     thirty_days_ago = datetime.utcnow() - timedelta(days=30)
 
     workflows = (
-        db.query(Workflow)
-        .filter(Workflow.tenant_id == tenant.id, Workflow.started_at >= thirty_days_ago)
-        .all()
+        db.execute(select(Workflow).where(Workflow.tenant_id == tenant.id, Workflow.started_at >= thirty_days_ago)).scalars().all()
     )
 
     total = len(workflows)
@@ -31,12 +29,8 @@ def api_analytics(
     failed = sum(1 for w in workflows if w.current_state in ("FAILED", "CANCELLED"))
     active = sum(1 for w in workflows if w.status in ("active", "paused"))
 
-    esc_count = 0
-
     comms_count = (
-        db.query(func.count(Communication.id))
-        .filter(Communication.tenant_id == tenant.id, Communication.created_at >= thirty_days_ago)
-        .scalar()
+        db.execute(select(func.count(Communication.id)).where(Communication.tenant_id == tenant.id, Communication.created_at >= thirty_days_ago)).scalar()
         or 0
     )
 
@@ -45,6 +39,6 @@ def api_analytics(
         "active_workflows": active,
         "recovered": recovered,
         "failed": failed,
-        "escalations": esc_count,
+        "escalations": 0,
         "communications_sent": comms_count,
     }

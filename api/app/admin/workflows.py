@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import uuid as uuid_mod
-from datetime import datetime
 
 from fastapi import Depends, HTTPException, Query
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
 
-from ..models import Conversation, Tenant, TimelineEvent, Workflow
+from ..models import Tenant, TimelineEvent, Workflow
 from .deps import get_admin_tenant
 from .router import router
 
@@ -22,7 +22,7 @@ def api_workflows(
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
 ):
-    q = db.query(Workflow).filter(Workflow.tenant_id == tenant.id)
+    q = select(Workflow).where(Workflow.tenant_id == tenant.id)
     if workflow_type:
         q = q.filter(Workflow.workflow_type == workflow_type)
     if status:
@@ -57,16 +57,15 @@ def api_workflow_timeline(
     db: Session = Depends(get_db),
 ):
     try:
-        wf_id = uuid_mod.UUID(workflow_id)
+        uuid_mod.UUID(workflow_id)
     except ValueError:
         raise HTTPException(status_code=404, detail="Invalid workflow ID")
     events = (
-        db.query(TimelineEvent)
-        .filter(
+        db.execute(select(TimelineEvent).where(
             TimelineEvent.tenant_id == tenant.id,
             TimelineEvent.entity_type == "workflow",
             TimelineEvent.entity_id == workflow_id,
-        )
+        )).scalars()
         .order_by(TimelineEvent.created_at.desc())
         .limit(100)
         .all()
@@ -86,29 +85,3 @@ def api_workflow_timeline(
     }
 
 
-@router.post("/api/workflows/{workflow_id}/escalate")
-def api_workflow_escalate(
-    workflow_id: str,
-    tenant: Tenant = Depends(get_admin_tenant),
-    db: Session = Depends(get_db),
-):
-    try:
-        wf_id = uuid_mod.UUID(workflow_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="Invalid workflow ID")
-    wf = db.query(Workflow).filter(Workflow.id == wf_id, Workflow.tenant_id == tenant.id).first()
-    if not wf:
-        raise HTTPException(status_code=404, detail="Workflow not found")
-
-    wf.status = "escalated"
-    wf.updated_at = datetime.utcnow()
-
-    conv = db.query(Conversation).filter(
-        Conversation.workflow_id == wf_id,
-        Conversation.status.in_(["active", "waiting"]),
-    ).first()
-    if conv:
-        conv.status = "handoff_requested"
-
-    db.commit()
-    return {"ok": True, "message": "Workflow escalated (placeholder)"}

@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+import uuid
 from datetime import datetime
 from typing import Optional
 
 from fastapi import Cookie, Depends, HTTPException, Request, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..auth.tokens import decode_token
 from ..config import get_settings
-from ..db import get_db
+from ..db import SessionLocal, get_db
 from ..models import TeamMember, Tenant
-from .router import SESSION_COOKIE
+from ..shared.constants import SESSION_COOKIE
 
 
 def get_admin_tenant(
@@ -31,7 +33,6 @@ def get_admin_tenant(
         raise HTTPException(status_code=status.HTTP_302_FOUND, headers={"Location": "/admin/login"})
     if payload.get("kind") != "access":
         raise HTTPException(status_code=status.HTTP_302_FOUND, headers={"Location": "/admin/login"})
-    import uuid
     tenant = db.get(Tenant, uuid.UUID(payload["sub"]))
     if not tenant:
         raise HTTPException(status_code=status.HTTP_302_FOUND, headers={"Location": "/admin/login"})
@@ -42,11 +43,11 @@ def get_current_team_member(
     tenant: Tenant = Depends(get_admin_tenant),
     db: Session = Depends(get_db),
 ) -> TeamMember:
-    member = db.query(TeamMember).filter(
+    member = db.execute(select(TeamMember).where(
         TeamMember.tenant_id == tenant.id,
         TeamMember.email == tenant.email,
         TeamMember.is_active,
-    ).first()
+    )).scalar_one_or_none()
     if not member:
         member = TeamMember(tenant_id=tenant.id, email=tenant.email, name=tenant.name, role="owner", accepted_at=datetime.utcnow())
         db.add(member)
@@ -75,14 +76,13 @@ def _ctx(request: Request, tenant: Tenant | None = None) -> dict:
 
 
 def _resolve_role(tenant: Tenant) -> str:
-    from ..db import SessionLocal
     db: Session | None = None
     try:
         db = SessionLocal()
-        member = db.query(TeamMember).filter(
+        member = db.execute(select(TeamMember).where(
             TeamMember.tenant_id == tenant.id,
             TeamMember.email == tenant.email,
-        ).first()
+        )).scalar_one_or_none()
         return member.role if member else "owner"
     except Exception:
         return "owner"
@@ -92,8 +92,4 @@ def _resolve_role(tenant: Tenant) -> str:
 
 
 
-def admin_api_dep(
-    tenant: Tenant = Depends(get_admin_tenant),
-    db: Session = Depends(get_db),
-):
-    return tenant, db
+

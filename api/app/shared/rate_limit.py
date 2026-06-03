@@ -8,32 +8,44 @@ Limits:
 """
 from __future__ import annotations
 
+import logging
 import threading
 import time
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Any
 
+logger = logging.getLogger("jeeves.shared.rate_limit")
 
-class _InMemoryLimiter:
+
+class RateLimiter(ABC):
+    """Abstract interface for rate-limiting backends."""
+
+    @abstractmethod
+    async def is_allowed(self, key: str, max_count: int, window: int) -> bool:
+        ...
+
+
+class _InMemoryLimiter(RateLimiter):
     """Thread-safe in-memory sliding window rate limiter for dev/single-process."""
 
     def __init__(self) -> None:
         self._buckets: dict[str, list[float]] = defaultdict(list)
         self._lock = threading.Lock()
 
-    def is_allowed(self, key: str, max_requests: int, window_seconds: int) -> bool:
+    async def is_allowed(self, key: str, max_count: int, window: int) -> bool:
         now = time.time()
-        cutoff = now - window_seconds
+        cutoff = now - window
         with self._lock:
             bucket = self._buckets[key]
             self._buckets[key] = [t for t in bucket if t > cutoff]
-            if len(self._buckets[key]) >= max_requests:
+            if len(self._buckets[key]) >= max_count:
                 return False
             self._buckets[key].append(now)
             return True
 
 
-_limiter: Any = None
+_limiter: RateLimiter | None = None
 
 def _get_limiter():
     global _limiter
@@ -50,27 +62,28 @@ def _get_limiter():
             return _limiter
     except Exception:
         pass
+    logger.info("Redis unavailable — falling back to in-memory rate limiter")
     _limiter = _InMemoryLimiter()
     return _limiter
 
 
-class _RedisLimiter:
+class _RedisLimiter(RateLimiter):
     """Redis-based sliding window rate limiter."""
 
     def __init__(self, client: Any) -> None:
         self._r = client
 
-    def is_allowed(self, key: str, max_requests: int, window_seconds: int) -> bool:
+    async def is_allowed(self, key: str, max_count: int, window: int) -> bool:
         now = time.time()
-        cutoff = now - window_seconds
+        cutoff = now - window
         pipe = self._r.pipeline()
         pipe.zremrangebyscore(key, 0, cutoff)
         pipe.zcard(key)
         pipe.zadd(key, {str(now): now})
-        pipe.expire(key, window_seconds + 10)
+        pipe.expire(key, window + 10)
         results = pipe.execute()
         count = results[1]
-        return count < max_requests
+        return count < max_count
 
 
 # Endpoint-specific limits
@@ -83,10 +96,10 @@ _LIMITS = {
 }
 
 
-def check_rate_limit(endpoint: str, ip: str) -> bool:
+async def check_rate_limit(endpoint: str, ip: str) -> bool:
     """Return True if request is allowed, False if rate limited."""
     if endpoint not in _LIMITS:
         return True
     max_req, window = _LIMITS[endpoint]
     key = f"ratelimit:{endpoint}:{ip}"
-    return _get_limiter().is_allowed(key, max_req, window)
+    return await _get_limiter().is_allowed(key, max_req, window)

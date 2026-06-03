@@ -1,12 +1,11 @@
 from __future__ import annotations
 
+from .classify import ClassificationResult, classify
 from .generator import simple_llm_response, translate_query
-from .triage import triage_intent
-from .intent_classifier import classify_intent
 
 __all__ = [
+    "ClassificationResult",
+    "classify",
     "simple_llm_response",
     "translate_query",
-    "triage_intent",
-    "classify_intent",
 ]

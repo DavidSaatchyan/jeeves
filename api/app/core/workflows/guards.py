@@ -32,21 +32,4 @@ async def check_no_active_workflow(db: Session, tenant_id: UUID, workflow_type: 
     return row is None
 
 
-async def check_subscription_active(db: Session, subscription_id: str) -> bool:
-    row = db.execute(
-        text("SELECT status FROM subscriptions WHERE external_subscription_id = :sid"),
-        {"sid": subscription_id},
-    ).first()
-    if not row:
-        return True
-    return row[0] == "active"
 
-
-async def check_invoice_unpaid(db: Session, invoice_id: str) -> bool:
-    row = db.execute(
-        text("SELECT status FROM invoices WHERE external_invoice_id = :iid"),
-        {"iid": invoice_id},
-    ).first()
-    if not row:
-        return True
-    return row[0] in ("open", "unpaid")

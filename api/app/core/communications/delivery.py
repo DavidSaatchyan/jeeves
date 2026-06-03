@@ -34,8 +34,4 @@ async def send_whatsapp_message(phone_number_id: str, access_token: str, wa_id: 
         return r.json()
 
 
-async def send_email(to: str, subject: str, body: str) -> bool:
-    """Email delivery is being removed (Phase 1). WhatsApp replaces email.
-    This stub remains to avoid breaking existing communication service imports."""
-    logger.warning("email delivery removed: would send to %s subject=%s", to, subject)
-    return False
+

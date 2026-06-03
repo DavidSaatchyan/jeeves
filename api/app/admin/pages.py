@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from fastapi import Depends, Form, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
+from sqlalchemy import select
 
 from ..auth.tokens import issue_tokens
 from ..db import get_db
 from ..models import Tenant
 from .deps import _ctx, get_admin_tenant
-from .router import SESSION_COOKIE, router, templates
+from ..shared.constants import SESSION_COOKIE
+from .router import router, templates
 
 
 @router.get("", response_class=HTMLResponse)
@@ -37,7 +39,7 @@ async def admin_login(
 
     pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-    tenant = db.query(Tenant).filter(Tenant.email == email).first()
+    tenant = db.execute(select(Tenant).where(Tenant.email == email)).scalar_one_or_none()
     pw = password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
     if not tenant or not pwd_ctx.verify(pw, tenant.hashed_password):
         return RedirectResponse(

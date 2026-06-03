@@ -209,7 +209,9 @@ def mock_db():
 
 class TestChannelConfigCrud:
     def test_upsert_new_channel(self, mock_db):
-        mock_db.query.return_value.filter.return_value.first.return_value = None
+        result = MagicMock()
+        result.scalar_one_or_none.return_value = None
+        mock_db.execute.return_value = result
         tenant_id = uuid4()
 
         result = upsert_channel(mock_db, tenant_id, "whatsapp", {"key": "val"}, "active")
@@ -225,7 +227,9 @@ class TestChannelConfigCrud:
         existing.channel_type = "whatsapp"
         existing.config = {"old": "config"}
         existing.status = "inactive"
-        mock_db.query.return_value.filter.return_value.first.return_value = existing
+        result = MagicMock()
+        result.scalar_one_or_none.return_value = existing
+        mock_db.execute.return_value = result
         tenant_id = uuid4()
 
         result = upsert_channel(mock_db, tenant_id, "whatsapp", {"new": "config"}, "active")
@@ -238,14 +242,18 @@ class TestChannelConfigCrud:
     def test_get_channel_found(self, mock_db):
         cfg = MagicMock(spec=ChannelConfig)
         cfg.channel_type = "whatsapp"
-        mock_db.query.return_value.filter.return_value.first.return_value = cfg
+        result = MagicMock()
+        result.scalar_one_or_none.return_value = cfg
+        mock_db.execute.return_value = result
 
         result = get_channel(mock_db, uuid4(), "whatsapp")
 
         assert result is cfg
 
     def test_get_channel_not_found(self, mock_db):
-        mock_db.query.return_value.filter.return_value.first.return_value = None
+        result = MagicMock()
+        result.scalar_one_or_none.return_value = None
+        mock_db.execute.return_value = result
 
         result = get_channel(mock_db, uuid4(), "whatsapp")
 
@@ -253,7 +261,9 @@ class TestChannelConfigCrud:
 
     def test_delete_channel_existing(self, mock_db):
         cfg = MagicMock(spec=ChannelConfig)
-        mock_db.query.return_value.filter.return_value.first.return_value = cfg
+        result = MagicMock()
+        result.scalar_one_or_none.return_value = cfg
+        mock_db.execute.return_value = result
 
         result = delete_channel(mock_db, uuid4(), "whatsapp")
 
@@ -262,7 +272,9 @@ class TestChannelConfigCrud:
         mock_db.commit.assert_not_called()
 
     def test_delete_channel_not_found(self, mock_db):
-        mock_db.query.return_value.filter.return_value.first.return_value = None
+        result = MagicMock()
+        result.scalar_one_or_none.return_value = None
+        mock_db.execute.return_value = result
 
         result = delete_channel(mock_db, uuid4(), "whatsapp")
 
@@ -271,7 +283,9 @@ class TestChannelConfigCrud:
         mock_db.commit.assert_not_called()
 
     def test_list_all_configs_empty(self, mock_db):
-        mock_db.query.return_value.filter.return_value.all.return_value = []
+        result = MagicMock()
+        result.scalars.return_value.all.return_value = []
+        mock_db.execute.return_value = result
 
         result = list_all_configs(mock_db, uuid4())
 
@@ -291,7 +305,9 @@ class TestChannelConfigCrud:
         )
         cfg.created_at = datetime(2025, 1, 1)
         cfg.updated_at = datetime(2025, 1, 2)
-        mock_db.query.return_value.filter.return_value.all.return_value = [cfg]
+        result = MagicMock()
+        result.scalars.return_value.all.return_value = [cfg]
+        mock_db.execute.return_value = result
 
         result = list_all_configs(mock_db, uuid4())
 
@@ -304,7 +320,9 @@ class TestChannelConfigCrud:
         assert whatsapp["description"] != ""
 
     def test_upsert_invalidates_cache(self, mock_db):
-        mock_db.query.return_value.filter.return_value.first.return_value = None
+        result = MagicMock()
+        result.scalar_one_or_none.return_value = None
+        mock_db.execute.return_value = result
         from app.channels.registry import channel_cache
         channel_cache._built = True
 
@@ -314,7 +332,9 @@ class TestChannelConfigCrud:
 
     def test_delete_invalidates_cache(self, mock_db):
         cfg = MagicMock(spec=ChannelConfig)
-        mock_db.query.return_value.filter.return_value.first.return_value = cfg
+        result = MagicMock()
+        result.scalar_one_or_none.return_value = cfg
+        mock_db.execute.return_value = result
         from app.channels.registry import channel_cache
         channel_cache._built = True
 

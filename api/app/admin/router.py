@@ -9,5 +9,3 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 _TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
 templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
-
-SESSION_COOKIE = "jeeves_session"

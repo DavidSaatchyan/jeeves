@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid as uuid_mod
 
 from fastapi import Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..core.activity_log import log_activity
@@ -17,7 +18,7 @@ def api_settings_list_keys(
     tenant: Tenant = Depends(get_admin_tenant),
     db: Session = Depends(get_db),
 ):
-    keys = db.query(ApiKey).filter(ApiKey.tenant_id == tenant.id).order_by(ApiKey.created_at.desc()).all()
+    keys = db.execute(select(ApiKey).where(ApiKey.tenant_id == tenant.id).order_by(ApiKey.created_at.desc())).scalars().all()
     return {
         "api_keys": [
             {
@@ -49,7 +50,7 @@ def api_settings_create_key(
     key = ApiKey(tenant_id=tenant.id, name=name, key_hash=hashed, prefix=prefix)
     db.add(key)
     db.commit()
-    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", f"API key created: {name}", api_status="success")
+    log_activity(db, tenant.id, tenant.email, "config_change", f"API key created: {name}", api_status="success")
     return {"ok": True, "raw_key": raw, "prefix": prefix, "name": name}
 
 
@@ -64,10 +65,10 @@ def api_settings_delete_key(
         kid = uuid_mod.UUID(key_id)
     except ValueError:
         raise HTTPException(status_code=404, detail="Invalid key ID")
-    key = db.query(ApiKey).filter(ApiKey.id == kid, ApiKey.tenant_id == tenant.id).first()
+    key = db.execute(select(ApiKey).where(ApiKey.id == kid, ApiKey.tenant_id == tenant.id)).scalar_one_or_none()
     if not key:
         raise HTTPException(status_code=404, detail="API key not found")
     db.delete(key)
     db.commit()
-    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", f"API key revoked: {key.name}", api_status="success")
+    log_activity(db, tenant.id, tenant.email, "config_change", f"API key revoked: {key.name}", api_status="success")
     return {"ok": True, "message": "API key revoked"}

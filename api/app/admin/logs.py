@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 from fastapi import Depends
-from sqlalchemy import func
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -25,7 +25,7 @@ def api_logs(
     last_id: str | None = None,
 ):
     limit = min(limit, 200)
-    q = db.query(ChatLog).filter(ChatLog.tenant_id == tenant.id)
+    q = select(ChatLog).where(ChatLog.tenant_id == tenant.id)
     if user_id:
         q = q.filter(ChatLog.user_id == user_id)
     if session_id:
@@ -36,7 +36,7 @@ def api_logs(
         q = q.filter(ChatLog.resolution == resolution)
     q = q.filter(ChatLog.created_at >= datetime.utcnow() - timedelta(days=days))
     if last_id:
-        last_log = db.query(ChatLog.created_at).filter(ChatLog.id == last_id).first()
+        last_log = db.execute(select(ChatLog.created_at).where(ChatLog.id == last_id)).scalar_one_or_none()
         if last_log:
             q = q.filter(ChatLog.created_at < last_log.created_at)
     rows = q.order_by(ChatLog.created_at.desc()).limit(limit + 1).all()
@@ -48,14 +48,16 @@ def api_logs(
     sessions = {}
     if session_ids:
         session_rows = (
-            db.query(
-                ChatLog.session_id,
-                func.count(ChatLog.id).label("turns"),
-                func.min(ChatLog.created_at).label("started_at"),
-                func.max(ChatLog.created_at).label("last_at"),
+            db.execute(
+                select(
+                    ChatLog.session_id,
+                    func.count(ChatLog.id).label("turns"),
+                    func.min(ChatLog.created_at).label("started_at"),
+                    func.max(ChatLog.created_at).label("last_at"),
+                )
+                .where(ChatLog.session_id.in_(session_ids))
+                .group_by(ChatLog.session_id)
             )
-            .filter(ChatLog.session_id.in_(session_ids))
-            .group_by(ChatLog.session_id)
             .all()
         )
         for sr in session_rows:
@@ -120,12 +122,12 @@ def api_list_ratings(
     last_id: str | None = None,
 ):
     limit = min(limit, 200)
-    q = db.query(ConversationRating).filter(ConversationRating.tenant_id == tenant.id)
+    q = select(ConversationRating).where(ConversationRating.tenant_id == tenant.id)
     if user_id:
         q = q.filter(ConversationRating.user_id == user_id)
     q = q.filter(ConversationRating.created_at >= datetime.utcnow() - timedelta(days=days))
     if last_id:
-        last_rating = db.query(ConversationRating.created_at).filter(ConversationRating.id == last_id).first()
+        last_rating = db.execute(select(ConversationRating.created_at).where(ConversationRating.id == last_id)).scalar_one_or_none()
         if last_rating:
             q = q.filter(ConversationRating.created_at < last_rating.created_at)
     rows = q.order_by(ConversationRating.created_at.desc()).limit(limit + 1).all()

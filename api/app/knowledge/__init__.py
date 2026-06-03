@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from sqlalchemy import func
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from pydantic import BaseModel
@@ -97,12 +97,11 @@ async def upload_file(
     data = await file.read()
     content_hash = file_sha256(data)
     duplicate = (
-        db.query(FileRecord)
-        .filter(
+        db.execute(select(FileRecord).where(
             FileRecord.tenant_id == tenant.id,
             FileRecord.content_hash == content_hash,
             FileRecord.status != "failed",
-        )
+        )).scalars()
         .order_by(FileRecord.created_at.desc())
         .first()
     )
@@ -177,7 +176,7 @@ def list_files(
     tenant: Tenant = Depends(get_current_tenant),
     db: Session = Depends(get_db),
 ):
-    rows = db.query(FileRecord).filter(FileRecord.tenant_id == tenant.id, FileRecord.file_type == "document").order_by(FileRecord.created_at.desc()).all()
+    rows = db.execute(select(FileRecord).where(FileRecord.tenant_id == tenant.id, FileRecord.file_type == "document").order_by(FileRecord.created_at.desc())).scalars().all()
     return [
         {
             "id": str(r.id),
@@ -198,7 +197,7 @@ def delete_file(
     tenant: Tenant = Depends(get_current_tenant),
     db: Session = Depends(get_db),
 ):
-    rec = db.query(FileRecord).filter(FileRecord.id == file_id, FileRecord.tenant_id == tenant.id).first()
+    rec = db.execute(select(FileRecord).where(FileRecord.id == file_id, FileRecord.tenant_id == tenant.id)).scalar_one_or_none()
     if not rec:
         raise HTTPException(404, "file not found")
 
@@ -235,7 +234,7 @@ def cleanup_chroma(
     2. Deduplicate remaining chunks by (filename, chunk_hash)
     """
     active = set()
-    for r in db.query(FileRecord).filter(FileRecord.tenant_id == tenant.id).all():
+    for r in db.execute(select(FileRecord).where(FileRecord.tenant_id == tenant.id)).scalars().all():
         active.add(str(r.id))
 
     p = rag.purge_orphans(tenant.id, active)

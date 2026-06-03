@@ -167,7 +167,7 @@ class PabauConnector(AbstractCrmConnector):
     # Slots
 
     def search_available_slots(self, doctor_id: str, date: str) -> list[dict[str, Any]]:
-        return []
+        raise NotImplementedError("Pabau slot search not implemented — use Cliniko adapter")
 
     # Connection test
 
@@ -182,7 +182,8 @@ class PabauConnector(AbstractCrmConnector):
 
     def verify_webhook_signature(self, payload: bytes, signature: str) -> bool:
         if not self.webhook_secret:
-            return True
+            logger.warning("Pabau webhook_secret not configured — rejecting webhook")
+            return False
         expected = hmac.new(self.webhook_secret.encode(), payload, hashlib.sha256).hexdigest()
         return hmac.compare_digest(expected, signature)
 

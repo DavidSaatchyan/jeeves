@@ -4,8 +4,7 @@ from datetime import date, datetime, timedelta
 
 from fastapi import Depends, Query, Request
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
-from sqlalchemy import text
+from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
 from ..agents.default_config import get_default_agent_config
@@ -24,15 +23,6 @@ from ..models import (
 )
 from .deps import _ctx, get_admin_tenant
 from .router import router, templates
-
-
-class _QueueActionBody(BaseModel):
-    item_id: str
-
-
-class _PolicyUpdateBody(BaseModel):
-    section: str
-    values: dict = {}
 
 
 # ── SSR pages ────────────────────────────────────────────────────
@@ -279,10 +269,10 @@ def api_agent_stats(
     db: Session = Depends(get_db),
 ):
     month_start = date.today().replace(day=1)
-    total = db.query(ChatLog).filter(
+    total = db.execute(select(func.count(ChatLog.id)).where(
         ChatLog.tenant_id == tenant.id,
         ChatLog.created_at >= month_start,
-    ).count()
+    )).scalar()
     return {"conversations_this_month": total}
 
 
@@ -294,10 +284,10 @@ def api_knowledge_tree(
     tenant: Tenant = Depends(get_admin_tenant),
     db: Session = Depends(get_db),
 ):
-    files = db.query(FileRecord).filter(
+    files = db.execute(select(FileRecord).where(
         FileRecord.tenant_id == tenant.id,
         FileRecord.status == "ready",
-    ).order_by(FileRecord.filename).all()
+    ).order_by(FileRecord.filename)).scalars().all()
     return {
         "files": [
             {"id": str(f.id), "filename": f.filename, "file_type": f.file_type}
@@ -328,64 +318,70 @@ def api_agent_feed(
             pass
 
     transitions = (
-        db.query(
-            WorkflowTransition.id,
-            WorkflowTransition.workflow_id,
-            Workflow.customer_id,
-            WorkflowTransition.from_state,
-            WorkflowTransition.to_state,
-            WorkflowTransition.decision_reason,
-            WorkflowTransition.created_at,
+        db.execute(
+            select(
+                WorkflowTransition.id,
+                WorkflowTransition.workflow_id,
+                Workflow.customer_id,
+                WorkflowTransition.from_state,
+                WorkflowTransition.to_state,
+                WorkflowTransition.decision_reason,
+                WorkflowTransition.created_at,
+            )
+            .join(Workflow, Workflow.id == WorkflowTransition.workflow_id)
+            .where(
+                Workflow.tenant_id == tenant.id,
+                Workflow.workflow_type == agent_type,
+                WorkflowTransition.created_at >= since_dt,
+            )
+            .order_by(WorkflowTransition.created_at.desc())
+            .limit(limit)
         )
-        .join(Workflow, Workflow.id == WorkflowTransition.workflow_id)
-        .filter(
-            Workflow.tenant_id == tenant.id,
-            Workflow.workflow_type == agent_type,
-            WorkflowTransition.created_at >= since_dt,
-        )
-        .order_by(WorkflowTransition.created_at.desc())
-        .limit(limit)
         .all()
     )
 
     comms = (
-        db.query(
-            Communication.id,
-            Communication.workflow_id,
-            Communication.customer_id,
-            Communication.channel,
-            Communication.template_name,
-            Communication.delivery_status,
-            Communication.sent_at,
+        db.execute(
+            select(
+                Communication.id,
+                Communication.workflow_id,
+                Communication.customer_id,
+                Communication.channel,
+                Communication.template_name,
+                Communication.delivery_status,
+                Communication.sent_at,
+            )
+            .join(Workflow, Workflow.id == Communication.workflow_id)
+            .where(
+                Workflow.tenant_id == tenant.id,
+                Workflow.workflow_type == agent_type,
+                Communication.created_at >= since_dt,
+            )
+            .order_by(Communication.created_at.desc())
+            .limit(limit)
         )
-        .join(Workflow, Workflow.id == Communication.workflow_id)
-        .filter(
-            Workflow.tenant_id == tenant.id,
-            Workflow.workflow_type == agent_type,
-            Communication.created_at >= since_dt,
-        )
-        .order_by(Communication.created_at.desc())
-        .limit(limit)
         .all()
     )
 
     ai_ints = (
-        db.query(AIInteraction)
-        .join(Workflow, Workflow.id == AIInteraction.workflow_id)
-        .filter(
-            Workflow.tenant_id == tenant.id,
-            Workflow.workflow_type == agent_type,
-            AIInteraction.created_at >= since_dt,
+        db.execute(
+            select(AIInteraction)
+            .join(Workflow, Workflow.id == AIInteraction.workflow_id)
+            .where(
+                Workflow.tenant_id == tenant.id,
+                Workflow.workflow_type == agent_type,
+                AIInteraction.created_at >= since_dt,
+            )
+            .order_by(AIInteraction.created_at.desc())
+            .limit(limit)
         )
-        .order_by(AIInteraction.created_at.desc())
-        .limit(limit)
+        .scalars()
         .all()
     )
 
     events = []
     for t in transitions:
         is_success = t.to_state in ("RECOVERED", "RETAINED", "RESOLVED")
-        is_active = t.to_state in ("RETRYING", "OUTREACH_SENT", "WAITING_CUSTOMER")
         is_escalated = t.to_state == "ESCALATED"
         icon = "💰" if is_success else "⚠️" if is_escalated else "🔄"
         events.append({
@@ -483,19 +479,23 @@ def api_agent_queue(
     limit: int = Query(50, ge=1, le=200),
 ):
     if queue == "active":
-        q = db.query(
+        q = select(
             Workflow.id,
             Workflow.customer_id,
             Workflow.current_state,
             Workflow.status,
             Workflow.started_at,
-        ).filter(
+        ).where(
             Workflow.tenant_id == tenant.id,
             Workflow.workflow_type == agent_type,
             Workflow.status.in_(["active", "paused"]),
         )
-        total = q.count()
-        rows = q.order_by(Workflow.started_at.desc()).offset(offset).limit(limit).all()
+        total = db.execute(select(func.count(Workflow.id)).where(
+            Workflow.tenant_id == tenant.id,
+            Workflow.workflow_type == agent_type,
+            Workflow.status.in_(["active", "paused"]),
+        )).scalar()
+        rows = db.execute(q.order_by(Workflow.started_at.desc()).offset(offset).limit(limit)).all()
         return {
             "queue": queue,
             "items": [
@@ -513,15 +513,19 @@ def api_agent_queue(
 
     elif queue == "log":
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-        q = db.query(TimelineEvent).filter(
+        q = select(TimelineEvent).where(
             TimelineEvent.tenant_id == tenant.id,
             TimelineEvent.entity_type == "workflow",
             TimelineEvent.created_at >= thirty_days_ago,
         )
         if agent_type != "all":
-            q = q.filter(TimelineEvent.event_type.like(f"{agent_type}%"))
-        total = q.count()
-        rows = q.order_by(TimelineEvent.created_at.desc()).offset(offset).limit(limit).all()
+            q = q.where(TimelineEvent.event_type.like(f"{agent_type}%"))
+        total = db.execute(select(func.count(TimelineEvent.id)).where(
+            TimelineEvent.tenant_id == tenant.id,
+            TimelineEvent.entity_type == "workflow",
+            TimelineEvent.created_at >= thirty_days_ago,
+        )).scalar()
+        rows = db.execute(q.order_by(TimelineEvent.created_at.desc()).offset(offset).limit(limit)).scalars().all()
         return {
             "queue": queue,
             "items": [
@@ -540,21 +544,3 @@ def api_agent_queue(
     return {"queue": queue, "items": [], "total": 0}
 
 
-@router.put("/api/agents/{agent_type}/policy")
-def api_agent_policy_update(
-    agent_type: str,
-    body: _PolicyUpdateBody,
-    tenant: Tenant = Depends(get_admin_tenant),
-    db: Session = Depends(get_db),
-):
-    return {"ok": True, "message": f"Policy section '{body.section}' updated (placeholder)"}
-
-
-@router.post("/api/agents/{agent_type}/queue/resolve")
-def api_agent_queue_resolve(
-    agent_type: str,
-    body: _QueueActionBody,
-    tenant: Tenant = Depends(get_admin_tenant),
-    db: Session = Depends(get_db),
-):
-    return {"ok": True, "message": "Resolved (placeholder)"}

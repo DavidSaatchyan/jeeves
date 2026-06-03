@@ -6,6 +6,7 @@ for O(1) webhook routing instead of scanning all active configs.
 from __future__ import annotations
 
 import threading
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models import ChannelConfig
@@ -26,46 +27,48 @@ CHANNEL_DESCRIPTIONS = {
 
 
 class _ChannelLookupCache:
-    """Thread-safe cache for O(1) channel lookup by identifier (bot_token, phone_number).
+    """Thread-safe cache for O(1) channel lookup by identifier (phone_number_id, instagram_account_id).
 
     Built once on startup, invalidated on config changes.
     """
 
     def __init__(self):
         self._lock = threading.Lock()
-        self._token_to_tenant: dict[str, int] = {}
-        self._phone_to_tenant: dict[str, int] = {}
+        self._phone_to_tenant: dict[str, tuple[int, str]] = {}
+        self._ig_to_tenant: dict[str, tuple[int, str]] = {}
         self._built = False
 
     def build(self, db: Session) -> None:
         with self._lock:
             configs = (
-                db.query(ChannelConfig)
-                .filter(ChannelConfig.status == "active")
-                .all()
+                db.execute(select(ChannelConfig).where(ChannelConfig.status == "active")).scalars().all()
             )
-            self._token_to_tenant.clear()
             self._phone_to_tenant.clear()
+            self._ig_to_tenant.clear()
             for cfg in configs:
                 if cfg.channel_type == "whatsapp":
-                    phone = cfg.config.get("business_phone", "")
-                    if phone:
-                        self._phone_to_tenant[phone] = cfg.tenant_id
+                    pid = cfg.config.get("phone_number_id", "")
+                    if pid:
+                        self._phone_to_tenant[pid] = (cfg.tenant_id, str(cfg.id))
+                elif cfg.channel_type == "instagram":
+                    ig_id = cfg.config.get("instagram_account_id", "")
+                    if ig_id:
+                        self._ig_to_tenant[ig_id] = (cfg.tenant_id, str(cfg.id))
             self._built = True
 
     def invalidate(self) -> None:
         with self._lock:
             self._built = False
 
-    def get_tenant_by_token(self, token: str) -> int | None:
+    def resolve_whatsapp(self, phone_number_id: str) -> tuple[int, str] | None:
         if not self._built:
             return None
-        return self._token_to_tenant.get(token)
+        return self._phone_to_tenant.get(phone_number_id)
 
-    def get_tenant_by_phone(self, phone: str) -> int | None:
+    def resolve_instagram(self, ig_account_id: str) -> tuple[int, str] | None:
         if not self._built:
             return None
-        return self._phone_to_tenant.get(phone)
+        return self._ig_to_tenant.get(ig_account_id)
 
 
 channel_cache = _ChannelLookupCache()
@@ -78,20 +81,16 @@ def build_channel_cache(db: Session) -> None:
 
 def get_channels(db: Session, tenant_id) -> list[ChannelConfig]:
     return (
-        db.query(ChannelConfig)
-        .filter(ChannelConfig.tenant_id == tenant_id)
-        .all()
+        db.execute(select(ChannelConfig).where(ChannelConfig.tenant_id == tenant_id)).scalars().all()
     )
 
 
 def get_channel(db: Session, tenant_id, channel_type: str) -> ChannelConfig | None:
     return (
-        db.query(ChannelConfig)
-        .filter(
+        db.execute(select(ChannelConfig).where(
             ChannelConfig.tenant_id == tenant_id,
             ChannelConfig.channel_type == channel_type,
-        )
-        .first()
+        )).scalar_one_or_none()
     )
 
 

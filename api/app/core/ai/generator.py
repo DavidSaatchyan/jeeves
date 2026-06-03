@@ -2,13 +2,52 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from typing import Any
+
+import tiktoken
+from openai import AsyncOpenAI
 
 from ...config import get_settings
 
 logger = logging.getLogger(__name__)
 
 _settings = get_settings()
+
+_MAX_CONTEXT_TOKENS = 8000
+_ENCODING = tiktoken.encoding_for_model("gpt-4o-mini")
+
+
+def _count_tokens(text: str) -> int:
+    return len(_ENCODING.encode(text))
+
+
+def truncate_history(
+    messages: list[dict],
+    budget: int = _MAX_CONTEXT_TOKENS,
+) -> list[dict]:
+    """Truncate conversation history from oldest to fit within token budget.
+
+    Assumes messages are in chronological order (oldest first).
+    Returns the suffix of messages that fits within the budget.
+    """
+    if not messages:
+        return messages
+
+    candidates = list(messages)
+    while candidates:
+        total = sum(_count_tokens(m.get("content", "")) for m in candidates)
+        if total <= budget:
+            return candidates
+        candidates.pop(0)
+
+    # If even the last message exceeds budget, truncate its content
+    last = candidates[-1]
+    content = last.get("content", "")
+    encoded = _ENCODING.encode(content)
+    if len(encoded) > budget:
+        last["content"] = _ENCODING.decode(encoded[:budget])
+    return candidates
 
 
 async def translate_query(query: str) -> str:
@@ -20,8 +59,6 @@ async def translate_query(query: str) -> str:
         "English:"
     )
     try:
-        from openai import AsyncOpenAI
-
         client = AsyncOpenAI(api_key=_settings.openai_api_key)
         response = await client.chat.completions.create(
             model="gpt-4o-mini",
@@ -49,8 +86,6 @@ async def generate_email(context: dict[str, Any], template_name: str) -> str:
     )
 
     try:
-        from openai import AsyncOpenAI
-
         client = AsyncOpenAI(api_key=_settings.openai_api_key)
         response = await client.chat.completions.create(
             model="gpt-4o-mini",
@@ -71,18 +106,18 @@ async def generate_email(context: dict[str, Any], template_name: str) -> str:
 
 
 async def simple_llm_response(tenant_id, message: str, system_override=None, conversation_history: list[dict] | None = None) -> dict:
-    import time
-
     start = time.monotonic()
     try:
-        from openai import AsyncOpenAI
-
         client = AsyncOpenAI(api_key=_settings.openai_api_key)
         messages = []
         if system_override:
             messages.append({"role": "system", "content": system_override})
         if conversation_history:
-            messages.extend(conversation_history)
+            budget = _MAX_CONTEXT_TOKENS
+            if system_override:
+                budget -= _count_tokens(system_override)
+            budget -= _count_tokens(message) + 1000  # leave room for output
+            messages.extend(truncate_history(conversation_history, budget))
         messages.append({"role": "user", "content": message})
         response = await client.chat.completions.create(
             model="gpt-4o-mini",
@@ -109,8 +144,6 @@ async def generate_widget_message(context: dict[str, Any], template_name: str) -
     )
 
     try:
-        from openai import AsyncOpenAI
-
         client = AsyncOpenAI(api_key=_settings.openai_api_key)
         response = await client.chat.completions.create(
             model="gpt-4o-mini",
@@ -156,11 +189,10 @@ async def generate_campaign_message(
     history = conversation_history or []
 
     try:
-        from openai import AsyncOpenAI
-
         client = AsyncOpenAI(api_key=_settings.openai_api_key)
         messages = [{"role": "system", "content": system_prompt}]
-        messages.extend(history)
+        budget = _MAX_CONTEXT_TOKENS - _count_tokens(system_prompt) - _count_tokens(user_msg) - 200
+        messages.extend(truncate_history(history, budget))
         messages.append({"role": "user", "content": user_msg})
         response = await client.chat.completions.create(
             model="gpt-4o-mini",

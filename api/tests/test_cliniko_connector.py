@@ -276,10 +276,17 @@ class TestClinikoConnectionTest:
 
 
 class TestClinikoWebhooks:
-    def test_verify_signature_always_true(self):
+    def test_verify_signature_rejects_empty_secret(self):
         c = _make_connector()
-        assert c.verify_webhook_signature(b"{}", "") is True
-        assert c.verify_webhook_signature(b"{}", "any") is True
+        assert c.verify_webhook_signature(b"{}", "") is False
+        assert c.verify_webhook_signature(b"{}", "any") is False
+
+    def test_verify_signature_valid(self):
+        c = _make_connector(webhook_secret="mysecret")
+        import hashlib
+        import hmac
+        sig = hmac.new(b"mysecret", b"{}", hashlib.sha256).hexdigest()
+        assert c.verify_webhook_signature(b"{}", sig) is True
 
     def test_parse_webhook_event(self):
         c = _make_connector()
@@ -310,20 +317,6 @@ class TestClinikoPractitioners:
             result = c.get_practitioners()
         assert result == []
 
-    def test_get_practitioner_by_id(self):
-        c = _make_connector()
-        with patch.object(c, "_request", return_value={"id": "dr1"}) as mock:
-            result = c.get_practitioner_by_id("dr1")
-        assert result == {"id": "dr1"}
-        mock.assert_called_once_with("GET", "/practitioners/dr1")
-
-    def test_get_practitioner_by_id_not_found(self):
-        c = _make_connector()
-        with patch.object(c, "_request", side_effect=ConnectorNotFoundError("cliniko", "GET", "")):
-            result = c.get_practitioner_by_id("missing")
-        assert result is None
-
-
 # ── Appointment Types ───────────────────────────────────────────────────────────────────
 
 
@@ -339,20 +332,6 @@ class TestClinikoAppointmentTypes:
         with patch.object(c, "_request", return_value={}):
             result = c.get_appointment_types()
         assert result == []
-
-    def test_get_appointment_type_by_id(self):
-        c = _make_connector()
-        with patch.object(c, "_request", return_value={"id": "t1"}) as mock:
-            result = c.get_appointment_type_by_id("t1")
-        assert result == {"id": "t1"}
-        mock.assert_called_once_with("GET", "/appointment_types/t1")
-
-    def test_get_appointment_type_by_id_not_found(self):
-        c = _make_connector()
-        with patch.object(c, "_request", side_effect=ConnectorNotFoundError("cliniko", "GET", "")):
-            result = c.get_appointment_type_by_id("missing")
-        assert result is None
-
 
 # ── Appointment creation with types ──────────────────────────────────────────────────────
 

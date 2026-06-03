@@ -14,12 +14,9 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..models import ChannelConfig, ChatLog, Conversation, ConversationRating, Message, Tenant
-from ..shared.moderation import moderate
-from ..shared.rate_limit import check_rate_limit
-from ..schemas import ChatOut, WidgetChatIn
-from ..core.ai import simple_llm_response
+from ..agents.service import process_message
 from ..core.compliance.consent import ConsentManager
-from ..shared.inbox_writer import add_message, get_or_create_conversation
+from ..schemas import ChatOut, WidgetChatIn
 
 router = APIRouter(tags=["widget"])
 
@@ -40,10 +37,10 @@ def _validate_origin_strict(tenant_id: uuid.UUID, request: Request, db: Session)
     origin = request.headers.get("origin", "")
     if not origin:
         raise HTTPException(403, "Origin header required")
-    channel_cfg = db.query(ChannelConfig).filter(
+    channel_cfg = db.execute(select(ChannelConfig).where(
         ChannelConfig.tenant_id == tenant_id,
         ChannelConfig.channel_type == "web_widget",
-    ).first()
+    )).scalar_one_or_none()
     if not channel_cfg or not channel_cfg.config:
         return  # no config yet — allow (first-time setup)
     allowed = channel_cfg.config.get("allowed_origins", [])
@@ -71,39 +68,31 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
 
     Security: Origin validation is MANDATORY to prevent tenant impersonation.
     """
-    ip = _get_client_ip(request)
-    if not check_rate_limit("widget", ip):
-        raise HTTPException(429, "Rate limit exceeded. Try again later.")
-
-    flagged, category = moderate(body.message)
-    if flagged:
-        raise HTTPException(400, "Message violates content policy")
-
     _validate_origin_strict(body.tenant_id, request, db)
 
     tenant = db.get(Tenant, body.tenant_id)
     if not tenant:
         raise HTTPException(404, "tenant not found")
 
-    session_id = uuid.uuid4()
-
-    log = ChatLog(
-        tenant_id=tenant.id,
-        user_id=body.user_id,
-        direction="incoming",
-        message=body.message,
-        extra_fields=body.extra_fields or {},
-        session_id=session_id,
-    )
-    db.add(log)
-
     channel = body.channel or "web_widget"
-    conv = get_or_create_conversation(db, tenant.id, body.user_id, channel=channel, user_display_name=body.user_id)
-    add_message(db, conv, "incoming", body.message, sender_type="customer")
-    db.commit()
 
-    # Implied consent capture for new widget conversations
-    if conv.created_at == conv.updated_at:
+    result = await process_message(
+        tenant_id=str(tenant.id),
+        customer_id=body.user_id,
+        message=body.message,
+        channel=channel,
+        db=db,
+        contact_name=body.user_id,
+    )
+
+    if result.blocked:
+        raise HTTPException(400, "Message violates content policy")
+    if result.rate_limited:
+        raise HTTPException(429, "Rate limit exceeded. Try again later.")
+
+    # Implied consent capture for new conversations
+    if result.is_new_conversation:
+        ip = _get_client_ip(request)
         ConsentManager.capture(
             db=db,
             patient_id=None,
@@ -114,36 +103,12 @@ async def widget_chat(body: WidgetChatIn, request: Request, db: Session = Depend
             ip_address=ip,
         )
 
-    # Load conversation history for LLM context
-    from ..core.memory import get_conversation_history
-    history = get_conversation_history(
-        tenant_id=str(tenant.id),
-        customer_id=body.user_id,
-        db=db,
-    )
-
-    # Load conversation history
-
-    result = await simple_llm_response(tenant.id, body.message, conversation_history=history)
-
-    log.response = result["response"]
-    log.resolution = "resolved"
-    log.latency_ms = result["latency_ms"]
-    log.session_id = session_id
-    log.channel = channel
-    if log.channel != "test_widget":
-        tenant.dialogs_used += 1
-        tenant.resolved_count += 1
-    m = add_message(db, conv, "outgoing", result["response"], sender_type="bot")
-    m.delivered = True
-    db.commit()
-
     return ChatOut(
-        response=result["response"],
+        response=result.response or "",
         action_called="",
-        latency_ms=result["latency_ms"],
-        escalated=False,
-        resolution="resolved",
+        latency_ms=result.latency_ms,
+        escalated=result.escalate,
+        resolution="escalated" if result.escalate else "resolved",
     )
 
 
@@ -171,7 +136,7 @@ def widget_inbox(tenant_id: uuid.UUID, user_id: str, viewing: bool = False, requ
         .where(
             Message.conversation_id == conv.id,
             Message.direction == "outgoing",
-            Message.delivered == False,
+            Message.delivered.is_(False),
         )
         .order_by(Message.created_at.asc())
     ).scalars().all()
@@ -201,18 +166,18 @@ def widget_rating(body: dict, request: Request, db: Session = Depends(get_db)):
         raise HTTPException(400, "invalid tenant_id")
 
     _validate_origin_strict(tid, request, db)
-    tenant = db.query(Tenant).filter(Tenant.id == tid).first()
+    tenant = db.execute(select(Tenant).where(Tenant.id == tid)).scalar_one_or_none()
     if not tenant:
         raise HTTPException(404, "tenant not found")
 
     mid = message_id
     if not mid:
-        last = db.query(ChatLog).filter(
+        last = db.execute(select(ChatLog).where(
             ChatLog.tenant_id == tenant.id,
             ChatLog.user_id == user_id,
             ChatLog.channel == body.get("channel", "web_widget"),
-            ChatLog.is_user == False,
-        ).order_by(ChatLog.created_at.desc()).first()
+            ChatLog.is_user.is_(False),
+        ).order_by(ChatLog.created_at.desc())).scalar_one_or_none()
         if last:
             mid = last.session_id
 

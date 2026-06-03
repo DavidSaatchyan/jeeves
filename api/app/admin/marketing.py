@@ -8,8 +8,10 @@ from pydantic import BaseModel
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
+from uuid import uuid4
+
 from ..db import get_db
-from ..models import Tenant
+from ..models import Campaign, Tenant, Workflow
 from ..core.events.schemas import CanonicalEvent
 from ..core.workflows.registry import route_event
 from .deps import get_admin_tenant
@@ -41,8 +43,6 @@ def list_campaigns(
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
 ):
-    from ..models import Campaign
-
     q = select(Campaign).where(Campaign.tenant_id == tenant.id)
     if status:
         q = q.where(Campaign.status == status)
@@ -62,8 +62,6 @@ def create_campaign(
     tenant: Tenant = Depends(get_admin_tenant),
     db: Session = Depends(get_db),
 ):
-    from ..models import Campaign
-    from uuid import uuid4
 
     campaign = Campaign(
         id=uuid4(),
@@ -88,8 +86,6 @@ async def launch_campaign(
     tenant: Tenant = Depends(get_admin_tenant),
     db: Session = Depends(get_db),
 ):
-    from ..models import Campaign
-
     campaign = db.get(Campaign, campaign_id)
     if not campaign or campaign.tenant_id != tenant.id:
         raise HTTPException(status_code=404, detail="Campaign not found")
@@ -131,8 +127,6 @@ def pause_campaign(
     tenant: Tenant = Depends(get_admin_tenant),
     db: Session = Depends(get_db),
 ):
-    from ..models import Campaign
-
     campaign = db.get(Campaign, campaign_id)
     if not campaign or campaign.tenant_id != tenant.id:
         raise HTTPException(status_code=404, detail="Campaign not found")
@@ -147,8 +141,6 @@ def campaign_analytics(
     tenant: Tenant = Depends(get_admin_tenant),
     db: Session = Depends(get_db),
 ):
-    from ..models import Campaign
-
     campaign = db.get(Campaign, campaign_id)
     if not campaign or campaign.tenant_id != tenant.id:
         raise HTTPException(status_code=404, detail="Campaign not found")
@@ -167,8 +159,6 @@ def list_followups(
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
 ):
-    from ..models import Workflow
-
     q = select(Workflow).where(
         Workflow.tenant_id == tenant.id,
         Workflow.workflow_type == "followup",

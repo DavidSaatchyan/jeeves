@@ -2,15 +2,14 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..core import billing
-from ..core.activity_log import log_activity
 from ..db import get_db
-from ..models import FileRecord, Tenant, TeamMember
-from .deps import get_admin_tenant, require_role
+from ..models import FileRecord, Tenant
+from .deps import get_admin_tenant
 from .router import router
 
 
@@ -70,26 +69,3 @@ def api_billing_details(
     }
 
 
-@router.post("/api/settings/billing/addons")
-def api_billing_addons(
-    body: dict,
-    tenant: Tenant = Depends(get_admin_tenant),
-    db: Session = Depends(get_db),
-    _: TeamMember = Depends(require_role("owner")),
-):
-    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", "Add-on purchase (placeholder)", api_status="pending")
-    return {"ok": True, "message": "Add-on purchase placeholder"}
-
-
-@router.post("/api/settings/billing/change-plan")
-def api_billing_change_plan(
-    body: dict,
-    tenant: Tenant = Depends(get_admin_tenant),
-    db: Session = Depends(get_db),
-    _: TeamMember = Depends(require_role("owner")),
-):
-    plan = (body.get("plan") or "").strip().lower()
-    if plan not in billing.PLANS:
-        raise HTTPException(status_code=400, detail="Invalid plan")
-    log_activity(db, tenant.id, "👤 " + tenant.email, "config_change", f"Plan change requested: {plan}", api_status="pending")
-    return {"ok": True, "plan": plan, "message": "Plan change placeholder (no Stripe yet)"}

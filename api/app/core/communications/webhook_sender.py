@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ...models import WebhookConfig
@@ -15,10 +16,10 @@ async def fire_outgoing_webhooks(db: Session, tenant_id, user_id: str, event: st
     """Send outgoing webhooks directly (no Celery) for configured events."""
     import httpx
 
-    cfg = db.query(WebhookConfig).filter(
+    cfg = db.execute(select(WebhookConfig).where(
         WebhookConfig.tenant_id == tenant_id,
         WebhookConfig.enabled == True,  # noqa: E712
-    ).first()
+    )).scalar_one_or_none()
     if not cfg or not cfg.events:
         return
 

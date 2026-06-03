@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import desc
+from sqlalchemy import select, desc
 from sqlalchemy.orm import Session
 
 from ..db import SessionLocal
@@ -30,12 +30,11 @@ def get_conversation_history(
             tenant_id = UUID(tenant_id)
         cutoff = datetime.utcnow() - timedelta(hours=max_age_hours)
         rows = (
-            db.query(ChatLog)
-            .filter(
+            db.execute(select(ChatLog).where(
                 ChatLog.tenant_id == tenant_id,
                 ChatLog.user_id == customer_id,
                 ChatLog.created_at >= cutoff,
-            )
+            )).scalars()
             .order_by(desc(ChatLog.created_at))
             .limit(limit)
             .all()

@@ -4,11 +4,12 @@ import uuid
 from typing import Optional
 
 from fastapi import Depends, Header, HTTPException, Request, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..models import ApiKey, Tenant
-from .router import SESSION_COOKIE
+from ..shared.constants import SESSION_COOKIE
 from .tokens import _hash_key, decode_token
 
 
@@ -33,7 +34,7 @@ def get_current_tenant(
     if token.startswith("sk_"):
         from datetime import datetime
         key_hash = _hash_key(token)
-        api_key = db.query(ApiKey).filter(ApiKey.key_hash == key_hash).first()
+        api_key = db.execute(select(ApiKey).where(ApiKey.key_hash == key_hash)).scalar_one_or_none()
         if not api_key:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid API key")
         if api_key.expires_at and api_key.expires_at < datetime.utcnow():

@@ -371,10 +371,10 @@ class TestPabauAppointments:
 
 
 class TestPabauSlots:
-    def test_search_available_slots_returns_empty(self):
+    def test_search_available_slots_not_implemented(self):
         c = _make_connector()
-        result = c.search_available_slots("dr1", "2026-06-01")
-        assert result == []
+        with pytest.raises(NotImplementedError):
+            c.search_available_slots("dr1", "2026-06-01")
 
 
 # ── Webhooks ─────────────────────────────────────────────────────────────────────────────
@@ -393,9 +393,9 @@ class TestPabauWebhooks:
         c = _make_connector(webhook_secret="mysecret")
         assert c.verify_webhook_signature(b'{"event":"test"}', "invalid_sig") is False
 
-    def test_verify_signature_no_secret_returns_true(self):
+    def test_verify_signature_no_secret_rejects(self):
         c = _make_connector(webhook_secret="")
-        assert c.verify_webhook_signature(b"{}", "anything") is True
+        assert c.verify_webhook_signature(b"{}", "anything") is False
 
     def test_parse_webhook_event(self):
         c = _make_connector()

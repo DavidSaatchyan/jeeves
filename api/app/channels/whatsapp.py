@@ -3,26 +3,23 @@
 Uses WhatsApp Cloud API (direct, no BSP needed).
 Config: phone_number_id, access_token, verify_token, business_phone.
 
-Inbound:  POST /channels/whatsapp/webhook -> verify -> moderate -> AI -> reply
+Inbound:  POST /channels/whatsapp/webhook -> opt-in/out -> process_message -> reply
 Verify:   GET  /channels/whatsapp/webhook  (Meta challenge)
 """
 from __future__ import annotations
 
 import logging
-import uuid
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import ChannelConfig, ChatLog, Tenant
-from ..shared.inbox_writer import add_message, get_or_create_conversation
-from ..core.ai import simple_llm_response
+from ..models import ChannelConfig, Tenant
+from ..agents.service import process_message
+from ..channels.registry import channel_cache
 from ..core.compliance.consent import ConsentManager
-from ..shared.rate_limit import check_rate_limit
-from ..shared.moderation import moderate
-from ..core.ai import classify_intent
 from ..integrations.resolver import get_crm_adapter
 
 WHATSAPP_API = "https://graph.facebook.com/v17.0/{phone_number_id}/messages"
@@ -34,18 +31,20 @@ def _api_url(phone_number_id: str) -> str:
     return WHATSAPP_API.format(phone_number_id=phone_number_id)
 
 
-def _resolve_tenant(db: Session, wa_id: str) -> tuple[Tenant | None, ChannelConfig | None]:
+def _resolve_tenant(db: Session, phone_number_id: str) -> tuple[Tenant | None, ChannelConfig | None]:
+    entry = channel_cache.resolve_whatsapp(phone_number_id)
+    if entry:
+        tenant_id, config_id = entry
+        return db.get(Tenant, tenant_id), db.get(ChannelConfig, config_id)
     configs = (
-        db.query(ChannelConfig)
-        .filter(
+        db.execute(select(ChannelConfig).where(
             ChannelConfig.channel_type == "whatsapp",
             ChannelConfig.status == "active",
-        )
-        .all()
+        )).scalars().all()
     )
     for cfg in configs:
-        phone = cfg.config.get("business_phone", "")
-        if phone:
+        pid = cfg.config.get("phone_number_id", "")
+        if pid == phone_number_id:
             return db.get(Tenant, cfg.tenant_id), cfg
     return None, None
 
@@ -100,12 +99,10 @@ def verify_webhook(
     challenge = request.query_params.get("hub.challenge", "")
 
     configs = (
-        db.query(ChannelConfig)
-        .filter(
+        db.execute(select(ChannelConfig).where(
             ChannelConfig.channel_type == "whatsapp",
             ChannelConfig.status == "active",
-        )
-        .all()
+        )).scalars().all()
     )
     for cfg in configs:
         vt = cfg.config.get("verify_token", "")
@@ -130,23 +127,17 @@ async def handle_webhook(request: Request, db: Session = Depends(get_db)):
                 wa_id = msg["from"]
                 text = msg["text"]["body"]
 
-                tenant, cfg = _resolve_tenant(db, wa_id)
+                phone_number_id = value.get("metadata", {}).get("phone_number_id", "")
+
+                tenant, cfg = _resolve_tenant(db, phone_number_id)
                 if not tenant or not cfg:
                     continue
 
                 phone_number_id = cfg.config.get("phone_number_id", "")
                 access_token = cfg.config.get("access_token", "")
 
-                if not check_rate_limit("whatsapp", wa_id):
-                    await _send_message(phone_number_id, access_token, wa_id,
-                        "Too many messages. Please slow down.")
-                    continue
-
-                flagged, category = moderate(text)
-                if flagged:
-                    await _send_message(phone_number_id, access_token, wa_id,
-                        "Your message couldn't be processed due to content policy.")
-                    continue
+                contacts = value.get("contacts") or []
+                contact_name = contacts[0].get("profile", {}).get("name") if contacts else None
 
                 up = text.strip().upper()
                 if up in ("YES", "OPT-IN", "START", "CONSENT"):
@@ -169,37 +160,23 @@ async def handle_webhook(request: Request, db: Session = Depends(get_db)):
                         "You've been unsubscribed. Reply YES to opt back in.")
                     continue
 
-                session_id = uuid.uuid4()
-
-                log = ChatLog(
-                    tenant_id=tenant.id,
-                    user_id=wa_id,
-                    direction="incoming",
-                    message=text,
-                    session_id=session_id,
-                    channel="whatsapp",
-                )
-                db.add(log)
-
-                contacts = value.get("contacts") or []
-                contact_name = contacts[0].get("profile", {}).get("name") if contacts else None
-
-                conv = get_or_create_conversation(
-                    db, tenant.id, wa_id,
-                    channel="whatsapp",
-                    user_display_name=contact_name or wa_id,
-                )
-                add_message(db, conv, "incoming", text, sender_type="customer")
-                db.commit()
-
-                from ..core.memory import get_conversation_history
-                history = get_conversation_history(
+                result = await process_message(
                     tenant_id=str(tenant.id),
                     customer_id=wa_id,
+                    message=text,
+                    channel="whatsapp",
                     db=db,
+                    contact_name=contact_name,
                 )
 
-                intent = await classify_intent(text, str(tenant.id), history=history)
+                if result.blocked:
+                    await _send_message(phone_number_id, access_token, wa_id,
+                        "Your message couldn't be processed due to content policy.")
+                    continue
+                if result.rate_limited:
+                    await _send_message(phone_number_id, access_token, wa_id,
+                        "Too many messages. Please slow down.")
+                    continue
 
                 followup_intents = {
                     "followup_feeling_good", "followup_feeling_bad",
@@ -208,11 +185,11 @@ async def handle_webhook(request: Request, db: Session = Depends(get_db)):
                 campaign_intents = {
                     "campaign_positive", "campaign_negative", "campaign_question",
                 }
-                if intent in followup_intents or intent in campaign_intents:
+
+                if result.intent in followup_intents or result.intent in campaign_intents:
                     from ..core.events.schemas import CanonicalEvent
                     from ..core.workflows.registry import route_event
-
-                    event_source = "followup" if intent in followup_intents else "marketing"
+                    event_source = "followup" if result.intent in followup_intents else "marketing"
                     event = CanonicalEvent(
                         tenant_id=str(tenant.id),
                         event_type="patient_responded",
@@ -222,29 +199,26 @@ async def handle_webhook(request: Request, db: Session = Depends(get_db)):
                         payload={
                             "patient_id": wa_id,
                             "message": text,
-                            "intent": intent,
+                            "intent": result.intent,
                             "channel": "whatsapp",
                             "phone_number_id": phone_number_id,
                             "access_token": access_token,
                             "wa_id": wa_id,
                             "contact_name": contact_name,
-                            "history": history,
                         },
                     )
                     await route_event(event, db)
                     continue
 
-                if intent in ("appointment", "reschedule", "cancel", "availability", "emergency"):
+                if result.intent in ("appointment", "reschedule", "cancel", "availability", "emergency"):
                     from ..core.events.schemas import CanonicalEvent
                     from ..core.workflows.registry import route_event
-
-                    if intent == "emergency":
+                    if result.intent == "emergency":
                         await _send_message(phone_number_id, access_token, wa_id,
                             "If this is a medical emergency, please call 911 or your local emergency services immediately.")
                     else:
                         await _send_message(phone_number_id, access_token, wa_id,
                             "Let me help you with that. I'll check available options.")
-
                     event = CanonicalEvent(
                         tenant_id=str(tenant.id),
                         event_type="patient_message_received",
@@ -258,32 +232,13 @@ async def handle_webhook(request: Request, db: Session = Depends(get_db)):
                             "channel": "whatsapp",
                             "phone_number_id": phone_number_id,
                             "access_token": access_token,
-                            "history": history,
                         },
                     )
                     await route_event(event, db)
-                else:
-                    result = await simple_llm_response(
-                        tenant.id, text,
-                        conversation_history=history,
-                    )
+                    continue
 
-                    response_text = result["response"]
-
-                    log.response = response_text
-                    log.resolution = "escalated" if result.get("escalated") else "resolved"
-                    log.action_called = result.get("action_called", "")
-                    log.latency_ms = result["latency_ms"]
-
-                    tenant.dialogs_used += 1
-                    if not result.get("escalated"):
-                        tenant.resolved_count += 1
-
-                    add_message(db, conv, "outgoing", response_text, sender_type="bot")
-                    db.commit()
-
-                    if response_text:
-                        await _send_message(phone_number_id, access_token, wa_id, response_text)
+                if result.response:
+                    await _send_message(phone_number_id, access_token, wa_id, result.response)
 
                 _maybe_crm_bridge(db, tenant.id, wa_id, text, contact_name)
 

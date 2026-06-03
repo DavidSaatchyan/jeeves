@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime, timedelta
 
 from fastapi import Depends, HTTPException, Request, Response
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..config import get_yaml_config
@@ -13,17 +14,18 @@ from ..shared.rate_limit import check_rate_limit
 from ..schemas import AuthOut, LoginIn, RefreshIn, RegisterIn, TokenOut
 from .deps import _get_client_ip
 from .passwords import prepare_password, validate_password_strength
-from .router import SESSION_COOKIE, pwd_ctx, router
+from ..shared.constants import SESSION_COOKIE
+from .router import pwd_ctx, router
 from .tokens import decode_token, issue_tokens, revoke_token
 
 
 @router.post("/register", response_model=AuthOut, status_code=201)
-def register(body: RegisterIn, request: Request, response: Response, db: Session = Depends(get_db)):
+async def register(body: RegisterIn, request: Request, response: Response, db: Session = Depends(get_db)):
     ip = _get_client_ip(request)
-    if not check_rate_limit("register", ip):
+    if not await check_rate_limit("register", ip):
         raise HTTPException(429, "Too many registration attempts. Try again later.")
     validate_password_strength(body.password)
-    exists = db.query(Tenant).filter(Tenant.email == body.email).first()
+    exists = db.execute(select(Tenant).where(Tenant.email == body.email)).scalar_one_or_none()
     if exists:
         raise HTTPException(400, "Email already exists")
     cfg = get_yaml_config().get("billing", {})
@@ -83,11 +85,11 @@ def revoke(body: dict):
 
 
 @router.post("/login", response_model=AuthOut)
-def login(body: LoginIn, request: Request, response: Response, db: Session = Depends(get_db)):
+async def login(body: LoginIn, request: Request, response: Response, db: Session = Depends(get_db)):
     ip = _get_client_ip(request)
-    if not check_rate_limit("login", ip):
+    if not await check_rate_limit("login", ip):
         raise HTTPException(429, "Too many login attempts. Try again later.")
-    tenant = db.query(Tenant).filter(Tenant.email == body.email).first()
+    tenant = db.execute(select(Tenant).where(Tenant.email == body.email)).scalar_one_or_none()
     if not tenant or not pwd_ctx.verify(prepare_password(body.password), tenant.hashed_password):
         raise HTTPException(401, "Invalid credentials")
     access, refresh = issue_tokens(tenant.id)

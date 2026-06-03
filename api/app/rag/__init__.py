@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from .config import DISTANCE_THRESHOLD, EMBED_MODEL, EMBEDDING_VERSION, TOP_K
-from .engine import _count_all_chunks, delete_file, index_file, search
+from .engine import delete_file, index_file, search
 from .maintenance import deduplicate_collection, purge_orphans
 from .products import delete_products_by_batch, index_products
 
