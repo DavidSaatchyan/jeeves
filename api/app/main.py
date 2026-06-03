@@ -138,14 +138,29 @@ async def dynamic_cors(request: Request, call_next):
 
 def _ensure_missing_columns(engine) -> None:
     """Add columns that migrations may have missed (stamp fallback path)."""
-    from sqlalchemy import inspect as sa_inspect
+    from sqlalchemy import inspect as sa_inspect, text as sa_text
     inspector = sa_inspect(engine)
     cols = {c["name"] for c in inspector.get_columns("tenants")}
     if "agent_config" not in cols:
-        from sqlalchemy import text
         with engine.begin() as conn:
-            conn.execute(text("ALTER TABLE tenants ADD COLUMN agent_config JSONB"))
+            conn.execute(sa_text("ALTER TABLE tenants ADD COLUMN agent_config JSONB"))
         logging.info("Added missing column tenants.agent_config via fallback")
+
+    # workflows tables may be missing columns added in later migrations
+    if "workflows" in inspector.get_table_names():
+        wf_cols = {c["name"] for c in inspector.get_columns("workflows")}
+        if "escalation_state" not in wf_cols:
+            with engine.begin() as conn:
+                conn.execute(sa_text("ALTER TABLE workflows ADD COLUMN escalation_state VARCHAR(32)"))
+            logging.info("Added missing column workflows.escalation_state via fallback")
+
+    # conversations table may be missing workflow_state
+    if "conversations" in inspector.get_table_names():
+        conv_cols = {c["name"] for c in inspector.get_columns("conversations")}
+        if "workflow_state" not in conv_cols:
+            with engine.begin() as conn:
+                conn.execute(sa_text("ALTER TABLE conversations ADD COLUMN workflow_state VARCHAR(64)"))
+            logging.info("Added missing column conversations.workflow_state via fallback")
 
 
 def _run_alembic_migrations() -> None:
