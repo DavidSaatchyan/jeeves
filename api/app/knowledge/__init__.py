@@ -197,7 +197,7 @@ async def simulate(
             "Be concise and factual.\n\nContext:\n" + context
         )
     else:
-        system_prompt = "You are a knowledge base assistant. You do NOT have any relevant information to answer the question. Say you don't know. Do not guess or make up an answer."
+        system_prompt = "You are a knowledge base assistant. No relevant documents were found for the query. State that this information is not present in the knowledge base. Do not guess or make up an answer."
 
     from openai import AsyncOpenAI
     client = AsyncOpenAI(api_key=_settings.openai_api_key)
