@@ -228,8 +228,13 @@
 @keyframes kb-spin{to{transform:rotate(360deg)}}
 
 /* ── Chunk modal ── */
-.chunk-modal{max-width:90vw;width:900px;max-height:85vh;display:flex;flex-direction:column}
-.chunk-modal-body{flex:1;overflow-y:auto;padding:4px 0;min-height:0}
+.chunk-modal{max-width:90vw;width:900px;max-height:85vh;min-height:320px;display:flex;flex-direction:column}
+.chunk-modal-body{flex:1;overflow-y:auto;padding:4px 0;min-height:0;scrollbar-width:thin}
+.chunk-modal-body::-webkit-scrollbar{width:5px}
+.chunk-modal-body::-webkit-scrollbar-track{background:transparent}
+.chunk-modal-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.chunk-modal-body::-webkit-scrollbar-thumb:hover{background:var(--muted2)}
+.chunk-loading{display:flex;align-items:center;justify-content:center;height:100%;min-height:240px;gap:12px;font-size:14px;color:var(--muted)}
 .kb-chunk{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;font-size:12px;font-family:'SF Mono',ui-monospace,Consolas,monospace;line-height:1.5}
 .kb-chunk:last-child{margin-bottom:0}
 .kb-chunk-meta{font-size:10px;color:var(--muted2);margin-bottom:4px}
@@ -530,8 +535,9 @@ async function syncCrmPrices(){
 // CHUNK VIEWER
 // ════════════════════════════════════════════════
 async function openChunkViewer(fileId){
+  document.body.style.overflow = 'hidden';
   document.getElementById('chunkModalTitle').textContent = 'Chunks';
-  document.getElementById('chunkModalBody').innerHTML = '<div class="muted" style="font-size:13px">Loading...</div>';
+  document.getElementById('chunkModalBody').innerHTML = '<div class="chunk-loading"><span class="kb-spinner"></span>Loading chunks...</div>';
   document.getElementById('chunkModal').classList.add('show');
 
   try {
@@ -546,12 +552,13 @@ async function openChunkViewer(fileId){
       html += '<div class="kb-chunk-text">' + esc(c.text) + '</div>';
       html += '</div>';
     });
-    document.getElementById('chunkModalBody').innerHTML = html || '<div class="muted" style="font-size:13px">No chunks for this file.</div>';
-  } catch(e){ document.getElementById('chunkModalBody').innerHTML = '<div class="muted" style="font-size:13px">Error: ' + e.message + '</div>'; }
+    document.getElementById('chunkModalBody').innerHTML = html || '<div class="chunk-loading" style="min-height:auto;padding:32px 0">No chunks for this file.</div>';
+  } catch(e){ document.getElementById('chunkModalBody').innerHTML = '<div class="chunk-loading" style="min-height:auto;padding:32px 0;color:var(--red)">Error: ' + e.message + '</div>'; }
 }
 function closeChunkViewer(){
   document.getElementById('chunkModal').classList.remove('show');
   document.getElementById('chunkModalBody').innerHTML = '';
+  document.body.style.overflow = '';
 }
 
 // ════════════════════════════════════════════════
