@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block body %}
-<h1>Knowledge base</h1>
-<p class="page-desc">Knowledge base for AI agents.</p>
+<h1>Memory system</h1>
+<p class="page-desc">Memory system for AI agents.</p>
 
 <!-- ═══════════════ RAG SIMULATOR ═══════════════ -->
 <div id="simSection" class="sim-section">
   <div class="sim-bar">
-    <input id="simQuery" type="text" class="sim-input" placeholder="Ask a question related to your knowledge base..." />
+    <input id="simQuery" type="text" class="sim-input" placeholder="Ask a question related to your memory system..." />
     <button id="simBtn" class="btn sm" onclick="simulate()">Search</button>
     <button id="simClearBtn" class="ghost sm" onclick="clearResults()" style="display:none">✕</button>
   </div>
@@ -84,7 +84,7 @@
 <div class="modal-overlay" id="uploadModal">
   <div class="modal" style="max-width:560px">
     <div class="modal-header">
-      <h2>Upload to knowledge base</h2>
+      <h2>Upload to memory system</h2>
       <button class="ghost sm" onclick="closeUploadModal()" style="border:none;font-size:18px;padding:4px 8px">&times;</button>
     </div>
 
@@ -123,7 +123,7 @@
     <!-- Tab: CRM price sync -->
     <div class="ch-panel" id="upanel-crm">
       <p class="muted" style="font-size:14px;margin-bottom:12px">
-        Sync service prices from your connected CRM (Cliniko / Pabau) into the knowledge base.
+        Sync service prices from your connected CRM (Cliniko / Pabau) into the memory system.
         Products with updated prices will be re-indexed.
       </p>
       <button class="btn sm" onclick="syncCrmPrices()" id="syncBtn">Sync now</button>
