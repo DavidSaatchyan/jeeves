@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>Knowledge base</h1>
-<p class="page-desc">Knowledge base for AI agents — documents, folders, and RAG testing.</p>
+<p class="page-desc">Knowledge base for AI agents.</p>
 
 <!-- ═══════════════ RAG SIMULATOR ═══════════════ -->
 <div id="simSection" class="sim-section">
@@ -76,14 +76,7 @@
       <div id="procMsg" class="kb-proc"><span class="kb-spinner"></span> Processing...</div>
     </div>
 
-    <!-- Chunk viewer (hidden until file selected) -->
-    <div id="chunkViewer" class="card" style="display:none;margin-top:16px">
-      <div class="card-header">
-        <h2 id="chunkViewerTitle">Chunks</h2>
-        <button class="ghost sm" onclick="closeChunkViewer()">Close</button>
-      </div>
-      <div id="chunkList" class="kb-chunk-list"></div>
-    </div>
+
   </main>
 </div>
 
@@ -173,6 +166,16 @@
     </div>
   </div>
 </div>
+<!-- ═══════════════ CHUNK VIEWER MODAL ═══════════════ -->
+<div class="modal-overlay" id="chunkModal">
+  <div class="modal chunk-modal">
+    <div class="modal-header">
+      <h2 id="chunkModalTitle">Chunks</h2>
+      <button class="ghost sm" onclick="closeChunkViewer()" style="border:none;font-size:18px;padding:4px 8px">&times;</button>
+    </div>
+    <div id="chunkModalBody" class="chunk-modal-body"></div>
+  </div>
+</div>
 {% endblock %}
 {% block tail %}
 <style>
@@ -224,9 +227,11 @@
 .kb-spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:kb-spin .6s linear infinite;display:inline-block}
 @keyframes kb-spin{to{transform:rotate(360deg)}}
 
-/* ── Editor ── */
-.kb-chunk-list{display:flex;flex-direction:column;gap:8px}
-.kb-chunk{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:12px;font-family:'SF Mono',ui-monospace,Consolas,monospace;line-height:1.5;position:relative}
+/* ── Chunk modal ── */
+.chunk-modal{max-width:90vw;width:900px;max-height:85vh;display:flex;flex-direction:column}
+.chunk-modal-body{flex:1;overflow-y:auto;padding:4px 0;min-height:0}
+.kb-chunk{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;font-size:12px;font-family:'SF Mono',ui-monospace,Consolas,monospace;line-height:1.5}
+.kb-chunk:last-child{margin-bottom:0}
 .kb-chunk-meta{font-size:10px;color:var(--muted2);margin-bottom:4px}
 .kb-chunk-text{color:var(--text);white-space:pre-wrap;word-break:break-word}
 
@@ -525,27 +530,28 @@ async function syncCrmPrices(){
 // CHUNK VIEWER
 // ════════════════════════════════════════════════
 async function openChunkViewer(fileId){
-  document.getElementById('chunkViewerTitle').textContent = 'Chunks';
-  document.getElementById('chunkViewer').style.display = '';
+  document.getElementById('chunkModalTitle').textContent = 'Chunks';
+  document.getElementById('chunkModalBody').innerHTML = '<div class="muted" style="font-size:13px">Loading...</div>';
+  document.getElementById('chunkModal').classList.add('show');
 
   try {
     var chunkData = await api('/knowledge/files/' + fileId + '/chunks');
-    var html = '<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);margin-bottom:8px">Chunks (' + chunkData.total + ')</div>';
+    var html = '';
     (chunkData.chunks || []).forEach(function(c){
       html += '<div class="kb-chunk">';
       html += '<div class="kb-chunk-meta">';
       html += '#' + c.index + ' &middot; chars ' + (c.char_start || '?') + '\u2013' + (c.char_end || '?');
       if(c.section) html += ' &middot; Section: ' + esc(c.section);
       html += '</div>';
-      html += '<div class="kb-chunk-text">' + esc(c.text).slice(0, 400) + (c.text.length > 400 ? '...' : '') + '</div>';
+      html += '<div class="kb-chunk-text">' + esc(c.text) + '</div>';
       html += '</div>';
     });
-    document.getElementById('chunkList').innerHTML = html;
-  } catch(e){ document.getElementById('chunkList').innerHTML = '<div class="muted" style="font-size:13px">Chunks: ' + e.message + '</div>'; }
+    document.getElementById('chunkModalBody').innerHTML = html || '<div class="muted" style="font-size:13px">No chunks for this file.</div>';
+  } catch(e){ document.getElementById('chunkModalBody').innerHTML = '<div class="muted" style="font-size:13px">Error: ' + e.message + '</div>'; }
 }
 function closeChunkViewer(){
-  document.getElementById('chunkViewer').style.display = 'none';
-  document.getElementById('chunkList').innerHTML = '';
+  document.getElementById('chunkModal').classList.remove('show');
+  document.getElementById('chunkModalBody').innerHTML = '';
 }
 
 // ════════════════════════════════════════════════
@@ -633,6 +639,9 @@ function closeConfirm(force){
 }
 document.getElementById('confirmModal').addEventListener('click', function(e){
   if(e.target === this) closeConfirm();
+});
+document.getElementById('chunkModal').addEventListener('click', function(e){
+  if(e.target === this) closeChunkViewer();
 });
 document.getElementById('confirmBtn').addEventListener('click', function(){
   if(_confirmCb) { _confirmCb(); }
