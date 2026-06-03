@@ -78,18 +78,13 @@
       <div id="procMsg" class="kb-proc"><span class="kb-spinner"></span> Processing...</div>
     </div>
 
-    <!-- Document editor (hidden until file selected) -->
-    <div id="editorSection" class="card" style="display:none;margin-top:16px">
+    <!-- Chunk viewer (hidden until file selected) -->
+    <div id="chunkViewer" class="card" style="display:none;margin-top:16px">
       <div class="card-header">
-        <h2 id="editorTitle">Editor</h2>
-        <button class="ghost sm" onclick="closeEditor()">Close</button>
+        <h2 id="chunkViewerTitle">Chunks</h2>
+        <button class="ghost sm" onclick="closeChunkViewer()">Close</button>
       </div>
-      <textarea id="editorContent" class="kb-editor" spellcheck="false"></textarea>
-      <div class="flex" style="gap:8px;margin-top:8px;justify-content:flex-end">
-        <button class="btn sm" onclick="saveEditor()">Save &amp; re-index</button>
-      </div>
-      <div id="editorStatus" class="muted mt-12" style="font-size:13px"></div>
-      <div id="chunkList" class="kb-chunk-list" style="margin-top:16px"></div>
+      <div id="chunkList" class="kb-chunk-list"></div>
     </div>
   </main>
 </div>
@@ -232,8 +227,6 @@
 @keyframes kb-spin{to{transform:rotate(360deg)}}
 
 /* ── Editor ── */
-.kb-editor{width:100%;min-height:300px;padding:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;font-family:'SF Mono',ui-monospace,Consolas,monospace;line-height:1.6;resize:vertical;outline:none;box-sizing:border-box}
-.kb-editor:focus{border-color:var(--accent)}
 .kb-chunk-list{display:flex;flex-direction:column;gap:8px}
 .kb-chunk{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:12px;font-family:'SF Mono',ui-monospace,Consolas,monospace;line-height:1.5;position:relative}
 .kb-chunk-meta{font-size:10px;color:var(--muted2);margin-bottom:4px}
@@ -265,7 +258,6 @@
 // Helpers
 // ════════════════════════════════════════════════
 var _selectedFolder = '';
-var _editingFileId = null;
 var _pollingActive = false;
 var _confirmCb = null;
 var _confirmLoading = false;
@@ -394,15 +386,14 @@ async function refresh() {
       var cls = r.status === 'ready' ? 'ok' : (r.status === 'failed' ? 'err' : 'warn');
       var label = r.status === 'processing' ? 'Processing' : r.status;
       var fname = (r.folder_id && folderMap[r.folder_id]) ? folderMap[r.folder_id] : '\u2014';
-      var editorLink = (r.status === 'ready' && ['.txt','.md'].some(function(ext){ return r.filename.toLowerCase().endsWith(ext); })) ? ('<button class="ghost sm" onclick="openEditor(\'' + r.id + '\')" title="Edit">✏️</button>') : '';
       return '<tr>'
-        + '<td><strong>' + esc(r.filename) + '</strong></td>'
+        + '<td><strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\');return false">' + esc(r.filename) + '</a></strong></td>'
         + '<td><span class="pill ' + cls + '" style="font-size:11px">' + label + '</span></td>'
         + '<td style="text-align:right">' + (r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB') + '</td>'
         + '<td style="text-align:right">' + (r.chunks_total || '\u2014') + '</td>'
         + '<td>' + (r.created_at ? r.created_at.slice(0, 10) : '\u2014') + '</td>'
         + '<td style="font-size:12px;color:var(--muted2)">' + esc(fname) + '</td>'
-        + '<td>' + editorLink + '<button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '">✕</button></td></tr>';
+        + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '">✕</button></td></tr>';
     }).join('') || '<tr><td colspan="7" class="muted" style="text-align:center;padding:16px">No files in this folder.</td></tr>';
 
     document.getElementById('procMsg').style.display = hasProcessing ? '' : 'none';
@@ -527,17 +518,11 @@ async function syncCrmPrices(){
 }
 
 // ════════════════════════════════════════════════
-// DOCUMENT EDITOR
+// CHUNK VIEWER
 // ════════════════════════════════════════════════
-async function openEditor(fileId){
-  _editingFileId = fileId;
-  try {
-    var data = await api('/knowledge/files/' + fileId + '/content');
-    document.getElementById('editorTitle').textContent = 'Editing: ' + esc(data.filename);
-    document.getElementById('editorContent').value = data.content;
-    document.getElementById('editorSection').style.display = '';
-    document.getElementById('editorStatus').textContent = '';
-  } catch(e){ document.getElementById('editorStatus').textContent = 'Error: ' + e.message; }
+async function openChunkViewer(fileId){
+  document.getElementById('chunkViewerTitle').textContent = 'Chunks';
+  document.getElementById('chunkViewer').style.display = '';
 
   try {
     var chunkData = await api('/knowledge/files/' + fileId + '/chunks');
@@ -554,22 +539,9 @@ async function openEditor(fileId){
     document.getElementById('chunkList').innerHTML = html;
   } catch(e){ document.getElementById('chunkList').innerHTML = '<div class="muted" style="font-size:13px">Chunks: ' + e.message + '</div>'; }
 }
-function closeEditor(){
-  _editingFileId = null;
-  document.getElementById('editorSection').style.display = 'none';
-  document.getElementById('editorContent').value = '';
+function closeChunkViewer(){
+  document.getElementById('chunkViewer').style.display = 'none';
   document.getElementById('chunkList').innerHTML = '';
-}
-async function saveEditor(){
-  if(!_editingFileId) return;
-  document.getElementById('editorStatus').textContent = 'Saving and re-indexing...';
-  try {
-    var resp = await api('/knowledge/files/' + _editingFileId + '/content', {method:'PUT', body:{content:document.getElementById('editorContent').value}});
-    document.getElementById('editorStatus').textContent = 'Saved — ' + resp.chunks + ' chunks re-indexed';
-    document.getElementById('chunkList').innerHTML = '';
-    await openEditor(_editingFileId);
-    await refresh();
-  } catch(e){ document.getElementById('editorStatus').textContent = 'Error: ' + e.message; }
 }
 
 // ════════════════════════════════════════════════
