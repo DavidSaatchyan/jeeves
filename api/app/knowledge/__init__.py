@@ -417,9 +417,11 @@ def get_file_content(
 
     file_path = Path(rec.s3_key) if rec.s3_key else None
     if not file_path or not file_path.exists():
-        raise HTTPException(404, "file not found on disk")
+        content = ""
+    else:
+        content = file_path.read_text(encoding="utf-8")
 
-    return {"filename": rec.filename, "content": file_path.read_text(encoding="utf-8")}
+    return {"filename": rec.filename, "content": content}
 
 
 class _ContentUpdate(BaseModel):
@@ -447,6 +449,7 @@ async def update_file_content(
     if not file_path:
         raise HTTPException(404, "file path not found")
 
+    file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.write_text(body.content, encoding="utf-8")
 
     # Re-index: delete old chunks, re-index

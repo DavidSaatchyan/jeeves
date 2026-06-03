@@ -337,7 +337,7 @@ async function saveFolder(){
       await api('/knowledge/folders/' + document.getElementById('folderParentInput').value, {method:'PATCH', body:JSON.stringify({name:name}), headers:{'Content-Type':'application/json'}});
     } else {
       var parentVal = document.getElementById('folderParentInput').value || null;
-      await api('/knowledge/folders', {method:'POST', body:JSON.stringify({name:name, parent_id:parentVal}), headers:{'Content-Type':'application/json'}});
+      await api('/knowledge/folders', {method:'POST', body:{name:name, parent_id:parentVal}});
     }
     closeFolderModal();
     await loadFolders();
@@ -564,7 +564,7 @@ async function saveEditor(){
   if(!_editingFileId) return;
   document.getElementById('editorStatus').textContent = 'Saving and re-indexing...';
   try {
-    var resp = await api('/knowledge/files/' + _editingFileId + '/content', {method:'PUT', body:JSON.stringify({content:document.getElementById('editorContent').value}), headers:{'Content-Type':'application/json'}});
+    var resp = await api('/knowledge/files/' + _editingFileId + '/content', {method:'PUT', body:{content:document.getElementById('editorContent').value}});
     document.getElementById('editorStatus').textContent = 'Saved — ' + resp.chunks + ' chunks re-indexed';
     document.getElementById('chunkList').innerHTML = '';
     await openEditor(_editingFileId);
@@ -593,7 +593,7 @@ async function simulate(){
   document.getElementById('simResults').style.display = '';
 
   try {
-    var data = await api('/knowledge/simulate', {method:'POST', body:JSON.stringify({query:query, top_k:5}), headers:{'Content-Type':'application/json'}});
+    var data = await api('/knowledge/simulate', {method:'POST', body:{query:query, top_k:5}});
     document.getElementById('simAnswer').innerHTML = '<strong>Answer:</strong><br>' + esc(data.answer);
     var sourcesHtml = '<div class="sim-sources-title">Sources (' + (data.sources || []).length + ')</div>';
     (data.sources || []).forEach(function(s){
