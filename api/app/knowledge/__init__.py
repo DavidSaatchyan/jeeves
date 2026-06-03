@@ -159,11 +159,35 @@ class _SimulateIn(BaseModel):
 async def simulate(
     body: _SimulateIn,
     tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
 ):
     if not body.query.strip():
         raise HTTPException(400, "query is required")
 
-    results = await asyncio.to_thread(rag.search, tenant.id, body.query, top_k=body.top_k)
+    raw = await asyncio.to_thread(rag.search, tenant.id, body.query, top_k=body.top_k)
+
+    # Filter out orphan chunks whose file_id no longer exists in DB
+    file_ids = [r["file_id"] for r in raw if r.get("file_id")]
+    if file_ids:
+        uuids = []
+        for f in file_ids:
+            try:
+                uuids.append(uuid.UUID(f))
+            except Exception:
+                pass
+        existing = set()
+        if uuids:
+            for row in db.execute(select(FileRecord.id).where(
+                FileRecord.id.in_(uuids),
+                FileRecord.tenant_id == tenant.id,
+            )).all():
+                existing.add(str(row[0]))
+        results = [r for r in raw if not r.get("file_id") or r["file_id"] in existing]
+        if len(results) < len(raw):
+            logger.info("simulate: filtered %d orphan chunks from search results", len(raw) - len(results))
+    else:
+        results = raw
+
     context = "\n\n".join(r["text"] for r in results) if results else ""
 
     if context:
