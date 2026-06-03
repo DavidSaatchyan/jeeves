@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block body %}
-<h1>Memory system</h1>
+<h1>Knowledge base</h1>
 <p class="page-desc">Memory system for AI agents.</p>
 
 <!-- ═══════════════ RAG SIMULATOR ═══════════════ -->
 <div id="simSection" class="sim-section">
   <div class="sim-bar">
-    <input id="simQuery" type="text" class="sim-input" placeholder="Ask a question related to your memory system..." />
+    <input id="simQuery" type="text" class="sim-input" placeholder="Ask a question related to your knowledge base..." />
     <button id="simBtn" class="btn sm" onclick="simulate()">Search</button>
     <button id="simClearBtn" class="ghost sm" onclick="clearResults()" style="display:none">✕</button>
   </div>
