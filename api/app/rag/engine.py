@@ -150,12 +150,15 @@ def search(
                     "chunk_hash": h,
                 }
             )
-        if out and out[0]["distance"] > thr:
-            logger.info("search: best dist=%.4f > %.2f, treating as empty", out[0]["distance"], thr)
+        before = len(out)
+        out = [r for r in out if r["distance"] <= thr]
+        if not out:
+            logger.info("search: %d results after dedup, all above threshold %.2f, returning empty", before, thr)
             return []
+        out.sort(key=lambda r: r["distance"])
         logger.info(
             "search passed threshold(%f): %d/%d results\n%s",
-            thr, len(out), len(docs),
+            thr, len(out), before,
             "\n".join(f"  [{i}] dist={r['distance']:.4f} score={r['score']:.4f} "
                       f"file={r['filename']} sect={r['section'][:40]} "
                       f"text={r['text'][:120]!r}"

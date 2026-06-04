@@ -56,18 +56,34 @@ async def _handle_kb_query(message: str, tenant_id: str, config: dict) -> str:
     if not results:
         return "I don't have that information in my knowledge base."
 
-    context = "\n\n".join(
-        f"[Source: {r.get('filename', 'unknown')}] {r.get('text', '')}"
-        for r in results
-    )
+    blocks = []
+    for i, r in enumerate(results, 1):
+        source = r.get("filename", "?")
+        section = r.get("section", "") or ""
+        sect_label = f" — Section: \"{section}\"" if section else ""
+        sep = "═" * 60
+        blocks.append(
+            f"[Document {i}] {source}{sect_label}\n"
+            f"{sep}\n"
+            f"{r['text']}\n"
+            f"{sep}"
+        )
+    context = "\n\n".join(blocks)
+
     kb_prompt = (
-        "Answer the patient's question using the knowledge base excerpts below. "
-        "If the answer is not in the excerpts, say you don't have that information."
+        "Answer the patient's question using only the knowledge base excerpts below.\n\n"
+        "RULES:\n"
+        "- Answer ONLY using text that appears verbatim in the context.\n"
+        "- For every claim, quote the exact source text in quotation marks and cite the document.\n"
+        "- If the context does not contain the answer, say you don't have that information.\n"
+        "- Do NOT combine separate facts into relationships unless the source text explicitly states that relationship.\n"
+        "- Do NOT use your training knowledge to supplement or interpret the context."
     )
-    full_prompt = f"{kb_prompt}\n\nKnowledge base:\n{context}\n\nPatient question: {message}"
+    full_prompt = f"{kb_prompt}\n\nCONTEXT:\n{context}\n\nPatient question: {message}"
     result = await simple_llm_response(
         tenant_id, full_prompt,
-        system_override="You are a medical clinic assistant. Answer only from the provided context.",
+        system_override="You are a medical clinic assistant. Extract information only from the context provided.",
+        temperature=0.0,
     )
     return result.get("response", "I don't have that information.")
 

@@ -191,23 +191,44 @@ async def simulate(
     else:
         results = raw
 
-    context = "\n\n".join(r["text"] for r in results) if results else ""
+    if results:
+        blocks = []
+        for i, r in enumerate(results, 1):
+            source = r.get("filename", "?")
+            section = r.get("section", "") or ""
+            sect_label = f" — Section: \"{section}\"" if section else ""
+            sep = "═" * 60
+            blocks.append(
+                f"[Document {i}] {source}{sect_label}\n"
+                f"{sep}\n"
+                f"{r['text']}\n"
+                f"{sep}"
+            )
+        context = "\n\n".join(blocks)
 
-    if context:
         system_prompt = (
-            "You are a knowledge base assistant. Answer the user's question using ONLY the context below. "
-            "If the context doesn't contain the answer, say you don't know. "
-            "Be concise and factual.\n\nContext:\n" + context
+            "You are an extractive knowledge base system.\n\n"
+            "RULES:\n"
+            "- Answer ONLY using text that appears verbatim in the context below.\n"
+            "- For every claim, quote the exact source text in quotation marks and cite the document.\n"
+            "- If the context does not contain the answer, say: \"I don't have this information in the knowledge base.\"\n"
+            "- Do NOT combine separate facts into causal or sequential relationships unless the source text explicitly states that relationship.\n"
+            "- Do NOT use your training knowledge to supplement or interpret the context.\n\n"
+            "CONTEXT:\n" + context
         )
     else:
-        system_prompt = "You are a knowledge base assistant. No relevant documents were found for the query. State that this information is not present in the knowledge base. Do not guess or make up an answer."
+        system_prompt = (
+            "You are an extractive knowledge base system. "
+            "No relevant documents were found for the query. "
+            "State that this information is not present in the knowledge base. Do not guess or make up an answer."
+        )
 
     from openai import AsyncOpenAI
     client = AsyncOpenAI(api_key=_settings.openai_api_key)
     resp = await client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": body.query}],
-        temperature=0.3,
+        temperature=0.0,
         max_tokens=1000,
     )
     answer = resp.choices[0].message.content or ""

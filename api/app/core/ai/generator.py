@@ -105,7 +105,7 @@ async def generate_email(context: dict[str, Any], template_name: str) -> str:
         return ""
 
 
-async def simple_llm_response(tenant_id, message: str, system_override=None, conversation_history: list[dict] | None = None) -> dict:
+async def simple_llm_response(tenant_id, message: str, system_override=None, conversation_history: list[dict] | None = None, temperature: float = 0.3) -> dict:
     start = time.monotonic()
     try:
         client = AsyncOpenAI(api_key=_settings.openai_api_key)
@@ -122,7 +122,7 @@ async def simple_llm_response(tenant_id, message: str, system_override=None, con
         response = await client.chat.completions.create(
             model="gpt-4o-mini",
             messages=messages,
-            temperature=0.3,
+            temperature=temperature,
             max_tokens=1000,
         )
         text = response.choices[0].message.content or ""
