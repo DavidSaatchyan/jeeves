@@ -24,7 +24,7 @@
     </div>
     <div class="kb-folder-tree" id="folderTree">
       <div class="kb-folder-item root" data-id="" onclick="selectFolder('')">
-        <svg class="kb-folder-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="16" height="13" rx="2"/><path d="M2 7h16"/><path d="M9 4L7 2H2v2"/></svg>
+        <span class="kb-folder-icon">📁</span>
         All files
       </div>
     </div>
@@ -215,11 +215,11 @@
 .kb-folder-item:hover .kb-folder-actions{display:flex}
 .kb-folder-item .kb-folder-actions button{font-size:11px;padding:2px 4px;border-radius:3px;opacity:.5;transition:opacity .1s}
 .kb-folder-item .kb-folder-actions button:hover{opacity:1}
-.kb-folder-icon{flex-shrink:0;width:16px;height:16px;color:var(--muted2);transition:color .12s}
-.kb-folder-item:hover .kb-folder-icon{color:var(--accent)}
-.kb-folder-item.active .kb-folder-icon{color:var(--accent)}
+.kb-folder-icon{flex-shrink:0;font-size:14px;opacity:.6;transition:opacity .12s}
+.kb-folder-item:hover .kb-folder-icon{opacity:1}
+.kb-folder-item.active .kb-folder-icon{opacity:1}
 .kb-folder-item.root{font-weight:700;color:var(--text);font-size:13px;margin-bottom:2px}
-.kb-folder-item.root .kb-folder-icon{color:var(--accent)}
+.kb-folder-item.root .kb-folder-icon{opacity:1}
 .kb-folder-count{margin-left:auto;font-size:10px;font-weight:600;color:var(--muted2);background:rgba(255,255,255,0.04);padding:1px 6px;border-radius:4px;min-width:16px;text-align:center;line-height:1.6}
 
 /* ── Upload tabs ── */
@@ -343,7 +343,7 @@ async function loadFolders(){
   document.getElementById('folderSkeleton').style.display='';
   var folders = await api('/knowledge/folders');
   var tree = document.getElementById('folderTree');
-  var html = '<div class="kb-folder-item root' + (_selectedFolder === '' ? ' active' : '') + '" data-id="" onclick="selectFolder(\'\')"><svg class="kb-folder-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="16" height="13" rx="2"/><path d="M2 7h16"/><path d="M9 4L7 2H2v2"/></svg> All files</div>';
+  var html = '<div class="kb-folder-item root' + (_selectedFolder === '' ? ' active' : '') + '" data-id="" onclick="selectFolder(\'\')"><span class="kb-folder-icon">📁</span> All files</div>';
   html += buildTree(folders, null, {});
   tree.innerHTML = html;
   document.getElementById('folderSkeleton').style.display='none';
@@ -356,7 +356,7 @@ function buildTree(folders, parentId, fileCounts){
     var active = _selectedFolder === f.id ? ' active' : '';
     var cnt = fileCounts[f.id];
     html += '<div class="kb-folder-item' + active + '" data-id="' + f.id + '" onclick="selectFolder(\'' + f.id + '\')">';
-    html += '<svg class="kb-folder-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4.5A1.5 1.5 0 013.5 3h4.5l2 2h6.5A1.5 1.5 0 0118 6.5v9a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 012 15.5V4.5z"/></svg>';
+    html += '<span class="kb-folder-icon">📁</span>';
     html += esc(f.name);
     if(cnt !== undefined) html += '<span class="kb-folder-count">' + cnt + '</span>';
     html += '<span class="kb-folder-actions">';
@@ -439,7 +439,7 @@ async function refresh() {
     var fileCounts = {};
     allRows.forEach(function(r){ if(r.folder_id){ fileCounts[r.folder_id] = (fileCounts[r.folder_id] || 0) + 1; } });
     var tree = document.getElementById('folderTree');
-    var thtml = '<div class="kb-folder-item root' + (_selectedFolder === '' ? ' active' : '') + '" data-id="" onclick="selectFolder(\'\')"><svg class="kb-folder-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="16" height="13" rx="2"/><path d="M2 7h16"/><path d="M9 4L7 2H2v2"/></svg> All files</div>';
+    var thtml = '<div class="kb-folder-item root' + (_selectedFolder === '' ? ' active' : '') + '" data-id="" onclick="selectFolder(\'\')"><span class="kb-folder-icon">📁</span> All files</div>';
     thtml += buildTree(folders, null, fileCounts);
     tree.innerHTML = thtml;
 
