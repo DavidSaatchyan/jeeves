@@ -709,9 +709,10 @@ async function simulate(){
         groups[key].push(s);
       });
 
+      var docCount = Object.keys(groups).length;
       html += '<div class="sim-sources-header">';
-      html += 'Sources';
-      html += '<span class="sim-source-count">' + sources.length + '</span>';
+      html += docCount === 1 ? 'Source' : 'Sources';
+      html += '<span class="sim-source-count">' + docCount + '</span>';
       html += '</div>';
 
       Object.keys(groups).forEach(function(fname){
