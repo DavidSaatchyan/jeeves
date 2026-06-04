@@ -139,7 +139,7 @@ def _extract_html_structured(html: str, url: str) -> tuple[str, list[tuple[str, 
         logger.warning("trafilatura HTML extract failed", exc_info=True)
 
     # Step 2 — parse with bs4
-    from bs4 import BeautifulSoup
+    from bs4 import BeautifulSoup, Tag
 
     soup = BeautifulSoup(clean_html or html, "lxml")
 
@@ -161,6 +161,20 @@ def _extract_html_structured(html: str, url: str) -> tuple[str, list[tuple[str, 
             page_title = t.get_text(strip=True)
 
     # Step 3 — walk content children grouping by heading tags
+    # Walk the tree manually to avoid processing both a container
+    # (e.g. <blockquote>) and its children (<p>), which duplicates text.
+    _BLOCK_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6", "p", "li", "blockquote", "pre"}
+
+    def _collect_blocks(root: Tag) -> list[Tag]:
+        elements: list[Tag] = []
+        for child in root.children:
+            if isinstance(child, Tag):
+                if child.name in _BLOCK_TAGS:
+                    elements.append(child)
+                else:
+                    elements.extend(_collect_blocks(child))
+        return elements
+
     sections: list[tuple[str, str]] = []
     current_heading = ""
     current_body_parts: list[str] = []
@@ -173,7 +187,7 @@ def _extract_html_structured(html: str, url: str) -> tuple[str, list[tuple[str, 
         current_body_parts = []
 
     body_el = soup.find("body") or soup.find("html") or soup
-    for el in body_el.find_all(["h1", "h2", "h3", "h4", "h5", "h6", "p", "li", "blockquote", "pre"]):
+    for el in _collect_blocks(body_el):
         if el.name in ("h1", "h2", "h3", "h4", "h5", "h6"):
             _flush()
             current_heading = el.get_text(strip=True)
