@@ -27,6 +27,12 @@
         <span class="kb-folder-icon">📁</span> All files
       </div>
     </div>
+    <div id="folderSkeleton" style="padding-top:4px">
+      <div class="skel-folder"><div class="skel-line w80 skeleton"></div></div>
+      <div class="skel-folder"><div class="skel-line w60 skeleton"></div></div>
+      <div class="skel-folder"><div class="skel-line w70 skeleton"></div></div>
+      <div class="skel-folder"><div class="skel-line w50 skeleton"></div></div>
+    </div>
   </aside>
 
   <!-- ───── Right: Content ───── -->
@@ -62,8 +68,13 @@
           <span class="kb-stat-label">Chunks indexed</span>
           <span class="kb-stat-value" id="sumChunks">0</span>
         </div>
-        <div class="kb-stat-sub" id="sumAvg">&mdash; avg/file</div>
+        <div class="kb-stat-sub" id="sumAvg">          &minus; avg/file</div>
       </div>
+    </div>
+    <div id="summarySkeleton" class="kb-summary" style="display:none">
+      <div class="skel-card skeleton"></div>
+      <div class="skel-card skeleton"></div>
+      <div class="skel-card skeleton"></div>
     </div>
 
     <!-- File list -->
@@ -73,6 +84,7 @@
         <button id="clearAllBtn" class="ghost sm kb-clear-all" style="display:none" onclick="clearAll()">Clear all</button>
       </div>
       <table class="kb-table"><thead><tr><th class="col-name">Filename</th><th class="col-status">Status</th><th class="col-size">Size</th><th class="col-chunks">Chunks</th><th class="col-date">Uploaded</th><th class="col-folder">Folder</th><th class="col-actions"></th></tr></thead><tbody id="tbl"></tbody></table>
+      <div id="tableSkeleton" class="kb-table-skeleton"></div>
       <div id="procMsg" class="kb-proc"><span class="kb-spinner"></span> Processing...</div>
     </div>
 
@@ -266,6 +278,18 @@
 .drop.hot,.drop:hover{border-color:var(--accent);background:rgba(99,102,241,0.04)}
 
 .mt-12{margin-top:12px}
+
+/* ── Skeleton loaders ── */
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skeleton{background:linear-gradient(90deg,var(--border) 25%,rgba(255,255,255,0.06) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.5s ease-in-out infinite;border-radius:5px}
+.skel-line{height:14px;margin-bottom:8px;width:100%}
+.skel-line.w60{width:60%}.skel-line.w40{width:40%}.skel-line.w80{width:80%}
+.skel-card{height:86px;border-radius:var(--radius)}
+.skel-row{display:grid;grid-template-columns:3fr 100px 80px 80px 100px 120px 60px;gap:0;padding:10px 14px;align-items:center}
+.skel-row .skel-line{margin:0;height:14px}
+.skel-folder{margin-bottom:6px;display:flex;align-items:center;gap:6px;padding:6px 8px}
+.skel-folder .skel-line{margin:0;height:12px}
+.kb-table-skeleton{display:none;flex-direction:column}.kb-table-skeleton .skel-row{border-bottom:1px solid var(--border)}
 </style>
 <script>
 // ════════════════════════════════════════════════
@@ -278,15 +302,38 @@ var _confirmLoading = false;
 
 function esc(v){ return String(v ?? '').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
 
+// ── Skeleton helpers ──
+var _skelRows = '';
+(function(){
+  for(var i=0;i<6;i++){
+    _skelRows += '<div class="skel-row"><div class="skel-line w80 skeleton"></div><div class="skel-line w60 skeleton"></div><div class="skel-line w40 skeleton"></div><div class="skel-line w40 skeleton"></div><div class="skel-line w60 skeleton"></div><div class="skel-line w60 skeleton"></div><div style="width:20px"></div></div>';
+  }
+})();
+function showSkeletons(){
+  document.getElementById('folderSkeleton').style.display='';
+  document.getElementById('summarySkeleton').style.display='grid';
+  document.getElementById('tableSkeleton').innerHTML=_skelRows;
+  document.getElementById('tableSkeleton').style.display='flex';
+  document.getElementById('kbSummary').style.display='none';
+  document.getElementById('tbl').innerHTML='';
+}
+function hideSkeletons(){
+  document.getElementById('folderSkeleton').style.display='none';
+  document.getElementById('summarySkeleton').style.display='none';
+  document.getElementById('tableSkeleton').style.display='none';
+}
+
 // ════════════════════════════════════════════════
 // FOLDER TREE
 // ════════════════════════════════════════════════
 async function loadFolders(){
+  document.getElementById('folderSkeleton').style.display='';
   var folders = await api('/knowledge/folders');
   var tree = document.getElementById('folderTree');
   var html = '<div class="kb-folder-item root' + (_selectedFolder === '' ? ' active' : '') + '" data-id="" onclick="selectFolder(\'\')"><span class="kb-folder-icon">📁</span> All files</div>';
   html += buildTree(folders, null);
   tree.innerHTML = html;
+  document.getElementById('folderSkeleton').style.display='none';
 }
 function buildTree(folders, parentId){
   var children = folders.filter(function(f){ return f.parent_id === parentId; });
@@ -364,12 +411,20 @@ async function deleteFolder(id, name){
 // FILE LIST
 // ════════════════════════════════════════════════
 async function refresh() {
+  showSkeletons();
   try {
-    var folders = await api('/knowledge/folders');
+    var data = await Promise.all([api('/knowledge/folders'), api('/knowledge/files')]);
+    var folders = data[0];
+    var allRows = data[1];
     var folderMap = {};
     folders.forEach(function(f){ folderMap[f.id] = f.name; });
 
-    var allRows = await api('/knowledge/files');
+    // rebuild folder tree
+    var tree = document.getElementById('folderTree');
+    var thtml = '<div class="kb-folder-item root' + (_selectedFolder === '' ? ' active' : '') + '" data-id="" onclick="selectFolder(\'\')"><span class="kb-folder-icon">📁</span> All files</div>';
+    thtml += buildTree(folders, null);
+    tree.innerHTML = thtml;
+
     var rows = _selectedFolder ? allRows.filter(function(r){ return r.folder_id === _selectedFolder; }) : allRows;
     var ready = allRows.filter(function(r){ return r.status === 'ready'; });
     var totalSize = allRows.reduce(function(a, r){ return a + (r.size_bytes || 0); }, 0);
@@ -412,7 +467,8 @@ async function refresh() {
 
     document.getElementById('procMsg').style.display = hasProcessing ? '' : 'none';
     if(hasProcessing && !_pollingActive) pollProcessing();
-  } catch(e) { console.error('kb refresh error:', e); }
+    hideSkeletons();
+  } catch(e) { console.error('kb refresh error:', e); hideSkeletons(); }
 }
 
 async function pollProcessing(){
@@ -658,7 +714,6 @@ document.getElementById('confirmBtn').addEventListener('click', function(){
 // ════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════
-loadFolders();
 refresh();
 </script>
 {% endblock %}
