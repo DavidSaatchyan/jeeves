@@ -1,8 +1,8 @@
-"""Document extraction and chunking for Jeeves RAG (Sprint 1).
+"""Document extraction and chunking for Jeeves RAG (Sprint 2).
 
 Goals:
 - Token-aware length budgeting via tiktoken (not char/4 heuristic).
-- Structure-aware splitting: Markdown by heading hierarchy; PDF merged into one unit.
+- Structure-aware splitting: Markdown by heading hierarchy; PDF by ALL CAPS headings.
 - Rich per-chunk metadata: filename, section path, page, char offsets.
 - Deterministic chunk IDs so re-indexing is idempotent.
 """
@@ -80,21 +80,15 @@ def _extract_units(path: Path) -> list[_Unit]:
     if ext == ".pdf":
         from pypdf import PdfReader
         reader = PdfReader(str(path))
-        segments: list[_Unit] = []
+        pages_text: list[str] = []
         for i, page in enumerate(reader.pages):
             text = (page.extract_text() or "").strip()
             if text:
-                segments.append(_Unit(text=text, page=i + 1))
-        if not segments:
+                pages_text.append(text)
+        if not pages_text:
             return [_Unit(text="")]
-        if len(segments) == 1:
-            return segments
-        # Merge all pages into one unit — page boundaries are layout artifacts,
-        # not semantic chunk boundaries. Chunk at paragraph/sentence level.
-        merged_parts: list[str] = []
-        for seg in segments:
-            merged_parts.append(seg.text)
-        return [_Unit(text="\n\n".join(merged_parts))]
+        merged = "\n\n".join(pages_text)
+        return _pdf_units(merged)
     raise ValueError(f"Unsupported file type: {ext}")
 
 
@@ -129,6 +123,50 @@ def _md_units(text: str) -> list[_Unit]:
             while len(stack) < level - 1:
                 stack.append("")
             stack.append(title)
+        else:
+            buf.append(line)
+    flush()
+    return units or [_Unit(text=text)]
+
+
+# PDF heading-aware splitter -------------------------------------------------
+# Page boundaries are layout artifacts — merge first, then detect structure.
+# Heuristic: lines that are ≥70% uppercase alpha, 2–80 chars, not bullet items,
+# and contain at least one letter, are treated as section headings.
+
+
+def _is_heading(line: str) -> bool:
+    st = line.strip()
+    if len(st) < 2 or len(st) > 80:
+        return False
+    if st.startswith(("•", "-", "*", "→", "▪", "●", "○", "§")):
+        return False
+    alpha = [c for c in st if c.isalpha()]
+    if len(alpha) < 2:
+        return False
+    upper = sum(1 for c in alpha if c.isupper())
+    return upper / len(alpha) >= 0.7
+
+
+def _pdf_units(text: str) -> list[_Unit]:
+    """Split merged PDF text into units anchored at section headings."""
+    lines = text.splitlines()
+    units: list[_Unit] = []
+    cur_section = ""
+    buf: list[str] = []
+
+    def flush():
+        if not buf:
+            return
+        body = "\n".join(buf).strip()
+        if body:
+            units.append(_Unit(text=body, section=cur_section))
+        buf.clear()
+
+    for line in lines:
+        if _is_heading(line):
+            flush()
+            cur_section = line.strip()
         else:
             buf.append(line)
     flush()
