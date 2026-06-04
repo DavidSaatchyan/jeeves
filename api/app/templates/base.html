@@ -200,6 +200,9 @@
     .ch-tab-badge{font-size:11px;line-height:1;margin-left:3px}
     .ch-panel{display:none}
     .ch-panel.active{display:block}
+    .ch-panels{position:relative;min-height:195px}
+    .ch-panels .ch-panel{display:block;position:absolute;top:0;left:0;right:0;opacity:0;pointer-events:none;transition:opacity .12s}
+    .ch-panels .ch-panel.active{opacity:1;pointer-events:auto}
     .ch-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:18px;padding:14px 16px;background:var(--bg);border:1px solid var(--border);border-radius:8px}
     .ch-step{display:flex;gap:12px;align-items:flex-start;font-size:13px;color:var(--muted)}
     .ch-step strong{color:var(--text)}

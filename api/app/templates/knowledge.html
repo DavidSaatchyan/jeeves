@@ -109,40 +109,40 @@
       <button class="ch-tab" data-utab="crm">Sync CRM prices</button>
     </div>
 
-    <!-- Tab: File upload -->
-    <div class="ch-panel active" id="upanel-file">
-      <div id="uploadDrop" class="drop">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;opacity:.4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <div style="font-size:15px;font-weight:600;margin-bottom:6px">Drop files here or <span style="color:var(--accent);cursor:pointer;text-decoration:underline">browse</span></div>
-        <div class="muted" style="font-size:13px">.pdf, .txt, .md &middot; Max 50 MB total</div>
-        <input id="uploadFileInput" type="file" accept=".pdf,.txt,.md" multiple style="display:none"/>
+    <!-- Tab panels (fixed-height container — no jumping) -->
+    <div class="ch-panels">
+      <div class="ch-panel active" id="upanel-file">
+        <div id="uploadDrop" class="drop">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;opacity:.4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <div style="font-size:15px;font-weight:600;margin-bottom:6px">Drop files here or <span style="color:var(--accent);cursor:pointer;text-decoration:underline">browse</span></div>
+          <div class="muted" style="font-size:13px">.pdf, .txt, .md &middot; Max 50 MB total</div>
+          <input id="uploadFileInput" type="file" accept=".pdf,.txt,.md" multiple style="display:none"/>
+        </div>
+        <div id="uploadProg" class="muted mt-12" style="min-height:36px"></div>
+        <div class="err-msg" id="uploadErr"></div>
       </div>
-      <div id="uploadProg" class="muted mt-12" style="min-height:36px"></div>
-      <div class="err-msg" id="uploadErr"></div>
-    </div>
 
-    <!-- Tab: URL import -->
-    <div class="ch-panel" id="upanel-url">
-      <label class="kb-label">Page URL</label>
-      <input id="urlInput" type="url" class="kb-input" placeholder="https://example.com/page" />
-      <label class="kb-label mt-12">Title (optional)</label>
-      <input id="urlTitle" type="text" class="kb-input" placeholder="My page" />
-      <div class="mt-12">
-        <button class="btn sm" onclick="importUrl()">Import</button>
+      <div class="ch-panel" id="upanel-url">
+        <label class="kb-label">Page URL</label>
+        <input id="urlInput" type="url" class="kb-input" placeholder="https://example.com/page" />
+        <label class="kb-label mt-12">Title (optional)</label>
+        <input id="urlTitle" type="text" class="kb-input" placeholder="My page" />
+        <div class="mt-12">
+          <button class="btn sm" onclick="importUrl()">Import</button>
+        </div>
+        <div id="urlStatus" class="muted mt-12" style="font-size:13px"></div>
+        <div class="err-msg" id="urlErr"></div>
       </div>
-      <div id="urlStatus" class="muted mt-12" style="font-size:13px"></div>
-      <div class="err-msg" id="urlErr"></div>
-    </div>
 
-    <!-- Tab: CRM price sync -->
-    <div class="ch-panel" id="upanel-crm">
-      <p class="muted" style="font-size:14px;margin-bottom:12px">
-        Sync service prices from your connected CRM (Cliniko / Pabau) into the memory system.
-        Products with updated prices will be re-indexed.
-      </p>
-      <button class="btn sm" onclick="syncCrmPrices()" id="syncBtn">Sync now</button>
-      <div id="syncStatus" class="muted mt-12" style="font-size:13px"></div>
-      <div class="err-msg" id="syncErr"></div>
+      <div class="ch-panel" id="upanel-crm">
+        <p class="muted" style="font-size:14px;margin-bottom:12px">
+          Sync service prices from your connected CRM (Cliniko / Pabau) into the memory system.
+          Products with updated prices will be re-indexed.
+        </p>
+        <button class="btn sm" onclick="syncCrmPrices()" id="syncBtn">Sync now</button>
+        <div id="syncStatus" class="muted mt-12" style="font-size:13px"></div>
+        <div class="err-msg" id="syncErr"></div>
+      </div>
     </div>
   </div>
 </div>
