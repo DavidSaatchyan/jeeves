@@ -43,13 +43,6 @@
   .rule-desc { font-size: 11px; color: var(--muted2); margin-bottom: 8px; }
   .rule-card input[type="number"] { width: 80px; padding: 6px 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-size: 13px; }
 
-  .btn { padding: 8px 18px; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
-  .btn:hover { filter: brightness(1.1); }
-  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-  .btn-outline:hover { background: rgba(255,255,255,0.04); }
-  .btn-sm { padding: 6px 14px; font-size: 12px; }
-  .btn-group { display: flex; gap: 8px; margin-top: 16px; }
-
   /* Right panel — Playground */
   .playground { display: flex; flex-direction: column; height: 100%; padding: 20px; }
   .playground h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
@@ -114,7 +107,7 @@
           <label class="form-label">System Prompt</label>
           <textarea class="form-textarea" id="cfg-system-prompt" placeholder="System prompt for the AI"></textarea>
         </div>
-        <button class="btn" onclick="savePersonality()">Save Personality</button>
+        <button class="btn accent sm" onclick="savePersonality()">Save Personality</button>
       </div>
 
       <!-- Skills -->
@@ -140,21 +133,21 @@
             <input type="checkbox" id="rule-duplicates" checked style="accent-color:var(--accent);margin-top:4px">
           </div>
         </div>
-        <button class="btn" onclick="saveSkills()" style="margin-top:16px">Save Skills</button>
+        <button class="btn accent sm" onclick="saveSkills()" style="margin-top:16px">Save Skills</button>
       </div>
 
       <!-- Knowledge -->
       <div class="config-panel" id="panel-knowledge">
         <p style="font-size:13px;color:var(--muted2);margin-bottom:16px">Select folders the agent can search for answers.</p>
         <div class="chk-list" id="knowledgeList"></div>
-        <button class="btn" onclick="saveKnowledge()" style="margin-top:12px">Save Knowledge Sources</button>
+        <button class="btn accent sm" onclick="saveKnowledge()" style="margin-top:12px">Save Knowledge Sources</button>
       </div>
 
       <!-- Channels -->
       <div class="config-panel" id="panel-channels">
         <p style="font-size:13px;color:var(--muted2);margin-bottom:16px">Connect communication channels. Configure channels in <a href="/admin/integrations">Integrations</a> first.</p>
         <div class="chk-list" id="channelsList"></div>
-        <button class="btn" onclick="saveChannels()" style="margin-top:12px">Save Channels</button>
+        <button class="btn accent sm" onclick="saveChannels()" style="margin-top:12px">Save Channels</button>
       </div>
     </div>
   </div>
@@ -172,8 +165,8 @@
         <button id="playgroundSendBtn" onclick="sendPlayground()">Send</button>
       </div>
       <div class="playground-actions">
-        <button class="btn btn-sm btn-outline" onclick="refreshPlayground()">🔄 Refresh Agent</button>
-        <button class="btn btn-sm" onclick="publishAgent()">📢 Publish</button>
+        <button class="btn ghost sm" onclick="refreshPlayground()">🔄 Refresh Agent</button>
+        <button class="btn accent sm" onclick="publishAgent()">📢 Publish</button>
       </div>
     </div>
   </div>

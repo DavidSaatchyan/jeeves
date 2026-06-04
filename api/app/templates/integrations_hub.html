@@ -6,28 +6,15 @@
   .hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
   .hub-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; cursor: pointer; transition: all .15s; display: flex; align-items: flex-start; gap: 16px; }
   .hub-card:hover { border-color: var(--border-bright); background: rgba(255,255,255,0.03); }
-  .hub-card .hub-action { opacity: 0; pointer-events: none; }
-  .hub-card:hover .hub-action { opacity: 1; pointer-events: auto; }
-  .hub-card .hub-action.danger { opacity: 1; pointer-events: auto; }
+  .hub-card .btn, .hub-card .ghost { opacity: 0; pointer-events: none; }
+  .hub-card:hover .btn, .hub-card:hover .ghost { opacity: 1; pointer-events: auto; }
+  .hub-card .ghost.danger { opacity: 1; pointer-events: auto; }
   .hub-card-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .hub-card-icon svg { width: 22px; height: 22px; }
   .hub-card-body { flex: 1; min-width: 0; }
   .hub-card-name { font-size: 15px; font-weight: 600; }
   .hub-card-desc { font-size: 12px; color: var(--muted2); margin-top: 2px; }
   .hub-card-meta { margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .hub-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-  .hub-badge.ok { background: rgba(52,211,153,0.12); color: #34d399; }
-  .hub-badge.off { background: rgba(107,114,128,0.12); color: var(--muted); }
-  .hub-badge.err { background: rgba(239,68,68,0.12); color: #ef4444; }
-  .hub-badge.warn { background: rgba(251,191,36,0.12); color: #fbbf24; }
-  .hub-action { margin-left: auto; font-size: 13px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all .15s; font-weight: 500; }
-  .hub-action:hover { border-color: var(--accent); color: var(--accent); }
-  .hub-action.primary { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
-  .hub-action.primary:hover { opacity: .85; }
-  .hub-action.danger { color: var(--red); }
-  .hub-action.danger:hover { background: rgba(229,72,77,.12); border-color: var(--red); color: var(--red); }
-  .hub-modal-close { position: absolute; top: 16px; right: 16px; width: 28px; height: 28px; border-radius: 6px; border: none; background: transparent; color: var(--muted2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all .15s; }
-  .hub-modal-close:hover { background: rgba(255,255,255,0.08); color: var(--text); }
   .eye-btn { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--muted2); padding: 4px; display: flex; align-items: center; border-radius: 4px; transition: all .15s; }
   .eye-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
   .eye-btn svg { width: 16px; height: 16px; }
@@ -49,11 +36,6 @@
   .modal-step-hint a { color: var(--accent); text-decoration: underline; cursor: pointer; }
   .modal-step-hint a:hover { opacity: .8; }
   .modal-actions { display: flex; gap: 8px; margin-top: 24px; justify-content: flex-end; }
-  .modal-actions button { padding: 8px 20px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; font-size: 13px; transition: all .15s; font-weight: 500; }
-  .modal-actions button:hover { border-color: var(--accent); color: var(--accent); }
-  .modal-actions .primary { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; min-width: 120px; text-align: center; display: inline-flex; align-items: center; justify-content: center; }
-  .modal-actions .primary:hover { opacity: .85; color: #000; }
-  .modal-actions .primary:disabled { opacity: .4; cursor: not-allowed; }
   /* confirm dialog */
   .confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 200; align-items: center; justify-content: center; }
   .confirm-overlay.open { display: flex; }
@@ -62,10 +44,6 @@
   .confirm-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
   .confirm-desc { font-size: 13px; color: var(--muted2); margin-bottom: 20px; line-height: 1.5; }
   .confirm-actions { display: flex; gap: 8px; justify-content: center; }
-  .confirm-actions button { padding: 8px 20px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; font-size: 13px; font-weight: 500; transition: all .15s; }
-  .confirm-actions button:hover { border-color: var(--accent); color: var(--accent); }
-  .confirm-actions .danger { background: var(--red); border-color: var(--red); color: #fff; font-weight: 600; }
-  .confirm-actions .danger:hover { opacity: .85; color: #fff; }
   .modal-result { margin-top: 12px; padding: 10px 14px; border-radius: 6px; font-size: 13px; display: none; }
   .modal-result.ok { display: block; background: rgba(52,211,153,0.1); color: #34d399; border: 1px solid rgba(52,211,153,0.2); }
   .modal-result.err { display: block; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
@@ -75,7 +53,6 @@
   .snippet-box { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 6px; font-size: 12px; font-family: monospace; white-space: pre-wrap; word-break: break-all; margin-top: 8px; position: relative; }
   .snippet-box .copy-btn { position: absolute; top: 6px; right: 6px; padding: 4px 10px; border-radius: 4px; border: none; background: rgba(255,255,255,.1); color: #fff; cursor: pointer; font-size: 11px; }
   .snippet-box .copy-btn:hover { background: rgba(255,255,255,.2); }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
   .status-dot.ok { background: #34d399; }
   .status-dot.off { background: #6b7280; }
   .status-dot.err { background: #ef4444; }
@@ -106,8 +83,10 @@
 <!-- ── Modals ── -->
 <div class="modal-overlay" id="crmModal">
   <div class="modal-box">
-    <button class="hub-modal-close" onclick="closeModal('crmModal')">✕</button>
-    <div class="modal-title"><span id="crmModalIcon"></span><span id="crmModalTitle">Connect CRM</span></div>
+    <div class="modal-header" style="margin-bottom:24px">
+      <div class="modal-title"><span id="crmModalIcon"></span><span id="crmModalTitle">Connect CRM</span></div>
+      <button class="close-btn" onclick="closeModal('crmModal')">✕</button>
+    </div>
     <div class="modal-step" id="crmApiKeyStep">
       <div class="modal-step-label">API Key</div>
       <div class="input-wrap"><input type="password" id="crmApiKey" placeholder="Paste your API key"><button class="eye-btn" onclick="toggleEye('crmApiKey',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
@@ -123,16 +102,18 @@
     </div>
     <div class="modal-result" id="crmResult"></div>
     <div class="modal-actions">
-      <button onclick="closeModal('crmModal')">Cancel</button>
-      <button class="primary" id="crmConnectBtn" onclick="connectCrm()">Connect</button>
+      <button class="ghost" onclick="closeModal('crmModal')">Cancel</button>
+      <button class="btn accent" id="crmConnectBtn" onclick="connectCrm()">Connect</button>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="whatsappModal">
   <div class="modal-box">
-    <button class="hub-modal-close" onclick="closeModal('whatsappModal')">✕</button>
-    <div class="modal-title">Connect WhatsApp</div>
+    <div class="modal-header" style="margin-bottom:24px">
+      <div class="modal-title">Connect WhatsApp</div>
+      <button class="close-btn" onclick="closeModal('whatsappModal')">✕</button>
+    </div>
     <!-- QR Step -->
     <div id="waQrStep">
       <p style="font-size:13px;color:var(--muted2);margin-bottom:12px">Scan to get started, or enter credentials manually below.</p>
@@ -141,7 +122,7 @@
         <div id="waQrPlaceholder" style="width:200px;height:200px;margin:0 auto;display:flex;align-items:center;justify-content:center;background:var(--bg);border-radius:8px;color:var(--muted2);font-size:13px">Loading QR…</div>
       </div>
       <div id="waQrStatus" style="text-align:center;font-size:13px;color:var(--muted2);margin-bottom:12px"></div>
-      <button class="hub-action" onclick="toggleWaManual()" style="margin:0 auto;display:block">Enter credentials manually</button>
+      <button class="ghost" onclick="toggleWaManual()" style="margin:0 auto;display:block">Enter credentials manually</button>
     </div>
     <!-- Manual Step -->
     <div id="waManualStep" style="display:none">
@@ -164,8 +145,8 @@
       </div>
       <div class="modal-result" id="waResult"></div>
       <div class="modal-actions">
-        <button onclick="closeModal('whatsappModal')">Cancel</button>
-        <button class="primary" onclick="connectWhatsApp()">Connect</button>
+        <button class="ghost" onclick="closeModal('whatsappModal')">Cancel</button>
+        <button class="btn accent" onclick="connectWhatsApp()">Connect</button>
       </div>
     </div>
   </div>
@@ -173,13 +154,15 @@
 
 <div class="modal-overlay" id="instagramModal">
   <div class="modal-box">
-    <button class="hub-modal-close" onclick="closeModal('instagramModal')">✕</button>
-    <div class="modal-title">Connect Instagram</div>
+    <div class="modal-header" style="margin-bottom:24px">
+      <div class="modal-title">Connect Instagram</div>
+      <button class="close-btn" onclick="closeModal('instagramModal')">✕</button>
+    </div>
     <!-- OAuth Step -->
     <div id="igOAuthStep">
       <p style="font-size:13px;color:var(--muted2);margin-bottom:16px">Connect your Instagram Business account via Facebook Login. You need a Facebook App with Instagram Graph API enabled.</p>
-      <button class="hub-action" onclick="loginWithFacebook()" style="margin:0 auto 12px;display:block;padding:12px 24px;font-size:15px;background:#1877f2;color:#fff;border:none">Login with Facebook</button>
-      <button class="hub-action" onclick="toggleIgManual()" style="margin:0 auto;display:block">Enter credentials manually</button>
+      <button onclick="loginWithFacebook()" style="margin:0 auto 12px;display:block;padding:12px 24px;font-size:15px;background:#1877f2;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">Login with Facebook</button>
+      <button class="ghost" onclick="toggleIgManual()" style="margin:0 auto;display:block">Enter credentials manually</button>
     </div>
     <!-- Manual Step -->
     <div id="igManualStep" style="display:none">
@@ -200,8 +183,8 @@
       </div>
       <div class="modal-result" id="igResult"></div>
       <div class="modal-actions">
-        <button onclick="closeModal('instagramModal')">Cancel</button>
-        <button class="primary" onclick="connectInstagram()">Connect</button>
+        <button class="ghost" onclick="closeModal('instagramModal')">Cancel</button>
+        <button class="btn accent" onclick="connectInstagram()">Connect</button>
       </div>
     </div>
   </div>
@@ -209,8 +192,10 @@
 
 <div class="modal-overlay" id="widgetModal">
   <div class="modal-box">
-    <button class="hub-modal-close" onclick="closeModal('widgetModal')">✕</button>
-    <div class="modal-title">Widget Settings</div>
+    <div class="modal-header" style="margin-bottom:24px">
+      <div class="modal-title">Widget Settings</div>
+      <button class="close-btn" onclick="closeModal('widgetModal')">✕</button>
+    </div>
     <div class="modal-step">
       <div class="modal-step-label">Widget Title</div>
       <input type="text" id="wTitle" value="Jeeves support">
@@ -244,8 +229,8 @@
     </div>
     <div class="modal-result" id="wResult"></div>
     <div class="modal-actions">
-      <button onclick="closeModal('widgetModal')">Cancel</button>
-      <button class="primary" onclick="saveWidget()">Save Settings</button>
+      <button class="ghost" onclick="closeModal('widgetModal')">Cancel</button>
+      <button class="btn accent" onclick="saveWidget()">Save Settings</button>
     </div>
   </div>
 </div>
@@ -256,8 +241,8 @@
     <div class="confirm-title" id="confirmTitle">Are you sure?</div>
     <div class="confirm-desc" id="confirmDesc">This action cannot be undone.</div>
     <div class="confirm-actions">
-      <button onclick="closeConfirm()">Cancel</button>
-      <button class="danger" id="confirmBtn" onclick="confirmAction()">Confirm</button>
+      <button class="ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn danger" id="confirmBtn" onclick="confirmAction()">Confirm</button>
     </div>
   </div>
 </div>
@@ -295,10 +280,10 @@ function renderGrid(gridId, items, renderFn) {
 }
 
 function statusBadge(status) {
-  if (status === 'connected' || status === 'active') return '<span class="hub-badge ok"><span class="status-dot ok"></span> Connected</span>';
-  if (status === 'not_configured') return '<span class="hub-badge off"><span class="status-dot off"></span> Not configured</span>';
-  if (status === 'error') return '<span class="hub-badge err"><span class="status-dot err"></span> Error</span>';
-  return '<span class="hub-badge warn"><span class="status-dot warn"></span> ' + status + '</span>';
+  if (status === 'connected' || status === 'active') return '<span class="pill ok"><span class="status-dot ok"></span> Connected</span>';
+  if (status === 'not_configured') return '<span class="pill muted"><span class="status-dot off"></span> Not configured</span>';
+  if (status === 'error') return '<span class="pill err"><span class="status-dot err"></span> Error</span>';
+  return '<span class="pill warn"><span class="status-dot warn"></span> ' + status + '</span>';
 }
 
 function renderCrmCard(i) {
@@ -313,7 +298,7 @@ function renderCrmCard(i) {
       <div class="hub-card-name">${i.name}</div>
       <div class="hub-card-meta">${statusBadge(i.status)}</div>
     </div>
-    ${connected ? '<button class="hub-action danger" onclick="event.stopPropagation();disconnectCrm()">Disconnect</button>' : '<button class="hub-action primary">Connect</button>'}
+    ${connected ? '<button class="ghost sm danger" onclick="event.stopPropagation();disconnectCrm()">Disconnect</button>' : '<button class="btn accent sm">Connect</button>'}
   </div>`;
 }
 
@@ -327,7 +312,7 @@ function renderWidgetCard(i) {
       <div class="hub-card-name">Web Widget</div>
       <div class="hub-card-meta">${statusBadge(st)}</div>
     </div>
-    <button class="hub-action primary">Configure</button>
+    <button class="btn accent sm">Configure</button>
   </div>`;
 }
 
@@ -392,7 +377,7 @@ function openCrmModal(provider) {
   const btn = document.getElementById('crmConnectBtn');
   btn.disabled = false;
   btn.textContent = 'Connect';
-  btn.className = 'primary';
+  btn.className = 'btn accent';
   const apiKeyInput = document.getElementById('crmApiKey');
   apiKeyInput.className = '';
   const int = _integrations.find(i => i.id === provider);
@@ -520,7 +505,7 @@ function renderChannelCard(i) {
       <div class="hub-card-name">${i.name}</div>
       <div class="hub-card-meta">${statusBadge(i.status)}</div>
     </div>
-    ${i.status === 'active' ? '<button class="hub-action danger" onclick="event.stopPropagation();disconnectChannel(\'' + i.id + '\')">Disconnect</button>' : '<button class="hub-action primary">Connect</button>'}
+    ${i.status === 'active' ? '<button class="ghost sm danger" onclick="event.stopPropagation();disconnectChannel(\'' + i.id + '\')">Disconnect</button>' : '<button class="btn accent sm">Connect</button>'}
   </div>`;
 }
 

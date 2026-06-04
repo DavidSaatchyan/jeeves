@@ -85,10 +85,16 @@
     button.ghost.danger { color: var(--red); }
     button.ghost.danger:hover { background: rgba(229,72,77,0.1); border-color: rgba(229,72,77,0.3); }
     button.sm { padding: 7px 14px; font-size: 13px; }
+    button.xs { padding: 4px 10px; font-size: 11px; }
     button.accent { background: var(--accent); color: #fff; }
     button.accent:hover { background: #525fc9; }
     button.green { background: var(--green); color: #fff; }
     button.green:hover { background: #1a8f6a; }
+    button.danger { background: var(--red); color: #fff; }
+    button.danger:hover { background: #c33035; }
+
+    .close-btn { width: 28px; height: 28px; border-radius: 6px; border: none; background: transparent; color: var(--muted2); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; transition: all .15s; }
+    .close-btn:hover { background: rgba(255,255,255,0.08); color: var(--text); }
 
     /* ── TABLE ── */
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -99,12 +105,15 @@
 
     /* ── BADGES / PILLS ── */
     .pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; }
+    .pill.xs { padding: 2px 8px; font-size: 10px; }
     .pill.ok { color: var(--green); background: rgba(34,166,126,0.12); border: 1px solid rgba(34,166,126,0.25); }
     .pill.err { color: var(--red); background: rgba(229,72,77,0.12); border: 1px solid rgba(229,72,77,0.25); }
     .pill.warn { color: var(--amber); background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.25); }
     .pill.muted { color: var(--muted); background: rgba(255,255,255,0.06); border: 1px solid var(--border); }
     .pill.cyan { color: var(--cyan); background: rgba(91,192,222,0.12); border: 1px solid rgba(91,192,222,0.25); }
     .pill.accent { color: var(--accent); background: rgba(94,106,210,0.12); border: 1px solid rgba(94,106,210,0.25); }
+
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 
     /* ── STAT CARDS ── */
     .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }

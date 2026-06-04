@@ -63,9 +63,9 @@ async function loadLogs(page) {
           return '<tr>' +
             '<td style="font-size:12px;white-space:nowrap;font-family:monospace">' + esc(time) + '</td>' +
             '<td style="font-size:13px">' + esc(l.initiator) + '</td>' +
-            '<td><span class="pill cyan" style="font-size:10px">' + esc(l.event_type) + '</span></td>' +
+            '<td><span class="pill cyan xs">' + esc(l.event_type) + '</span></td>' +
             '<td style="font-size:12px">' + esc(l.patient_reference || '—') + '</td>' +
-            '<td><span class="pill ' + statusClass + '" style="font-size:10px">' + esc(l.api_status) + '</span></td>' +
+            '<td><span class="pill xs ' + statusClass + '">' + esc(l.api_status) + '</span></td>' +
             '<td style="font-size:12px;color:var(--muted2);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(l.description) + '</td>' +
             '</tr>';
         }).join('')

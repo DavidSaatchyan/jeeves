@@ -67,7 +67,7 @@
   <div class="modal" style="max-width:700px">
     <div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:16px">
       <h2 style="margin:0">Choose a Plan</h2>
-      <button class="ghost" onclick="closePlanModal()" style="font-size:20px;padding:4px 10px">&times;</button>
+      <button class="close-btn" onclick="closePlanModal()">&times;</button>
     </div>
     <div class="grid grid-2" style="gap:12px">
       {% for p in plans %}
@@ -93,7 +93,7 @@
   <div class="modal" style="max-width:500px">
     <div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:16px">
       <h2 style="margin:0">Add-ons</h2>
-      <button class="ghost" onclick="closeAddonsModal()" style="font-size:20px;padding:4px 10px">&times;</button>
+      <button class="close-btn" onclick="closeAddonsModal()">&times;</button>
     </div>
     <div id="addonsEmpty" class="muted" style="text-align:center;padding:24px">No add-ons available yet.</div>
     <div class="flex" style="justify-content:flex-end;margin-top:16px">
