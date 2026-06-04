@@ -47,10 +47,12 @@ def client(app, override_deps):
 def mock_rag():
     patches = {
         "index_file": MagicMock(return_value=5),
+        "index_text": MagicMock(return_value=4),
         "search": MagicMock(return_value=[
             {"text": "chunk1", "score": 0.9, "filename": "doc.txt", "section": "", "distance": 0.1}
         ]),
         "delete_file": MagicMock(),
+        "get_chunks_for_file": MagicMock(return_value=[]),
         "purge_orphans": MagicMock(return_value={"purged": 0}),
         "deduplicate_collection": MagicMock(return_value={"removed": 0}),
     }
@@ -411,6 +413,139 @@ class TestBackgroundIndex:
         with patch("app.knowledge.engine.begin") as mock_begin:
             mock_begin.return_value.__enter__.side_effect = Exception("DB error")
             await _background_index(tenant_id, file_id, path)
+
+
+# ── Background URL index ───────────────────────────────────────────────────
+
+
+class TestBackgroundIndexUrl:
+    @pytest.mark.asyncio
+    async def test_index_url_success_updates_db(self, mock_rag):
+        from app.knowledge import _background_index_url
+
+        tenant_id = uuid4()
+        url_id = uuid4()
+
+        mock_rag["index_text"].return_value = 7
+
+        with patch("app.knowledge.url_extractor.fetch_url") as mock_fetch:
+            mock_fetch.return_value = ("Extracted text content", "Page Title")
+            with patch("app.knowledge.engine.begin") as mock_begin:
+                mock_conn = MagicMock()
+                mock_begin.return_value.__enter__.return_value = mock_conn
+                await _background_index_url(tenant_id, url_id, "https://example.com", None)
+                mock_conn.execute.assert_called_once()
+                mock_rag["index_text"].assert_called_once_with(tenant_id, url_id, "Extracted text content", "Page Title")
+
+    @pytest.mark.asyncio
+    async def test_index_url_failure_marks_failed(self, mock_rag):
+        from app.knowledge import _background_index_url
+
+        tenant_id = uuid4()
+        url_id = uuid4()
+
+        mock_rag["index_text"].side_effect = ValueError("Index failed")
+
+        with patch("app.knowledge.url_extractor.fetch_url") as mock_fetch:
+            mock_fetch.return_value = ("text", "Title")
+            with patch("app.knowledge.engine.begin") as mock_begin:
+                mock_conn = MagicMock()
+                mock_begin.return_value.__enter__.return_value = mock_conn
+                await _background_index_url(tenant_id, url_id, "https://example.com", None)
+                call_text = str(mock_conn.execute.call_args[0][0])
+                assert "failed" in call_text
+
+
+# ── URL import ──────────────────────────────────────────────────────────────
+
+
+@patch("app.knowledge.asyncio.create_task", MagicMock())
+class TestImportUrl:
+    def test_import_url_success(self, client, mock_db, mock_rag, mock_chunking):
+        _mock_db_execute_scalar_one_or_none(mock_db, None)
+        resp = client.post("/knowledge/urls", json={"url": "https://example.com/page"})
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["status"] == "processing"
+        assert "id" in data
+        assert data["url"] == "https://example.com/page"
+        mock_db.add.assert_called_once()
+
+    def test_import_url_empty_raises(self, client, mock_db, mock_rag, mock_chunking):
+        resp = client.post("/knowledge/urls", json={"url": ""})
+        assert resp.status_code == 400
+
+    def test_import_url_folder_not_found(self, client, mock_db, mock_rag, mock_chunking):
+        _mock_db_execute_scalar_one_or_none(mock_db, None)
+        resp = client.post("/knowledge/urls", json={
+            "url": "https://example.com", "folder_id": str(uuid4()),
+        })
+        assert resp.status_code == 404
+
+    def test_list_urls(self, client, mock_db, mock_rag):
+        mock_rec = MagicMock()
+        mock_rec.id = uuid4()
+        mock_rec.url = "https://example.com"
+        mock_rec.title = "Test"
+        mock_rec.status = "ready"
+        mock_rec.folder_id = None
+        mock_rec.chunks_total = 5
+        mock_rec.error = None
+        mock_rec.created_at = None
+        _mock_db_execute_all(mock_db, [mock_rec])
+        resp = client.get("/knowledge/urls")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) == 1
+        assert data[0]["url"] == "https://example.com"
+
+    def test_delete_url(self, client, mock_db, mock_rag):
+        mock_rec = MagicMock()
+        mock_rec.id = uuid4()
+        _mock_db_execute_scalar_one_or_none(mock_db, mock_rec)
+        resp = client.delete(f"/knowledge/urls/{mock_rec.id}")
+        assert resp.status_code == 204
+        mock_db.delete.assert_called_once_with(mock_rec)
+        mock_db.commit.assert_called_once()
+        mock_rag["delete_file"].assert_called_once()
+
+    def test_delete_url_not_found(self, client, mock_db, mock_rag):
+        _mock_db_execute_scalar_one_or_none(mock_db, None)
+        resp = client.delete(f"/knowledge/urls/{uuid4()}")
+        assert resp.status_code == 404
+
+    def test_url_chunks(self, client, mock_db, mock_rag):
+        mock_rec = MagicMock()
+        mock_rec.id = uuid4()
+        _mock_db_execute_scalar_one_or_none(mock_db, mock_rec)
+        mock_rag["get_chunks_for_file"].return_value = [
+            {"index": 0, "text": "chunk content", "section": "", "char_start": 0, "char_end": 14, "chunk_hash": "abc"},
+        ]
+        resp = client.get(f"/knowledge/urls/{mock_rec.id}/chunks")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["total"] == 1
+
+
+@patch("app.knowledge.asyncio.create_task", MagicMock())
+class TestImportUrlAuthGuard:
+    def test_import_url_requires_auth(self, app):
+        app.dependency_overrides.clear()
+        with TestClient(app) as c:
+            resp = c.post("/knowledge/urls", json={"url": "https://example.com"})
+        assert resp.status_code in (401, 403)
+
+    def test_list_urls_requires_auth(self, app):
+        app.dependency_overrides.clear()
+        with TestClient(app) as c:
+            resp = c.get("/knowledge/urls")
+        assert resp.status_code in (401, 403)
+
+    def test_delete_url_requires_auth(self, app):
+        app.dependency_overrides.clear()
+        with TestClient(app) as c:
+            resp = c.delete(f"/knowledge/urls/{uuid4()}")
+        assert resp.status_code in (401, 403)
 
 
 # ── Auth guard ──────────────────────────────────────────────────────────────

@@ -248,21 +248,25 @@ def _token_window(text: str) -> list[str]:
         return [text[i : i + win] for i in range(0, len(text), step)]
 
 
-# Public entry point --------------------------------------------------------
+# Public entry points -------------------------------------------------------
 def build_chunks(path: Path) -> list[Chunk]:
     """Open a file, extract units, split into Chunk objects with metadata."""
-    filename = path.name
-    units = _extract_units(path)
-    chunks: list[Chunk] = []
+    return _build_chunks_from_units(_extract_units(path), path.name)
 
+
+def build_chunks_from_text(text: str, filename: str, section: str = "") -> list[Chunk]:
+    """Split raw text into Chunk objects (same pipeline, no file on disk)."""
+    return _build_chunks_from_units([_Unit(text=text, section=section)], filename)
+
+
+def _build_chunks_from_units(units: list[_Unit], filename: str) -> list[Chunk]:
+    chunks: list[Chunk] = []
     for u in units:
         text = (u.text or "").strip()
         if not text:
             continue
         parts = _split_recursive(text)
-        # Prepend section path to every chunk for richer embeddings + LLM context
         section_prefix = f"# {u.section}\n\n" if u.section else ""
-        # Track char offsets inside the unit (approximate, for citations).
         cursor = 0
         for p in parts:
             idx = u.text.find(p, cursor)
@@ -272,7 +276,6 @@ def build_chunks(path: Path) -> list[Chunk]:
             end = idx + len(p)
             cursor = end
             chunk_text = section_prefix + p
-            # Hard cap defence: if somehow a chunk is still too big, window it.
             if _ntok(chunk_text) > HARD_CAP_TOKENS:
                 for w in _token_window(p):
                     wt = section_prefix + w

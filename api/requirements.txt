@@ -31,3 +31,6 @@ sendgrid>=6.11.0
 qrcode[pil]>=7.4.0
 google-api-python-client>=2.150.0
 google-auth-oauthlib>=1.2.0
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+trafilatura>=2.0.0

@@ -510,6 +510,37 @@ def list_file_chunks(
 # ── URL import ────────────────────────────────────────────────────────────────
 
 
+async def _background_index_url(tenant_id: uuid.UUID, url_id: uuid.UUID, url: str | None, title: str | None):
+    """Fetch URL, extract text, index into Chroma in background thread."""
+    import logging
+    try:
+        from .url_extractor import fetch_url
+        logging.info("[url-index] Fetching URL %s for url_id %s", url, url_id)
+        text, resolved_title = await asyncio.to_thread(fetch_url, url or "")
+        display_name = (title or resolved_title or url or "untitled").strip()
+        n = await asyncio.to_thread(rag.index_text, tenant_id, url_id, text, display_name)
+        logging.info("[url-index] Indexed %s chunks for url %s, updating DB", n, url_id)
+        with engine.begin() as conn:
+            from sqlalchemy import text
+            conn.execute(
+                text("UPDATE knowledge_urls SET status='ready', chunks_total=:n, error=NULL WHERE id=:uid"),
+                {"uid": str(url_id), "n": n},
+            )
+        logging.info("[url-index] URL %s marked as ready", url_id)
+    except Exception as e:
+        import traceback
+        logging.error("[url-index] Failed to index URL %s: %s", url_id, traceback.format_exc())
+        try:
+            with engine.begin() as conn:
+                from sqlalchemy import text
+                conn.execute(
+                    text("UPDATE knowledge_urls SET status='failed', error=:error WHERE id=:uid"),
+                    {"uid": str(url_id), "error": str(e)[:2000]},
+                )
+        except Exception as db_err:
+            logging.error("[url-index] Failed to update DB status for %s: %s", url_id, db_err)
+
+
 class _UrlImportIn(BaseModel):
     url: str
     title: str | None = None
@@ -517,7 +548,7 @@ class _UrlImportIn(BaseModel):
 
 
 @router.post("/urls", status_code=201)
-def import_url(
+async def import_url(
     body: _UrlImportIn,
     tenant: Tenant = Depends(get_current_tenant),
     db: Session = Depends(get_db),
@@ -538,10 +569,12 @@ def import_url(
         url=body.url,
         title=body.title,
         folder_id=body.folder_id,
-        status="pending",
+        status="processing",
     )
     db.add(rec)
     db.commit()
+
+    asyncio.create_task(_background_index_url(tenant.id, rec.id, body.url, body.title))
     return {"id": str(rec.id), "url": rec.url, "title": rec.title, "status": rec.status}
 
 
@@ -568,6 +601,21 @@ def list_urls(
         }
         for r in rows
     ]
+
+
+@router.get("/urls/{url_id}/chunks")
+def list_url_chunks(
+    url_id: uuid.UUID,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    rec = db.execute(select(KnowledgeUrl).where(
+        KnowledgeUrl.id == url_id, KnowledgeUrl.tenant_id == tenant.id,
+    )).scalar_one_or_none()
+    if not rec:
+        raise HTTPException(404, "url not found")
+    chunks = rag.get_chunks_for_file(tenant.id, url_id)
+    return {"chunks": chunks, "total": len(chunks)}
 
 
 @router.delete("/urls/{url_id}", status_code=204)

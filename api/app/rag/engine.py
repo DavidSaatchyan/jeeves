@@ -20,8 +20,7 @@ def _count_all_chunks(tenant_id: UUID | str) -> int:
         return 0
 
 
-def index_file(tenant_id: UUID | str, file_id: UUID | str, path: Path) -> int:
-    chunks = chunking.build_chunks(path)
+def _add_chunks(tenant_id: UUID | str, file_id: UUID | str, chunks: list[chunking.Chunk]) -> int:
     if not chunks:
         return 0
     col = _collection(tenant_id)
@@ -35,6 +34,16 @@ def index_file(tenant_id: UUID | str, file_id: UUID | str, path: Path) -> int:
     embeddings = embed_batch(texts)
     col.add(ids=ids, embeddings=embeddings, documents=texts, metadatas=metadatas)
     return len(chunks)
+
+
+def index_file(tenant_id: UUID | str, file_id: UUID | str, path: Path) -> int:
+    chunks = chunking.build_chunks(path)
+    return _add_chunks(tenant_id, file_id, chunks)
+
+
+def index_text(tenant_id: UUID | str, file_id: UUID | str, text: str, filename: str, section: str = "") -> int:
+    chunks = chunking.build_chunks_from_text(text, filename, section)
+    return _add_chunks(tenant_id, file_id, chunks)
 
 
 def delete_file(tenant_id: UUID | str, file_id: UUID | str):

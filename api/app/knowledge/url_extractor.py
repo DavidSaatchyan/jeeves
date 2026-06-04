@@ -1,0 +1,122 @@
+"""Fetch and extract readable text from URLs for knowledge base ingestion."""
+from __future__ import annotations
+
+import logging
+
+import httpx
+
+logger = logging.getLogger(__name__)
+
+MAX_BODY_BYTES = 2_000_000
+MAX_EXTRACTED_CHARS = 500_000
+
+
+def fetch_url(url: str) -> tuple[str, str | None]:
+    """Fetch a URL and extract clean text + optional title.
+
+    Returns (cleaned_text, title_or_None).
+    Raises ValueError on non-200, timeouts, unsupported content types.
+    """
+    if not url.strip():
+        raise ValueError("url is required")
+
+    try:
+        resp = httpx.get(url, timeout=30.0, follow_redirects=True)
+    except httpx.TimeoutException:
+        raise ValueError("Request timed out")
+    except httpx.RequestError as e:
+        raise ValueError(f"Request failed: {e}")
+
+    if resp.status_code == 404:
+        raise ValueError("Page not found (404)")
+    if resp.status_code in (401, 403):
+        raise ValueError("Authentication required (the page is behind a login)")
+    if resp.status_code != 200:
+        raise ValueError(f"HTTP {resp.status_code}")
+
+    content_type = (resp.headers.get("content-type") or "").lower()
+
+    if "application/pdf" in content_type or url.rstrip("/").lower().endswith(".pdf"):
+        return _extract_pdf_url(resp.content)
+
+    if "text/plain" in content_type:
+        text = resp.text[:MAX_EXTRACTED_CHARS]
+        return text, None
+
+    if "text/html" not in content_type and "application/xhtml" not in content_type:
+        raise ValueError(f"Unsupported content type: {content_type}")
+
+    return _extract_html(resp.text, url)
+
+
+def _extract_html(html: str, url: str) -> tuple[str, str | None]:
+    """Extract clean text and title from HTML using trafilatura + bs4 fallback."""
+    text: str | None = None
+    title: str | None = None
+
+    # Primary: trafilatura for main-content extraction
+    try:
+        import trafilatura
+        text = trafilatura.extract(
+            html,
+            url=url,
+            output_format="txt",
+            include_comments=False,
+            include_tables=True,
+            no_fallback=False,
+        )
+    except Exception:
+        logger.warning("trafilatura extract failed, falling back to bs4", exc_info=True)
+
+    # Fallback: bs4 manual stripping
+    if not text:
+        try:
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(html, "lxml")
+            for tag in soup(["script", "style", "nav", "footer", "header", "aside", "noscript"]):
+                tag.decompose()
+            text = soup.get_text(separator="\n", strip=True)
+        except Exception:
+            raise ValueError("Failed to extract text from HTML")
+
+    # Extract title
+    try:
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html, "lxml")
+        t = soup.find("title")
+        if t and t.get_text(strip=True):
+            title = t.get_text(strip=True)
+    except Exception:
+        pass
+
+    text = text.strip()
+    if not text:
+        raise ValueError("No readable content found at this URL")
+
+    if len(text) > MAX_EXTRACTED_CHARS:
+        text = text[:MAX_EXTRACTED_CHARS]
+
+    return text, title
+
+
+def _extract_pdf_url(data: bytes) -> tuple[str, str | None]:
+    """Download PDF content and extract text via pypdf."""
+    from pypdf import PdfReader
+    import io
+    try:
+        reader = PdfReader(io.BytesIO(data))
+        pages: list[str] = []
+        for page in reader.pages:
+            t = (page.extract_text() or "").strip()
+            if t:
+                pages.append(t)
+        if not pages:
+            raise ValueError("No text found in PDF")
+        text = "\n\n".join(pages)
+        if len(text) > MAX_EXTRACTED_CHARS:
+            text = text[:MAX_EXTRACTED_CHARS]
+        return text, None
+    except ValueError:
+        raise
+    except Exception as e:
+        raise ValueError(f"Failed to parse PDF: {e}")

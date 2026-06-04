@@ -9,6 +9,7 @@ import pytest
 from app.rag.chunking import (
     Chunk,
     build_chunks,
+    build_chunks_from_text,
     file_sha256,
     sanitize_filename,
     _md_units,
@@ -366,3 +367,40 @@ class TestBuildChunksRealPDF:
         chunks = build_chunks(p)
         # Blank page = no extractable text → filtered out
         assert isinstance(chunks, list)
+
+
+# ── build_chunks_from_text (no file on disk) ───────────────────────────────
+
+
+class TestBuildChunksFromText:
+    def test_short_text(self):
+        chunks = build_chunks_from_text("Hello world.", "test.txt")
+        assert len(chunks) == 1
+        assert chunks[0].filename == "test.txt"
+        assert "Hello" in chunks[0].text
+
+    def test_empty_text(self):
+        chunks = build_chunks_from_text("", "empty.txt")
+        assert chunks == []
+
+    def test_section_prefix(self):
+        chunks = build_chunks_from_text("Content here.", "doc.txt", section="My Section")
+        assert len(chunks) == 1
+        assert "# My Section" in chunks[0].text
+        assert "Content here." in chunks[0].text
+
+    def test_long_text_splits(self):
+        text = ("Long paragraph. " * 1000)
+        chunks = build_chunks_from_text(text, "long.txt")
+        assert len(chunks) >= 2
+        for c in chunks:
+            assert _ntok(c.text) <= 1800  # HARD_CAP_TOKENS
+
+    def test_chunk_metadata(self):
+        chunks = build_chunks_from_text("Some text content here.", "meta.txt", section="Test")
+        assert len(chunks) == 1
+        c = chunks[0]
+        assert c.filename == "meta.txt"
+        assert c.section == "Test"
+        assert c.chunk_hash
+        assert len(c.chunk_hash) == 16

@@ -434,11 +434,28 @@ async function deleteFolder(id, name){
 async function refresh() {
   showSkeletons();
   try {
-    var data = await Promise.all([api('/knowledge/folders'), api('/knowledge/files')]);
+    var data = await Promise.all([api('/knowledge/folders'), api('/knowledge/files'), api('/knowledge/urls')]);
     var folders = data[0];
-    var allRows = data[1];
+    var fileRows = data[1];
+    var urlRows = data[2];
     var folderMap = {};
     folders.forEach(function(f){ folderMap[f.id] = f.name; });
+
+    // Normalize URL rows to look like file rows
+    var urlNormalized = (urlRows || []).map(function(u){
+      return {
+        id: u.id,
+        filename: u.title || u.url,
+        status: u.status,
+        size_bytes: 0,
+        chunks_total: u.chunks_total || 0,
+        created_at: u.created_at,
+        folder_id: u.folder_id,
+        _is_url: true,
+        _url: u.url,
+      };
+    });
+    var allRows = fileRows.concat(urlNormalized);
 
     // rebuild folder tree
     var fileCounts = {};
@@ -456,7 +473,7 @@ async function refresh() {
     var pct = Math.min((totalSize / (maxMB * 1024 * 1024)) * 100, 100);
 
     var types = {};
-    rows.forEach(function(r){ var ext = r.filename.split('.').pop().toUpperCase(); types[ext] = (types[ext] || 0) + 1; });
+    rows.forEach(function(r){ if(r._is_url){ types['URL'] = (types['URL'] || 0) + 1; } else { var ext = r.filename.split('.').pop().toUpperCase(); types[ext] = (types[ext] || 0) + 1; } });
     var typeLabels = Object.keys(types).sort().map(function(t){ return types[t] + ' ' + t; });
 
     document.getElementById('sumFiles').textContent = ready.length + ' file' + (ready.length !== 1 ? 's' : '');
@@ -469,7 +486,7 @@ async function refresh() {
     document.getElementById('kbSummary').style.display = 'grid';
 
     var hasFiles = allRows.length > 0;
-    var hasProcessing = allRows.some(function(r){ return r.status === 'processing'; });
+    var hasProcessing = allRows.some(function(r){ return r.status === 'processing' || r.status === 'pending'; });
     document.getElementById('clearAllBtn').style.display = hasFiles ? '' : 'none';
 
     document.getElementById('kbFileListTitle').textContent = _selectedFolder ? 'Files in ' + (folderMap[_selectedFolder] || 'folder') : 'Files';
@@ -478,14 +495,24 @@ async function refresh() {
       var cls = r.status === 'ready' ? 'ok' : (r.status === 'failed' ? 'err' : 'warn');
       var label = r.status === 'processing' ? 'Processing' : r.status;
       var fname = (r.folder_id && folderMap[r.folder_id]) ? folderMap[r.folder_id] : '\u2014';
+
+      var nameHtml, sizeHtml;
+      if(r._is_url){
+        nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',true);return false" title="' + esc(r._url) + '">' + esc(r.filename) + '</a></strong>';
+        sizeHtml = '<span class="muted" style="font-size:12px">URL</span>';
+      } else {
+        nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',false);return false">' + esc(r.filename) + '</a></strong>';
+        sizeHtml = r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB';
+      }
+
       return '<tr>'
-        + '<td><strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\');return false">' + esc(r.filename) + '</a></strong></td>'
+        + '<td>' + nameHtml + '</td>'
         + '<td><span class="pill ' + cls + '" style="font-size:11px">' + label + '</span></td>'
-        + '<td style="text-align:right">' + (r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB') + '</td>'
+        + '<td style="text-align:right">' + sizeHtml + '</td>'
         + '<td style="text-align:right">' + (r.chunks_total || '\u2014') + '</td>'
         + '<td>' + (r.created_at ? r.created_at.slice(0, 10) : '\u2014') + '</td>'
         + '<td style="font-size:12px;color:var(--muted2)">' + esc(fname) + '</td>'
-        + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '">✕</button></td></tr>';
+        + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '" data-isurl="' + (r._is_url ? '1' : '0') + '">✕</button></td></tr>';
     }).join('') || '<tr><td colspan="7" class="muted" style="text-align:center;padding:16px">No files in this folder.</td></tr>';
 
     document.getElementById('procMsg').style.display = hasProcessing ? '' : 'none';
@@ -499,8 +526,9 @@ async function pollProcessing(){
   _pollingActive = true;
   try {
     for(var i = 0; i < 600; i++){
-      var rows = await api('/knowledge/files');
-      var pending = rows.filter(function(r){ return r.status === 'processing'; });
+      var data = await Promise.all([api('/knowledge/files'), api('/knowledge/urls')]);
+      var all = data[0].concat(data[1]);
+      var pending = all.filter(function(r){ return r.status === 'processing' || r.status === 'pending'; });
       var pMsg = document.getElementById('procMsg');
       if(!pending.length) { pMsg.style.display = 'none'; _pollingActive = false; await refresh(); return; }
       pMsg.style.display = '';
@@ -513,9 +541,11 @@ async function pollProcessing(){
 async function del(btn){
   var id = btn.getAttribute('data-id');
   var name = decodeURIComponent(btn.getAttribute('data-name') || '');
+  var isUrl = btn.getAttribute('data-isurl') === '1';
+  var endpoint = isUrl ? '/knowledge/urls/' : '/knowledge/files/';
   showConfirm('Are you sure you want to delete "' + name + '"?', async function(){
     setConfirmLoading(true);
-    try{ await api('/knowledge/files/' + id, {method:'DELETE'}); await refresh(); } catch(e){ alert('Error: ' + e.message); }
+    try{ await api(endpoint + id, {method:'DELETE'}); await refresh(); } catch(e){ alert('Error: ' + e.message); }
     closeConfirm(true);
   }, name || 'Confirm');
 }
@@ -613,14 +643,15 @@ async function syncCrmPrices(){
 // ════════════════════════════════════════════════
 // CHUNK VIEWER
 // ════════════════════════════════════════════════
-async function openChunkViewer(fileId){
+async function openChunkViewer(fileId, isUrl){
   document.body.style.overflow = 'hidden';
   document.getElementById('chunkModalTitle').textContent = 'Chunks';
   document.getElementById('chunkModalBody').innerHTML = '<div class="chunk-loading"><span class="kb-spinner"></span>Loading chunks...</div>';
   document.getElementById('chunkModal').classList.add('show');
 
   try {
-    var chunkData = await api('/knowledge/files/' + fileId + '/chunks');
+    var ep = isUrl ? '/knowledge/urls/' : '/knowledge/files/';
+    var chunkData = await api(ep + fileId + '/chunks');
     var html = '';
     (chunkData.chunks || []).forEach(function(c){
       html += '<div class="kb-chunk">';
