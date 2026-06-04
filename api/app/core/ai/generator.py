@@ -213,11 +213,11 @@ async def generate_campaign_message(
 
 
 async def naturalize_answer(tenant_id: str, cited_answer: str) -> str:
-    """Strip citation markers, quotes, and document references from an answer.
+    """Synthesize a cited extractive analysis into a single coherent final answer.
 
-    This is stage 2 of a two-stage RAG pipeline: first generate with citations
-    (for accuracy grounding), then naturalize for client presentation.
-    If the naturalization call fails, the original answer is returned unchanged.
+    Stage 1 produces a thorough step-by-step analysis with citations (accurate).
+    Stage 2 condenses that into a clean, contradiction-free answer for the patient.
+    If synthesis fails, the original cited answer is returned unchanged.
     """
     if not cited_answer:
         return cited_answer
@@ -225,16 +225,23 @@ async def naturalize_answer(tenant_id: str, cited_answer: str) -> str:
         from openai import AsyncOpenAI
 
         client = AsyncOpenAI(api_key=_settings.openai_api_key)
-        system_msg = "You are a text reformatter. Your only job is to remove citation-related formatting. Never change facts, content, or meaning."
+        system_msg = (
+            "You are a medical answer synthesizer. "
+            "Take the detailed analysis below and produce a single, coherent, "
+            "natural-sounding final answer for the patient."
+        )
         user_msg = (
-            "Rewrite the answer below in a natural, conversational style.\n\n"
-            "Remove ALL of the following:\n"
-            "- Citation markers like [1], [2], [Document 1], [Document 2]\n"
-            "- Quotation marks that are used to quote or cite source documents\n"
-            "- References like \"according to Document 1\" or \"per Document 2\"\n\n"
-            "CRITICAL: Keep EVERY factual detail, number, date, and piece of information "
-            "exactly as stated. Do not add, remove, or change any facts or meaning.\n\n"
-            "Answer:\n" + cited_answer
+            "The text below is a thorough step-by-step analysis with citations. "
+            "Your job is to distill it into ONE clear final answer.\n\n"
+            "RULES:\n"
+            "- State the conclusion directly — do NOT walk through each rule one by one\n"
+            "- Include ALL relevant facts and numbers\n"
+            "- If the analysis mentions multiple checks, synthesize them into a unified verdict\n"
+            "- Remove any citation markers like [1], [Document 2], or quotation marks\n"
+            "- Remove any internal reasoning, self-correction, or tentative language\n"
+            "- Keep every factual detail — do not add, remove, or change facts\n"
+            "- Sound natural and conversational, not like a checklist\n\n"
+            "Analysis:\n" + cited_answer
         )
         response = await client.chat.completions.create(
             model="gpt-4o-mini",
