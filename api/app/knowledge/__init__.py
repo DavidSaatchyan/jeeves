@@ -210,7 +210,7 @@ async def simulate(
             "You are an extractive knowledge base system.\n\n"
             "RULES:\n"
             "- Answer ONLY using text that appears verbatim in the context below.\n"
-            "- Present the information naturally, without quotation marks, citations, or document references.\n"
+            "- For every claim, quote the exact source text in quotation marks and cite the document.\n"
             "- If the context does not contain the answer, say: \"I don't have this information in the knowledge base.\"\n"
             "- Do NOT combine separate facts into causal or sequential relationships unless the source text explicitly states that relationship.\n"
             "- Do NOT use your training knowledge to supplement or interpret the context.\n\n"
