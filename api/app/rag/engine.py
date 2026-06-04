@@ -46,6 +46,12 @@ def index_text(tenant_id: UUID | str, file_id: UUID | str, text: str, filename: 
     return _add_chunks(tenant_id, file_id, chunks)
 
 
+def index_structured_text(tenant_id: UUID | str, file_id: UUID | str, sections: list[tuple[str, str]], filename: str) -> int:
+    """Index structured (heading, body) sections — deterministic, no heading heuristics."""
+    chunks = chunking.build_chunks_from_sections(sections, filename)
+    return _add_chunks(tenant_id, file_id, chunks)
+
+
 def delete_file(tenant_id: UUID | str, file_id: UUID | str):
     try:
         col = _collection(tenant_id)

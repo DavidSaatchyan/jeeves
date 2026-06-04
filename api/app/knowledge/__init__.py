@@ -511,21 +511,21 @@ def list_file_chunks(
 
 
 async def _background_index_url(tenant_id: uuid.UUID, url_id: uuid.UUID, url: str | None, title: str | None):
-    """Fetch URL, extract text, index into Chroma in background thread."""
+    """Fetch URL, extract structured sections, index into Chroma in background thread."""
     import logging
     try:
-        from .url_extractor import fetch_url
+        from .url_extractor import fetch_url_structured
         logging.info("[url-index] Fetching URL %s for url_id %s", url, url_id)
-        text, resolved_title = await fetch_url(url or "")
+        resolved_title, sections = await fetch_url_structured(url or "")
         display_name = (title or resolved_title or url or "untitled").strip()
-        text_len = len(text.encode("utf-8"))
-        n = await asyncio.to_thread(rag.index_text, tenant_id, url_id, text, display_name)
+        total_len = sum(len(body) for _, body in sections)
+        n = await asyncio.to_thread(rag.index_structured_text, tenant_id, url_id, sections, display_name)
         logging.info("[url-index] Indexed %s chunks for url %s, updating DB", n, url_id)
         with engine.begin() as conn:
             from sqlalchemy import text
             conn.execute(
                 text("UPDATE knowledge_urls SET status='ready', chunks_total=:n, size_bytes=:sz, error=NULL WHERE id=:uid"),
-                {"uid": str(url_id), "n": n, "sz": text_len},
+                {"uid": str(url_id), "n": n, "sz": total_len},
             )
         logging.info("[url-index] URL %s marked as ready", url_id)
     except Exception as e:

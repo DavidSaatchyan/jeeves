@@ -48,6 +48,7 @@ def mock_rag():
     patches = {
         "index_file": MagicMock(return_value=5),
         "index_text": MagicMock(return_value=4),
+        "index_structured_text": MagicMock(return_value=6),
         "search": MagicMock(return_value=[
             {"text": "chunk1", "score": 0.9, "filename": "doc.txt", "section": "", "distance": 0.1}
         ]),
@@ -430,16 +431,16 @@ class TestBackgroundIndexUrl:
         tenant_id = uuid4()
         url_id = uuid4()
 
-        mock_rag["index_text"].return_value = 7
+        mock_rag["index_structured_text"].return_value = 7
 
-        with patch("app.knowledge.url_extractor.fetch_url", new_callable=AsyncMock) as mock_fetch:
-            mock_fetch.return_value = ("Extracted text content", "Page Title")
+        with patch("app.knowledge.url_extractor.fetch_url_structured", new_callable=AsyncMock) as mock_fetch:
+            mock_fetch.return_value = ("Page Title", [("", "Extracted text content")])
             with patch("app.knowledge.engine.begin") as mock_begin:
                 mock_conn = MagicMock()
                 mock_begin.return_value.__enter__.return_value = mock_conn
                 await _background_index_url(tenant_id, url_id, "https://example.com", None)
                 mock_conn.execute.assert_called_once()
-                mock_rag["index_text"].assert_called_once_with(tenant_id, url_id, "Extracted text content", "Page Title")
+                mock_rag["index_structured_text"].assert_called_once_with(tenant_id, url_id, [("", "Extracted text content")], "Page Title")
 
     @pytest.mark.asyncio
     async def test_index_url_failure_marks_failed(self, mock_rag):
@@ -448,10 +449,10 @@ class TestBackgroundIndexUrl:
         tenant_id = uuid4()
         url_id = uuid4()
 
-        mock_rag["index_text"].side_effect = ValueError("Index failed")
+        mock_rag["index_structured_text"].side_effect = ValueError("Index failed")
 
-        with patch("app.knowledge.url_extractor.fetch_url", new_callable=AsyncMock) as mock_fetch:
-            mock_fetch.return_value = ("text", "Title")
+        with patch("app.knowledge.url_extractor.fetch_url_structured", new_callable=AsyncMock) as mock_fetch:
+            mock_fetch.return_value = ("Title", [("", "text")])
             with patch("app.knowledge.engine.begin") as mock_begin:
                 mock_conn = MagicMock()
                 mock_begin.return_value.__enter__.return_value = mock_conn

@@ -248,43 +248,6 @@ def _token_window(text: str) -> list[str]:
         return [text[i : i + win] for i in range(0, len(text), step)]
 
 
-# Text-based heading detection (for URL-extracted clean text) ---------------
-def _text_units(text: str, default_section: str = "") -> list[_Unit]:
-    """Split clean text into units at heading-like lines.
-
-    Detects:
-      - ALL CAPS headings (via _is_heading)
-      - Short lines starting with uppercase, not ending with sentence punctuation
-    """
-    lines = text.splitlines()
-    units: list[_Unit] = []
-    cur_section = default_section
-    buf: list[str] = []
-
-    def flush():
-        if buf:
-            body = "\n".join(buf).strip()
-            if body:
-                units.append(_Unit(text=body, section=cur_section))
-            buf.clear()
-
-    for line in lines:
-        stripped = line.strip()
-        if _is_heading(stripped):
-            flush()
-            cur_section = stripped
-        elif (stripped and len(stripped) < 80 and stripped[0].isupper()
-              and not stripped.endswith((".", ":", ";", ",", "!"))
-              and not stripped.startswith(("•", "-", "*", "→", "▪", "●", "○", "§", "|", "!", '"', "'", "(", "["))
-              and sum(1 for c in stripped if c.isalpha()) > 2):
-            flush()
-            cur_section = stripped
-        else:
-            buf.append(line)
-    flush()
-    return units or [_Unit(text=text, section=default_section)]
-
-
 # Public entry points -------------------------------------------------------
 def build_chunks(path: Path) -> list[Chunk]:
     """Open a file, extract units, split into Chunk objects with metadata."""
@@ -292,12 +255,24 @@ def build_chunks(path: Path) -> list[Chunk]:
 
 
 def build_chunks_from_text(text: str, filename: str, section: str = "") -> list[Chunk]:
-    """Split raw text into Chunk objects — detects headings to match file behaviour."""
-    return _build_chunks_from_units(_text_units(text, section), filename)
+    """Split raw text into Chunk objects (single unit — no heading heuristics)."""
+    return _build_chunks_from_units([_Unit(text=text, section=section)], filename)
+
+
+def build_chunks_from_sections(sections: list[tuple[str, str]], filename: str) -> list[Chunk]:
+    """Build chunks from pre-parsed (heading, body) sections.
+
+    Args:
+        sections: List of (heading_text, body_text) pairs as extracted by
+                  trafilatura XML (deterministic, no heuristics).
+    """
+    units = [_Unit(text=body.strip(), section=heading) for heading, body in sections if body.strip()]
+    return _build_chunks_from_units(units, filename)
 
 
 def _build_chunks_from_units(units: list[_Unit], filename: str) -> list[Chunk]:
     chunks: list[Chunk] = []
+    offset = 0  # cumulative char offset across all units
     for u in units:
         text = (u.text or "").strip()
         if not text:
@@ -309,9 +284,9 @@ def _build_chunks_from_units(units: list[_Unit], filename: str) -> list[Chunk]:
             idx = u.text.find(p, cursor)
             if idx < 0:
                 idx = cursor
-            start = idx
-            end = idx + len(p)
-            cursor = end
+            start = offset + idx
+            end = offset + idx + len(p)
+            cursor = idx + len(p)
             chunk_text = section_prefix + p
             if _ntok(chunk_text) > HARD_CAP_TOKENS:
                 for w in _token_window(p):
@@ -325,6 +300,7 @@ def _build_chunks_from_units(units: list[_Unit], filename: str) -> list[Chunk]:
                 text=chunk_text, filename=filename, section=u.section, page=u.page,
                 char_start=start, char_end=end, chunk_hash=_hash(chunk_text),
             ))
+        offset += len(u.text)
     return chunks
 
 
