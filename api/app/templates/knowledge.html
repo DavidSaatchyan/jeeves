@@ -24,7 +24,8 @@
     </div>
     <div class="kb-folder-tree" id="folderTree">
       <div class="kb-folder-item root" data-id="" onclick="selectFolder('')">
-        <span class="kb-folder-icon">📁</span> All files
+        <svg class="kb-folder-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="16" height="13" rx="2"/><path d="M2 7h16"/><path d="M9 4L7 2H2v2"/></svg>
+        All files
       </div>
     </div>
     <div id="folderSkeleton" style="padding-top:4px">
@@ -193,21 +194,33 @@
 <style>
 /* ── Layout ── */
 .kb-layout{display:flex;gap:20px;align-items:flex-start}
-.kb-sidebar{width:240px;flex-shrink:0;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);padding:12px;position:sticky;top:16px;max-height:calc(100vh - 160px);overflow-y:auto}
-.kb-sidebar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:13px;color:var(--muted2)}
+.kb-sidebar{width:240px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px;position:sticky;top:16px;max-height:calc(100vh - 160px);overflow-y:auto}
+.kb-sidebar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding:4px 6px 6px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted2)}
+.kb-sidebar-header button{font-size:15px;font-weight:400;padding:2px 6px;border-radius:4px}
 .kb-main{flex:1;min-width:0}
 .kb-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
 .kb-current-folder{font-size:16px;font-weight:700}
 .kb-toolbar-actions{display:flex;gap:8px}
 
 /* ── Folder tree ── */
-.kb-folder-item{padding:6px 8px;border-radius:5px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px}
-.kb-folder-item:hover{background:rgba(255,255,255,0.04)}
-.kb-folder-item.active{background:rgba(99,102,241,0.12);color:var(--accent)}
-.kb-folder-item .kb-folder-actions{display:none;margin-left:auto}
-.kb-folder-item:hover .kb-folder-actions{display:flex;gap:2px}
-.kb-folder-item .kb-folder-icon{font-size:14px}
-.kb-folder-item.root{font-weight:600}
+.kb-folder-children{padding-left:18px;position:relative}
+.kb-folder-children::before{content:'';position:absolute;left:8px;top:0;bottom:4px;width:1px;background:var(--border)}
+.kb-folder-item{padding:5px 8px;border-radius:5px;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:6px;position:relative;transition:background .12s;color:var(--muted)}
+.kb-folder-item:hover{background:rgba(255,255,255,0.04);color:var(--text)}
+.kb-folder-item.active{background:rgba(99,102,241,0.1);color:var(--accent);font-weight:600}
+.kb-folder-item.active::after{content:'';position:absolute;left:-2px;top:4px;bottom:4px;width:2px;border-radius:2px;background:var(--accent)}
+.kb-folder-children .kb-folder-item::before{content:'';position:absolute;left:-10px;top:50%;width:9px;height:1px;background:var(--border)}
+.kb-folder-children .kb-folder-item.active::before{content:'';position:absolute;left:-10px;top:50%;width:9px;height:1px;background:var(--accent)}
+.kb-folder-item .kb-folder-actions{display:none;margin-left:auto;gap:1px}
+.kb-folder-item:hover .kb-folder-actions{display:flex}
+.kb-folder-item .kb-folder-actions button{font-size:11px;padding:2px 4px;border-radius:3px;opacity:.5;transition:opacity .1s}
+.kb-folder-item .kb-folder-actions button:hover{opacity:1}
+.kb-folder-icon{flex-shrink:0;width:16px;height:16px;color:var(--muted2);transition:color .12s}
+.kb-folder-item:hover .kb-folder-icon{color:var(--accent)}
+.kb-folder-item.active .kb-folder-icon{color:var(--accent)}
+.kb-folder-item.root{font-weight:700;color:var(--text);font-size:13px;margin-bottom:2px}
+.kb-folder-item.root .kb-folder-icon{color:var(--accent)}
+.kb-folder-count{margin-left:auto;font-size:10px;font-weight:600;color:var(--muted2);background:rgba(255,255,255,0.04);padding:1px 6px;border-radius:4px;min-width:16px;text-align:center;line-height:1.6}
 
 /* ── Upload tabs ── */
 .kb-label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);margin-bottom:4px}
@@ -330,25 +343,28 @@ async function loadFolders(){
   document.getElementById('folderSkeleton').style.display='';
   var folders = await api('/knowledge/folders');
   var tree = document.getElementById('folderTree');
-  var html = '<div class="kb-folder-item root' + (_selectedFolder === '' ? ' active' : '') + '" data-id="" onclick="selectFolder(\'\')"><span class="kb-folder-icon">📁</span> All files</div>';
-  html += buildTree(folders, null);
+  var html = '<div class="kb-folder-item root' + (_selectedFolder === '' ? ' active' : '') + '" data-id="" onclick="selectFolder(\'\')"><svg class="kb-folder-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="16" height="13" rx="2"/><path d="M2 7h16"/><path d="M9 4L7 2H2v2"/></svg> All files</div>';
+  html += buildTree(folders, null, {});
   tree.innerHTML = html;
   document.getElementById('folderSkeleton').style.display='none';
 }
-function buildTree(folders, parentId){
+function buildTree(folders, parentId, fileCounts){
   var children = folders.filter(function(f){ return f.parent_id === parentId; });
   if(!children.length) return '';
   var html = '';
   children.forEach(function(f){
     var active = _selectedFolder === f.id ? ' active' : '';
+    var cnt = fileCounts[f.id];
     html += '<div class="kb-folder-item' + active + '" data-id="' + f.id + '" onclick="selectFolder(\'' + f.id + '\')">';
-    html += '<span class="kb-folder-icon">📁</span>' + esc(f.name);
+    html += '<svg class="kb-folder-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4.5A1.5 1.5 0 013.5 3h4.5l2 2h6.5A1.5 1.5 0 0118 6.5v9a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 012 15.5V4.5z"/></svg>';
+    html += esc(f.name);
+    if(cnt !== undefined) html += '<span class="kb-folder-count">' + cnt + '</span>';
     html += '<span class="kb-folder-actions">';
     html += '<button class="ghost sm" onclick="event.stopPropagation();showFolderModal(\'' + f.id + '\')" title="Rename">✏️</button>';
     html += '<button class="ghost sm" onclick="event.stopPropagation();deleteFolder(\'' + f.id + '\',\'' + esc(f.name).replace(/'/g,"\\'") + '\')" title="Delete">🗑️</button>';
     html += '</span></div>';
-    var childHtml = buildTree(folders, f.id);
-    if(childHtml) html += '<div style="padding-left:16px">' + childHtml + '</div>';
+    var childHtml = buildTree(folders, f.id, fileCounts);
+    if(childHtml) html += '<div class="kb-folder-children">' + childHtml + '</div>';
   });
   return html;
 }
@@ -420,9 +436,11 @@ async function refresh() {
     folders.forEach(function(f){ folderMap[f.id] = f.name; });
 
     // rebuild folder tree
+    var fileCounts = {};
+    allRows.forEach(function(r){ if(r.folder_id){ fileCounts[r.folder_id] = (fileCounts[r.folder_id] || 0) + 1; } });
     var tree = document.getElementById('folderTree');
-    var thtml = '<div class="kb-folder-item root' + (_selectedFolder === '' ? ' active' : '') + '" data-id="" onclick="selectFolder(\'\')"><span class="kb-folder-icon">📁</span> All files</div>';
-    thtml += buildTree(folders, null);
+    var thtml = '<div class="kb-folder-item root' + (_selectedFolder === '' ? ' active' : '') + '" data-id="" onclick="selectFolder(\'\')"><svg class="kb-folder-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="16" height="13" rx="2"/><path d="M2 7h16"/><path d="M9 4L7 2H2v2"/></svg> All files</div>';
+    thtml += buildTree(folders, null, fileCounts);
     tree.innerHTML = thtml;
 
     var rows = _selectedFolder ? allRows.filter(function(r){ return r.folder_id === _selectedFolder; }) : allRows;
