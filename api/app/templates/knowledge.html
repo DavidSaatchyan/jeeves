@@ -304,6 +304,7 @@
 .skel-folder{margin-bottom:6px;display:flex;align-items:center;gap:6px;padding:6px 8px}
 .skel-folder .skel-line{margin:0;height:12px}
 .kb-table-skeleton{display:none;flex-direction:column}.kb-table-skeleton .skel-row{border-bottom:1px solid var(--border)}
+#confirmTitle,#confirmMsg{word-break:break-word;overflow-wrap:break-word}
 </style>
 <script>
 // ════════════════════════════════════════════════
@@ -543,11 +544,12 @@ async function del(btn){
   var name = decodeURIComponent(btn.getAttribute('data-name') || '');
   var isUrl = btn.getAttribute('data-isurl') === '1';
   var endpoint = isUrl ? '/knowledge/urls/' : '/knowledge/files/';
-  showConfirm('Are you sure you want to delete "' + name + '"?', async function(){
+  var shortName = name.length > 50 ? name.slice(0, 47) + '...' : name;
+  showConfirm('Are you sure you want to delete "' + shortName + '"?', async function(){
     setConfirmLoading(true);
     try{ await api(endpoint + id, {method:'DELETE'}); await refresh(); } catch(e){ alert('Error: ' + e.message); }
     closeConfirm(true);
-  }, name || 'Confirm');
+  }, shortName || 'Confirm');
 }
 async function clearAll(){
   showConfirm('Delete all documents?', async function(){
