@@ -271,21 +271,23 @@
 .sim-bar{display:flex;gap:8px}
 .sim-input{flex:1;padding:10px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:14px;outline:none}
 .sim-input:focus{border-color:var(--accent)}
-.sim-results{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+.sim-results{margin-top:16px;display:flex;flex-direction:column;gap:16px}
 .sim-q{font-size:13px;font-weight:600;color:var(--muted2);padding:8px 14px;background:rgba(255,255,255,0.03);border-radius:var(--radius);align-self:flex-end;max-width:80%}
-.sim-a{font-size:14px;line-height:1.7;white-space:pre-wrap;color:var(--text);padding:14px;background:rgba(99,102,241,0.06);border-radius:var(--radius)}
-.sim-refs{display:flex;flex-direction:column;gap:2px;margin-top:2px}
-.sim-ref-item{border-radius:5px}
-.sim-ref-item:hover{background:rgba(255,255,255,0.03)}
-.sim-ref{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:12px;cursor:pointer;-webkit-user-select:none;user-select:none}
-.sim-ref-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:rgba(99,102,241,0.15);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
-.sim-ref-score{flex-shrink:0;font-size:11px;font-weight:600;color:var(--accent);min-width:30px;text-align:right}
-.sim-ref-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;color:var(--text)}
-.sim-ref-sec{flex-shrink:0;font-size:11px;color:var(--muted2)}
-.sim-ref-arrow{flex-shrink:0;font-size:8px;color:var(--muted2);transition:transform .2s}
-.sim-ref-item.exp .sim-ref-arrow{transform:rotate(90deg)}
-.sim-ref-chunk{display:none;font-size:12px;color:var(--muted);white-space:pre-wrap;word-break:break-word;line-height:1.5;padding:8px 12px;margin:0 8px 4px 38px;background:rgba(255,255,255,0.02);border-radius:4px}
-.sim-ref-item.exp .sim-ref-chunk{display:block}
+.sim-a{font-size:14px;line-height:1.7;white-space:pre-wrap;color:var(--text);padding:14px 14px 14px 16px;background:rgba(99,102,241,0.06);border-radius:var(--radius);border-left:3px solid var(--accent)}
+.sim-sources-header{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted2);padding:0 4px;margin-top:4px}
+.sim-sources-header::after{content:'';flex:1;height:1px;background:var(--border)}
+.sim-source-count{font-size:10px;font-weight:700;color:var(--accent);background:rgba(99,102,241,0.12);padding:1px 7px;border-radius:8px;line-height:1.7}
+.sim-source-group{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .15s}
+.sim-source-group:hover{border-color:var(--border-bright)}
+.sim-source-header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,0.02);border-bottom:1px solid var(--border);font-size:12px;font-weight:600}
+.sim-source-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.sim-chunk-item{padding:8px 12px;font-size:12.5px;line-height:1.6;cursor:pointer;transition:background .12s}
+.sim-chunk-item:hover{background:rgba(255,255,255,0.03)}
+.sim-chunk-item + .sim-chunk-item{border-top:1px solid var(--border)}
+.sim-chunk-text{white-space:pre-wrap;word-break:break-word;color:var(--muted)}
+.sim-chunk-full{white-space:pre-wrap;word-break:break-word;color:var(--text)}
+.sim-chunk-toggle{font-size:11px;font-weight:600;color:var(--accent);margin-top:4px;display:inline-block;-webkit-user-select:none;user-select:none}
+.sim-chunk-toggle:hover{opacity:.8}
 
 /* ── Drop zone ── */
 .drop{border:2px dashed var(--border);border-radius:var(--radius);padding:32px;text-align:center;cursor:pointer;transition:all .25s}
@@ -701,21 +703,43 @@ async function simulate(){
 
     var sources = data.sources || [];
     if(sources.length){
-      html += '<div class="sim-refs">';
-      sources.forEach(function(s, i){
-        var j = i + 1;
-        html += '<div class="sim-ref-item" onclick="this.classList.toggle(\'exp\')">';
-        html += '<div class="sim-ref">';
-        html += '<span class="sim-ref-num">' + j + '</span>';
-        html += '<span class="sim-ref-score">' + (s.score ? (s.score * 100).toFixed(0) : '?') + '%</span>';
-        html += '<span class="sim-ref-name" title="' + esc(s.filename) + '">' + esc(s.filename) + '</span>';
-        if(s.section) html += '<span class="sim-ref-sec">' + esc(s.section) + '</span>';
-        html += '<span class="sim-ref-arrow">▶</span>';
-        html += '</div>';
-        html += '<div class="sim-ref-chunk">' + esc(s.chunk) + '</div>';
-        html += '</div>';
+      // Group by filename
+      var groups = {};
+      sources.forEach(function(s){
+        var key = s.filename || 'Unknown';
+        if(!groups[key]) groups[key] = [];
+        groups[key].push(s);
       });
+
+      html += '<div class="sim-sources-header">';
+      html += 'Sources';
+      html += '<span class="sim-source-count">' + sources.length + '</span>';
       html += '</div>';
+
+      Object.keys(groups).forEach(function(fname){
+        var chunks = groups[fname];
+        html += '<div class="sim-source-group">';
+        html += '<div class="sim-source-header">';
+        html += '<span style="font-size:14px;opacity:.5">📄</span>';
+        html += '<span class="sim-source-name" title="' + esc(fname) + '">' + esc(fname) + '</span>';
+        html += '</div>';
+        html += '<div class="sim-source-chunks">';
+        chunks.forEach(function(s){
+          var isLong = s.chunk.length > 250;
+          var shortText = isLong ? s.chunk.slice(0, 250) + '…' : s.chunk;
+          html += '<div class="sim-chunk-item' + (isLong ? ' has-more' : '') + '">';
+          if(s.section){
+            html += '<div style="font-size:11px;color:var(--muted2);margin-bottom:3px">§ ' + esc(s.section) + '</div>';
+          }
+          html += '<div class="sim-chunk-text">' + esc(shortText) + '</div>';
+          if(isLong){
+            html += '<div class="sim-chunk-full" style="display:none">' + esc(s.chunk) + '</div>';
+            html += '<span class="sim-chunk-toggle">Show more</span>';
+          }
+          html += '</div>';
+        });
+        html += '</div></div>';
+      });
     }
 
     document.getElementById('simResults').innerHTML = html;
@@ -737,6 +761,21 @@ function clearResults(){
   document.getElementById('simQuery').value = '';
   document.getElementById('simQuery').focus();
 }
+
+// Toggle chunk expand on "Show more" / "Show less" click
+document.getElementById('simResults').addEventListener('click', function(e){
+  var toggle = e.target.closest('.sim-chunk-toggle');
+  if(!toggle) return;
+  var item = toggle.closest('.sim-chunk-item');
+  if(!item) return;
+  var text = item.querySelector('.sim-chunk-text');
+  var full = item.querySelector('.sim-chunk-full');
+  if(!full) return;
+  var showing = full.style.display !== 'none';
+  full.style.display = showing ? 'none' : '';
+  text.style.display = showing ? '' : 'none';
+  toggle.textContent = showing ? 'Show more' : 'Show less';
+});
 
 document.getElementById('simQuery').addEventListener('keydown', function(e){ if(e.key === 'Enter') simulate(); });
 
