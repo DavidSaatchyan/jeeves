@@ -302,16 +302,17 @@ def _build_chunks_from_units(units: list[_Unit], filename: str) -> list[Chunk]:
             ))
         offset += len(u.text)
 
-    # Merge consecutive chunks while combined size fits within MAX_TOKENS.
-    # Prevents tiny chunks from section-level isolation (URL imports) and
-    # _pack trailing remainders, while preserving all content and heading
-    # markers in the merged text.
+    # Merge tiny chunk with neighbour (up to HARD_CAP) to prevent
+    # isolated <MIN_TOKENS fragments from URL section borders and
+    # _pack trailing remainders.  Content + heading markers preserved.
     if not chunks:
         return chunks
     merged = [chunks[0]]
     for c in chunks[1:]:
         prev = merged[-1]
-        if _ntok(prev.text) + _ntok(c.text) <= MAX_TOKENS:
+        prev_tok = _ntok(prev.text)
+        cur_tok = _ntok(c.text)
+        if (prev_tok < MIN_TOKENS or cur_tok < MIN_TOKENS) and prev_tok + cur_tok <= HARD_CAP_TOKENS:
             merged_text = prev.text + "\n\n" + c.text
             merged[-1] = Chunk(
                 text=merged_text,
