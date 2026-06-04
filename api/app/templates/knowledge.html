@@ -360,7 +360,7 @@ function buildTree(folders, parentId, fileCounts){
   children.forEach(function(f){
     var active = _selectedFolder === f.id ? ' active' : '';
     var cnt = fileCounts[f.id];
-    html += '<div class="kb-folder-item' + active + '" data-id="' + f.id + '" onclick="selectFolder(\'' + f.id + '\')">';
+    html += '<div class="kb-folder-item' + active + '" data-id="' + f.id + '" data-name="' + esc(f.name) + '" onclick="selectFolder(\'' + f.id + '\')">';
     html += '<span class="kb-folder-icon">📁</span>';
     html += esc(f.name);
     if(cnt !== undefined) html += '<span class="kb-folder-count">' + cnt + '</span>';
@@ -378,7 +378,7 @@ function selectFolder(id){
   document.querySelectorAll('.kb-folder-item').forEach(function(el){ el.classList.remove('active'); });
   var sel = document.querySelector('.kb-folder-item[data-id="' + id + '"]');
   if(sel) sel.classList.add('active');
-  var label = id ? (sel ? sel.textContent.trim() : 'Folder') : 'All files';
+  var label = id ? (sel ? sel.getAttribute('data-name') : 'Folder') : 'All files';
   document.getElementById('kbCurrentFolder').textContent = label;
   refresh();
 }
@@ -449,14 +449,14 @@ async function refresh() {
     tree.innerHTML = thtml;
 
     var rows = _selectedFolder ? allRows.filter(function(r){ return r.folder_id === _selectedFolder; }) : allRows;
-    var ready = allRows.filter(function(r){ return r.status === 'ready'; });
-    var totalSize = allRows.reduce(function(a, r){ return a + (r.size_bytes || 0); }, 0);
+    var ready = rows.filter(function(r){ return r.status === 'ready'; });
+    var totalSize = rows.reduce(function(a, r){ return a + (r.size_bytes || 0); }, 0);
     var totalChunks = ready.reduce(function(a, r){ return a + (r.chunks_total || 0); }, 0);
     var maxMB = 50;
     var pct = Math.min((totalSize / (maxMB * 1024 * 1024)) * 100, 100);
 
     var types = {};
-    allRows.forEach(function(r){ var ext = r.filename.split('.').pop().toUpperCase(); types[ext] = (types[ext] || 0) + 1; });
+    rows.forEach(function(r){ var ext = r.filename.split('.').pop().toUpperCase(); types[ext] = (types[ext] || 0) + 1; });
     var typeLabels = Object.keys(types).sort().map(function(t){ return types[t] + ' ' + t; });
 
     document.getElementById('sumFiles').textContent = ready.length + ' file' + (ready.length !== 1 ? 's' : '');
