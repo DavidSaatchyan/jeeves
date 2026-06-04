@@ -260,15 +260,16 @@
 
 /* ── Chunk modal ── */
 .chunk-modal{max-width:90vw;width:900px;max-height:85vh;display:flex;flex-direction:column}
-.chunk-modal-body{flex:1;overflow-y:auto;padding:4px 0;min-height:400px;scrollbar-width:thin}
-.chunk-modal-body::-webkit-scrollbar{width:5px}
+.chunk-modal-body{flex:1;overflow-y:auto;padding:4px 0;min-height:400px;scrollbar-width:thin;scrollbar-color:transparent transparent}
+.chunk-modal-body:hover{scrollbar-color:var(--border) transparent}
+.chunk-modal-body::-webkit-scrollbar{width:4px}
 .chunk-modal-body::-webkit-scrollbar-track{background:transparent}
-.chunk-modal-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-.chunk-modal-body::-webkit-scrollbar-thumb:hover{background:var(--muted2)}
+.chunk-modal-body::-webkit-scrollbar-thumb{background:transparent;border-radius:3px}
+.chunk-modal-body:hover::-webkit-scrollbar-thumb{background:var(--border)}
 .chunk-loading{display:flex;align-items:center;justify-content:center;height:100%;min-height:240px;gap:12px;font-size:14px;color:var(--muted)}
-.kb-chunk{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;font-size:12px;font-family:'SF Mono',ui-monospace,Consolas,monospace;line-height:1.5}
+.kb-chunk{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px;font-size:13.5px;line-height:1.7}
 .kb-chunk:last-child{margin-bottom:0}
-.kb-chunk-meta{font-size:10px;color:var(--muted2);margin-bottom:4px}
+.kb-chunk-meta{font-size:11px;color:var(--muted2);margin-bottom:6px}
 .kb-chunk-text{color:var(--text);white-space:pre-wrap;word-break:break-word}
 
 /* ── RAG Simulator ── */
@@ -504,10 +505,12 @@ async function refresh() {
 
       var nameHtml, sizeHtml;
       if(r._is_url){
-        nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',true);return false" title="' + esc(r._url) + '">' + esc(r.filename) + '</a></strong>';
+        var encName = encodeURIComponent(r.filename);
+        nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',true,\'' + encName + '\');return false" title="' + esc(r._url) + '">' + esc(r.filename) + '</a></strong>';
         sizeHtml = r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB';
       } else {
-        nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',false);return false">' + esc(r.filename) + '</a></strong>';
+        var encName = encodeURIComponent(r.filename);
+        nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',false,\'' + encName + '\');return false">' + esc(r.filename) + '</a></strong>';
         sizeHtml = r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB';
       }
 
@@ -657,9 +660,9 @@ async function syncCrmPrices(){
 // ════════════════════════════════════════════════
 // CHUNK VIEWER
 // ════════════════════════════════════════════════
-async function openChunkViewer(fileId, isUrl){
+async function openChunkViewer(fileId, isUrl, name){
   document.body.style.overflow = 'hidden';
-  document.getElementById('chunkModalTitle').textContent = 'Chunks';
+  document.getElementById('chunkModalTitle').textContent = name ? decodeURIComponent(name) : 'Chunks';
   document.getElementById('chunkModalBody').innerHTML = '<div class="chunk-loading"><span class="kb-spinner"></span>Loading chunks...</div>';
   document.getElementById('chunkModal').classList.add('show');
 
