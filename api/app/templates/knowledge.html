@@ -28,11 +28,12 @@
         All files
       </div>
     </div>
-    <div id="folderSkeleton" style="padding-top:4px">
-      <div class="skel-folder"><div class="skel-line w80 skeleton"></div></div>
-      <div class="skel-folder"><div class="skel-line w60 skeleton"></div></div>
+    <div id="folderSkeleton">
       <div class="skel-folder"><div class="skel-line w70 skeleton"></div></div>
-      <div class="skel-folder"><div class="skel-line w50 skeleton"></div></div>
+      <div class="skel-folder" style="padding-left:18px"><div class="skel-line w55 skeleton"></div></div>
+      <div class="skel-folder" style="padding-left:18px"><div class="skel-line w65 skeleton"></div></div>
+      <div class="skel-folder" style="padding-left:18px"><div class="skel-line w45 skeleton"></div></div>
+      <div class="skel-folder" style="padding-left:18px"><div class="skel-line w50 skeleton"></div></div>
     </div>
   </aside>
 
@@ -323,6 +324,7 @@ var _skelRows = '';
   }
 })();
 function showSkeletons(){
+  document.getElementById('folderTree').style.display='none';
   document.getElementById('folderSkeleton').style.display='';
   document.getElementById('summarySkeleton').style.display='grid';
   document.getElementById('tableSkeleton').innerHTML=_skelRows;
@@ -331,6 +333,7 @@ function showSkeletons(){
   document.getElementById('tbl').innerHTML='';
 }
 function hideSkeletons(){
+  document.getElementById('folderTree').style.display='';
   document.getElementById('folderSkeleton').style.display='none';
   document.getElementById('summarySkeleton').style.display='none';
   document.getElementById('tableSkeleton').style.display='none';
@@ -340,12 +343,14 @@ function hideSkeletons(){
 // FOLDER TREE
 // ════════════════════════════════════════════════
 async function loadFolders(){
+  document.getElementById('folderTree').style.display='none';
   document.getElementById('folderSkeleton').style.display='';
   var folders = await api('/knowledge/folders');
   var tree = document.getElementById('folderTree');
   var html = '<div class="kb-folder-item root' + (_selectedFolder === '' ? ' active' : '') + '" data-id="" onclick="selectFolder(\'\')"><span class="kb-folder-icon">📁</span> All files</div>';
   html += buildTree(folders, null, {});
   tree.innerHTML = html;
+  document.getElementById('folderTree').style.display='';
   document.getElementById('folderSkeleton').style.display='none';
 }
 function buildTree(folders, parentId, fileCounts){
