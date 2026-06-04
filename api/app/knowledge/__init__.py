@@ -180,6 +180,11 @@ async def simulate(
                 FileRecord.tenant_id == tenant.id,
             )).all():
                 existing.add(str(row[0]))
+            for row in db.execute(select(KnowledgeUrl.id).where(
+                KnowledgeUrl.id.in_(uuids),
+                KnowledgeUrl.tenant_id == tenant.id,
+            )).all():
+                existing.add(str(row[0]))
         results = [r for r in raw if not r.get("file_id") or r["file_id"] in existing]
         if len(results) < len(raw):
             logger.info("simulate: filtered %d orphan chunks from search results", len(raw) - len(results))
@@ -280,6 +285,8 @@ def cleanup_chroma(
     """
     active = set()
     for r in db.execute(select(FileRecord).where(FileRecord.tenant_id == tenant.id)).scalars().all():
+        active.add(str(r.id))
+    for r in db.execute(select(KnowledgeUrl).where(KnowledgeUrl.tenant_id == tenant.id)).scalars().all():
         active.add(str(r.id))
 
     p = rag.purge_orphans(tenant.id, active)
