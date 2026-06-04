@@ -286,9 +286,6 @@
 .sim-chunk-item:hover{background:rgba(255,255,255,0.03)}
 .sim-chunk-item + .sim-chunk-item{border-top:1px solid var(--border)}
 .sim-chunk-text{white-space:pre-wrap;word-break:break-word;color:var(--muted)}
-.sim-chunk-full{white-space:pre-wrap;word-break:break-word;color:var(--text)}
-.sim-chunk-toggle{font-size:11.5px;font-weight:600;color:var(--accent);margin-top:5px;display:inline-block;-webkit-user-select:none;user-select:none;letter-spacing:.2px}
-.sim-chunk-toggle:hover{opacity:.8}
 
 /* ── Drop zone ── */
 .drop{border:2px dashed var(--border);border-radius:var(--radius);padding:32px;text-align:center;cursor:pointer;transition:all .25s}
@@ -735,17 +732,13 @@ async function simulate(){
         html += '</div>';
         html += '<div class="sim-source-chunks">';
         chunks.forEach(function(s){
-          var isLong = s.chunk.length > 250;
-          var shortText = isLong ? s.chunk.slice(0, 250) + '…' : s.chunk;
-          html += '<div class="sim-chunk-item' + (isLong ? ' has-more' : '') + '">';
+          var shortText = s.chunk.length > 250 ? s.chunk.slice(0, 250) + '…' : s.chunk;
+          html += '<div class="sim-chunk-item">';
           if(s.section){
-            html += '<div style="font-size:11px;color:var(--muted2);margin-bottom:3px">§ ' + esc(s.section) + '</div>';
+            html += '<div style="font-size:11px;color:var(--muted2);margin-bottom:2px">§ ' + esc(s.section) + '</div>';
           }
+          html += '<div style="font-size:11px;color:var(--accent);margin-bottom:3px">Match ' + (s.score ? (s.score * 100).toFixed(0) : '?') + '%</div>';
           html += '<div class="sim-chunk-text">' + esc(shortText) + '</div>';
-          if(isLong){
-            html += '<div class="sim-chunk-full" style="display:none">' + esc(s.chunk) + '</div>';
-            html += '<span class="sim-chunk-toggle">Show more</span>';
-          }
           html += '</div>';
         });
         html += '</div></div>';
@@ -783,20 +776,6 @@ function toggleSources(header){
   arrow.textContent = expanded ? '▶' : '▼';
 }
 
-// Toggle chunk expand on "Show more" / "Show less" click
-document.getElementById('simResults').addEventListener('click', function(e){
-  var toggle = e.target.closest('.sim-chunk-toggle');
-  if(!toggle) return;
-  var item = toggle.closest('.sim-chunk-item');
-  if(!item) return;
-  var text = item.querySelector('.sim-chunk-text');
-  var full = item.querySelector('.sim-chunk-full');
-  if(!full) return;
-  var showing = full.style.display !== 'none';
-  full.style.display = showing ? 'none' : '';
-  text.style.display = showing ? '' : 'none';
-  toggle.textContent = showing ? 'Show more' : 'Show less';
-});
 
 document.getElementById('simQuery').addEventListener('keydown', function(e){ if(e.key === 'Enter') simulate(); });
 
