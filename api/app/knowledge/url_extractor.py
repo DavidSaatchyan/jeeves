@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from xml.etree import ElementTree
 
 import httpx
 
@@ -112,74 +111,89 @@ def _extract_html(html: str, url: str) -> tuple[str, str | None]:
 
 
 def _extract_html_structured(html: str, url: str) -> tuple[str, list[tuple[str, str]]]:
-    """Extract structured (heading, body) sections from HTML using trafilatura XML.
+    """Extract structured (heading, body) sections from HTML.
 
+    Strategy:
+    1. Use trafilatura HTML output to get clean main content (boilerplate removed).
+    2. Parse with bs4 to identify heading tags (h1-h6) and group content under them.
+    3. If trafilatura unavailable or fails, parse raw HTML with bs4 directly.
+
+    No heuristics — relies on semantic HTML heading structure.
     Returns (page_title, [(heading_text, body_text), ...]).
-    Falls back to a single unnamed section if XML parsing fails.
     """
+    page_title = ""
+    clean_html: str | None = None
+
+    # Step 1 — try trafilatura HTML output for clean main content
     try:
         import trafilatura
+        raw = trafilatura.extract(
+            html, url=url, output_format="html",
+            include_comments=False, include_tables=True, no_fallback=False,
+        )
+        if raw:
+            clean_html = raw
     except ImportError:
-        logger.warning("trafilatura not available, falling back to plain text extraction")
-        text = _extract_html_fallback(html)
-        return "", [("", text)]
+        pass
+    except Exception:
+        logger.warning("trafilatura HTML extract failed", exc_info=True)
 
-    raw = trafilatura.extract(
-        html, url=url, output_format="xml",
-        include_comments=False, include_tables=True, no_fallback=False,
-    )
-    if not raw:
-        text = _extract_html_fallback(html)
-        return "", [("", text)]
+    # Step 2 — parse with bs4
+    from bs4 import BeautifulSoup
 
-    page_title = ""
+    soup = BeautifulSoup(clean_html or html, "lxml")
+
+    if clean_html:
+        # Extract title from original HTML (trafilatura HTML output omits <title>)
+        try:
+            src = BeautifulSoup(html, "lxml")
+            t = src.find("title")
+            if t and t.get_text(strip=True):
+                page_title = t.get_text(strip=True)
+        except Exception:
+            pass
+    else:
+        # Fallback: manually strip boilerplate from raw HTML
+        for tag in soup(["script", "style", "nav", "footer", "header", "aside", "noscript"]):
+            tag.decompose()
+        t = soup.find("title")
+        if t and t.get_text(strip=True):
+            page_title = t.get_text(strip=True)
+
+    # Step 3 — walk content children grouping by heading tags
     sections: list[tuple[str, str]] = []
-    try:
-        root = ElementTree.fromstring(raw)
-        # TEI namespace
-        ns = "http://www.tei-c.org/ns/1.0"
-        body = root.find(f".//{{{ns}}}body")
-        if body is None:
-            text = _extract_html_fallback(html)
-            return "", [("", text)]
+    current_heading = ""
+    current_body_parts: list[str] = []
 
-        # Extract title from teiHeader
-        title_elem = root.find(f".//{{{ns}}}title")
-        if title_elem is not None:
-            page_title = "".join(title_elem.itertext()).strip()
+    def _flush() -> None:
+        nonlocal current_body_parts
+        body = "\n\n".join(p for p in current_body_parts if p.strip()).strip()
+        if body or current_heading:
+            sections.append((current_heading, body))
+        current_body_parts = []
 
-        for elem in body.iter():
-            tag = elem.tag.split("}", 1)[-1] if "}" in elem.tag else elem.tag
-            text = "".join(elem.itertext()).strip()
-            if not text:
-                continue
-            if tag == "head":
-                sections.append((text, ""))
-            else:
-                if sections:
-                    prev_heading, prev_body = sections[-1]
-                    sections[-1] = (prev_heading, (prev_body + "\n\n" + text).strip())
-                else:
-                    sections.append(("", text))
-    except Exception as exc:
-        logger.warning("trafilatura XML parse failed: %s, falling back", exc)
-        text = _extract_html_fallback(html)
-        return page_title, [("", text)]
+    body_el = soup.find("body") or soup.find("html") or soup
+    for el in body_el.find_all(["h1", "h2", "h3", "h4", "h5", "h6", "p", "li", "blockquote", "pre"]):
+        if el.name in ("h1", "h2", "h3", "h4", "h5", "h6"):
+            _flush()
+            current_heading = el.get_text(strip=True)
+        else:
+            text = el.get_text(strip=True)
+            if text:
+                current_body_parts.append(text)
+
+    _flush()
 
     if not sections:
-        text = _extract_html_fallback(html)
+        # No heading structure found — return single unnamed section
+        text = soup.get_text(separator="\n", strip=True)
+        if not text:
+            raise ValueError("No readable content found at this URL")
+        if len(text) > MAX_EXTRACTED_CHARS:
+            text = text[:MAX_EXTRACTED_CHARS]
         return page_title, [("", text)]
 
     return page_title, sections
-
-
-def _extract_html_fallback(html: str) -> str:
-    """Fallback: bs4 manual text extraction (no structure)."""
-    from bs4 import BeautifulSoup
-    soup = BeautifulSoup(html, "lxml")
-    for tag in soup(["script", "style", "nav", "footer", "header", "aside", "noscript"]):
-        tag.decompose()
-    return soup.get_text(separator="\n", strip=True)
 
 
 async def fetch_url_structured(url: str) -> tuple[str, list[tuple[str, str]]]:
