@@ -108,6 +108,7 @@ class KnowledgeUrl(Base, _TenantScoped, _CreatedAt):
     status = Column(String(16), default="pending", nullable=False)  # pending | processing | ready | failed
     folder_id = Column(UUID(as_uuid=True), ForeignKey("knowledge_folders.id", ondelete="SET NULL"), nullable=True, index=True)
     chunks_total = Column(Integer, default=0)
+    size_bytes = Column(Integer, default=0)
     error = Column(Text)
 
 

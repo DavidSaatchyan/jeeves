@@ -518,13 +518,14 @@ async def _background_index_url(tenant_id: uuid.UUID, url_id: uuid.UUID, url: st
         logging.info("[url-index] Fetching URL %s for url_id %s", url, url_id)
         text, resolved_title = await fetch_url(url or "")
         display_name = (title or resolved_title or url or "untitled").strip()
+        text_len = len(text.encode("utf-8"))
         n = await asyncio.to_thread(rag.index_text, tenant_id, url_id, text, display_name)
         logging.info("[url-index] Indexed %s chunks for url %s, updating DB", n, url_id)
         with engine.begin() as conn:
             from sqlalchemy import text
             conn.execute(
-                text("UPDATE knowledge_urls SET status='ready', chunks_total=:n, error=NULL WHERE id=:uid"),
-                {"uid": str(url_id), "n": n},
+                text("UPDATE knowledge_urls SET status='ready', chunks_total=:n, size_bytes=:sz, error=NULL WHERE id=:uid"),
+                {"uid": str(url_id), "n": n, "sz": text_len},
             )
         logging.info("[url-index] URL %s marked as ready", url_id)
     except Exception as e:
@@ -612,6 +613,7 @@ def list_urls(
             "status": r.status,
             "folder_id": str(r.folder_id) if r.folder_id else None,
             "chunks_total": r.chunks_total or 0,
+            "size_bytes": r.size_bytes or 0,
             "error": r.error,
             "created_at": _iso_utc(r.created_at),
         }

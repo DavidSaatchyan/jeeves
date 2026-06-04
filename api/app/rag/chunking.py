@@ -248,6 +248,43 @@ def _token_window(text: str) -> list[str]:
         return [text[i : i + win] for i in range(0, len(text), step)]
 
 
+# Text-based heading detection (for URL-extracted clean text) ---------------
+def _text_units(text: str, default_section: str = "") -> list[_Unit]:
+    """Split clean text into units at heading-like lines.
+
+    Detects:
+      - ALL CAPS headings (via _is_heading)
+      - Short lines starting with uppercase, not ending with sentence punctuation
+    """
+    lines = text.splitlines()
+    units: list[_Unit] = []
+    cur_section = default_section
+    buf: list[str] = []
+
+    def flush():
+        if buf:
+            body = "\n".join(buf).strip()
+            if body:
+                units.append(_Unit(text=body, section=cur_section))
+            buf.clear()
+
+    for line in lines:
+        stripped = line.strip()
+        if _is_heading(stripped):
+            flush()
+            cur_section = stripped
+        elif (stripped and len(stripped) < 80 and stripped[0].isupper()
+              and not stripped.endswith((".", ":", ";", ",", "!"))
+              and not stripped.startswith(("•", "-", "*", "→", "▪", "●", "○", "§", "|", "!", '"', "'", "(", "["))
+              and sum(1 for c in stripped if c.isalpha()) > 2):
+            flush()
+            cur_section = stripped
+        else:
+            buf.append(line)
+    flush()
+    return units or [_Unit(text=text, section=default_section)]
+
+
 # Public entry points -------------------------------------------------------
 def build_chunks(path: Path) -> list[Chunk]:
     """Open a file, extract units, split into Chunk objects with metadata."""
@@ -255,8 +292,8 @@ def build_chunks(path: Path) -> list[Chunk]:
 
 
 def build_chunks_from_text(text: str, filename: str, section: str = "") -> list[Chunk]:
-    """Split raw text into Chunk objects (same pipeline, no file on disk)."""
-    return _build_chunks_from_units([_Unit(text=text, section=section)], filename)
+    """Split raw text into Chunk objects — detects headings to match file behaviour."""
+    return _build_chunks_from_units(_text_units(text, section), filename)
 
 
 def _build_chunks_from_units(units: list[_Unit], filename: str) -> list[Chunk]:

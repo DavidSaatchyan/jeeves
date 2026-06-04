@@ -447,7 +447,7 @@ async function refresh() {
         id: u.id,
         filename: u.title || u.url,
         status: u.status,
-        size_bytes: 0,
+        size_bytes: u.size_bytes || 0,
         chunks_total: u.chunks_total || 0,
         created_at: u.created_at,
         folder_id: u.folder_id,
@@ -499,7 +499,7 @@ async function refresh() {
       var nameHtml, sizeHtml;
       if(r._is_url){
         nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',true);return false" title="' + esc(r._url) + '">' + esc(r.filename) + '</a></strong>';
-        sizeHtml = '<span class="muted" style="font-size:12px">URL</span>';
+        sizeHtml = r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB';
       } else {
         nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',false);return false">' + esc(r.filename) + '</a></strong>';
         sizeHtml = r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB';
@@ -564,7 +564,15 @@ async function clearAll(){
 // ════════════════════════════════════════════════
 // UPLOAD MODAL
 // ════════════════════════════════════════════════
-function showUploadModal(){ document.getElementById('uploadModal').classList.add('show'); }
+function showUploadModal(){
+  document.getElementById('uploadModal').classList.add('show');
+  document.getElementById('urlStatus').textContent = '';
+  document.getElementById('urlErr').textContent = '';
+  document.getElementById('uploadErr').textContent = '';
+  document.getElementById('uploadProg').innerHTML = '';
+  document.getElementById('syncStatus').textContent = '';
+  document.getElementById('syncErr').textContent = '';
+}
 function closeUploadModal(){ document.getElementById('uploadModal').classList.remove('show'); }
 document.getElementById('uploadModal').addEventListener('click', function(e){ if(e.target === this) closeUploadModal(); });
 
@@ -598,11 +606,10 @@ async function uploadFiles(files){
       var fd = new FormData(); fd.append('file', files[i]);
       if(_selectedFolder) fd.append('folder_id', _selectedFolder);
       await api('/knowledge/files', {method:'POST', body:fd});
-      prog.innerHTML = '<div class="kb-uprog"><span style="color:var(--green)">' + esc(name) + ' uploaded</span><div class="kb-uprog-bar"><div class="kb-uprog-fill" style="width:100%;background:var(--green)"></div></div></div>';
     } catch(e){ err.textContent = files[i].name + ': ' + e.message; }
   }
   await refresh();
-  setTimeout(function(){ prog.innerHTML = ''; }, 2500);
+  closeUploadModal();
 }
 
 // URL import
@@ -614,10 +621,10 @@ async function importUrl(){
   document.getElementById('urlStatus').textContent = 'Importing...';
   try {
     var resp = await api('/knowledge/urls', {method:'POST', body:{url:url, title:title || null, folder_id:_selectedFolder || null}});
-    document.getElementById('urlStatus').innerHTML = 'Imported: <a href="' + esc(url) + '" target="_blank">' + esc(resp.title || url) + '</a> (pending)';
     document.getElementById('urlInput').value = '';
     document.getElementById('urlTitle').value = '';
     await refresh();
+    closeUploadModal();
   } catch(e){ document.getElementById('urlErr').textContent = e.message; }
 }
 
@@ -656,7 +663,7 @@ async function openChunkViewer(fileId, isUrl){
     (chunkData.chunks || []).forEach(function(c){
       html += '<div class="kb-chunk">';
       html += '<div class="kb-chunk-meta">';
-      html += '#' + c.index + ' &middot; chars ' + (c.char_start || '?') + '\u2013' + (c.char_end || '?');
+      html += '#' + c.index + ' &middot; chars ' + (c.char_start != null ? c.char_start : '?') + '\u2013' + (c.char_end != null ? c.char_end : '?');
       if(c.section) html += ' &middot; Section: ' + esc(c.section);
       html += '</div>';
       html += '<div class="kb-chunk-text">' + esc(c.text) + '</div>';
