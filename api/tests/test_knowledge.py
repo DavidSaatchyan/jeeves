@@ -91,10 +91,10 @@ def mock_openai_chat():
 
 
 def _mock_db_execute_first(db: MagicMock, return_value):
-    """Set up mock_db.execute(...).scalars().order_by(...).first() = return_value."""
+    """Set up mock_db.execute(select(...).order_by(...)).scalars().first() = return_value."""
     result = MagicMock()
     scalars_result = MagicMock()
-    scalars_result.order_by.return_value.first.return_value = return_value
+    scalars_result.first.return_value = return_value
     result.scalars.return_value = scalars_result
     db.execute.return_value = result
 

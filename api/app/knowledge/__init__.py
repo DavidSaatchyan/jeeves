@@ -97,15 +97,13 @@ async def upload_file(
 
     data = await file.read()
     content_hash = file_sha256(data)
-    duplicate = (
-        db.execute(select(FileRecord).where(
+    duplicate = db.execute(
+        select(FileRecord).where(
             FileRecord.tenant_id == tenant.id,
             FileRecord.content_hash == content_hash,
             FileRecord.status != "failed",
-        )).scalars()
-        .order_by(FileRecord.created_at.desc())
-        .first()
-    )
+        ).order_by(FileRecord.created_at.desc())
+    ).scalars().first()
     if duplicate:
         return {
             "id": str(duplicate.id),
