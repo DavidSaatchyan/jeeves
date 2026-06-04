@@ -16,100 +16,124 @@ def _mock_trafilatura(extract_return: str | None = None):
     return patch.dict("sys.modules", {"trafilatura": m})
 
 
+class _MockStreamResponse:
+    """Plain class mimicking httpx streaming response — no AsyncMock issues."""
+
+    def __init__(self, status_code=200, headers=None, content=b""):
+        self.status_code = status_code
+        self.headers = headers or {"content-type": "text/html"}
+        self._content = content
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args):
+        pass
+
+    async def aiter_bytes(self):
+        yield self._content
+
+
+def _mock_client(stream_resp):
+    """Build a mock for httpx.AsyncClient that returns stream_resp from .stream()."""
+    client = MagicMock()
+    client.__aenter__.return_value = client
+    client.stream.return_value = stream_resp
+    return client
+
+
+@pytest.mark.asyncio
 class TestFetchUrl:
-    def test_empty_url_raises(self):
+    async def test_empty_url_raises(self):
         with pytest.raises(ValueError, match="url is required"):
-            fetch_url("")
+            await fetch_url("")
 
-    def test_non_200_raises(self):
-        with patch("app.knowledge.url_extractor.httpx.get") as mock_get:
-            mock_get.return_value = MagicMock(status_code=404, headers={"content-type": "text/html"})
+    async def test_404_raises(self):
+        resp = _MockStreamResponse(status_code=404)
+        with patch("httpx.AsyncClient", return_value=_mock_client(resp)):
             with pytest.raises(ValueError, match="404"):
-                fetch_url("https://example.com/missing")
+                await fetch_url("https://example.com/missing")
 
-    def test_401_raises_auth_error(self):
-        with patch("app.knowledge.url_extractor.httpx.get") as mock_get:
-            mock_get.return_value = MagicMock(status_code=401, headers={"content-type": "text/html"})
-            with pytest.raises(ValueError, match="Authentication required"):
-                fetch_url("https://example.com/private")
-
-    def test_timeout_raises(self):
-        with patch("app.knowledge.url_extractor.httpx.get") as mock_get:
-            mock_get.side_effect = httpx.TimeoutException("timed out")
+    async def test_timeout_raises(self):
+        client = MagicMock()
+        client.__aenter__.return_value = client
+        client.stream.side_effect = httpx.TimeoutException("timed out")
+        with patch("httpx.AsyncClient", return_value=client):
             with pytest.raises(ValueError, match="timed out"):
-                fetch_url("https://example.com/slow")
+                await fetch_url("https://example.com/slow")
 
-    def test_unsupported_content_type_raises(self):
-        with patch("app.knowledge.url_extractor.httpx.get") as mock_get:
-            mock_get.return_value = MagicMock(
-                status_code=200,
-                headers={"content-type": "application/json"},
-                text="{}",
-            )
+    async def test_request_error_raises(self):
+        client = MagicMock()
+        client.__aenter__.return_value = client
+        client.stream.side_effect = httpx.RequestError("connection reset")
+        with patch("httpx.AsyncClient", return_value=client):
+            with pytest.raises(ValueError, match="connection reset"):
+                await fetch_url("https://example.com/broken")
+
+    async def test_401_raises_auth_error(self):
+        resp = _MockStreamResponse(status_code=401)
+        with patch("httpx.AsyncClient", return_value=_mock_client(resp)):
+            with pytest.raises(ValueError, match="Authentication required"):
+                await fetch_url("https://example.com/private")
+
+    async def test_unsupported_content_type_raises(self):
+        resp = _MockStreamResponse(headers={"content-type": "application/json"})
+        with patch("httpx.AsyncClient", return_value=_mock_client(resp)):
             with pytest.raises(ValueError, match="Unsupported content type"):
-                fetch_url("https://example.com/data.json")
+                await fetch_url("https://example.com/data.json")
 
-    def test_html_extraction_via_trafilatura(self):
-        with patch("app.knowledge.url_extractor.httpx.get") as mock_get:
-            mock_get.return_value = MagicMock(
-                status_code=200,
-                headers={"content-type": "text/html"},
-                text="<html><body><p>Hello world</p></body></html>",
-            )
+    async def test_html_extraction_via_trafilatura(self):
+        resp = _MockStreamResponse(content=b"<html><body><p>Hello world</p></body></html>")
+        with patch("httpx.AsyncClient", return_value=_mock_client(resp)):
             with _mock_trafilatura("Hello world"):
-                text, title = fetch_url("https://example.com")
+                text, title = await fetch_url("https://example.com")
                 assert text == "Hello world"
 
-    def test_html_extraction_fallback_to_bs4(self):
-        with patch("app.knowledge.url_extractor.httpx.get") as mock_get:
-            mock_get.return_value = MagicMock(
-                status_code=200,
-                headers={"content-type": "text/html"},
-                text="<html><body><p>Fallback content</p></body></html>",
-            )
+    async def test_html_extraction_fallback_to_bs4(self):
+        resp = _MockStreamResponse(content=b"<html><body><p>Fallback content</p></body></html>")
+        with patch("httpx.AsyncClient", return_value=_mock_client(resp)):
             with _mock_trafilatura(None):
-                text, title = fetch_url("https://example.com")
+                text, title = await fetch_url("https://example.com")
                 assert "Fallback content" in text
 
-    def test_html_title_extraction(self):
+    async def test_html_title_extraction(self):
         html = "<html><head><title>My Page</title></head><body><p>Content</p></body></html>"
-        with patch("app.knowledge.url_extractor.httpx.get") as mock_get:
-            mock_get.return_value = MagicMock(
-                status_code=200,
-                headers={"content-type": "text/html"},
-                text=html,
-            )
+        resp = _MockStreamResponse(content=html.encode())
+        with patch("httpx.AsyncClient", return_value=_mock_client(resp)):
             with _mock_trafilatura("Content"):
-                _, title = fetch_url("https://example.com")
+                _, title = await fetch_url("https://example.com")
                 assert title == "My Page"
 
-    def test_plain_text_content_type(self):
-        with patch("app.knowledge.url_extractor.httpx.get") as mock_get:
-            mock_get.return_value = MagicMock(
-                status_code=200,
-                headers={"content-type": "text/plain"},
-                text="Just some plain text",
-            )
-            text, title = fetch_url("https://example.com/data.txt")
+    async def test_plain_text_content_type(self):
+        resp = _MockStreamResponse(
+            headers={"content-type": "text/plain"},
+            content=b"Just some plain text",
+        )
+        with patch("httpx.AsyncClient", return_value=_mock_client(resp)):
+            text, title = await fetch_url("https://example.com/data.txt")
             assert text == "Just some plain text"
             assert title is None
 
-    def test_pdf_url_via_content_type(self):
-        with patch("app.knowledge.url_extractor.httpx.get") as mock_get:
-            mock_get.return_value = MagicMock(
-                status_code=200,
-                headers={"content-type": "application/pdf"},
-                content=b"%PDF-1.4 junk",
-            )
+    async def test_pdf_url_via_content_type(self):
+        resp = _MockStreamResponse(
+            headers={"content-type": "application/pdf"},
+            content=b"%PDF-1.4 junk",
+        )
+        with patch("httpx.AsyncClient", return_value=_mock_client(resp)):
             with patch("pypdf.PdfReader") as mock_reader:
                 mock_page = MagicMock()
                 mock_page.extract_text.return_value = "PDF text content"
                 mock_reader.return_value.pages = [mock_page]
-                text, title = fetch_url("https://example.com/doc.pdf")
+                text, title = await fetch_url("https://example.com/doc.pdf")
                 assert "PDF text content" in text
 
-    def test_network_error_raises(self):
-        with patch("app.knowledge.url_extractor.httpx.get") as mock_get:
-            mock_get.side_effect = httpx.RequestError("connection failed")
-            with pytest.raises(ValueError, match="connection failed"):
-                fetch_url("https://example.com")
+    async def test_body_truncation(self):
+        from app.knowledge.url_extractor import MAX_BODY_BYTES
+        big = b"x" * (MAX_BODY_BYTES + 100_000)
+        resp = _MockStreamResponse(
+            headers={"content-type": "text/plain"},
+            content=big,
+        )
+        with patch("httpx.AsyncClient", return_value=_mock_client(resp)):
+            text, _ = await fetch_url("https://example.com/big")
+            assert len(text) <= MAX_BODY_BYTES

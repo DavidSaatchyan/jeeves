@@ -11,9 +11,10 @@ MAX_BODY_BYTES = 2_000_000
 MAX_EXTRACTED_CHARS = 500_000
 
 
-def fetch_url(url: str) -> tuple[str, str | None]:
+async def fetch_url(url: str) -> tuple[str, str | None]:
     """Fetch a URL and extract clean text + optional title.
 
+    Body is streamed with a MAX_BODY_BYTES cap to avoid OOM on large pages.
     Returns (cleaned_text, title_or_None).
     Raises ValueError on non-200, timeouts, unsupported content types.
     """
@@ -21,32 +22,42 @@ def fetch_url(url: str) -> tuple[str, str | None]:
         raise ValueError("url is required")
 
     try:
-        resp = httpx.get(url, timeout=30.0, follow_redirects=True)
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+            async with client.stream("GET", url) as resp:
+                status = resp.status_code
+                if status == 404:
+                    raise ValueError("Page not found (404)")
+                if status in (401, 403):
+                    raise ValueError("Authentication required (the page is behind a login)")
+                if status != 200:
+                    raise ValueError(f"HTTP {status}")
+
+                content_type = (resp.headers.get("content-type") or "").lower()
+                is_pdf = "application/pdf" in content_type or url.rstrip("/").lower().endswith(".pdf")
+                is_text = "text/plain" in content_type
+                is_html = "text/html" in content_type or "application/xhtml" in content_type
+
+                if not is_pdf and not is_text and not is_html:
+                    raise ValueError(f"Unsupported content type: {content_type}")
+
+                # Stream body with size cap
+                raw = b""
+                async for chunk in resp.aiter_bytes():
+                    raw += chunk
+                    if len(raw) > MAX_BODY_BYTES:
+                        break
+
     except httpx.TimeoutException:
         raise ValueError("Request timed out")
     except httpx.RequestError as e:
         raise ValueError(f"Request failed: {e}")
 
-    if resp.status_code == 404:
-        raise ValueError("Page not found (404)")
-    if resp.status_code in (401, 403):
-        raise ValueError("Authentication required (the page is behind a login)")
-    if resp.status_code != 200:
-        raise ValueError(f"HTTP {resp.status_code}")
-
-    content_type = (resp.headers.get("content-type") or "").lower()
-
-    if "application/pdf" in content_type or url.rstrip("/").lower().endswith(".pdf"):
-        return _extract_pdf_url(resp.content)
-
-    if "text/plain" in content_type:
-        text = resp.text[:MAX_EXTRACTED_CHARS]
-        return text, None
-
-    if "text/html" not in content_type and "application/xhtml" not in content_type:
-        raise ValueError(f"Unsupported content type: {content_type}")
-
-    return _extract_html(resp.text, url)
+    if is_pdf:
+        return _extract_pdf_url(raw)
+    body = raw.decode("utf-8", errors="replace")[:MAX_EXTRACTED_CHARS * 4]
+    if is_text:
+        return body[:MAX_EXTRACTED_CHARS], None
+    return _extract_html(body, url)
 
 
 def _extract_html(html: str, url: str) -> tuple[str, str | None]:

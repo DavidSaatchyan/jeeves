@@ -516,7 +516,7 @@ async def _background_index_url(tenant_id: uuid.UUID, url_id: uuid.UUID, url: st
     try:
         from .url_extractor import fetch_url
         logging.info("[url-index] Fetching URL %s for url_id %s", url, url_id)
-        text, resolved_title = await asyncio.to_thread(fetch_url, url or "")
+        text, resolved_title = await fetch_url(url or "")
         display_name = (title or resolved_title or url or "untitled").strip()
         n = await asyncio.to_thread(rag.index_text, tenant_id, url_id, text, display_name)
         logging.info("[url-index] Indexed %s chunks for url %s, updating DB", n, url_id)
@@ -563,6 +563,22 @@ async def import_url(
         )).scalar_one_or_none()
         if not folder:
             raise HTTPException(404, "folder not found")
+
+    existing = db.execute(
+        select(KnowledgeUrl).where(
+            KnowledgeUrl.tenant_id == tenant.id,
+            KnowledgeUrl.url == body.url,
+            KnowledgeUrl.status != "failed",
+        ).order_by(KnowledgeUrl.created_at.desc())
+    ).scalars().first()
+    if existing:
+        return {
+            "id": str(existing.id),
+            "url": existing.url,
+            "title": existing.title,
+            "status": existing.status,
+            "duplicate": True,
+        }
 
     rec = KnowledgeUrl(
         tenant_id=tenant.id,

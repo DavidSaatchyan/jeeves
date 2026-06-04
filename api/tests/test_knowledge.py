@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import io
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch, ANY
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
@@ -111,9 +111,13 @@ def _mock_db_execute_all(db: MagicMock, return_value):
 
 
 def _mock_db_execute_scalar_one_or_none(db: MagicMock, return_value):
-    """Set up mock_db.execute(...).scalar_one_or_none() = return_value."""
+    """Set up mock_db.execute(...).scalar_one_or_none() = return_value.
+    Also handles .scalars().first() chain used by dedup queries."""
     result = MagicMock()
     result.scalar_one_or_none.return_value = return_value
+    scalars_mock = MagicMock()
+    scalars_mock.first.return_value = return_value
+    result.scalars.return_value = scalars_mock
     db.execute.return_value = result
 
 
@@ -428,7 +432,7 @@ class TestBackgroundIndexUrl:
 
         mock_rag["index_text"].return_value = 7
 
-        with patch("app.knowledge.url_extractor.fetch_url") as mock_fetch:
+        with patch("app.knowledge.url_extractor.fetch_url", new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = ("Extracted text content", "Page Title")
             with patch("app.knowledge.engine.begin") as mock_begin:
                 mock_conn = MagicMock()
@@ -446,7 +450,7 @@ class TestBackgroundIndexUrl:
 
         mock_rag["index_text"].side_effect = ValueError("Index failed")
 
-        with patch("app.knowledge.url_extractor.fetch_url") as mock_fetch:
+        with patch("app.knowledge.url_extractor.fetch_url", new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = ("text", "Title")
             with patch("app.knowledge.engine.begin") as mock_begin:
                 mock_conn = MagicMock()
