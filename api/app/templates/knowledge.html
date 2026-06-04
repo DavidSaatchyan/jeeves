@@ -778,8 +778,8 @@ function toggleSources(header){
   var body = header.nextElementSibling;
   var arrow = header.querySelector('.sim-source-arrow');
   if(!body || !arrow) return;
-  var expanded = body.style.display !== 'none';
-  body.style.display = expanded ? 'none' : '';
+  var expanded = body.style.display === 'block';
+  body.style.display = expanded ? 'none' : 'block';
   arrow.textContent = expanded ? '▶' : '▼';
 }
 
