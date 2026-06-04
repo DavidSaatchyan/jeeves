@@ -74,7 +74,7 @@ async def _handle_kb_query(message: str, tenant_id: str, config: dict) -> str:
         "Answer the patient's question using only the knowledge base excerpts below.\n\n"
         "RULES:\n"
         "- Answer ONLY using text that appears verbatim in the context.\n"
-        "- For every claim, quote the exact source text in quotation marks and cite the document.\n"
+        "- Present the information naturally, without quotation marks, citations, or document references.\n"
         "- If the context does not contain the answer, say you don't have that information.\n"
         "- Do NOT combine separate facts into relationships unless the source text explicitly states that relationship.\n"
         "- Do NOT use your training knowledge to supplement or interpret the context."
