@@ -18,6 +18,7 @@ from ..rag.chunking import file_sha256, sanitize_filename
 from ..auth.deps import get_current_tenant
 from .. import rag
 from ..config import get_settings
+from ..core.ai.generator import naturalize_answer
 from ..db import get_db, engine
 from ..models import FileRecord, KnowledgeFolder, KnowledgeUrl, Tenant
 
@@ -232,6 +233,8 @@ async def simulate(
         max_tokens=1000,
     )
     answer = resp.choices[0].message.content or ""
+    if answer:
+        answer = await naturalize_answer(str(tenant.id), answer)
 
     sources = [
         {"chunk": r["text"][:500], "filename": r["filename"], "section": r["section"], "score": r["score"]}

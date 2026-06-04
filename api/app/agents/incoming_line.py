@@ -7,7 +7,8 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from ..core.ai import classify, simple_llm_response
+from ..core.ai import classify
+from ..core.ai.generator import naturalize_answer, simple_llm_response
 from ..core.booking import get_available_slots
 from ..integrations.resolver import get_crm_adapter_for_tenant
 from ..core.activity_log import log_activity
@@ -85,7 +86,8 @@ async def _handle_kb_query(message: str, tenant_id: str, config: dict) -> str:
         system_override="You are a medical clinic assistant. Extract information only from the context provided.",
         temperature=0.0,
     )
-    return result.get("response", "I don't have that information.")
+    cited = result.get("response", "I don't have that information.")
+    return await naturalize_answer(tenant_id, cited)
 
 
 async def _handle_appointment(

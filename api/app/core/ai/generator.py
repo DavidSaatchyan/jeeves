@@ -210,3 +210,40 @@ async def generate_campaign_message(
         f"Hi {patient_name}! We have some great health services available for you. "
         f"Would you like to learn more? Reply STOP to opt out."
     )
+
+
+async def naturalize_answer(tenant_id: str, cited_answer: str) -> str:
+    """Strip citation markers, quotes, and document references from an answer.
+
+    This is stage 2 of a two-stage RAG pipeline: first generate with citations
+    (for accuracy grounding), then naturalize for client presentation.
+    If the naturalization call fails, the original answer is returned unchanged.
+    """
+    if not cited_answer:
+        return cited_answer
+    try:
+        from openai import AsyncOpenAI
+
+        client = AsyncOpenAI(api_key=_settings.openai_api_key)
+        system_msg = "You are a text reformatter. Your only job is to remove citation-related formatting. Never change facts, content, or meaning."
+        user_msg = (
+            "Rewrite the answer below in a natural, conversational style.\n\n"
+            "Remove ALL of the following:\n"
+            "- Citation markers like [1], [2], [Document 1], [Document 2]\n"
+            "- Quotation marks that are used to quote or cite source documents\n"
+            "- References like \"according to Document 1\" or \"per Document 2\"\n\n"
+            "CRITICAL: Keep EVERY factual detail, number, date, and piece of information "
+            "exactly as stated. Do not add, remove, or change any facts or meaning.\n\n"
+            "Answer:\n" + cited_answer
+        )
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_msg}],
+            temperature=0.0,
+            max_tokens=1000,
+        )
+        cleaned = response.choices[0].message.content or ""
+        return cleaned.strip()
+    except Exception:
+        logger.warning("naturalize_answer failed, returning original", exc_info=True)
+        return cited_answer
