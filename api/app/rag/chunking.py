@@ -2,7 +2,7 @@
 
 Goals:
 - Token-aware length budgeting via tiktoken (not char/4 heuristic).
-- Structure-aware splitting: Markdown by heading hierarchy; PDF per page.
+- Structure-aware splitting: Markdown by heading hierarchy; PDF merged into one unit.
 - Rich per-chunk metadata: filename, section path, page, char offsets.
 - Deterministic chunk IDs so re-indexing is idempotent.
 """
@@ -80,10 +80,21 @@ def _extract_units(path: Path) -> list[_Unit]:
     if ext == ".pdf":
         from pypdf import PdfReader
         reader = PdfReader(str(path))
-        return [
-            _Unit(text=(page.extract_text() or ""), page=i + 1)
-            for i, page in enumerate(reader.pages)
-        ]
+        segments: list[_Unit] = []
+        for i, page in enumerate(reader.pages):
+            text = (page.extract_text() or "").strip()
+            if text:
+                segments.append(_Unit(text=text, page=i + 1))
+        if not segments:
+            return [_Unit(text="")]
+        if len(segments) == 1:
+            return segments
+        # Merge all pages into one unit — page boundaries are layout artifacts,
+        # not semantic chunk boundaries. Chunk at paragraph/sentence level.
+        merged_parts: list[str] = []
+        for seg in segments:
+            merged_parts.append(seg.text)
+        return [_Unit(text="\n\n".join(merged_parts))]
     raise ValueError(f"Unsupported file type: {ext}")
 
 
