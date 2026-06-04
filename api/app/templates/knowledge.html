@@ -408,7 +408,7 @@ async function saveFolder(){
   document.getElementById('folderErr').textContent = '';
   try {
     if(isRename){
-      await api('/knowledge/folders/' + document.getElementById('folderParentInput').value, {method:'PATCH', body:JSON.stringify({name:name}), headers:{'Content-Type':'application/json'}});
+      await api('/knowledge/folders/' + document.getElementById('folderParentInput').value, {method:'PATCH', body:{name:name}});
     } else {
       var parentVal = document.getElementById('folderParentInput').value || null;
       await api('/knowledge/folders', {method:'POST', body:{name:name, parent_id:parentVal}});
@@ -613,7 +613,7 @@ async function importUrl(){
   document.getElementById('urlErr').textContent = '';
   document.getElementById('urlStatus').textContent = 'Importing...';
   try {
-    var resp = await api('/knowledge/urls', {method:'POST', body:JSON.stringify({url:url, title:title || null, folder_id:_selectedFolder || null}), headers:{'Content-Type':'application/json'}});
+    var resp = await api('/knowledge/urls', {method:'POST', body:{url:url, title:title || null, folder_id:_selectedFolder || null}});
     document.getElementById('urlStatus').innerHTML = 'Imported: <a href="' + esc(url) + '" target="_blank">' + esc(resp.title || url) + '</a> (pending)';
     document.getElementById('urlInput').value = '';
     document.getElementById('urlTitle').value = '';
