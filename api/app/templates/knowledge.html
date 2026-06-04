@@ -242,7 +242,12 @@
 /* ── Table ── */
 .kb-table{width:100%;border-collapse:collapse}
 .kb-table th,.kb-table td{padding:10px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--border)}
-.col-name{width:auto}.col-status{width:100px}.col-size{width:80px;text-align:right}.col-chunks{width:80px;text-align:right}.col-date{width:100px}.col-folder{width:120px}.col-actions{width:60px}
+.col-name{width:auto}.col-status{width:100px;text-align:center}.col-size{width:80px;text-align:right}.col-chunks{width:80px;text-align:right}.col-date{width:115px;white-space:nowrap}.col-folder{width:130px}.col-actions{width:60px;text-align:center}
+.kb-table th.col-status,.kb-table td.col-status{text-align:center}
+.kb-table th.col-size,.kb-table td.col-size{text-align:right}
+.kb-table th.col-chunks,.kb-table td.col-chunks{text-align:right}
+.kb-table th.col-date,.kb-table td.col-date{white-space:nowrap}
+.kb-table th.col-actions,.kb-table td.col-actions{text-align:center}
 .kb-clear-all{color:var(--muted2)}.kb-clear-all:hover{color:var(--red)}
 .kb-proc{display:none;align-items:center;gap:10px;padding:14px 18px;font-size:13px;color:var(--muted);border-top:1px solid var(--border)}
 .del-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:5px;padding:5px;cursor:pointer}
