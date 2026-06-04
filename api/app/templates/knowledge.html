@@ -276,7 +276,8 @@
 .sim-results{margin-top:16px;display:flex;flex-direction:column;gap:16px;min-height:80px}
 .sim-a{font-size:15px;line-height:1.75;white-space:pre-wrap;color:var(--text);padding:16px 16px 16px 18px;border-left:2px solid var(--accent)}
 .sim-sources-header{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted2);padding:0 4px;margin-top:4px}
-.sim-source-count{font-size:10px;font-weight:600;color:var(--muted2);padding:1px 7px;border-radius:8px;line-height:1.7;border:1px solid var(--border)}
+.sim-source-count{font-size:10px;font-weight:700;color:var(--accent);background:rgba(99,102,241,0.1);padding:1px 7px;border-radius:8px;line-height:1.7}
+.sim-source-sub{font-size:10px;font-weight:500;color:var(--muted2)}
 .sim-source-group{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
 .sim-source-header{display:flex;align-items:center;gap:8px;padding:9px 12px;background:rgba(255,255,255,0.02);border-bottom:1px solid var(--border);font-size:12.5px;font-weight:600}
 .sim-source-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
@@ -710,9 +711,11 @@ async function simulate(){
       });
 
       var docCount = Object.keys(groups).length;
+      var chunkCount = sources.length;
       html += '<div class="sim-sources-header">';
       html += docCount === 1 ? 'Source' : 'Sources';
       html += '<span class="sim-source-count">' + docCount + '</span>';
+      html += '<span class="sim-source-sub">' + chunkCount + ' ' + (chunkCount === 1 ? 'excerpt' : 'excerpts') + '</span>';
       html += '</div>';
 
       Object.keys(groups).forEach(function(fname){
