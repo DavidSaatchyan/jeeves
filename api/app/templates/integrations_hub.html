@@ -9,7 +9,7 @@
   .hub-section { margin-bottom: 32px; }
   .hub-section-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
   .hub-section-title { font-size: 14px; font-weight: 600; color: var(--muted2); text-transform: uppercase; letter-spacing: .5px; }
-  .hub-section-count { font-size: 12px; color: var(--muted2); }
+
   .hub-section-divider { height: 1px; background: var(--border); margin-bottom: 16px; }
   .hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
   @keyframes cardEnter {
@@ -114,13 +114,12 @@
 </style>
 
 <h1>Integrations</h1>
-<p class="page-desc">Configure and manage all external services from one place</p>
+<p class="page-desc">Configure and manage all external services</p>
 
 <!-- CRM -->
 <div class="hub-section">
   <div class="hub-section-header">
-    <div class="hub-section-title">CRM</div>
-    <div class="hub-section-count" id="crmCount"></div>
+    <div class="hub-section-title">Practice management software</div>
   </div>
   <div class="hub-section-divider"></div>
   <div class="hub-grid" id="crmGrid"></div>
@@ -138,8 +137,7 @@
 <!-- Channels -->
 <div class="hub-section">
   <div class="hub-section-header">
-    <div class="hub-section-title">Channels</div>
-    <div class="hub-section-count" id="channelCount"></div>
+    <div class="hub-section-title">Communication platforms</div>
   </div>
   <div class="hub-section-divider"></div>
   <div class="hub-grid" id="channelGrid"></div>
@@ -157,8 +155,7 @@
 <!-- Widget -->
 <div class="hub-section">
   <div class="hub-section-header">
-    <div class="hub-section-title">Widget</div>
-    <div class="hub-section-count" id="widgetCount"></div>
+    <div class="hub-section-title">Other services</div>
   </div>
   <div class="hub-section-divider"></div>
   <div class="hub-grid" id="widgetGrid"></div>
@@ -375,10 +372,6 @@ async function loadIntegrations() {
     const widget = integrations.find(i => i.id === 'widget');
     const widgetList = widget ? [widget] : [];
 
-    document.getElementById('crmCount').textContent = crm.length + ' ' + (crm.length === 1 ? 'integration' : 'integrations');
-    document.getElementById('channelCount').textContent = channels.length + ' ' + (channels.length === 1 ? 'integration' : 'integrations');
-    document.getElementById('widgetCount').textContent = widgetList.length + ' ' + (widgetList.length === 1 ? 'integration' : 'integrations');
-
     renderGrid('crmGrid', crm, renderCrmCard);
     renderGrid('channelGrid', channels, renderChannelCard);
     renderGrid('widgetGrid', widgetList, renderWidgetCard);
@@ -456,10 +449,6 @@ function refreshCards() {
   const channels = _integrations.filter(i => i.category === 'channel' && i.id !== 'widget');
   const widget = _integrations.find(i => i.id === 'widget');
   const widgetList = widget ? [widget] : [];
-
-  document.getElementById('crmCount').textContent = crm.length + ' ' + (crm.length === 1 ? 'integration' : 'integrations');
-  document.getElementById('channelCount').textContent = channels.length + ' ' + (channels.length === 1 ? 'integration' : 'integrations');
-  document.getElementById('widgetCount').textContent = widgetList.length + ' ' + (widgetList.length === 1 ? 'integration' : 'integrations');
 
   renderGrid('crmGrid', crm, renderCrmCard);
   renderGrid('channelGrid', channels, renderChannelCard);
