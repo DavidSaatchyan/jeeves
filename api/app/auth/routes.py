@@ -7,7 +7,7 @@ from fastapi import Depends, HTTPException, Request, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..config import get_yaml_config
+from ..config import get_settings, get_yaml_config
 from ..db import get_db
 from ..models import TeamMember, Tenant
 from ..shared.rate_limit import check_rate_limit
@@ -54,7 +54,7 @@ async def register(body: RegisterIn, request: Request, response: Response, db: S
         httponly=True,
         secure=True,
         samesite="lax",
-        max_age=900,
+        max_age=get_settings().access_token_ttl_minutes * 60,
         path="/admin",
     )
 
@@ -100,7 +100,7 @@ async def login(body: LoginIn, request: Request, response: Response, db: Session
         httponly=True,
         secure=False,
         samesite="lax",
-        max_age=900,
+        max_age=get_settings().access_token_ttl_minutes * 60,
         path="/admin",
     )
 

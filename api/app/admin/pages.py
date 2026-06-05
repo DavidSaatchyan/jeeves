@@ -5,6 +5,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
 from ..auth.tokens import issue_tokens
+from ..config import get_settings
 from ..db import get_db
 from ..models import Tenant
 from .deps import _ctx, get_admin_tenant
@@ -47,7 +48,7 @@ async def admin_login(
             status_code=status.HTTP_302_FOUND,
         )
 
-    access, _ = issue_tokens(tenant.id)
+    access, refresh = issue_tokens(tenant.id)
     response = RedirectResponse(url="/admin", status_code=status.HTTP_302_FOUND)
     response.set_cookie(
         key=SESSION_COOKIE,
@@ -55,7 +56,15 @@ async def admin_login(
         httponly=True,
         secure=False,
         samesite="lax",
-        max_age=900,
+        max_age=get_settings().access_token_ttl_minutes * 60,
+        path="/admin",
+    )
+    response.set_cookie(
+        key="jeeves_refresh",
+        value=refresh,
+        httponly=False,
+        secure=False,
+        samesite="lax",
         path="/admin",
     )
     return response
@@ -65,6 +74,7 @@ async def admin_login(
 def admin_logout():
     response = RedirectResponse(url="/admin/login", status_code=status.HTTP_302_FOUND)
     response.delete_cookie(key=SESSION_COOKIE, path="/admin")
+    response.delete_cookie(key="jeeves_refresh", path="/admin")
     return response
 
 

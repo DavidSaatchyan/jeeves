@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     openai_api_key: str
     jwt_secret: str
     jwt_algorithm: str = "HS256"
-    access_token_ttl_minutes: int = 15
+    access_token_ttl_minutes: int = 60
     refresh_token_ttl_days: int = 30
     public_base_url: str = "http://localhost:8000"
     knowledge_dir: str = "/app/knowledge"
