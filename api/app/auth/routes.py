@@ -62,7 +62,7 @@ async def register(body: RegisterIn, request: Request, response: Response, db: S
 
 
 @router.post("/refresh", response_model=TokenOut)
-def refresh_tokens(body: RefreshIn, db: Session = Depends(get_db)):
+def refresh_tokens(body: RefreshIn, response: Response, db: Session = Depends(get_db)):
     payload = decode_token(body.refresh_token)
     if payload.get("kind") != "refresh":
         raise HTTPException(401, "Not a refresh token")
@@ -71,6 +71,15 @@ def refresh_tokens(body: RefreshIn, db: Session = Depends(get_db)):
     if not db.get(Tenant, tid):
         raise HTTPException(401, "Tenant not found")
     access, refresh = issue_tokens(tid)
+    response.set_cookie(
+        key=SESSION_COOKIE,
+        value=access,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=get_settings().access_token_ttl_minutes * 60,
+        path="/admin",
+    )
     return TokenOut(access_token=access, refresh_token=refresh)
 
 
