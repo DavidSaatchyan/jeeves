@@ -311,6 +311,8 @@ async function api(path, opts={}){
   return data;
 }
 function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function lockScroll(){ var sw=window.innerWidth-document.documentElement.clientWidth; document.body.style.overflow='hidden'; document.body.style.paddingRight=sw+'px'; }
+function unlockScroll(){ document.body.style.overflow=''; document.body.style.paddingRight=''; }
 if(!token() && !location.pathname.endsWith('/login')){ location.href='/admin/login'; }
 </script>
 <aside>

@@ -425,9 +425,10 @@ async function showFolderModal(parentId){
     } catch(e){}
   }
   document.getElementById('folderModal').classList.add('show');
+  lockScroll();
   document.getElementById('folderNameInput').focus();
 }
-function closeFolderModal(){ document.getElementById('folderModal').classList.remove('show'); }
+function closeFolderModal(){ unlockScroll(); document.getElementById('folderModal').classList.remove('show'); }
 document.getElementById('folderModal').addEventListener('click', function(e){ if(e.target === this) closeFolderModal(); });
 
 async function saveFolder(){
@@ -553,6 +554,62 @@ async function refresh() {
   } catch(e) { console.error('kb refresh error:', e); hideSkeletons(); }
 }
 
+async function refreshFileRows() {
+  try {
+    var data = await Promise.all([api('/knowledge/files'), api('/knowledge/urls')]);
+    var fileRows = data[0];
+    var urlRows = data[1];
+    var urlNormalized = (urlRows || []).map(function(u){
+      return { id: u.id, filename: u.title || u.url, status: u.status, size_bytes: u.size_bytes || 0, chunks_total: u.chunks_total || 0, created_at: u.created_at, folder_id: u.folder_id, _is_url: true, _url: u.url };
+    });
+    var allRows = fileRows.concat(urlNormalized);
+    var rows = _selectedFolder ? allRows.filter(function(r){ return r.folder_id === _selectedFolder; }) : allRows;
+    var ready = rows.filter(function(r){ return r.status === 'ready'; });
+    var totalSize = rows.reduce(function(a, r){ return a + (r.size_bytes || 0); }, 0);
+    var totalChunks = ready.reduce(function(a, r){ return a + (r.chunks_total || 0); }, 0);
+    var maxMB = 50;
+    var pct = Math.min((totalSize / (maxMB * 1024 * 1024)) * 100, 100);
+    var types = {};
+    rows.forEach(function(r){ if(r._is_url){ types['URL'] = (types['URL'] || 0) + 1; } else { var ext = r.filename.split('.').pop().toUpperCase(); types[ext] = (types[ext] || 0) + 1; } });
+    var typeLabels = Object.keys(types).sort().map(function(t){ return types[t] + ' ' + t; });
+    document.getElementById('sumFiles').textContent = ready.length + ' file' + (ready.length !== 1 ? 's' : '');
+    document.getElementById('sumTypes').textContent = typeLabels.length ? typeLabels.join(', ') : 'No files';
+    document.getElementById('sumSize').textContent = totalSize > 1048576 ? (totalSize/1048576).toFixed(1) + ' MB' : (totalSize/1024).toFixed(0) + ' KB';
+    document.getElementById('sizeBar').style.width = pct + '%';
+    document.getElementById('sumQuota').textContent = pct.toFixed(1) + '% of 50 MB';
+    document.getElementById('sumChunks').textContent = totalChunks;
+    document.getElementById('sumAvg').textContent = ready.length ? Math.round(totalChunks / ready.length) + ' avg/file' : '\u2014';
+    var hasFiles = allRows.length > 0;
+    document.getElementById('clearAllBtn').style.display = hasFiles ? '' : 'none';
+    var hasProcessing = allRows.some(function(r){ return r.status === 'processing' || r.status === 'pending'; });
+    document.getElementById('tbl').innerHTML = rows.map(function(r){
+      var cls = r.status === 'ready' ? 'ok' : (r.status === 'failed' ? 'err' : 'warn');
+      var label = r.status === 'processing' ? 'Processing' : r.status;
+      var fname = '\u2014';
+      var nameHtml, sizeHtml;
+      if(r._is_url){
+        var encName = encodeURIComponent(r.filename);
+        nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',true,\'' + encName + '\');return false" title="' + esc(r._url) + '">' + esc(r.filename) + '</a></strong>';
+        sizeHtml = r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB';
+      } else {
+        var encName = encodeURIComponent(r.filename);
+        nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',false,\'' + encName + '\');return false">' + esc(r.filename) + '</a></strong>';
+        sizeHtml = r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB';
+      }
+      return '<tr>'
+        + '<td>' + nameHtml + '</td>'
+        + '<td><span class="pill ' + cls + '">' + label + '</span></td>'
+        + '<td style="text-align:right">' + sizeHtml + '</td>'
+        + '<td style="text-align:right">' + (r.chunks_total || '\u2014') + '</td>'
+        + '<td>' + (r.created_at ? r.created_at.slice(0, 10) : '\u2014') + '</td>'
+        + '<td style="font-size:12px;color:var(--muted2)">' + esc(fname) + '</td>'
+        + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '" data-isurl="' + (r._is_url ? '1' : '0') + '">\u2715</button></td></tr>';
+    }).join('') || '<tr><td colspan="7" class="muted" style="text-align:center;padding:16px">No files in this folder.</td></tr>';
+    document.getElementById('procMsg').style.display = hasProcessing ? '' : 'none';
+    if(hasProcessing && !_pollingActive) pollProcessing();
+  } catch(e) { console.error('refreshFileRows error:', e); }
+}
+
 async function pollProcessing(){
   if(_pollingActive) return;
   _pollingActive = true;
@@ -562,7 +619,7 @@ async function pollProcessing(){
       var all = data[0].concat(data[1]);
       var pending = all.filter(function(r){ return r.status === 'processing' || r.status === 'pending'; });
       var pMsg = document.getElementById('procMsg');
-      if(!pending.length) { pMsg.style.display = 'none'; _pollingActive = false; await refresh(); return; }
+      if(!pending.length) { pMsg.style.display = 'none'; _pollingActive = false; await refreshFileRows(); return; }
       pMsg.style.display = '';
       await new Promise(function(r){ setTimeout(r, 2000); });
     }
@@ -578,7 +635,7 @@ async function del(btn){
   var shortName = name.length > 50 ? name.slice(0, 47) + '...' : name;
   showConfirm('Are you sure you want to delete "' + shortName + '"?', async function(){
     setConfirmLoading(true);
-    try{ await api(endpoint + id, {method:'DELETE'}); await refresh(); } catch(e){ alert('Error: ' + e.message); }
+    try{ await api(endpoint + id, {method:'DELETE'}); await refreshFileRows(); } catch(e){ alert('Error: ' + e.message); }
     closeConfirm(true);
   }, shortName || 'Confirm');
 }
@@ -588,7 +645,7 @@ async function clearAll(){
     try{
       var rows = await api('/knowledge/files');
       for(var i = 0; i < rows.length; i++){ await api('/knowledge/files/' + rows[i].id, {method:'DELETE'}); }
-      await refresh();
+      await refreshFileRows();
     } catch(e){ alert('Error: ' + e.message); }
     closeConfirm(true);
   }, 'All documents');
@@ -598,6 +655,7 @@ async function clearAll(){
 // UPLOAD MODAL
 // ════════════════════════════════════════════════
 function showUploadModal(){
+  lockScroll();
   document.getElementById('uploadModal').classList.add('show');
   document.getElementById('urlStatus').textContent = '';
   document.getElementById('urlErr').textContent = '';
@@ -606,7 +664,7 @@ function showUploadModal(){
   document.getElementById('syncStatus').textContent = '';
   document.getElementById('syncErr').textContent = '';
 }
-function closeUploadModal(){ document.getElementById('uploadModal').classList.remove('show'); }
+function closeUploadModal(){ unlockScroll(); document.getElementById('uploadModal').classList.remove('show'); }
 document.getElementById('uploadModal').addEventListener('click', function(e){ if(e.target === this) closeUploadModal(); });
 
 // Upload tab switching
@@ -641,7 +699,7 @@ async function uploadFiles(files){
       await api('/knowledge/files', {method:'POST', body:fd});
     } catch(e){ err.textContent = files[i].name + ': ' + e.message; }
   }
-  await refresh();
+  await refreshFileRows();
   closeUploadModal();
 }
 
@@ -656,7 +714,7 @@ async function importUrl(){
     var resp = await api('/knowledge/urls', {method:'POST', body:{url:url, title:title || null, folder_id:_selectedFolder || null}});
     document.getElementById('urlInput').value = '';
     document.getElementById('urlTitle').value = '';
-    await refresh();
+    await refreshFileRows();
     closeUploadModal();
   } catch(e){ document.getElementById('urlErr').textContent = e.message; }
 }
@@ -674,7 +732,7 @@ async function syncCrmPrices(){
     if(resp.errors && resp.errors.length){
       document.getElementById('syncErr').innerHTML = resp.errors.slice(0, 5).map(function(e){ return '<div>' + esc(e) + '</div>'; }).join('');
     }
-    await refresh();
+    await refreshFileRows();
   } catch(e){ document.getElementById('syncErr').textContent = e.message; }
   btn.disabled = false;
   btn.textContent = 'Sync now';
@@ -684,7 +742,7 @@ async function syncCrmPrices(){
 // CHUNK VIEWER
 // ════════════════════════════════════════════════
 async function openChunkViewer(fileId, isUrl, name){
-  document.body.style.overflow = 'hidden';
+  lockScroll();
   document.getElementById('chunkModalTitle').textContent = name ? decodeURIComponent(name) : 'Chunks';
   document.getElementById('chunkModalBody').innerHTML = '<div class="chunk-loading"><span class="kb-spinner"></span>Loading chunks...</div>';
   document.getElementById('chunkModal').classList.add('show');
@@ -708,7 +766,7 @@ async function openChunkViewer(fileId, isUrl, name){
 function closeChunkViewer(){
   document.getElementById('chunkModal').classList.remove('show');
   document.getElementById('chunkModalBody').innerHTML = '';
-  document.body.style.overflow = '';
+  unlockScroll();
 }
 
 // ════════════════════════════════════════════════
@@ -814,6 +872,7 @@ document.getElementById('simQuery').addEventListener('keydown', function(e){ if(
 // CONFIRM MODAL
 // ════════════════════════════════════════════════
 function showConfirm(msg, cb, title){
+  lockScroll();
   document.getElementById('confirmTitle').textContent = title || 'Confirm';
   document.getElementById('confirmMsg').textContent = msg;
   document.getElementById('confirmActions').style.display = '';
@@ -830,6 +889,7 @@ function setConfirmLoading(on){
 function closeConfirm(force){
   if(_confirmLoading && !force) return;
   _confirmLoading = false;
+  unlockScroll();
   document.getElementById('confirmModal').classList.remove('show');
   _confirmCb = null;
 }
