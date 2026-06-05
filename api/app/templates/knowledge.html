@@ -80,14 +80,14 @@
           <div class="skel-line skeleton w60" style="height:12px"></div>
           <div class="skel-line skeleton w30" style="height:20px"></div>
         </div>
-        <div class="skel-line skeleton w70" style="height:12px;margin-top:10px"></div>
+        <div class="skel-line skeleton w70" style="height:12px"></div>
       </div>
       <div class="skel-stat">
         <div class="skel-stat-header">
           <div class="skel-line skeleton w60" style="height:12px"></div>
           <div class="skel-line skeleton w40" style="height:20px"></div>
         </div>
-        <div class="skeleton" style="height:6px;border-radius:3px;margin:10px 0"></div>
+        <div class="skeleton" style="height:6px;border-radius:3px"></div>
         <div class="skel-line skeleton w50" style="height:12px"></div>
       </div>
       <div class="skel-stat">
@@ -95,7 +95,7 @@
           <div class="skel-line skeleton w70" style="height:12px"></div>
           <div class="skel-line skeleton w25" style="height:20px"></div>
         </div>
-        <div class="skel-line skeleton w60" style="height:12px;margin-top:10px"></div>
+        <div class="skel-line skeleton w60" style="height:12px"></div>
       </div>
     </div>
 
@@ -329,8 +329,9 @@
 .skel-row{display:grid;grid-template-columns:1fr 100px 80px 80px 115px 130px 60px;gap:0;padding:10px 14px;align-items:center}
 .skel-row .skel-line{margin:0;height:13px}
 .kb-table-skeleton{display:none;flex-direction:column}.kb-table-skeleton .skel-row{border-bottom:1px solid var(--border)}
-.skel-stat{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px}
-.skel-stat-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.skel-stat{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.skel-stat .skel-line{margin:0}
+.skel-stat-header{display:flex;justify-content:space-between;align-items:baseline}
 .skel-folder-item{display:flex;align-items:center;padding:6px 8px;height:13px;margin-bottom:4px}
 .skel-folder-item .skel-line{height:11px;margin:0}
 .skel-folder-item.root .skel-line{height:13px}
@@ -721,8 +722,6 @@ async function importUrl(){
   document.getElementById('urlStatus').textContent = 'Importing...';
   try {
     var resp = await api('/knowledge/urls', {method:'POST', body:{url:url, title:title, folder_id:_selectedFolder || null}});
-    document.getElementById('urlInput').value = '';
-    document.getElementById('urlTitle').value = '';
     await refreshFileRows();
     closeUploadModal();
   } catch(e){ document.getElementById('urlErr').textContent = e.message; }
