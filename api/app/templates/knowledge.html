@@ -29,12 +29,10 @@
       </div>
     </div>
     <div id="folderSkeleton">
-      <div class="skel-folder-item root"><div class="skel-line w70 skeleton" style="height:13px"></div></div>
-      <div class="skel-folder-children">
-        <div class="skel-folder-item"><div class="skel-line w55 skeleton"></div></div>
-        <div class="skel-folder-item"><div class="skel-line w65 skeleton"></div></div>
-        <div class="skel-folder-item"><div class="skel-line w45 skeleton"></div></div>
-      </div>
+      <div class="skel-folder-item root"><div class="skel-line w70 skeleton" style="height:13px;margin:0"></div></div>
+      <div class="skel-folder-item"><div class="skel-line w55 skeleton" style="height:11px;margin:0"></div></div>
+      <div class="skel-folder-item"><div class="skel-line w65 skeleton" style="height:11px;margin:0"></div></div>
+      <div class="skel-folder-item"><div class="skel-line w45 skeleton" style="height:11px;margin:0"></div></div>
     </div>
   </aside>
 
@@ -77,25 +75,25 @@
     <div id="summarySkeleton" class="kb-summary" style="display:none">
       <div class="skel-stat">
         <div class="skel-stat-header">
-          <div class="skel-line skeleton w60" style="height:12px"></div>
-          <div class="skel-line skeleton w30" style="height:20px"></div>
+          <div class="skel-line skeleton" style="height:16px;width:40%"></div>
+          <div class="skel-line skeleton" style="height:24px;width:25%"></div>
         </div>
-        <div class="skel-line skeleton w70" style="height:12px"></div>
+        <div class="skel-line skeleton" style="height:16px;width:60%"></div>
       </div>
       <div class="skel-stat">
         <div class="skel-stat-header">
-          <div class="skel-line skeleton w60" style="height:12px"></div>
-          <div class="skel-line skeleton w40" style="height:20px"></div>
+          <div class="skel-line skeleton" style="height:16px;width:50%"></div>
+          <div class="skel-line skeleton" style="height:24px;width:30%"></div>
         </div>
         <div class="skeleton" style="height:6px;border-radius:3px"></div>
-        <div class="skel-line skeleton w50" style="height:12px"></div>
+        <div class="skel-line skeleton" style="height:16px;width:45%"></div>
       </div>
       <div class="skel-stat">
         <div class="skel-stat-header">
-          <div class="skel-line skeleton w70" style="height:12px"></div>
-          <div class="skel-line skeleton w25" style="height:20px"></div>
+          <div class="skel-line skeleton" style="height:16px;width:55%"></div>
+          <div class="skel-line skeleton" style="height:24px;width:20%"></div>
         </div>
-        <div class="skel-line skeleton w60" style="height:12px"></div>
+        <div class="skel-line skeleton" style="height:16px;width:50%"></div>
       </div>
     </div>
 
@@ -326,13 +324,13 @@
 .skeleton{background:linear-gradient(90deg,var(--border) 25%,rgba(255,255,255,0.06) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.5s ease-in-out infinite;border-radius:5px}
 .skel-line{height:14px;margin-bottom:8px;width:100%}
 .skel-line.w60{width:60%}.skel-line.w40{width:40%}.skel-line.w80{width:80%}.skel-line.w30{width:30%}.skel-line.w25{width:25%}.skel-line.w50{width:50%}.skel-line.w70{width:70%}
-.skel-row{display:grid;grid-template-columns:1fr 100px 80px 80px 115px 130px 60px;gap:0;padding:10px 14px;align-items:center}
-.skel-row .skel-line{margin:0;height:13px}
-.kb-table-skeleton{display:none;flex-direction:column}.kb-table-skeleton .skel-row{border-bottom:1px solid var(--border)}
+.skel-tr .skel-line{margin:0;height:13px}
+.skel-tr td{padding:10px 14px;border-bottom:1px solid var(--border)}
+.kb-table-skeleton{display:none}
 .skel-stat{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;display:flex;flex-direction:column;gap:10px}
 .skel-stat .skel-line{margin:0}
-.skel-stat-header{display:flex;justify-content:space-between;align-items:baseline}
-.skel-folder-item{display:flex;align-items:center;padding:6px 8px;height:13px;margin-bottom:4px}
+.skel-stat-header{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.skel-folder-item{display:flex;align-items:center;padding:5px 8px}
 .skel-folder-item .skel-line{height:11px;margin:0}
 .skel-folder-item.root .skel-line{height:13px}
 .skel-folder-children{padding-left:18px}
@@ -353,23 +351,20 @@ function esc(v){ return String(v ?? '').replace(/[&<>"']/g, function(c){ return 
 var _skelRows = '';
 (function(){
   for(var i=0;i<6;i++){
-    _skelRows += '<div class="skel-row"><div class="skel-line w80 skeleton"></div><div class="skel-line w60 skeleton"></div><div class="skel-line w40 skeleton"></div><div class="skel-line w40 skeleton"></div><div class="skel-line w60 skeleton"></div><div class="skel-line w60 skeleton"></div><div style="width:20px"></div></div>';
+    _skelRows += '<tr class="skel-tr"><td><div class="skel-line w80 skeleton"></div></td><td><div class="skel-line w60 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w40 skeleton" style="margin-left:auto"></div></td><td><div class="skel-line w40 skeleton" style="margin-left:auto"></div></td><td><div class="skel-line w60 skeleton"></div></td><td><div class="skel-line w60 skeleton"></div></td><td><div style="width:20px;height:20px"></div></td></tr>';
   }
 })();
 function showSkeletons(){
   document.getElementById('folderTree').style.display='none';
   document.getElementById('folderSkeleton').style.display='';
   document.getElementById('summarySkeleton').style.display='grid';
-  document.getElementById('tableSkeleton').innerHTML=_skelRows;
-  document.getElementById('tableSkeleton').style.display='flex';
   document.getElementById('kbSummary').style.display='none';
-  document.getElementById('tbl').innerHTML='';
+  document.getElementById('tbl').innerHTML=_skelRows;
 }
 function hideSkeletons(){
   document.getElementById('folderTree').style.display='';
   document.getElementById('folderSkeleton').style.display='none';
   document.getElementById('summarySkeleton').style.display='none';
-  document.getElementById('tableSkeleton').style.display='none';
 }
 
 // ════════════════════════════════════════════════
