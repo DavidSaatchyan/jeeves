@@ -191,12 +191,14 @@
       <h2 id="confirmTitle">Confirm</h2>
     </div>
     <p id="confirmMsg" class="muted" style="margin-bottom:24px;font-size:14px"></p>
-    <div class="flex" style="gap:8px;justify-content:flex-end" id="confirmActions">
-      <button class="ghost sm" onclick="closeConfirm()">Cancel</button>
-      <button class="btn sm" id="confirmBtn">Delete</button>
-    </div>
-    <div id="confirmLoader" style="display:none;align-items:center;justify-content:center;gap:10px;padding:10px 0">
-      <span class="kb-spinner"></span><span class="muted" style="font-size:14px">Deleting...</span>
+    <div id="confirmActions" style="position:relative;min-height:36px">
+      <div id="confirmButtons" class="flex" style="gap:8px;justify-content:flex-end">
+        <button class="ghost sm" onclick="closeConfirm()">Cancel</button>
+        <button class="btn sm" id="confirmBtn">Delete</button>
+      </div>
+      <div id="confirmLoader" style="display:none;align-items:center;justify-content:center;gap:10px;position:absolute;inset:0">
+        <span class="kb-spinner"></span><span class="muted" style="font-size:14px">Deleting...</span>
+      </div>
     </div>
   </div>
 </div>
@@ -883,7 +885,7 @@ function showConfirm(msg, cb, title){
 }
 function setConfirmLoading(on){
   _confirmLoading = on;
-  document.getElementById('confirmActions').style.display = on ? 'none' : '';
+  document.getElementById('confirmButtons').style.display = on ? 'none' : '';
   document.getElementById('confirmLoader').style.display = on ? 'flex' : 'none';
 }
 function closeConfirm(force){
