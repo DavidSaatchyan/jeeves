@@ -229,6 +229,17 @@ def on_startup() -> None:
         seed_plans(db)
     finally:
         db.close()
+    from .core.scheduler import setup_scheduler
+    from .config import get_yaml_config
+    yaml_cfg = get_yaml_config()
+    interval = (yaml_cfg.get("crm_sync") or {}).get("poll_interval_minutes", 60)
+    setup_scheduler(interval_minutes=interval)
+
+
+@app.on_event("shutdown")
+def on_shutdown() -> None:
+    from .core.scheduler import shutdown_scheduler
+    shutdown_scheduler()
 
 
 @app.get("/health")

@@ -75,6 +75,16 @@ class PabauConnector(AbstractCrmConnector):
             return result
         return []
 
+    def get_billable_items(
+        self,
+        item_type: str | None = None,
+        updated_since: str | None = None,
+    ) -> list[dict[str, Any]]:
+        return self.get_services()
+
+    def get_businesses(self) -> list[dict[str, Any]]:
+        return []
+
     # Patients
 
     def get_patient(self, patient_id: str) -> dict[str, Any] | None:

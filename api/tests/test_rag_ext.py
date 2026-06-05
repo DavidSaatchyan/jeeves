@@ -423,3 +423,159 @@ class TestSearchWithWhereEdgeCases:
         rag.search(tenant_id, "test", where={}, threshold=0.99)
         call_kwargs = col.query.call_args[1]
         assert "where" not in call_kwargs  # empty dict is falsy, not passed
+
+
+# ── CRM Indexer ──────────────────────────────────────────────────────────────────────────
+
+
+class TestTextualizeService:
+    def test_minimal(self):
+        from app.rag.crm_indexer import _textualize_service
+        result = _textualize_service({"name": "Consult"})
+        assert "Service: Consult" in result
+        assert "Price:" not in result
+        assert "Duration:" not in result
+
+    def test_with_price_and_duration(self):
+        from app.rag.crm_indexer import _textualize_service
+        result = _textualize_service({"name": "Checkup", "price": 15000, "duration_in_minutes": 30})
+        assert "$150.00" in result
+        assert "30 minutes" in result
+
+    def test_with_all_fields(self):
+        from app.rag.crm_indexer import _textualize_service
+        s = {"name": "Standard", "price": 10000, "duration_in_minutes": 45, "category": "Consultation",
+             "description": "Full check", "telehealth_enabled": True, "item_code": "SC-001"}
+        result = _textualize_service(s)
+        assert "Telehealth: Yes" in result
+        assert "Code: SC-001" in result
+        assert "Category: Consultation" in result
+
+    def test_telehealth_disabled(self):
+        from app.rag.crm_indexer import _textualize_service
+        result = _textualize_service({"name": "X", "telehealth_enabled": False})
+        assert "Telehealth: No" in result
+
+
+class TestTextualizePractitioner:
+    def test_minimal(self):
+        from app.rag.crm_indexer import _textualize_practitioner
+        result = _textualize_practitioner({"display_name": "Dr. Smith"})
+        assert "Practitioner: Dr. Smith" in result
+        assert "Accepting new patients: Yes" in result
+
+    def test_with_all_fields(self):
+        from app.rag.crm_indexer import _textualize_practitioner
+        p = {"display_name": "Dr. Jane", "title": "Dr.", "designation": "Physiotherapist",
+             "description": "Sports medicine", "active": True}
+        result = _textualize_practitioner(p)
+        assert "Title: Dr." in result
+        assert "Specialty: Physiotherapist" in result
+        assert "Description: Sports medicine" in result
+        assert "Accepting new patients: Yes" in result
+
+    def test_inactive(self):
+        from app.rag.crm_indexer import _textualize_practitioner
+        result = _textualize_practitioner({"display_name": "X", "active": False})
+        assert "Accepting new patients: No" in result
+
+
+class TestTextualizeClinic:
+    def test_minimal(self):
+        from app.rag.crm_indexer import _textualize_clinic
+        result = _textualize_clinic({"business_name": "Sydney Physio"})
+        assert "Clinic: Sydney Physio" in result
+
+    def test_with_address(self):
+        from app.rag.crm_indexer import _textualize_clinic
+        c = {"business_name": "Clinic", "address": "123 Main St", "city": "Sydney", "state": "NSW",
+             "postcode": "2000", "country": "Australia", "phone": "+612", "email": "info@c.com"}
+        result = _textualize_clinic(c)
+        assert "Address: 123 Main St, Sydney, NSW, 2000, Australia" in result
+        assert "Phone: +612" in result
+        assert "Email: info@c.com" in result
+
+
+class TestIndexServices:
+    def test_empty_list(self, tenant_id, mock_chroma, mock_openai):
+        from app.rag.crm_indexer import index_services
+        col, _ = mock_chroma
+        result = index_services(tenant_id, [], "batch1")
+        assert result == 0
+        col.add.assert_not_called()
+
+    def test_index_single_service(self, tenant_id, mock_chroma, mock_openai):
+        from app.rag.crm_indexer import index_services
+        col, _ = mock_chroma
+        services = [{"name": "Consult", "id": "s1", "price": 15000}]
+        result = index_services(tenant_id, services, "batch1")
+        assert result == 1
+        col.add.assert_called_once()
+        meta = col.add.call_args[1]["metadatas"][0]
+        assert meta["type"] == "service"
+        assert meta["import_batch"] == "batch1"
+
+    def test_index_multiple(self, tenant_id, mock_chroma, mock_openai):
+        from app.rag.crm_indexer import index_services
+        col, _ = mock_chroma
+        services = [{"name": "A", "id": "a1"}, {"name": "B", "id": "b2"}]
+        result = index_services(tenant_id, services, "batch1")
+        assert result == 2
+        assert len(col.add.call_args[1]["ids"]) == 2
+
+
+class TestIndexPractitioners:
+    def test_empty(self, tenant_id, mock_chroma, mock_openai):
+        from app.rag.crm_indexer import index_practitioners
+        col, _ = mock_chroma
+        assert index_practitioners(tenant_id, [], "b1") == 0
+        col.add.assert_not_called()
+
+    def test_index_single(self, tenant_id, mock_chroma, mock_openai):
+        from app.rag.crm_indexer import index_practitioners
+        col, _ = mock_chroma
+        result = index_practitioners(tenant_id, [{"display_name": "Dr. X", "id": "p1"}], "b1")
+        assert result == 1
+        meta = col.add.call_args[1]["metadatas"][0]
+        assert meta["type"] == "practitioner"
+        assert meta["designation"] == ""
+
+
+class TestIndexClinic:
+    def test_none(self, tenant_id, mock_chroma, mock_openai):
+        from app.rag.crm_indexer import index_clinic
+        col, _ = mock_chroma
+        assert index_clinic(tenant_id, None, "b1") == 0
+        col.add.assert_not_called()
+
+    def test_index_single(self, tenant_id, mock_chroma, mock_openai):
+        from app.rag.crm_indexer import index_clinic
+        col, _ = mock_chroma
+        result = index_clinic(tenant_id, {"business_name": "My Clinic", "id": "c1"}, "b1")
+        assert result == 1
+        meta = col.add.call_args[1]["metadatas"][0]
+        assert meta["type"] == "clinic"
+        assert meta["name"] == "My Clinic"
+
+
+class TestDeleteByTypeAndBatch:
+    def test_deletes_matching_docs(self, tenant_id, mock_chroma):
+        from app.rag.crm_indexer import delete_by_type_and_batch
+        col, _ = mock_chroma
+        col.count.side_effect = [5, 0]
+        result = delete_by_type_and_batch(tenant_id, "service", "batch1")
+        assert result == 5
+
+    def test_no_match(self, tenant_id, mock_chroma):
+        from app.rag.crm_indexer import delete_by_type_and_batch
+        col, _ = mock_chroma
+        col.count.side_effect = [0, 0]
+        result = delete_by_type_and_batch(tenant_id, "service", "nonexistent")
+        assert result == 0
+
+    def test_exception_returns_zero(self, tenant_id, mock_chroma):
+        from app.rag.crm_indexer import delete_by_type_and_batch
+        col, _ = mock_chroma
+        col.delete.side_effect = Exception("fail")
+        result = delete_by_type_and_batch(tenant_id, "service", "b1")
+        assert result == 0

@@ -37,6 +37,10 @@ followup:
   satisfaction_survey_delay_days: 7
   escalate_on_negative_response: true
 
+crm_sync:
+  poll_interval_minutes: 60
+  enabled: true
+
 policies:
   retry:
     max_attempts: 3

@@ -64,6 +64,34 @@ class ClinikoConnector(AbstractCrmConnector):
         except httpx.RequestError as e:
             raise ConnectorError("cliniko", "request", str(e))
 
+    def _paginate_all(self, path: str, params: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+        """Fetch all pages of a Cliniko list endpoint, following links.next."""
+        all_items: list[dict[str, Any]] = []
+        params = dict(params or {})
+        params.setdefault("per_page", "100")
+        resource_key: str | None = None
+        while True:
+            resp = self._request("GET", path, params=params)
+            if not isinstance(resp, dict):
+                break
+            if resource_key is None:
+                for k in resp:
+                    if k != "links" and k != "total_entries":
+                        resource_key = k
+                        break
+            if resource_key:
+                all_items.extend(resp.get(resource_key, []))
+            links = resp.get("links", {})
+            next_url = links.get("next")
+            if not next_url:
+                break
+            from urllib.parse import urlparse, parse_qs
+            parsed = urlparse(next_url)
+            qs = parse_qs(parsed.query)
+            params = {k: v[0] if len(v) == 1 else v for k, v in qs.items()}
+            path = parsed.path
+        return all_items
+
     def _build_q(self, **filters: str) -> dict[str, list[str]]:
         params: dict[str, list[str]] = {}
         for field, value in filters.items():
@@ -92,14 +120,48 @@ class ClinikoConnector(AbstractCrmConnector):
     # Appointment Types
 
     def get_services(self) -> list[dict[str, Any]]:
-        return self.get_appointment_types()
+        return self.get_billable_items(item_type="Service")
 
-    def get_appointment_types(self) -> list[dict[str, Any]]:
+    def get_appointment_types(self, updated_since: str | None = None) -> list[dict[str, Any]]:
         """Fetch all appointment types from Cliniko."""
-        result = self._request("GET", "/appointment_types", params={"per_page": "100"})
-        if isinstance(result, dict):
-            return result.get("appointment_types", [])
-        return []
+        params: dict[str, Any] = {"per_page": "100"}
+        if updated_since:
+            params["q[]"] = f"updated_at:>{updated_since}"
+        return self._paginate_all("/appointment_types", params)
+
+    # Billable items (services with prices)
+
+    def get_billable_items(
+        self,
+        item_type: str | None = "Service",
+        updated_since: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Fetch billable items, optionally filtered by type and/or updated_since."""
+        params: dict[str, Any] = {"per_page": "100"}
+        q_filters: list[str] = []
+        if item_type:
+            q_filters.append(f"item_type:={item_type}")
+        if updated_since:
+            q_filters.append(f"updated_at:>{updated_since}")
+        if q_filters:
+            params["q[]"] = q_filters if len(q_filters) > 1 else q_filters[0]
+        return self._paginate_all("/billable_items", params)
+
+    def get_appointment_type_billable_items(
+        self,
+        appointment_type_id: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Fetch links between appointment types and billable items."""
+        params: dict[str, Any] = {"per_page": "100"}
+        if appointment_type_id:
+            params["q[]"] = f"appointment_type_id:={appointment_type_id}"
+        return self._paginate_all("/appointment_type_billable_items", params)
+
+    # Businesses (clinic info)
+
+    def get_businesses(self) -> list[dict[str, Any]]:
+        """Fetch all businesses (clinic info)."""
+        return self._paginate_all("/businesses")
 
     # Patients
 
@@ -235,6 +297,45 @@ class ClinikoConnector(AbstractCrmConnector):
         event_type = payload.get("event", "unknown")
         resource = payload.get("data", payload.get("resource", {}))
         return {"event": event_type, "resource": resource}
+
+
+def enrich_services_with_descriptions(
+    billable_items: list[dict[str, Any]],
+    appointment_types: list[dict[str, Any]],
+    links: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Merge AppointmentType description/duration into BillableItem via links.
+
+    For each billable_item, finds the linked appointment_type (if any)
+    and copies: description, duration_in_minutes, telehealth_enabled.
+    """
+    at_map: dict[str, dict[str, Any]] = {}
+    for at in appointment_types:
+        at_id = at.get("id")
+        if at_id:
+            at_map[str(at_id)] = at
+
+    bi_to_at: dict[str, str] = {}
+    for link in links:
+        bi_id = link.get("billable_item_id", {}).get("id")
+        at_id = link.get("appointment_type_id", {}).get("id")
+        if bi_id and at_id:
+            bi_to_at[str(bi_id)] = str(at_id)
+
+    enriched: list[dict[str, Any]] = []
+    for bi in billable_items:
+        item = dict(bi)
+        at_id = bi_to_at.get(str(bi.get("id", "")))
+        if at_id and at_id in at_map:
+            at = at_map[at_id]
+            if at.get("description"):
+                item.setdefault("description", at["description"])
+            if at.get("duration_in_minutes") is not None:
+                item.setdefault("duration_in_minutes", at["duration_in_minutes"])
+            if at.get("telehealth_enabled") is not None:
+                item.setdefault("telehealth_enabled", at["telehealth_enabled"])
+        enriched.append(item)
+    return enriched
 
 
 def _map_patient_to_cliniko(data: dict[str, Any]) -> dict[str, Any]:

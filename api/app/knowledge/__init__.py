@@ -22,10 +22,12 @@ from ..core.ai.generator import naturalize_answer
 from ..db import get_db, engine
 from ..models import FileRecord, KnowledgeFolder, KnowledgeUrl, Tenant
 from ..schemas import BatchUploadOut, BatchUploadResultItem
+from . import sync as _sync
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
+router.include_router(_sync.router, prefix="/sync")
 
 _settings = get_settings()
 
@@ -787,48 +789,4 @@ def delete_url(
     db.commit()
 
 
-# ── CRM price sync ────────────────────────────────────────────────────────────
-
-
-@router.post("/sync/prices")
-def sync_prices(
-    tenant: Tenant = Depends(get_current_tenant),
-    db: Session = Depends(get_db),
-):
-    try:
-        from ..integrations.resolver import get_crm_adapter_for_tenant
-        adapter = get_crm_adapter_for_tenant(tenant.id)
-        if not adapter:
-            raise HTTPException(400, "No CRM adapter configured for this tenant")
-
-        services = adapter.get_services()
-        if not services:
-            return {"imported": 0, "errors": []}
-
-        products = []
-        for s in services:
-            products.append({
-                "id": str(s.get("id", "")),
-                "name": s.get("name", "Unnamed"),
-                "description": s.get("description", ""),
-                "price": s.get("price", 0),
-                "category": s.get("category", ""),
-                "stock_status": "in_stock",
-            })
-
-        batch_id = f"crm-sync-{tenant.id}-{datetime.now(timezone.utc).isoformat()}"
-        imported = rag.index_products(tenant.id, products, batch_id=batch_id)
-        return {"imported": imported, "errors": [], "batch_id": batch_id}
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error("CRM sync failed: %s", e)
-        raise HTTPException(502, f"CRM sync failed: {e}") from e
-
-
-@router.get("/sync/status")
-def sync_status(
-    tenant: Tenant = Depends(get_current_tenant),
-):
-    return {"last_sync": None, "status": "idle"}
+# ── CRM sync is now in knowledge/sync.py (included via router.include_router) ──

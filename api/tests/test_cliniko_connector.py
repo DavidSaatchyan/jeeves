@@ -7,7 +7,7 @@ import httpx
 import pytest
 
 from app.integrations.exceptions import ConnectorAuthError, ConnectorError, ConnectorNotFoundError, ConnectorRateLimitError
-from app.integrations.cliniko import ClinikoConnector, _map_patient_to_cliniko
+from app.integrations.cliniko import ClinikoConnector, _map_patient_to_cliniko, enrich_services_with_descriptions
 
 
 def _make_connector(**overrides: str) -> ClinikoConnector:
@@ -332,6 +332,127 @@ class TestClinikoAppointmentTypes:
         with patch.object(c, "_request", return_value={}):
             result = c.get_appointment_types()
         assert result == []
+
+# ── Billable Items / Pagination ──────────────────────────────────────────────────────────
+
+
+class TestClinikoBillableItems:
+    def test_get_billable_items_returns_list(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={"billable_items": [{"id": 1, "name": "Consult", "price": 15000}]}) as mock:
+            result = c.get_billable_items(item_type="Service")
+        assert result == [{"id": 1, "name": "Consult", "price": 15000}]
+        assert "item_type:=Service" in str(mock.call_args)
+
+    def test_get_billable_items_with_updated_since(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={"billable_items": []}) as mock:
+            c.get_billable_items(item_type="Service", updated_since="2026-06-01T00:00:00Z")
+        assert "updated_at:>" in str(mock.call_args)
+
+    def test_get_billable_items_no_filter(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={"billable_items": [{"id": 1}]}) as mock:
+            c.get_billable_items(item_type=None)
+        assert "item_type:=" not in str(mock.call_args)
+
+    def test_get_billable_items_paginates(self):
+        c = _make_connector()
+        page1 = {"billable_items": [{"id": 1}], "links": {"next": "/v1/billable_items?page=2&per_page=100"}}
+        page2 = {"billable_items": [{"id": 2}], "links": {}}
+        with patch.object(c, "_request", side_effect=[page1, page2]) as mock:
+            result = c.get_billable_items(item_type="Service")
+        assert len(result) == 2
+        assert mock.call_count == 2
+
+    def test_get_billable_items_empty(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={}):
+            result = c.get_billable_items()
+        assert result == []
+
+
+class TestClinikoAppointmentTypeBillableItems:
+    def test_returns_links(self):
+        c = _make_connector()
+        links = {"appointment_type_billable_items": [{"billable_item_id": {"id": 1}, "appointment_type_id": {"id": 2}}]}
+        with patch.object(c, "_request", return_value=links):
+            result = c.get_appointment_type_billable_items()
+        assert len(result) == 1
+        assert result[0]["billable_item_id"]["id"] == 1
+
+    def test_filters_by_appointment_type(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={"appointment_type_billable_items": []}) as mock:
+            c.get_appointment_type_billable_items(appointment_type_id="at1")
+        assert "appointment_type_id:=at1" in str(mock.call_args)
+
+
+class TestClinikoBusinesses:
+    def test_get_businesses_returns_list(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={"businesses": [{"id": 1, "business_name": "Clinic"}]}):
+            result = c.get_businesses()
+        assert result == [{"id": 1, "business_name": "Clinic"}]
+
+    def test_get_businesses_empty(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={}):
+            result = c.get_businesses()
+        assert result == []
+
+
+class TestClinikoPaginateAll:
+    def test_single_page(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={"practitioners": [{"id": 1}]}):
+            result = c._paginate_all("/practitioners")
+        assert result == [{"id": 1}]
+
+    def test_multiple_pages(self):
+        c = _make_connector()
+        page1 = {"practitioners": [{"id": 1}], "links": {"next": "/v1/practitioners?page=2"}}
+        page2 = {"practitioners": [{"id": 2}], "links": {}}
+        with patch.object(c, "_request", side_effect=[page1, page2]):
+            result = c._paginate_all("/practitioners")
+        assert result == [{"id": 1}, {"id": 2}]
+
+    def test_no_resource_key_in_response(self):
+        c = _make_connector()
+        with patch.object(c, "_request", return_value={"links": {}}):
+            result = c._paginate_all("/unknown")
+        assert result == []
+
+
+class TestEnrichServices:
+    def test_merges_description_from_appointment_type(self):
+        billable = [{"id": 1, "name": "Consult", "price": 15000}]
+        app_types = [{"id": 10, "description": "A comprehensive health check", "duration_in_minutes": 30, "telehealth_enabled": True}]
+        links = [{"billable_item_id": {"id": 1}, "appointment_type_id": {"id": 10}}]
+        result = enrich_services_with_descriptions(billable, app_types, links)
+        assert result[0]["description"] == "A comprehensive health check"
+        assert result[0]["duration_in_minutes"] == 30
+        assert result[0]["telehealth_enabled"] is True
+
+    def test_skips_unlinked_items(self):
+        billable = [{"id": 1, "name": "Consult"}, {"id": 2, "name": "XRay"}]
+        app_types = [{"id": 10, "description": "Checkup"}]
+        links = [{"billable_item_id": {"id": 1}, "appointment_type_id": {"id": 10}}]
+        result = enrich_services_with_descriptions(billable, app_types, links)
+        assert result[0].get("description") == "Checkup"
+        assert result[1].get("description") is None
+
+    def test_empty_links(self):
+        billable = [{"id": 1, "name": "Consult"}]
+        result = enrich_services_with_descriptions(billable, [], [])
+        assert result == billable
+
+    def test_no_matching_appointment_type(self):
+        billable = [{"id": 1, "name": "Consult"}]
+        links = [{"billable_item_id": {"id": 1}, "appointment_type_id": {"id": 99}}]
+        result = enrich_services_with_descriptions(billable, [], links)
+        assert result[0].get("description") is None
+
 
 # ── Appointment creation with types ──────────────────────────────────────────────────────
 

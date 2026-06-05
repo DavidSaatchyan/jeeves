@@ -43,7 +43,7 @@
       <span id="kbCurrentFolder" class="kb-current-folder">All files</span>
       <div class="kb-toolbar-actions">
         <button class="btn sm" onclick="showUploadModal()">+ Upload</button>
-        
+        <span id="crmBadge" class="crm-badge" style="display:none" onclick="showUploadModal();setTimeout(function(){document.querySelector('.ch-tab[data-utab=\"crm\"]').click();},50)"></span>
       </div>
     </div>
 
@@ -124,7 +124,7 @@
     <div class="ch-tabs" style="margin-bottom:16px">
       <button class="ch-tab active" data-utab="file">File</button>
       <button class="ch-tab" data-utab="url">Import URL</button>
-      <button class="ch-tab" data-utab="crm">Sync CRM prices</button>
+      <button class="ch-tab" data-utab="crm">Sync from CRM</button>
     </div>
 
     <!-- Tab panels (fixed-height container — no jumping) -->
@@ -153,13 +153,65 @@
       </div>
 
       <div class="ch-panel" id="upanel-crm">
-        <p class="muted" style="font-size:14px;margin-bottom:12px">
-          Sync service prices from your connected CRM (Cliniko / Pabau) into the memory system.
-          Products with updated prices will be re-indexed.
-        </p>
-        <button class="btn sm" onclick="syncCrmPrices()" id="syncBtn">Sync now</button>
-        <div id="syncStatus" class="muted mt-12" style="font-size:13px"></div>
-        <div class="err-msg" id="syncErr"></div>
+        <div class="crm-header">
+          <div>
+            <strong style="font-size:15px">Sync from CRM</strong>
+            <span class="muted" style="font-size:13px;margin-left:8px" id="crmProvider"></span>
+          </div>
+          <span class="muted" id="crmLastSync">Last sync: —</span>
+        </div>
+
+        <div id="crmNoCrm" style="display:none;padding:20px;text-align:center;border:1px dashed var(--border);border-radius:var(--radius);margin-bottom:12px">
+          <p class="muted" style="margin-bottom:12px">No CRM connected. Connect a CRM first in Integrations.</p>
+          <a href="/integrations" class="btn sm">Go to Integrations</a>
+        </div>
+
+        <div id="crmSections">
+          <div class="crm-section" id="crmSec-services">
+            <div class="crm-section-header">
+              <span class="crm-section-icon" id="crmIcon-services"><span class="dot">●</span></span>
+              <span class="crm-section-title">Services</span>
+              <span class="crm-section-count" id="crmCount-services">—</span>
+            </div>
+            <div class="crm-section-detail" id="crmDetail-services"></div>
+            <div class="crm-section-footer">
+              <span class="crm-timestamp" id="crmTs-services">Not synced</span>
+              <button class="ghost sm crm-sync-btn" onclick="syncCrm(['services'])" id="crmBtn-services" disabled>⟳ Sync</button>
+            </div>
+          </div>
+
+          <div class="crm-section" id="crmSec-practitioners">
+            <div class="crm-section-header">
+              <span class="crm-section-icon" id="crmIcon-practitioners"><span class="dot">●</span></span>
+              <span class="crm-section-title">Practitioners</span>
+              <span class="crm-section-count" id="crmCount-practitioners">—</span>
+            </div>
+            <div class="crm-section-detail" id="crmDetail-practitioners"></div>
+            <div class="crm-section-footer">
+              <span class="crm-timestamp" id="crmTs-practitioners">Not synced</span>
+              <button class="ghost sm crm-sync-btn" onclick="syncCrm(['practitioners'])" id="crmBtn-practitioners" disabled>⟳ Sync</button>
+            </div>
+          </div>
+
+          <div class="crm-section" id="crmSec-clinic">
+            <div class="crm-section-header">
+              <span class="crm-section-icon" id="crmIcon-clinic"><span class="dot">●</span></span>
+              <span class="crm-section-title">Clinic</span>
+              <span class="crm-section-count" id="crmCount-clinic">—</span>
+            </div>
+            <div class="crm-section-detail" id="crmDetail-clinic"></div>
+            <div class="crm-section-footer">
+              <span class="crm-timestamp" id="crmTs-clinic">Not synced</span>
+              <button class="ghost sm crm-sync-btn" onclick="syncCrm(['clinic'])" id="crmBtn-clinic" disabled>⟳ Sync</button>
+            </div>
+          </div>
+
+          <div class="mt-12">
+            <button class="btn sm" onclick="syncCrm(null)" id="crmSyncAllBtn" disabled>⟳ Sync all data</button>
+          </div>
+
+          <div id="crmGlobalStatus" style="display:none"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -335,6 +387,32 @@
 .skel-folder-item.root .skel-line{height:13px}
 .skel-folder-children{padding-left:18px}
 #confirmTitle,#confirmMsg{word-break:break-word;overflow-wrap:break-word}
+
+/* ── CRM sync panel ── */
+.crm-section{border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;transition:border-color .2s}
+.crm-section:hover{border-color:var(--border-bright)}
+.crm-section-header{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.crm-section-icon{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.crm-section-icon .crm-spinner{width:16px;height:16px;border-width:2px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:kb-spin .6s linear infinite;display:inline-block}
+.crm-section-icon .crm-check{color:var(--green);font-size:16px;font-weight:700}
+.crm-section-icon .crm-cross{color:var(--red);font-size:16px;font-weight:700}
+.crm-section-icon .crm-dot{color:var(--muted2);font-size:16px}
+.crm-section-title{font-size:14px;font-weight:700;flex:1}
+.crm-section-count{font-size:13px;color:var(--muted)}
+.crm-section-detail{font-size:12px;color:var(--muted2);margin:2px 0 0 24px;line-height:1.5}
+.crm-section-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.crm-timestamp{font-size:11px;color:var(--muted2)}
+.crm-sync-btn{font-size:12px;padding:4px 12px}
+.crm-global-status{margin-top:16px;padding:10px 14px;border-radius:var(--radius);font-size:13px;display:flex;align-items:center;gap:8px}
+.crm-global-status.crm-ok{background:rgba(34,197,94,0.08);color:var(--green)}
+.crm-global-status.crm-err{background:rgba(248,113,113,0.08);color:var(--red)}
+.crm-global-status.crm-loading{background:rgba(99,102,241,0.08);color:var(--accent)}
+.crm-global-status.crm-partial{background:rgba(234,179,8,0.08);color:#eab308}
+.crm-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:6px}
+.crm-header .muted{font-size:13px}
+.crm-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted2);cursor:pointer;padding:3px 8px;border-radius:4px;transition:background .12s;margin-left:8px}
+.crm-badge:hover{background:rgba(255,255,255,0.04)}
+.crm-badge-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
 </style>
 <script>
 // ════════════════════════════════════════════════
@@ -662,8 +740,8 @@ function showUploadModal(){
   document.getElementById('urlErr').textContent = '';
   document.getElementById('uploadErr').textContent = '';
   document.getElementById('uploadProg').innerHTML = '';
-  document.getElementById('syncStatus').textContent = '';
-  document.getElementById('syncErr').textContent = '';
+  document.getElementById('crmGlobalStatus').style.display = 'none';
+  document.getElementById('crmGlobalStatus').className = 'crm-global-status';
 }
 function closeUploadModal(){ unlockScroll(); document.getElementById('uploadModal').classList.remove('show'); }
 document.getElementById('uploadModal').addEventListener('click', function(e){ if(e.target === this) closeUploadModal(); });
@@ -677,6 +755,7 @@ document.querySelectorAll('.ch-tabs[style] .ch-tab, #uploadModal .ch-tab').forEa
     document.querySelectorAll('#uploadModal .ch-panel').forEach(function(p){ p.classList.remove('active'); });
     tab.classList.add('active');
     document.getElementById('upanel-' + tab.getAttribute('data-utab')).classList.add('active');
+    if(tab.getAttribute('data-utab') === 'crm') loadCrmStatus();
   });
 });
 
@@ -723,22 +802,136 @@ async function importUrl(){
 }
 
 // CRM sync
-async function syncCrmPrices(){
-  var btn = document.getElementById('syncBtn');
-  btn.disabled = true;
-  btn.textContent = 'Syncing...';
-  document.getElementById('syncErr').textContent = '';
-  document.getElementById('syncStatus').textContent = '';
+var _crmSyncing = false;
+var _crmStatus = null;
+
+function _timeAgo(iso){
+  if(!iso) return null;
+  var diff = Date.now() - new Date(iso + (iso.endsWith('Z')?'':'Z')).getTime();
+  var mins = Math.floor(diff / 60000);
+  if(mins < 1) return 'just now';
+  if(mins < 60) return mins + 'm ago';
+  var hrs = Math.floor(mins / 60);
+  if(hrs < 24) return hrs + 'h ago';
+  return new Date(iso).toLocaleDateString();
+}
+
+function _setCrmIcon(type, state){
+  var el = document.getElementById('crmIcon-' + type);
+  if(state === 'loading') el.innerHTML = '<span class="crm-spinner"></span>';
+  else if(state === 'success') el.innerHTML = '<span class="crm-check">✓</span>';
+  else if(state === 'error') el.innerHTML = '<span class="crm-cross">✗</span>';
+  else el.innerHTML = '<span class="crm-dot">●</span>';
+}
+
+function _disableCrmBtns(disabled){
+  document.getElementById('crmSyncAllBtn').disabled = disabled;
+  ['services','practitioners','clinic'].forEach(function(t){
+    document.getElementById('crmBtn-' + t).disabled = disabled;
+  });
+}
+
+function updateCrmGlobalStatus(state, message){
+  var el = document.getElementById('crmGlobalStatus');
+  if(!message){ el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  el.className = 'crm-global-status crm-' + state;
+  el.innerHTML = '<span>' + message + '</span>';
+}
+
+function renderCrmSection(type, data, state){
+  var labels = {services:'Services', practitioners:'Practitioners', clinic:'Clinic'};
+  var detail = data && data.detail ? data.detail : '';
+  document.getElementById('crmCount-' + type).textContent = data && data.count != null ? data.count + ' ' + labels[type].toLowerCase() : '—';
+  document.getElementById('crmDetail-' + type).textContent = detail;
+  document.getElementById('crmTs-' + type).textContent = data && data.last_sync ? 'Last synced: ' + (_timeAgo(data.last_sync) || data.last_sync) : 'Not synced';
+  _setCrmIcon(type, state || 'idle');
+}
+
+async function loadCrmStatus(){
   try {
-    var resp = await api('/knowledge/sync/prices', {method:'POST'});
-    document.getElementById('syncStatus').textContent = 'Synced ' + (resp.imported || 0) + ' products';
-    if(resp.errors && resp.errors.length){
-      document.getElementById('syncErr').innerHTML = resp.errors.slice(0, 5).map(function(e){ return '<div>' + esc(e) + '</div>'; }).join('');
+    document.getElementById('crmNoCrm').style.display = 'none';
+    document.getElementById('crmSections').style.display = '';
+    _disableCrmBtns(true);
+    var resp = await api('/knowledge/sync/crm/status');
+    _crmStatus = resp;
+    document.getElementById('crmProvider').textContent = resp.crm_provider ? '(' + resp.crm_provider + ')' : '';
+
+    if(!resp.crm_provider){
+      document.getElementById('crmNoCrm').style.display = '';
+      document.getElementById('crmSections').style.display = 'none';
+      return;
     }
+
+    var lastSync = resp.last_sync_at;
+    document.getElementById('crmLastSync').textContent = lastSync ? 'Last sync: ' + (_timeAgo(lastSync) || lastSync) : 'Last sync: —';
+
+    ['services','practitioners','clinic'].forEach(function(t){
+      var s = resp[t] || {count:0, last_sync:null};
+      renderCrmSection(t, s, s.last_sync ? 'idle' : 'idle');
+    });
+
+    _disableCrmBtns(false);
+
+    // Update badge
+    var badge = document.getElementById('crmBadge');
+    if(lastSync){
+      var ago = _timeAgo(lastSync);
+      badge.style.display = 'inline-flex';
+      var allOk = ['services','practitioners','clinic'].every(function(t){ return (resp[t]||{}).last_sync; });
+      badge.innerHTML = '<span class="crm-badge-dot" style="background:' + (allOk ? 'var(--green)' : 'var(--muted2)') + '"></span> Synced ' + ago;
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch(e){
+    document.getElementById('crmNoCrm').style.display = '';
+    document.getElementById('crmNoCrm').innerHTML = '<p class="muted" style="margin-bottom:12px">Could not load sync status.</p>';
+    document.getElementById('crmSections').style.display = 'none';
+  }
+}
+
+async function syncCrm(types){
+  if(_crmSyncing) return;
+  _crmSyncing = true;
+  _disableCrmBtns(true);
+
+  var typeList = types || ['services','practitioners','clinic'];
+  typeList.forEach(function(t){ _setCrmIcon(t, 'loading'); });
+  if(typeList.length === 3) updateCrmGlobalStatus('loading', 'Syncing all data...');
+  else updateCrmGlobalStatus('loading', 'Syncing ' + typeList[0] + '...');
+
+  try {
+    var resp = await api('/knowledge/sync/crm', {method:'POST', body:{types:typeList}});
+    var hasErrors = false;
+    var allOk = true;
+
+    typeList.forEach(function(t){
+      var r = resp[t];
+      if(r){
+        if(r.errors && r.errors.length){
+          _setCrmIcon(t, 'error');
+          renderCrmSection(t, {count: r.imported, last_sync: null}, 'error');
+          hasErrors = true;
+          allOk = false;
+        } else {
+          _setCrmIcon(t, 'success');
+          renderCrmSection(t, {count: r.imported, last_sync: new Date().toISOString()}, 'success');
+        }
+      }
+    });
+
+    if(hasErrors) updateCrmGlobalStatus('partial', 'Synced with errors. Check individual sections.');
+    else if(allOk) updateCrmGlobalStatus('ok', 'All data synced successfully.');
+
     await refreshFileRows();
-  } catch(e){ document.getElementById('syncErr').textContent = e.message; }
-  btn.disabled = false;
-  btn.textContent = 'Sync now';
+    await loadCrmStatus();
+  } catch(e){
+    updateCrmGlobalStatus('err', 'Sync failed: ' + e.message);
+    typeList.forEach(function(t){ _setCrmIcon(t, 'error'); });
+  }
+
+  _disableCrmBtns(false);
+  _crmSyncing = false;
 }
 
 // ════════════════════════════════════════════════

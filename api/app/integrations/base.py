@@ -76,6 +76,18 @@ class AbstractCrmConnector(ABC):
         ...
 
     @abstractmethod
+    def get_billable_items(
+        self,
+        item_type: str | None = None,
+        updated_since: str | None = None,
+    ) -> list[dict[str, Any]]:
+        ...
+
+    @abstractmethod
+    def get_businesses(self) -> list[dict[str, Any]]:
+        ...
+
+    @abstractmethod
     def search_available_slots(self, doctor_id: str, date: str) -> list[dict[str, Any]]:
         ...
 
