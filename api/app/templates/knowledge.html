@@ -145,7 +145,7 @@
       <div class="ch-panel" id="upanel-url">
         <label class="kb-label">Page URL</label>
         <input id="urlInput" type="url" class="kb-input" placeholder="https://example.com/page" />
-        <label class="kb-label mt-12">Title (optional)</label>
+        <label class="kb-label mt-12">Title</label>
         <input id="urlTitle" type="text" class="kb-input" placeholder="My page" />
         <div class="mt-12">
           <button class="btn sm" onclick="importUrl()">Import</button>
@@ -710,10 +710,11 @@ async function importUrl(){
   var url = document.getElementById('urlInput').value.trim();
   var title = document.getElementById('urlTitle').value.trim();
   if(!url){ document.getElementById('urlErr').textContent = 'URL is required'; return; }
+  if(!title){ document.getElementById('urlErr').textContent = 'Title is required'; return; }
   document.getElementById('urlErr').textContent = '';
   document.getElementById('urlStatus').textContent = 'Importing...';
   try {
-    var resp = await api('/knowledge/urls', {method:'POST', body:{url:url, title:title || null, folder_id:_selectedFolder || null}});
+    var resp = await api('/knowledge/urls', {method:'POST', body:{url:url, title:title, folder_id:_selectedFolder || null}});
     document.getElementById('urlInput').value = '';
     document.getElementById('urlTitle').value = '';
     await refreshFileRows();

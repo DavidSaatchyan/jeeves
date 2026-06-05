@@ -580,7 +580,7 @@ class TestBackgroundIndexUrl:
 class TestImportUrl:
     def test_import_url_success(self, client, mock_db, mock_rag, mock_chunking):
         _mock_db_execute_scalar_one_or_none(mock_db, None)
-        resp = client.post("/knowledge/urls", json={"url": "https://example.com/page"})
+        resp = client.post("/knowledge/urls", json={"url": "https://example.com/page", "title": "Test Page"})
         assert resp.status_code == 201
         data = resp.json()
         assert data["status"] == "processing"
@@ -589,15 +589,19 @@ class TestImportUrl:
         mock_db.add.assert_called_once()
 
     def test_import_url_empty_raises(self, client, mock_db, mock_rag, mock_chunking):
-        resp = client.post("/knowledge/urls", json={"url": ""})
+        resp = client.post("/knowledge/urls", json={"url": "", "title": "Test"})
         assert resp.status_code == 400
 
     def test_import_url_folder_not_found(self, client, mock_db, mock_rag, mock_chunking):
         _mock_db_execute_scalar_one_or_none(mock_db, None)
         resp = client.post("/knowledge/urls", json={
-            "url": "https://example.com", "folder_id": str(uuid4()),
+            "url": "https://example.com", "title": "Test", "folder_id": str(uuid4()),
         })
         assert resp.status_code == 404
+
+    def test_import_url_empty_title_raises(self, client, mock_db, mock_rag, mock_chunking):
+        resp = client.post("/knowledge/urls", json={"url": "https://example.com/page", "title": ""})
+        assert resp.status_code == 400
 
     def test_list_urls(self, client, mock_db, mock_rag):
         mock_rec = MagicMock()
@@ -649,7 +653,7 @@ class TestImportUrlAuthGuard:
     def test_import_url_requires_auth(self, app):
         app.dependency_overrides.clear()
         with TestClient(app) as c:
-            resp = c.post("/knowledge/urls", json={"url": "https://example.com"})
+            resp = c.post("/knowledge/urls", json={"url": "https://example.com", "title": "Test"})
         assert resp.status_code in (401, 403)
 
     def test_list_urls_requires_auth(self, app):

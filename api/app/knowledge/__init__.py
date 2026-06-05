@@ -672,7 +672,7 @@ async def _background_index_url(tenant_id: uuid.UUID, url_id: uuid.UUID, url: st
 
 class _UrlImportIn(BaseModel):
     url: str
-    title: str | None = None
+    title: str
     folder_id: uuid.UUID | None = None
 
 
@@ -684,6 +684,8 @@ async def import_url(
 ):
     if not body.url.strip():
         raise HTTPException(400, "url is required")
+    if not body.title.strip():
+        raise HTTPException(400, "title is required")
 
     if body.folder_id:
         folder = db.execute(select(KnowledgeFolder).where(
