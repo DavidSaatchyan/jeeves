@@ -46,6 +46,7 @@ class Chunk:
     def to_metadata(self, file_id: str) -> dict:
         # Chroma 0.5.x does not accept None in metadata values.
         m = {
+            "source": "kb",
             "file_id": file_id,
             "filename": self.filename,
             "section": self.section or "",

@@ -248,6 +248,14 @@ async def upload_files_batch(
     return BatchUploadOut(results=[BatchUploadResultItem(**r) for r in results])
 
 
+def _is_non_uuid(s: str) -> bool:
+    try:
+        uuid.UUID(s)
+        return False
+    except Exception:
+        return True
+
+
 class _SimulateIn(BaseModel):
     query: str
     top_k: int = 5
@@ -265,6 +273,7 @@ async def simulate(
     raw = await asyncio.to_thread(rag.search, tenant.id, body.query, top_k=body.top_k)
 
     # Filter out orphan chunks whose file_id no longer exists in DB
+    # Synthetic file_ids (PMS, non-UUID) are kept — they have no DB record.
     file_ids = [r["file_id"] for r in raw if r.get("file_id")]
     if file_ids:
         uuids = []
@@ -285,7 +294,12 @@ async def simulate(
                 KnowledgeUrl.tenant_id == tenant.id,
             )).all():
                 existing.add(str(row[0]))
-        results = [r for r in raw if not r.get("file_id") or r["file_id"] in existing]
+        results = [
+            r for r in raw
+            if not r.get("file_id")
+            or r["file_id"] in existing
+            or _is_non_uuid(r["file_id"])
+        ]
         if len(results) < len(raw):
             logger.info("simulate: filtered %d orphan chunks from search results", len(raw) - len(results))
     else:

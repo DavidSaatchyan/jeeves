@@ -476,6 +476,52 @@ class Provider(Base, _TenantScoped, _CreatedAt, _UpdatedAt):
     schedule = Column(JSONB, default=dict)                  # availability rules
 
 
+class PmsService(Base, _TenantScoped, _CreatedAt, _UpdatedAt):
+    """PMS service/billable item — source of truth for sync data."""
+    __tablename__ = "pms_services"
+
+    external_id = Column(Text, nullable=False, index=True)
+    name = Column(Text, nullable=False)
+    description = Column(Text, default="")
+    price_cents = Column(Integer, default=0)
+    duration_minutes = Column(Integer)
+    category = Column(Text, default="")
+    telehealth_enabled = Column(Boolean, default=False)
+    online_bookable = Column(Boolean, default=True)
+    raw_data = Column(JSONB, default=dict)
+
+
+class PmsPractitioner(Base, _TenantScoped, _CreatedAt, _UpdatedAt):
+    """PMS practitioner/provider — source of truth for sync data."""
+    __tablename__ = "pms_practitioners"
+
+    external_id = Column(Text, nullable=False, index=True)
+    display_name = Column(Text, nullable=False)
+    title = Column(Text, default="")
+    designation = Column(Text, default="")
+    description = Column(Text, default="")
+    active = Column(Boolean, default=True)
+    raw_data = Column(JSONB, default=dict)
+
+
+class PmsClinic(Base, _TenantScoped, _CreatedAt, _UpdatedAt):
+    """PMS clinic/business — source of truth for sync data (1 per tenant)."""
+    __tablename__ = "pms_clinic"
+
+    external_id = Column(Text, nullable=False)
+    business_name = Column(Text, nullable=False)
+    address = Column(Text, default="")
+    city = Column(Text, default="")
+    state = Column(Text, default="")
+    postcode = Column(Text, default="")
+    country = Column(Text, default="")
+    phone = Column(Text, default="")
+    email = Column(Text, default="")
+    website = Column(Text, default="")
+    timezone = Column(Text, default="")
+    raw_data = Column(JSONB, default=dict)
+
+
 class AuditLog(Base, _TenantScoped):
     """Extended compliance audit log (GDPR Art. 30 / HIPAA)."""
     __tablename__ = "audit_logs"

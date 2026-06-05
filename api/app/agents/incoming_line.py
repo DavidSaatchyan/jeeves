@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from datetime import date
@@ -19,6 +20,29 @@ from .default_config import get_default_agent_config
 from .registry import register
 
 logger = logging.getLogger("jeeves.agents.incoming_line")
+
+
+def _rrf_merge(*lists: list[dict], weights: list[float] | None = None, k: int = 60) -> list[dict]:
+    scores: dict[str, float] = {}
+    items: dict[str, dict] = {}
+    w = weights or [1.0] * len(lists)
+    for rank_list, weight in zip(lists, w):
+        for i, item in enumerate(rank_list):
+            key = item.get("chunk_hash", item.get("id", str(i)))
+            scores[key] = scores.get(key, 0.0) + weight / (k + i + 1)
+            items[key] = item
+    return sorted(items.values(), key=lambda x: scores.get(x.get("chunk_hash", ""), 0), reverse=True)
+
+
+def _diversify_results(results: list[dict], key_fn: Any, max_per_group: int = 3) -> list[dict]:
+    counts: dict[str, int] = {}
+    out: list[dict] = []
+    for r in results:
+        key = key_fn(r)
+        if counts.get(key, 0) < max_per_group:
+            out.append(r)
+            counts[key] = counts.get(key, 0) + 1
+    return out
 
 
 def _get_agent_config(tenant: Tenant | None) -> dict:
@@ -49,11 +73,21 @@ def _build_slot_text(slots: list) -> str:
 
 async def _handle_kb_query(message: str, tenant_id: str, config: dict) -> str:
     knowledge_folders = config.get("knowledge_folders", [])
-    where_clause = {"file_id": {"$in": knowledge_folders}} if knowledge_folders else None
-    results = rag_search(
-        tenant_id, message, top_k=5, threshold=0.8,
-        where=where_clause,
-    )
+
+    kb_where: dict[str, Any] = {"source": "kb"}
+    if knowledge_folders:
+        kb_where["file_id"] = {"$in": knowledge_folders}
+
+    kb_fut = asyncio.to_thread(rag_search, tenant_id, message, 4, 0.8, kb_where)
+    pms_fut = asyncio.to_thread(rag_search, tenant_id, message, 3, 0.8, {"source": "pms"})
+
+    kb_results, pms_results = await asyncio.gather(kb_fut, pms_fut)
+
+    results = _rrf_merge(kb_results, pms_results, weights=[1.0, 1.2])
+
+    # Diversity: ensure at most 3 from same source in top-5
+    results = _diversify_results(results, key_fn=lambda r: r.get("source", ""), max_per_group=3)[:5]
+
     if not results:
         return "I don't have that information in my knowledge base."
 

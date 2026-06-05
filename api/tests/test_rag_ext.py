@@ -428,72 +428,72 @@ class TestSearchWithWhereEdgeCases:
 # ── CRM Indexer ──────────────────────────────────────────────────────────────────────────
 
 
-class TestTextualizeService:
+class TestExtractServiceSections:
     def test_minimal(self):
-        from app.rag.crm_indexer import _textualize_service
-        result = _textualize_service({"name": "Consult"})
-        assert "Service: Consult" in result
-        assert "Price:" not in result
-        assert "Duration:" not in result
+        from app.rag.crm_indexer import _extract_service_sections
+        result = _extract_service_sections({"name": "Consult"})
+        assert ("Name", "Consult") in result
+        assert not any(h == "Pricing" for h, _ in result)
+        assert not any(h == "Duration" for h, _ in result)
 
     def test_with_price_and_duration(self):
-        from app.rag.crm_indexer import _textualize_service
-        result = _textualize_service({"name": "Checkup", "price": 15000, "duration_in_minutes": 30})
-        assert "$150.00" in result
-        assert "30 minutes" in result
+        from app.rag.crm_indexer import _extract_service_sections
+        result = _extract_service_sections({"name": "Checkup", "price": 15000, "duration_in_minutes": 30})
+        assert any("$150" in v for _, v in result)
+        assert any("30 minutes" in v for _, v in result)
 
     def test_with_all_fields(self):
-        from app.rag.crm_indexer import _textualize_service
+        from app.rag.crm_indexer import _extract_service_sections
         s = {"name": "Standard", "price": 10000, "duration_in_minutes": 45, "category": "Consultation",
              "description": "Full check", "telehealth_enabled": True, "item_code": "SC-001"}
-        result = _textualize_service(s)
-        assert "Telehealth: Yes" in result
-        assert "Code: SC-001" in result
-        assert "Category: Consultation" in result
+        result = _extract_service_sections(s)
+        assert ("Telehealth", "Yes") in result
+        assert ("Code", "SC-001") in result
+        assert ("Category", "Consultation") in result
 
     def test_telehealth_disabled(self):
-        from app.rag.crm_indexer import _textualize_service
-        result = _textualize_service({"name": "X", "telehealth_enabled": False})
-        assert "Telehealth: No" in result
+        from app.rag.crm_indexer import _extract_service_sections
+        result = _extract_service_sections({"name": "X", "telehealth_enabled": False})
+        assert ("Telehealth", "No") in result
 
 
-class TestTextualizePractitioner:
+class TestExtractPractitionerSections:
     def test_minimal(self):
-        from app.rag.crm_indexer import _textualize_practitioner
-        result = _textualize_practitioner({"display_name": "Dr. Smith"})
-        assert "Practitioner: Dr. Smith" in result
-        assert "Accepting new patients: Yes" in result
+        from app.rag.crm_indexer import _extract_practitioner_sections
+        result = _extract_practitioner_sections({"display_name": "Dr. Smith"})
+        assert ("Name", "Dr. Smith") in result
+        assert ("Accepting new patients", "Yes") in result
 
     def test_with_all_fields(self):
-        from app.rag.crm_indexer import _textualize_practitioner
+        from app.rag.crm_indexer import _extract_practitioner_sections
         p = {"display_name": "Dr. Jane", "title": "Dr.", "designation": "Physiotherapist",
              "description": "Sports medicine", "active": True}
-        result = _textualize_practitioner(p)
-        assert "Title: Dr." in result
-        assert "Specialty: Physiotherapist" in result
-        assert "Description: Sports medicine" in result
-        assert "Accepting new patients: Yes" in result
+        result = _extract_practitioner_sections(p)
+        assert ("Title", "Dr.") in result
+        assert ("Specialty", "Physiotherapist") in result
+        assert ("Description", "Sports medicine") in result
+        assert ("Accepting new patients", "Yes") in result
 
     def test_inactive(self):
-        from app.rag.crm_indexer import _textualize_practitioner
-        result = _textualize_practitioner({"display_name": "X", "active": False})
-        assert "Accepting new patients: No" in result
+        from app.rag.crm_indexer import _extract_practitioner_sections
+        result = _extract_practitioner_sections({"display_name": "X", "active": False})
+        assert ("Accepting new patients", "No") in result
 
 
-class TestTextualizeClinic:
+class TestExtractClinicSections:
     def test_minimal(self):
-        from app.rag.crm_indexer import _textualize_clinic
-        result = _textualize_clinic({"business_name": "Sydney Physio"})
-        assert "Clinic: Sydney Physio" in result
+        from app.rag.crm_indexer import _extract_clinic_sections
+        result = _extract_clinic_sections({"business_name": "Sydney Physio"})
+        assert ("Clinic", "Sydney Physio") in result
 
     def test_with_address(self):
-        from app.rag.crm_indexer import _textualize_clinic
+        from app.rag.crm_indexer import _extract_clinic_sections
         c = {"business_name": "Clinic", "address": "123 Main St", "city": "Sydney", "state": "NSW",
              "postcode": "2000", "country": "Australia", "phone": "+612", "email": "info@c.com"}
-        result = _textualize_clinic(c)
-        assert "Address: 123 Main St, Sydney, NSW, 2000, Australia" in result
-        assert "Phone: +612" in result
-        assert "Email: info@c.com" in result
+        result = _extract_clinic_sections(c)
+        assert any("123 Main St" in v for _, v in result)
+        assert ("Phone", "+612") in result
+        assert ("Email", "info@c.com") in result
 
 
 class TestIndexServices:
@@ -535,10 +535,10 @@ class TestIndexPractitioners:
         from app.rag.crm_indexer import index_practitioners
         col, _ = mock_chroma
         result = index_practitioners(tenant_id, [{"display_name": "Dr. X", "id": "p1"}], "b1")
-        assert result == 1
-        meta = col.add.call_args[1]["metadatas"][0]
-        assert meta["type"] == "practitioner"
-        assert meta["designation"] == ""
+        assert result == 1  # short sections merged into 1 chunk
+        metas = col.add.call_args[1]["metadatas"]
+        assert all(m["type"] == "practitioner" for m in metas)
+        assert metas[0]["designation"] == ""
 
 
 class TestIndexClinic:

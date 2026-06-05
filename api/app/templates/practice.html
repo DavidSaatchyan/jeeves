@@ -57,6 +57,13 @@
 </div>
 
 <div id="pmsGlobalStatus" class="pms-global-status" style="display:none"></div>
+
+<div class="pms-metrics">
+  <div class="pms-metric"><span class="pms-metric-value">{{ chunks.total }}</span> total chunks</div>
+  <div class="pms-metric"><span class="pms-metric-value">{{ chunks.pms }}</span> PMS chunks</div>
+  <div class="pms-metric"><span class="pms-metric-value">{{ chunks.kb }}</span> KB chunks</div>
+  <button class="btn sm" id="reindexBtn" onclick="reindexFromSql()" style="display:none">⟳ Reindex from SQL</button>
+</div>
 {% endblock %}
 
 {% block tail %}
@@ -89,6 +96,10 @@
 .pms-global-status.pms-err{background:rgba(248,113,113,0.08);color:var(--red)}
 .pms-global-status.pms-loading{background:rgba(99,102,241,0.08);color:var(--accent)}
 .pms-global-status.pms-partial{background:rgba(234,179,8,0.08);color:#eab308}
+
+.pms-metrics{display:flex;gap:16px;align-items:center;margin-bottom:20px;padding:12px 16px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius)}
+.pms-metric{font-size:13px;color:var(--muted2)}
+.pms-metric-value{font-size:18px;font-weight:700;color:var(--text)}
 </style>
 <script>
 var _pmsSyncing = false;
@@ -216,8 +227,31 @@ async function syncPms(types){
 
 function syncAll(){ syncPms(['services','practitioners','clinic']); }
 
+async function reindexFromSql(){
+  if(!confirm('Reindex all PMS data from SQL to Chroma? This will not call the CRM API.')) return;
+  updateGlobalStatus('loading', 'Reindexing from SQL…');
+  try {
+    var resp = await api('/knowledge/sync/crm/reindex', {method:'POST'});
+    var msg = [];
+    ['services','practitioners','clinic'].forEach(function(t){
+      var r = resp[t] || {};
+      if(r.imported > 0) msg.push(t + ': ' + r.imported + ' chunks');
+    });
+    updateGlobalStatus('ok', 'Reindex complete: ' + (msg.join(', ') || 'nothing to reindex'));
+    await loadPmsStatus();
+  } catch(e){
+    updateGlobalStatus('err', 'Reindex failed: ' + e.message);
+  }
+}
+
 setInterval(function(){ if(!_pmsSyncing) loadPmsStatus(); }, 30000);
 
 loadPmsStatus();
+
+// Show reindex button if PMS data exists in Chroma
+setTimeout(function(){
+  var pmsCount = {{ chunks.pms }};
+  if(pmsCount > 0) document.getElementById('reindexBtn').style.display = '';
+}, 500);
 </script>
 {% endblock %}

@@ -20,6 +20,18 @@ def _count_all_chunks(tenant_id: UUID | str) -> int:
         return 0
 
 
+def count_chunks_by_source(tenant_id: UUID | str) -> dict[str, int]:
+    """Return count of chunks grouped by source (pms, kb, etc.)."""
+    try:
+        col = _collection(tenant_id)
+        total = col.count()
+        pms = col.count(where={"source": "pms"})
+        kb = col.count(where={"source": "kb"})
+        return {"total": total, "pms": pms, "kb": kb, "other": total - pms - kb}
+    except Exception:
+        return {"total": 0, "pms": 0, "kb": 0, "other": 0}
+
+
 def _add_chunks(tenant_id: UUID | str, file_id: UUID | str, chunks: list[chunking.Chunk]) -> int:
     if not chunks:
         return 0

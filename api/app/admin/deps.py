@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import Cookie, Depends, HTTPException, Request, status
 from sqlalchemy import select
@@ -64,7 +64,7 @@ def require_role(*roles: str):
     return _checker
 
 
-def _ctx(request: Request, tenant: Tenant | None = None) -> dict:
+def _ctx(request: Request, tenant: Tenant | None = None, **kwargs: Any) -> dict:
     s = get_settings()
     base = s.public_base_url
     if not base or base == "http://localhost:8000":
@@ -72,7 +72,9 @@ def _ctx(request: Request, tenant: Tenant | None = None) -> dict:
         host = request.headers.get("x-forwarded-host", request.url.netloc)
         base = f"{scheme}://{host}"
     role = _resolve_role(tenant) if tenant else "owner"
-    return {"public_base_url": base, "tenant_role": role}
+    ctx: dict[str, Any] = {"public_base_url": base, "tenant_role": role}
+    ctx.update(kwargs)
+    return ctx
 
 
 def _resolve_role(tenant: Tenant) -> str:

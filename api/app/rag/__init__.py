@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from .config import DISTANCE_THRESHOLD, EMBED_MODEL, EMBEDDING_VERSION, TOP_K
-from .engine import delete_file, get_chunks_for_file, index_file, index_structured_text, index_text, search
+from .engine import count_chunks_by_source, delete_file, get_chunks_for_file, index_file, index_structured_text, index_text, search
 from .maintenance import deduplicate_collection, purge_orphans
 from .products import delete_products_by_batch, index_products
 
@@ -11,6 +11,7 @@ __all__ = [
     "EMBED_MODEL",
     "EMBEDDING_VERSION",
     "TOP_K",
+    "count_chunks_by_source",
     "delete_file",
     "delete_products_by_batch",
     "deduplicate_collection",
