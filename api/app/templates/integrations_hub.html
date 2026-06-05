@@ -16,8 +16,8 @@
   .eye-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
   .eye-btn svg { width: 16px; height: 16px; }
   .input-wrap { position: relative; }
-  .input-wrap input { padding-right: 40px; text-overflow: ellipsis; }
-  .input-wrap input[type=password] { text-overflow: clip; }
+  .input-wrap input { padding-right: 48px; overflow: hidden; text-overflow: ellipsis; }
+  .input-wrap input[type=password] { text-overflow: clip; letter-spacing: 2px; font-family: monospace; font-size: 16px; }
   .modal-step { margin-bottom: 24px; }
   .modal-step-label { font-size: 12px; font-weight: 600; color: var(--muted2); margin-bottom: 4px; }
   .modal-step input, .modal-step select { width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:13px; box-sizing:border-box; outline:none; transition:border-color .1s; }
@@ -27,6 +27,14 @@
   .modal-step-hint { font-size: 12px; color: var(--muted2); margin-top: 6px; line-height: 1.5; }
   .modal-step-hint a { color: var(--accent); text-decoration: underline; cursor: pointer; }
   .modal-step-hint a:hover { opacity: .8; }
+  .hint-toggle { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 2px 8px; background:none; border:1px solid transparent; border-radius:4px; color:var(--accent); cursor:pointer; transition:all .1s; }
+  .hint-toggle:hover { border-color:var(--border); background:rgba(255,255,255,0.03); }
+  .hint-toggle .chevron { font-size: 10px; transition: transform .15s; display: inline-block; }
+  .hint-toggle.open .chevron { transform: rotate(180deg); }
+  .hint-steps { margin-top: 10px; padding: 14px; background: var(--bg); border-radius: 8px; font-size: 12px; line-height: 1.8; border:1px solid var(--border); display:none; }
+  .hint-steps ol { margin: 0 0 12px; padding-left: 20px; }
+  .hint-steps ol li { margin-bottom: 4px; }
+  .hint-steps a.btn { margin-top: 8px; display: inline-flex; }
   .modal-step.two-col { display: flex; gap: 12px; }
   .modal-actions { display: flex; gap: 8px; margin-top: 24px; justify-content: flex-end; }
   .modal-title { font-size: 18px; font-weight: 700; }
@@ -91,16 +99,19 @@
       <div class="modal-step-label">API Key</div>
       <div class="input-wrap"><input type="password" id="crmApiKey" placeholder="Paste your API key"><button class="eye-btn" onclick="toggleEye('crmApiKey',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
       <p class="modal-step-hint">Paste your API key to sync patients and appointments.
-        <a href="#" onclick="event.preventDefault();this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'">Where can I find it?</a>
-        <span style="display:none;margin-top:10px;padding:12px;background:var(--bg);border-radius:6px;font-size:12px;line-height:1.6">
-          <strong>To find your Cliniko API key:</strong><br>
-          1. Log in to your <a href="https://www.cliniko.com" target="_blank">Cliniko account</a><br>
-          2. Go to <strong>Settings → API</strong> in the sidebar<br>
-          3. Click <strong>"Generate API Key"</strong> (or copy an existing one)<br>
-          4. Copy the key and paste it above<br><br>
-          <a href="https://help.cliniko.com/s/article/How-do-I-find-my-API-key-in-Cliniko" target="_blank" style="color:var(--accent)">Open Cliniko help guide →</a>
-        </span>
+        <button class="hint-toggle" type="button" onclick="toggleHint(this)">
+          Where can I find it? <span class="chevron">▼</span>
+        </button>
       </p>
+      <div class="hint-steps" id="crmHintSteps">
+        <ol id="crmHintList">
+          <li>Log in to your <a href="https://www.cliniko.com" target="_blank">Cliniko account</a></li>
+          <li>Go to <strong>Settings → API</strong> in the sidebar</li>
+          <li>Click <strong>"Generate API Key"</strong> or copy an existing one</li>
+          <li>Copy the key and paste it above</li>
+        </ol>
+        <a class="btn sm" id="crmHintLink" href="https://help.cliniko.com/s/article/How-do-I-find-my-API-key-in-Cliniko" target="_blank">Open help guide →</a>
+      </div>
     </div>
     <div class="modal-step" id="crmCompanyIdStep" style="display:none">
       <div class="modal-step-label">Company ID</div>
@@ -345,6 +356,13 @@ function closeModal(id) { document.getElementById(id).classList.remove('show'); 
 document.querySelectorAll('.modal-overlay').forEach(el => {
   el.addEventListener('click', function(e) { if (e.target === this) { this.classList.remove('show'); unlockScroll(); } });
 });
+// ── Toggle hint steps ──
+function toggleHint(btn) {
+  btn.classList.toggle('open');
+  const steps = btn.parentElement.nextElementSibling;
+  if (!steps) return;
+  steps.style.display = steps.style.display === 'block' ? 'none' : 'block';
+}
 // ── Long text UX: hover tooltip + auto-select on focus ──
 ['crmApiKey','crmWebhookSecret','waAccessToken','waVerifyToken','igAccessToken','igPageId','igAccountId'].forEach(id => {
   const el = document.getElementById(id);
@@ -354,10 +372,12 @@ document.querySelectorAll('.modal-overlay').forEach(el => {
   if (el.value) el.title = el.value;
 });
 // ── CRM: track API key changes to enable Save button ──
-let _crmOriginalKey = '';
 document.getElementById('crmApiKey').addEventListener('input', function() {
   const btn = document.getElementById('crmConnectBtn');
-  btn.disabled = this.value === _crmOriginalKey;
+  const original = btn.dataset.originalKey || '';
+  const changed = this.value !== original;
+  btn.disabled = !changed;
+  btn.textContent = changed ? (btn.dataset.saveLabel || 'Save') : (btn.dataset.originalLabel || 'Connect');
 });
 // ── Confirm dialog ──
 let _confirmCb = null;
@@ -374,14 +394,20 @@ function confirmAction() {
   const cb = _confirmCb; closeConfirm(); if (cb) cb();
 }
 document.getElementById('confirmModal').addEventListener('click', function(e) { if (e.target === this) { this.classList.remove('show'); unlockScroll(); } });
-// Eye toggle
+// Eye toggle with masked preview
 function toggleEye(inputId, btn) {
   const inp = document.getElementById(inputId);
   if (inp.type === 'password') {
     inp.type = 'text';
+    inp.style.letterSpacing = 'normal';
+    inp.style.fontFamily = '';
+    inp.style.fontSize = '';
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
   } else {
     inp.type = 'password';
+    inp.style.letterSpacing = '2px';
+    inp.style.fontFamily = 'monospace';
+    inp.style.fontSize = '16px';
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
   }
 }
@@ -402,6 +428,31 @@ function openCrmModal(provider) {
   document.getElementById('crmCompanyIdStep').style.display = isCliniko ? 'none' : '';
   document.getElementById('crmWebhookStep').style.display = isCliniko ? 'none' : '';
   document.getElementById('crmResult').style.display = 'none';
+  // Reset hint collapse
+  const toggle = document.querySelector('#crmModal .hint-toggle');
+  if (toggle) { toggle.classList.remove('open'); }
+  const steps = document.getElementById('crmHintSteps');
+  if (steps) steps.style.display = 'none';
+  // Update hint content per provider
+  const list = document.getElementById('crmHintList');
+  const link = document.getElementById('crmHintLink');
+  if (isCliniko) {
+    list.innerHTML =
+      '<li>Log in to your <a href="https://www.cliniko.com" target="_blank">Cliniko account</a></li>' +
+      '<li>Go to <strong>Settings → API</strong> in the sidebar</li>' +
+      '<li>Click <strong>"Generate API Key"</strong> or copy an existing one</li>' +
+      '<li>Copy the key and paste it above</li>';
+    link.href = 'https://help.cliniko.com/s/article/How-do-I-find-my-API-key-in-Cliniko';
+    link.textContent = 'Open Cliniko help guide →';
+  } else {
+    list.innerHTML =
+      '<li>Log in to your <a href="https://pabau.com/login" target="_blank">Pabau account</a></li>' +
+      '<li>Go to <strong>Settings → Integrations → API</strong></li>' +
+      '<li>Click <strong>"Generate New Key"</strong></li>' +
+      '<li>Copy the key and paste it above</li>';
+    link.href = 'https://help.pabau.com/en/articles/...';
+    link.textContent = 'Open Pabau help guide →';
+  }
   const btn = document.getElementById('crmConnectBtn');
   const apiKeyInput = document.getElementById('crmApiKey');
   apiKeyInput.className = '';
@@ -410,16 +461,23 @@ function openCrmModal(provider) {
     const meta = int.meta || {};
     apiKeyInput.value = meta.api_key || '';
     btn.textContent = 'Save';
+    btn.dataset.saveLabel = 'Save';
+    btn.dataset.originalLabel = 'Save';
   } else {
     apiKeyInput.value = '';
     document.getElementById('crmCompanyId').value = '';
     document.getElementById('crmWebhookSecret').value = '';
     btn.textContent = 'Connect';
+    btn.dataset.saveLabel = 'Connect';
+    btn.dataset.originalLabel = 'Connect';
   }
-  _crmOriginalKey = apiKeyInput.value;
+  btn.dataset.originalKey = apiKeyInput.value;
   btn.disabled = true;
   btn.className = 'btn sm';
   apiKeyInput.type = 'password';
+  apiKeyInput.style.letterSpacing = '2px';
+  apiKeyInput.style.fontFamily = 'monospace';
+  apiKeyInput.style.fontSize = '16px';
   apiKeyInput.title = apiKeyInput.value;
   openModal('crmModal');
 }
@@ -448,14 +506,14 @@ async function connectCrm() {
     } else {
       apiKeyInput.className = 'err';
       showResult('crmResult', '✗ ' + (data.message || 'Invalid API key. Please check and try again.'), false);
-      btn.disabled = false;
-      btn.textContent = 'Connect';
+      btn.disabled = apiKeyInput.value === (btn.dataset.originalKey || '');
+      btn.textContent = btn.dataset.saveLabel || 'Save';
     }
   } catch (e) {
     apiKeyInput.className = 'err';
     showResult('crmResult', '✗ ' + e.message, false);
-    btn.disabled = false;
-    btn.textContent = 'Connect';
+    btn.disabled = apiKeyInput.value === (btn.dataset.originalKey || '');
+    btn.textContent = btn.dataset.saveLabel || 'Save';
   }
 }
 
