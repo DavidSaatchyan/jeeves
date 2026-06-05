@@ -48,7 +48,9 @@
   .hint-link:hover { color: var(--accent); text-decoration: underline; }
   .modal-step.two-col { display: flex; gap: 12px; }
   .modal-actions { display: flex; gap: 8px; margin-top: 24px; justify-content: flex-end; }
-  .modal-actions .btn.sm { min-width: 120px; }
+  .btn.loading { pointer-events: none; }
+  .btn.loading::after { content: ''; display: inline-block; width: 10px; height: 10px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .6s linear infinite; margin-left: 6px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   .modal-title { font-size: 18px; font-weight: 700; }
   .modal-result { margin-top: 12px; border-radius: 6px; font-size: 13px; max-height: 0; overflow: hidden; padding: 0 14px; border: 1px solid transparent; background: transparent; color: transparent; transition: max-height .2s ease, padding .2s ease, border-color .2s ease, background .2s ease; }
   .modal-result.ok { max-height: 60px; padding: 10px 14px; background: rgba(52,211,153,0.1); color: #34d399; border-color: rgba(52,211,153,0.2); }
@@ -394,13 +396,21 @@ function toggleHint(el) {
   el.addEventListener('focus', function() { this.select(); });
   if (el.value) el.title = el.value;
 });
-// ── CRM: track API key changes to enable Save button ──
+// ── CRM: track API key changes to toggle between Save/Disconnect ──
 document.getElementById('crmApiKey').addEventListener('input', function() {
   const btn = document.getElementById('crmConnectBtn');
   const original = btn.dataset.originalKey || '';
   const changed = this.value !== original;
-  btn.disabled = !changed;
-  btn.textContent = changed ? (btn.dataset.saveLabel || 'Save') : (btn.dataset.originalLabel || 'Connect');
+  const connected = _integrations.find(i => i.id === crmProvider)?.status === 'connected';
+  if (connected && !changed) {
+    btn.className = 'ghost sm danger';
+    btn.textContent = 'Disconnect';
+    btn.disabled = true;
+  } else {
+    btn.className = 'btn sm';
+    btn.textContent = changed ? 'Save' : 'Connect';
+    btn.disabled = !changed;
+  }
 });
 // ── Confirm dialog ──
 let _confirmCb = null;
@@ -446,7 +456,7 @@ function openCrmModal(provider) {
   document.getElementById('crmApiKeyStep').style.display = '';
   document.getElementById('crmCompanyIdStep').style.display = isCliniko ? 'none' : '';
   document.getElementById('crmWebhookStep').style.display = isCliniko ? 'none' : '';
-  document.getElementById('crmResult').style.display = 'none';
+  document.getElementById('crmResult').className = 'modal-result';
   // Reset hint collapse
   const toggle = document.querySelector('#crmModal .hint-toggle');
   if (toggle) toggle.classList.remove('open');
@@ -479,20 +489,21 @@ function openCrmModal(provider) {
   if (int && int.status === 'connected') {
     const meta = int.meta || {};
     apiKeyInput.value = meta.api_key || '';
-    btn.textContent = 'Save';
-    btn.dataset.saveLabel = 'Save';
-    btn.dataset.originalLabel = 'Save';
+    btn.className = 'ghost sm danger';
+    btn.textContent = 'Disconnect';
+    btn.dataset.saveLabel = 'Disconnect';
+    btn.dataset.originalLabel = 'Disconnect';
   } else {
     apiKeyInput.value = '';
     document.getElementById('crmCompanyId').value = '';
     document.getElementById('crmWebhookSecret').value = '';
+    btn.className = 'btn sm';
     btn.textContent = 'Connect';
     btn.dataset.saveLabel = 'Connect';
     btn.dataset.originalLabel = 'Connect';
   }
   btn.dataset.originalKey = apiKeyInput.value;
   btn.disabled = true;
-  btn.className = 'btn sm';
   apiKeyInput.type = 'password';
   apiKeyInput.title = apiKeyInput.value;
   openModal('crmModal');
@@ -501,11 +512,11 @@ function openCrmModal(provider) {
 async function connectCrm() {
   const btn = document.getElementById('crmConnectBtn');
   btn.disabled = true;
-  btn.textContent = 'Connecting...';
+  btn.classList.add('loading');
   const apiKeyInput = document.getElementById('crmApiKey');
   apiKeyInput.className = '';
   const result = document.getElementById('crmResult');
-  result.style.display = 'none';
+  result.className = 'modal-result';
   try {
     const body = { provider: crmProvider, api_key: apiKeyInput.value };
     if (crmProvider === 'pabau') {
@@ -513,23 +524,38 @@ async function connectCrm() {
       body.webhook_secret = document.getElementById('crmWebhookSecret').value;
     }
     const data = await api('/admin/api/integrations/crm/configure', { method: 'POST', body });
+    btn.classList.remove('loading');
+    const connected = _integrations.find(i => i.id === crmProvider)?.status === 'connected';
     if (data.connected) {
       apiKeyInput.className = 'ok';
       showResult('crmResult', '✓ Connected successfully!', true);
-      btn.textContent = 'Connected';
+      btn.className = 'ghost sm danger';
+      btn.textContent = 'Disconnect';
+      btn.dataset.saveLabel = 'Disconnect';
+      btn.dataset.originalLabel = 'Disconnect';
+      btn.dataset.originalKey = apiKeyInput.value;
       btn.disabled = true;
       _refreshOnClose = true;
     } else {
       apiKeyInput.className = 'err';
       showResult('crmResult', '✗ ' + (data.message || 'Invalid API key. Please check and try again.'), false);
-      btn.disabled = apiKeyInput.value === (btn.dataset.originalKey || '');
-      btn.textContent = btn.dataset.saveLabel || 'Save';
+      btn.disabled = false;
+      if (connected) {
+        btn.className = 'btn sm';
+        btn.textContent = 'Save';
+      } else {
+        btn.className = 'btn sm';
+        btn.textContent = 'Connect';
+      }
     }
   } catch (e) {
+    btn.classList.remove('loading');
     apiKeyInput.className = 'err';
     showResult('crmResult', '✗ ' + e.message, false);
-    btn.disabled = apiKeyInput.value === (btn.dataset.originalKey || '');
-    btn.textContent = btn.dataset.saveLabel || 'Save';
+    btn.disabled = false;
+    btn.className = 'btn sm';
+    const connected = _integrations.find(i => i.id === crmProvider)?.status === 'connected';
+    btn.textContent = connected ? 'Save' : 'Connect';
   }
 }
 
@@ -563,7 +589,7 @@ function openWhatsAppModal() {
   openModal('whatsappModal');
   document.getElementById('waQrStep').style.display = 'block';
   document.getElementById('waManualStep').style.display = 'none';
-  document.getElementById('waResult').style.display = 'none';
+  document.getElementById('waResult').className = 'modal-result';
   loadWaQr();
 }
 
@@ -628,8 +654,8 @@ function renderChannelCard(i) {
 async function connectWhatsApp() {
   const btn = event.target;
   btn.disabled = true;
-  btn.textContent = 'Connecting...';
-  document.getElementById('waResult').style.display = 'none';
+  btn.classList.add('loading');
+  document.getElementById('waResult').className = 'modal-result';
   try {
     const body = {
       phone_number_id: document.getElementById('waPhoneNumberId').value,
@@ -638,12 +664,14 @@ async function connectWhatsApp() {
       business_phone: document.getElementById('waBusinessPhone').value,
     };
     await api('/admin/api/integrations/whatsapp/configure', { method: 'POST', body });
-    showResult('waResult', 'WhatsApp connected!', true);
-    btn.textContent = 'Connected';
+    btn.classList.remove('loading');
+    showResult('waResult', '✓ WhatsApp connected!', true);
+    btn.textContent = 'Configured';
     btn.disabled = true;
     _refreshOnClose = true;
   } catch (e) {
-    showResult('waResult', e.message, false);
+    btn.classList.remove('loading');
+    showResult('waResult', '✗ ' + e.message, false);
     btn.disabled = false;
     btn.textContent = 'Connect';
   }
@@ -654,7 +682,7 @@ function openIgModal() {
   openModal('instagramModal');
   document.getElementById('igOAuthStep').style.display = 'block';
   document.getElementById('igManualStep').style.display = 'none';
-  document.getElementById('igResult').style.display = 'none';
+  document.getElementById('igResult').className = 'modal-result';
 }
 
 function toggleIgManual() {
@@ -669,8 +697,8 @@ function loginWithFacebook() {
 async function connectInstagram() {
   const btn = event.target;
   btn.disabled = true;
-  btn.textContent = 'Connecting...';
-  document.getElementById('igResult').style.display = 'none';
+  btn.classList.add('loading');
+  document.getElementById('igResult').className = 'modal-result';
   try {
     const body = {
       access_token: document.getElementById('igAccessToken').value,
@@ -678,12 +706,14 @@ async function connectInstagram() {
       instagram_account_id: document.getElementById('igAccountId').value,
     };
     await api('/admin/api/integrations/instagram/configure', { method: 'POST', body });
-    showResult('igResult', 'Instagram connected!', true);
-    btn.textContent = 'Connected';
+    btn.classList.remove('loading');
+    showResult('igResult', '✓ Instagram connected!', true);
+    btn.textContent = 'Configured';
     btn.disabled = true;
     _refreshOnClose = true;
   } catch (e) {
-    showResult('igResult', e.message, false);
+    btn.classList.remove('loading');
+    showResult('igResult', '✗ ' + e.message, false);
     btn.disabled = false;
     btn.textContent = 'Connect';
   }
