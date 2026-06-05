@@ -274,6 +274,10 @@ async function loadIntegrations() {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
+    ['crmGrid','channelGrid','widgetGrid'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'grid';
+    });
   } catch (e) {
     ['crmGrid','channelGrid','widgetGrid'].forEach(id => {
       document.getElementById(id).innerHTML = `<div class="card" style="padding:40px;text-align:center;color:var(--muted2)">Error: ${e.message}</div>`;
