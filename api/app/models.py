@@ -112,6 +112,15 @@ class KnowledgeUrl(Base, _TenantScoped, _CreatedAt):
     error = Column(Text)
 
 
+class KbActivity(Base, _TenantScoped, _CreatedAt):
+    """KB activity feed — file uploads, syncs, deletes."""
+    __tablename__ = "kb_activity"
+
+    event_type = Column(String(32), nullable=False)  # file_uploaded | file_deleted | url_imported | url_deleted | folder_created | folder_deleted | pms_synced
+    description = Column(Text, nullable=False, default="")
+    ref_id = Column(String(36), nullable=True)  # UUID of the related entity (file, url, folder)
+
+
 # Phase 1: ProductCatalog, CatalogVariant, Compatibility removed — e-commerce concepts
 
 

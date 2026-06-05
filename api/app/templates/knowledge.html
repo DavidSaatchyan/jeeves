@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>Knowledge base</h1>
-<p class="page-desc">AI agents memory system</p>
+<p class="page-desc">AI agent memory system — documents, URLs, and practice data</p>
 
 <!-- ═══════════════ RAG SIMULATOR ═══════════════ -->
 <div id="simSection" class="sim-section">
@@ -14,104 +14,210 @@
   <div id="simError" class="err-msg" style="display:none"></div>
 </div>
 
-<!-- ═══════════════ MAIN LAYOUT: SIDEBAR + CONTENT ═══════════════ -->
-<div class="kb-layout">
-  <!-- ───── Left: Folder tree ───── -->
-  <aside class="kb-sidebar">
-    <div class="kb-sidebar-header">
-      <strong>Folders</strong>
-      <button class="ghost sm" onclick="showFolderModal(null)" title="New folder">+</button>
-    </div>
-    <div class="kb-folder-tree" id="folderTree">
-      <div class="kb-folder-item root" data-id="" onclick="selectFolder('')">
-        <span class="kb-folder-icon">📁</span>
-        All files
-      </div>
-    </div>
-    <div id="folderSkeleton">
-      <div class="skel-folder-item root"><div class="skel-line w70 skeleton" style="height:13px;margin:0"></div></div>
-      <div class="skel-folder-item"><div class="skel-line w55 skeleton" style="height:11px;margin:0"></div></div>
-      <div class="skel-folder-item"><div class="skel-line w65 skeleton" style="height:11px;margin:0"></div></div>
-      <div class="skel-folder-item"><div class="skel-line w45 skeleton" style="height:11px;margin:0"></div></div>
-    </div>
-  </aside>
+<!-- ═══════════════ PMS QUICK STATUS ═══════════════ -->
+{% if crm_provider %}
+<div class="pms-header" id="pmsQuickStatus">
+  <span class="pms-icon" id="pmsQuickIcon"></span>
+  <span id="pmsQuickProvider">{{ crm_provider }}</span>
+  <span id="pmsQuickSync" class="muted">{% if last_sync_at %}Last sync: {{ last_sync_at }}{% else %}Not synced{% endif %}</span>
+  <button class="btn sm" onclick="syncQuick()" id="pmsQuickBtn">⟳ Quick Sync</button>
+</div>
+{% endif %}
 
-  <!-- ───── Right: Content ───── -->
-  <main class="kb-main">
-    <!-- Toolbar -->
-    <div class="kb-toolbar">
-      <span id="kbCurrentFolder" class="kb-current-folder">All files</span>
-      <div class="kb-toolbar-actions">
-        <button class="btn sm" onclick="showUploadModal()">+ Upload</button>
-      </div>
-    </div>
+<!-- ═══════════════ TAB BAR ═══════════════ -->
+<div class="kb-tabs">
+  <a class="kb-tab active" data-tab="overview" onclick="switchTab('overview')">📊 Overview</a>
+  <a class="kb-tab" data-tab="documents" data-role="owner,manager" onclick="switchTab('documents')">📄 Documents</a>
+  <a class="kb-tab" data-tab="practice" data-role="owner,manager" onclick="switchTab('practice')">🏥 Practice Data</a>
+</div>
 
-    <!-- Summary stats -->
-    <div id="kbSummary" class="kb-summary" style="display:none">
-      <div class="kb-stat">
-        <div class="kb-stat-header">
-          <span class="kb-stat-label">Files</span>
-          <span class="kb-stat-value" id="sumFiles">0</span>
-        </div>
-        <div class="kb-stat-sub" id="sumTypes">No files</div>
-      </div>
-      <div class="kb-stat">
-        <div class="kb-stat-header">
-          <span class="kb-stat-label">Storage</span>
-          <span class="kb-stat-value" id="sumSize">0 KB</span>
-        </div>
-        <div class="kb-bar-track"><div class="kb-bar-fill" id="sizeBar"></div></div>
-        <div class="kb-stat-sub" id="sumQuota">0% of 50 MB</div>
-      </div>
-      <div class="kb-stat">
-        <div class="kb-stat-header">
-          <span class="kb-stat-label">Chunks indexed</span>
-          <span class="kb-stat-value" id="sumChunks">0</span>
-        </div>
-        <div class="kb-stat-sub" id="sumAvg">          &minus; avg/file</div>
-      </div>
+<!-- ═══════════════ TAB: OVERVIEW ═══════════════ -->
+<div id="tab-overview" class="kb-tab-content" style="display:none">
+  <div id="ov-error" class="err-msg" style="display:none">Failed to load overview data.</div>
+  <div id="ov-skeleton">
+    <div class="stats">
+      <div class="stat"><div class="n skeleton" style="display:inline-block;width:60px;height:32px">&nbsp;</div><div class="l skeleton" style="width:120px;height:14px;margin-top:8px">&nbsp;</div></div>
+      <div class="stat"><div class="n skeleton" style="display:inline-block;width:60px;height:32px">&nbsp;</div><div class="l skeleton" style="width:120px;height:14px;margin-top:8px">&nbsp;</div></div>
+      <div class="stat"><div class="n skeleton" style="display:inline-block;width:60px;height:32px">&nbsp;</div><div class="l skeleton" style="width:120px;height:14px;margin-top:8px">&nbsp;</div></div>
     </div>
-    <div id="summarySkeleton" class="kb-summary" style="display:none">
-      <div class="skel-stat">
-        <div class="skel-stat-header">
-          <div class="skel-line skeleton" style="height:16px;width:40%"></div>
-          <div class="skel-line skeleton" style="height:24px;width:25%"></div>
-        </div>
-        <div class="skel-line skeleton" style="height:16px;width:60%"></div>
+  </div>
+  <div class="stats" id="ov-cards" style="display:none">
+    <div class="stat">
+      <div class="n" id="ov-files">0</div>
+      <div class="l">KB files &amp; URLs</div>
+      <div class="sub"><span id="ov-chunks">0</span> chunks · <span id="ov-size">0 KB</span></div>
+    </div>
+    <div class="stat">
+      <div class="n"><span id="ov-pms-services">0</span> · <span id="ov-pms-practitioners">0</span> · <span id="ov-pms-clinic">0</span></div>
+      <div class="l">PMS records (S · P · C)</div>
+      <div class="sub"><span id="ov-pms-chunks">0</span> chunks · <span id="ov-pms-sync"></span></div>
+    </div>
+    <div class="stat">
+      <div class="n" id="ov-total-chunks">0</div>
+      <div class="l">Total chunks indexed</div>
+    </div>
+  </div>
+  <div class="ov-activity" id="ov-activity" style="display:none">
+    <div class="ov-activity-header">Recent activity</div>
+    <div id="ov-activity-list"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ TAB: DOCUMENTS ═══════════════ -->
+<div id="tab-documents" class="kb-tab-content" style="display:none">
+  <div class="kb-layout">
+    <aside class="kb-sidebar">
+      <div class="kb-sidebar-header">
+        <strong>Folders</strong>
+        <button class="ghost sm" onclick="showFolderModal(null)" title="New folder">+</button>
       </div>
-      <div class="skel-stat">
-        <div class="skel-stat-header">
+      <div class="kb-folder-tree" id="folderTree">
+        <div class="kb-folder-item root" data-id="" onclick="selectFolder('')">
+          <span class="kb-folder-icon">📁</span>
+          All files
+        </div>
+      </div>
+      <div id="folderSkeleton">
+        <div class="skel-folder-item root"><div class="skel-line w70 skeleton" style="height:13px;margin:0"></div></div>
+        <div class="skel-folder-item"><div class="skel-line w55 skeleton" style="height:11px;margin:0"></div></div>
+        <div class="skel-folder-item"><div class="skel-line w65 skeleton" style="height:11px;margin:0"></div></div>
+        <div class="skel-folder-item"><div class="skel-line w45 skeleton" style="height:11px;margin:0"></div></div>
+      </div>
+    </aside>
+
+    <main class="kb-main">
+      <div class="kb-toolbar">
+        <span id="kbCurrentFolder" class="kb-current-folder">All files</span>
+        <div class="kb-toolbar-actions">
+          <button class="btn sm" onclick="showUploadModal()">+ Upload</button>
+        </div>
+      </div>
+
+      <div id="kbSummary" class="kb-summary" style="display:none">
+        <div class="kb-stat">
+          <div class="kb-stat-header">
+            <span class="kb-stat-label">Files</span>
+            <span class="kb-stat-value" id="sumFiles">0</span>
+          </div>
+          <div class="kb-stat-sub" id="sumTypes">No files</div>
+        </div>
+        <div class="kb-stat">
+          <div class="kb-stat-header">
+            <span class="kb-stat-label">Storage</span>
+            <span class="kb-stat-value" id="sumSize">0 KB</span>
+          </div>
+          <div class="kb-bar-track"><div class="kb-bar-fill" id="sizeBar"></div></div>
+          <div class="kb-stat-sub" id="sumQuota">0% of 50 MB</div>
+        </div>
+        <div class="kb-stat">
+          <div class="kb-stat-header">
+            <span class="kb-stat-label">Chunks indexed</span>
+            <span class="kb-stat-value" id="sumChunks">0</span>
+          </div>
+          <div class="kb-stat-sub" id="sumAvg"> &mdash; avg/file</div>
+        </div>
+      </div>
+      <div id="summarySkeleton" class="kb-summary" style="display:none">
+        <div class="skel-stat">
+          <div class="skel-stat-header">
+            <div class="skel-line skeleton" style="height:16px;width:40%"></div>
+            <div class="skel-line skeleton" style="height:24px;width:25%"></div>
+          </div>
+          <div class="skel-line skeleton" style="height:16px;width:60%"></div>
+        </div>
+        <div class="skel-stat">
+          <div class="skel-stat-header">
+            <div class="skel-line skeleton" style="height:16px;width:50%"></div>
+            <div class="skel-line skeleton" style="height:24px;width:30%"></div>
+          </div>
+          <div class="skeleton" style="height:6px;border-radius:3px"></div>
+          <div class="skel-line skeleton" style="height:16px;width:45%"></div>
+        </div>
+        <div class="skel-stat">
+          <div class="skel-stat-header">
+            <div class="skel-line skeleton" style="height:16px;width:55%"></div>
+            <div class="skel-line skeleton" style="height:24px;width:20%"></div>
+          </div>
           <div class="skel-line skeleton" style="height:16px;width:50%"></div>
-          <div class="skel-line skeleton" style="height:24px;width:30%"></div>
         </div>
-        <div class="skeleton" style="height:6px;border-radius:3px"></div>
-        <div class="skel-line skeleton" style="height:16px;width:45%"></div>
       </div>
-      <div class="skel-stat">
-        <div class="skel-stat-header">
-          <div class="skel-line skeleton" style="height:16px;width:55%"></div>
-          <div class="skel-line skeleton" style="height:24px;width:20%"></div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 id="kbFileListTitle">Files</h2>
+          <button id="clearAllBtn" class="ghost sm kb-clear-all" style="display:none" onclick="clearAll()">Clear all</button>
         </div>
-        <div class="skel-line skeleton" style="height:16px;width:50%"></div>
+        <table class="kb-table"><thead><tr><th class="col-name">Filename</th><th class="col-status">Status</th><th class="col-size">Size</th><th class="col-chunks">Chunks</th><th class="col-date">Uploaded</th><th class="col-folder">Folder</th><th class="col-actions"></th></tr></thead><tbody id="tbl"></tbody></table>
+        <div id="tableSkeleton" class="kb-table-skeleton"></div>
+        <div id="procMsg" class="kb-proc"><span class="kb-spinner"></span> Processing...</div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════ TAB: PRACTICE DATA ═══════════════ -->
+<div id="tab-practice" class="kb-tab-content" style="display:none">
+  <div id="pmsNoPms" class="help" style="display:none">
+    <h3>No practice management system connected</h3>
+    <p>Connect Cliniko or Pabau in <a href="/integrations">Integrations</a> to sync practice data.</p>
+  </div>
+
+  <div id="pmsHeader" class="pms-header">
+    <span class="pms-icon" id="pmsProviderIcon"></span>
+    <span id="pmsProviderName">&mdash;</span>
+    <span id="pmsLastSync" class="muted">Not synced</span>
+    <button class="btn sm" onclick="syncAll()" id="pmsSyncAllBtn" disabled>&#10227; Sync all data</button>
+  </div>
+
+  <div class="pms-cards" id="pmsCards">
+    <div class="pms-card" id="pmsCard-services">
+      <div class="pms-card-header">
+        <span class="pms-card-icon" id="pmsIcon-services"><span class="pms-dot">&#9679;</span></span>
+        <span class="pms-card-title">Services</span>
+        <span class="pms-card-count" id="pmsCount-services">&mdash;</span>
+      </div>
+      <div class="pms-card-detail" id="pmsDetail-services"></div>
+      <div class="pms-card-footer">
+        <span class="pms-card-timestamp" id="pmsTs-services">Not synced</span>
+        <button class="ghost sm pms-sync-btn" onclick="syncPms(['services'])" id="pmsBtn-services" disabled>&#10227; Sync</button>
       </div>
     </div>
 
-    <!-- File list -->
-    <div class="card">
-      <div class="card-header">
-        <h2 id="kbFileListTitle">Files</h2>
-        <button id="clearAllBtn" class="ghost sm kb-clear-all" style="display:none" onclick="clearAll()">Clear all</button>
+    <div class="pms-card" id="pmsCard-practitioners">
+      <div class="pms-card-header">
+        <span class="pms-card-icon" id="pmsIcon-practitioners"><span class="pms-dot">&#9679;</span></span>
+        <span class="pms-card-title">Practitioners</span>
+        <span class="pms-card-count" id="pmsCount-practitioners">&mdash;</span>
       </div>
-      <table class="kb-table"><thead><tr><th class="col-name">Filename</th><th class="col-status">Status</th><th class="col-size">Size</th><th class="col-chunks">Chunks</th><th class="col-date">Uploaded</th><th class="col-folder">Folder</th><th class="col-actions"></th></tr></thead><tbody id="tbl"></tbody></table>
-      <div id="tableSkeleton" class="kb-table-skeleton"></div>
-      <div id="procMsg" class="kb-proc"><span class="kb-spinner"></span> Processing...</div>
+      <div class="pms-card-detail" id="pmsDetail-practitioners"></div>
+      <div class="pms-card-footer">
+        <span class="pms-card-timestamp" id="pmsTs-practitioners">Not synced</span>
+        <button class="ghost sm pms-sync-btn" onclick="syncPms(['practitioners'])" id="pmsBtn-practitioners" disabled>&#10227; Sync</button>
+      </div>
     </div>
 
-    <div class="pms-redirect">
-      <a href="/admin/practice">Practice data synchronization →</a>
+    <div class="pms-card" id="pmsCard-clinic">
+      <div class="pms-card-header">
+        <span class="pms-card-icon" id="pmsIcon-clinic"><span class="pms-dot">&#9679;</span></span>
+        <span class="pms-card-title">Clinic</span>
+        <span class="pms-card-count" id="pmsCount-clinic">&mdash;</span>
+      </div>
+      <div class="pms-card-detail" id="pmsDetail-clinic"></div>
+      <div class="pms-card-footer">
+        <span class="pms-card-timestamp" id="pmsTs-clinic">Not synced</span>
+        <button class="ghost sm pms-sync-btn" onclick="syncPms(['clinic'])" id="pmsBtn-clinic" disabled>&#10227; Sync</button>
+      </div>
     </div>
+  </div>
 
-  </main>
+  <div id="pmsGlobalStatus" class="pms-global-status" style="display:none"></div>
+
+  <div class="pms-metrics">
+    <div class="pms-metric"><span class="pms-metric-value">{{ chunks.total }}</span> total chunks</div>
+    <div class="pms-metric"><span class="pms-metric-value">{{ chunks.pms }}</span> PMS chunks</div>
+    <div class="pms-metric"><span class="pms-metric-value">{{ chunks.kb }}</span> KB chunks</div>
+    <button class="btn sm" id="reindexBtn" onclick="reindexFromSql()" style="display:none">&#10227; Reindex from SQL</button>
+  </div>
 </div>
 
 <!-- ═══════════════ UPLOAD MODAL ═══════════════ -->
@@ -122,13 +228,11 @@
       <button class="close-btn" onclick="closeUploadModal()">&times;</button>
     </div>
 
-    <!-- Upload tabs -->
     <div class="ch-tabs" style="margin-bottom:16px">
       <button class="ch-tab active" data-utab="file">File</button>
       <button class="ch-tab" data-utab="url">Import URL</button>
     </div>
 
-    <!-- Tab panels (fixed-height container — no jumping) -->
     <div class="ch-panels">
       <div class="ch-panel active" id="upanel-file">
         <div id="uploadDrop" class="drop">
@@ -151,63 +255,6 @@
         </div>
         <div id="urlStatus" class="muted mt-12" style="font-size:13px"></div>
         <div class="err-msg" id="urlErr"></div>
-      </div>
-
-    </div>
-          <span class="muted" id="crmLastSync">Last sync: —</span>
-        </div>
-
-        <div id="crmNoCrm" style="display:none;padding:20px;text-align:center;border:1px dashed var(--border);border-radius:var(--radius);margin-bottom:12px">
-          <p class="muted" style="margin-bottom:12px">No CRM connected. Connect a CRM first in Integrations.</p>
-          <a href="/integrations" class="btn sm">Go to Integrations</a>
-        </div>
-
-        <div id="crmSections">
-          <div class="crm-section" id="crmSec-services">
-            <div class="crm-section-header">
-              <span class="crm-section-icon" id="crmIcon-services"><span class="dot">●</span></span>
-              <span class="crm-section-title">Services</span>
-              <span class="crm-section-count" id="crmCount-services">—</span>
-            </div>
-            <div class="crm-section-detail" id="crmDetail-services"></div>
-            <div class="crm-section-footer">
-              <span class="crm-timestamp" id="crmTs-services">Not synced</span>
-              <button class="ghost sm crm-sync-btn" onclick="syncCrm(['services'])" id="crmBtn-services" disabled>⟳ Sync</button>
-            </div>
-          </div>
-
-          <div class="crm-section" id="crmSec-practitioners">
-            <div class="crm-section-header">
-              <span class="crm-section-icon" id="crmIcon-practitioners"><span class="dot">●</span></span>
-              <span class="crm-section-title">Practitioners</span>
-              <span class="crm-section-count" id="crmCount-practitioners">—</span>
-            </div>
-            <div class="crm-section-detail" id="crmDetail-practitioners"></div>
-            <div class="crm-section-footer">
-              <span class="crm-timestamp" id="crmTs-practitioners">Not synced</span>
-              <button class="ghost sm crm-sync-btn" onclick="syncCrm(['practitioners'])" id="crmBtn-practitioners" disabled>⟳ Sync</button>
-            </div>
-          </div>
-
-          <div class="crm-section" id="crmSec-clinic">
-            <div class="crm-section-header">
-              <span class="crm-section-icon" id="crmIcon-clinic"><span class="dot">●</span></span>
-              <span class="crm-section-title">Clinic</span>
-              <span class="crm-section-count" id="crmCount-clinic">—</span>
-            </div>
-            <div class="crm-section-detail" id="crmDetail-clinic"></div>
-            <div class="crm-section-footer">
-              <span class="crm-timestamp" id="crmTs-clinic">Not synced</span>
-              <button class="ghost sm crm-sync-btn" onclick="syncCrm(['clinic'])" id="crmBtn-clinic" disabled>⟳ Sync</button>
-            </div>
-          </div>
-
-          <div class="mt-12">
-            <button class="btn sm" onclick="syncCrm(null)" id="crmSyncAllBtn" disabled>⟳ Sync all data</button>
-          </div>
-
-          <div id="crmGlobalStatus" style="display:none"></div>
-        </div>
       </div>
     </div>
   </div>
@@ -248,6 +295,7 @@
     </div>
   </div>
 </div>
+
 <!-- ═══════════════ CHUNK VIEWER MODAL ═══════════════ -->
 <div class="modal-overlay" id="chunkModal">
   <div class="modal chunk-modal">
@@ -261,7 +309,6 @@
 {% endblock %}
 {% block tail %}
 <style>
-/* ── Layout ── */
 .kb-layout{display:flex;gap:20px;align-items:flex-start}
 .kb-sidebar{width:240px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px;position:sticky;top:16px;max-height:calc(100vh - 160px);overflow-y:auto}
 .kb-sidebar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding:4px 6px 6px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted2)}
@@ -270,8 +317,6 @@
 .kb-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
 .kb-current-folder{font-size:16px;font-weight:700}
 .kb-toolbar-actions{display:flex;gap:8px}
-
-/* ── Folder tree ── */
 .kb-folder-children{padding-left:18px;position:relative}
 .kb-folder-children::before{content:'';position:absolute;left:8px;top:0;bottom:4px;width:1px;background:var(--border)}
 .kb-folder-item{padding:5px 8px;border-radius:5px;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:6px;position:relative;transition:background .12s;color:var(--muted)}
@@ -290,13 +335,9 @@
 .kb-folder-item.root{font-weight:700;color:var(--text);font-size:13px;margin-bottom:2px}
 .kb-folder-item.root .kb-folder-icon{opacity:1}
 .kb-folder-count{margin-left:auto;font-size:10px;font-weight:600;color:var(--muted2);background:rgba(255,255,255,0.04);padding:1px 6px;border-radius:4px;min-width:16px;text-align:center;line-height:1.6}
-
-/* ── Upload tabs ── */
 .kb-label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);margin-bottom:4px}
 .kb-input{width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:14px;outline:none;box-sizing:border-box}
 .kb-input:focus{border-color:var(--accent)}
-
-/* ── Summary ── */
 .kb-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
 .kb-stat{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px}
 .kb-stat:hover{border-color:var(--border-bright)}
@@ -306,8 +347,6 @@
 .kb-bar-track{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:10px}
 .kb-bar-fill{height:100%;border-radius:3px;transition:width .6s ease;background:linear-gradient(90deg,var(--accent),#818cf8)}
 .kb-stat-sub{font-size:12px;color:var(--muted)}
-
-/* ── Table ── */
 .kb-table{width:100%;border-collapse:collapse}
 .kb-table th,.kb-table td{padding:10px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--border)}
 .col-name{width:auto}.col-status{width:100px;text-align:center}.col-size{width:80px;text-align:right}.col-chunks{width:80px;text-align:right}.col-date{width:115px;white-space:nowrap}.col-folder{width:130px}.col-actions{width:60px;text-align:center}
@@ -325,8 +364,6 @@
 .kb-uprog-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .3s ease}
 .kb-spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:kb-spin .6s linear infinite;display:inline-block}
 @keyframes kb-spin{to{transform:rotate(360deg)}}
-
-/* ── Chunk modal ── */
 .chunk-modal{max-width:90vw;width:900px;max-height:85vh;display:flex;flex-direction:column}
 .chunk-modal-body{flex:1;overflow-y:auto;padding:4px 0;min-height:400px;scrollbar-width:thin;scrollbar-color:transparent transparent}
 .chunk-modal-body:hover{scrollbar-color:var(--border) transparent}
@@ -339,8 +376,6 @@
 .kb-chunk:last-child{margin-bottom:0}
 .kb-chunk-meta{font-size:11px;color:var(--muted2);margin-bottom:6px}
 .kb-chunk-text{color:var(--text);white-space:pre-wrap;word-break:break-word}
-
-/* ── RAG Simulator ── */
 .sim-section{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px}
 .sim-bar{display:flex;gap:8px}
 .sim-input{flex:1;padding:10px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:14px;outline:none}
@@ -360,61 +395,289 @@
 .sim-chunk-item:hover{background:rgba(255,255,255,0.03)}
 .sim-chunk-item + .sim-chunk-item{border-top:1px solid var(--border)}
 .sim-chunk-text{white-space:pre-wrap;word-break:break-word;color:var(--muted)}
-
-/* ── Drop zone ── */
 .drop{border:2px dashed var(--border);border-radius:var(--radius);padding:32px;text-align:center;cursor:pointer;transition:all .25s}
 .drop.hot,.drop:hover{border-color:var(--accent);background:rgba(99,102,241,0.04)}
-
 .mt-12{margin-top:12px}
-
-.pms-redirect{margin-top:16px;padding:10px 16px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);text-align:center}
-.pms-redirect a{font-size:13px;font-weight:600;color:var(--accent);text-decoration:none}
-.pms-redirect a:hover{color:#fff}
+.ov-activity{border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:20px}
+.ov-activity-header{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.ov-activity-item{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13px}
+.ov-activity-item+.ov-activity-item{border-top:1px solid rgba(255,255,255,0.03)}
+.ov-activity-icon{flex-shrink:0;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px}
+.ov-activity-icon.upload{background:rgba(52,211,153,0.12);color:#34d399}
+.ov-activity-icon.delete{background:rgba(248,113,113,0.12);color:#f87171}
+.ov-activity-icon.folder{background:rgba(96,165,250,0.12);color:#60a5fa}
+.ov-activity-icon.sync{background:rgba(251,191,36,0.12);color:#fbbf24}
+.ov-activity-desc{flex:1;min-width:0;color:var(--text)}
+.ov-activity-time{flex-shrink:0;font-size:11px;color:var(--muted2);white-space:nowrap}
 </style>
 <script>
-// ════════════════════════════════════════════════
-// Helpers
-// ════════════════════════════════════════════════
 var _selectedFolder = '';
-var _pollingActive = false;
 var _confirmCb = null;
 var _confirmLoading = false;
-
-function esc(v){ return String(v ?? '').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
-
-// ── Skeleton helpers ──
 var _skelRows = '';
 (function(){
   for(var i=0;i<6;i++){
     _skelRows += '<tr class="skel-tr"><td><div class="skel-line w80 skeleton"></div></td><td><div class="skel-line w60 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w40 skeleton" style="margin-left:auto"></div></td><td><div class="skel-line w40 skeleton" style="margin-left:auto"></div></td><td><div class="skel-line w60 skeleton"></div></td><td><div class="skel-line w60 skeleton"></div></td><td><div style="width:20px;height:20px"></div></td></tr>';
   }
 })();
-function showSkeletons(){
-  document.getElementById('folderTree').style.display='none';
-  document.getElementById('folderSkeleton').style.display='';
-  document.getElementById('summarySkeleton').style.display='grid';
-  document.getElementById('kbSummary').style.display='none';
-  document.getElementById('tbl').innerHTML=_skelRows;
+
+// ════════════════════════════════════════════════
+// TAB MANAGEMENT
+// ════════════════════════════════════════════════
+var _activeTab = 'overview';
+var _savedFolder = '';
+var _idDocPoll = null;
+var _idPmsPoll = null;
+var _pmsSyncing = false;
+var _pmsStatus = null;
+
+(function(){
+  var hash = location.hash.replace('#', '') || 'overview';
+  if(['overview','documents','practice'].indexOf(hash) >= 0) {
+    switchTab(hash, false);
+  }
+})();
+
+window.addEventListener('hashchange', function(){
+  var hash = location.hash.replace('#', '') || 'overview';
+  if(['overview','documents','practice'].indexOf(hash) >= 0) {
+    switchTab(hash, false);
+  }
+});
+
+function closeAllModals() {
+  if(!_confirmLoading) closeConfirm();
+  closeUploadModal();
+  closeChunkViewer();
+  closeFolderModal();
 }
-function hideSkeletons(){
-  document.getElementById('folderTree').style.display='';
-  document.getElementById('folderSkeleton').style.display='none';
-  document.getElementById('summarySkeleton').style.display='none';
+
+function switchTab(tab, pushState) {
+  if(pushState !== false) {
+    history.replaceState(null, '', '#' + tab);
+  }
+  if(_activeTab === 'documents' && tab !== 'documents') _savedFolder = _selectedFolder;
+  closeAllModals();
+  if(_idDocPoll) { clearInterval(_idDocPoll); _idDocPoll = null; }
+  if(_idPmsPoll) { clearInterval(_idPmsPoll); _idPmsPoll = null; }
+  _activeTab = tab;
+  document.querySelectorAll('.kb-tab-content').forEach(function(el){ el.style.display = 'none'; });
+  document.getElementById('tab-' + tab).style.display = '';
+  document.querySelectorAll('.kb-tab').forEach(function(el){ el.classList.remove('active'); });
+  var tabEl = document.querySelector('.kb-tab[data-tab="' + tab + '"]');
+  if(tabEl) tabEl.classList.add('active');
+  try {
+    if(tab === 'overview') { loadOverview(); }
+    if(tab === 'documents') {
+      if(_savedFolder) { _selectedFolder = _savedFolder; selectFolder(_savedFolder); }
+      loadFolders();
+      refresh();
+      _idDocPoll = setInterval(refreshFileRows, 2000);
+    }
+    if(tab === 'practice') {
+      loadPmsStatus();
+      _idPmsPoll = setInterval(loadPmsStatus, 30000);
+    }
+  } catch(e) { console.error('switchTab error:', e); }
 }
+
+// ════════════════════════════════════════════════
+// OVERVIEW TAB
+// ════════════════════════════════════════════════
+async function loadOverview() {
+  var el = document.getElementById('ov-skeleton');
+  if(el) el.style.display = '';
+  try {
+    var data = await api('/knowledge/overview');
+    document.getElementById('ov-files').textContent = data.files.count;
+    document.getElementById('ov-chunks').textContent = data.files.chunks;
+    document.getElementById('ov-size').textContent = (data.files.size_bytes / 1024).toFixed(0) + ' KB';
+    document.getElementById('ov-pms-services').textContent = data.pms.services;
+    document.getElementById('ov-pms-practitioners').textContent = data.pms.practitioners;
+    document.getElementById('ov-pms-clinic').textContent = data.pms.clinic;
+    document.getElementById('ov-pms-chunks').textContent = data.pms.chunks;
+    document.getElementById('ov-total-chunks').textContent = (data.chunks.kb || 0) + (data.chunks.pms || 0);
+    if(data.pms.last_sync_at) {
+      document.getElementById('ov-pms-sync').textContent = 'Last sync: ' + _timeAgo(data.pms.last_sync_at);
+    }
+    document.getElementById('ov-cards').style.display = 'grid';
+    if(el) el.style.display = 'none';
+    loadActivity();
+  } catch(e) {
+    console.error('loadOverview error:', e);
+    document.getElementById('ov-error').style.display = '';
+    if(el) el.style.display = 'none';
+  }
+}
+
+async function loadActivity() {
+  try {
+    var data = await api('/knowledge/activity?limit=15');
+    var container = document.getElementById('ov-activity');
+    var list = document.getElementById('ov-activity-list');
+    if(!data.length) { container.style.display = 'none'; return; }
+    var icons = {file_uploaded:'upload',file_deleted:'delete',url_imported:'upload',url_deleted:'delete',folder_created:'folder',folder_deleted:'delete',pms_synced:'sync'};
+    var labels = {file_uploaded:'\u2191',file_deleted:'\u2716',url_imported:'\u2191',url_deleted:'\u2716',folder_created:'+',folder_deleted:'\u2716',pms_synced:'\u21bb'};
+    list.innerHTML = data.map(function(a){
+      var ic = icons[a.event_type] || 'upload';
+      var lb = labels[a.event_type] || '\u2022';
+      return '<div class="ov-activity-item"><div class="ov-activity-icon ' + ic + '">' + lb + '</div><div class="ov-activity-desc">' + esc(a.description) + '</div><div class="ov-activity-time">' + _timeAgo(a.created_at) + '</div></div>';
+    }).join('');
+    container.style.display = '';
+  } catch(e) { console.error('loadActivity error:', e); }
+}
+
+// ════════════════════════════════════════════════
+// PMS HELPERS (also used by Quick Status)
+// ════════════════════════════════════════════════
+function _timeAgo(iso){
+  if(!iso) return null;
+  var diff = Date.now() - new Date(iso + (iso.endsWith('Z')?'':'Z')).getTime();
+  var mins = Math.floor(diff / 60000);
+  if(mins < 1) return 'just now';
+  if(mins < 60) return mins + 'm ago';
+  var hrs = Math.floor(mins / 60);
+  if(hrs < 24) return hrs + 'h ago';
+  return new Date(iso).toLocaleDateString();
+}
+
+function _setIcon(type, state){
+  var el = document.getElementById('pmsIcon-' + type);
+  if(state === 'loading') el.innerHTML = '<span class="pms-spinner"></span>';
+  else if(state === 'success') el.innerHTML = '<span class="pms-check">&#10003;</span>';
+  else if(state === 'error') el.innerHTML = '<span class="pms-cross">&#10007;</span>';
+  else el.innerHTML = '<span class="pms-dot">&#9679;</span>';
+}
+
+function updateGlobalStatus(state, msg){
+  var el = document.getElementById('pmsGlobalStatus');
+  if(!msg){ el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  el.className = 'pms-global-status pms-' + state;
+  el.innerHTML = '<span>' + msg + '</span>';
+}
+
+function disableBtns(disabled){
+  document.getElementById('pmsSyncAllBtn').disabled = disabled;
+  ['services','practitioners','clinic'].forEach(function(t){
+    document.getElementById('pmsBtn-' + t).disabled = disabled;
+  });
+}
+
+function renderCard(type, data, state){
+  var labels = {services:'Services', practitioners:'Practitioners', clinic:'Clinic'};
+  document.getElementById('pmsCount-' + type).textContent = data && data.count != null ? data.count + ' ' + labels[type].toLowerCase() : '\u2014';
+  document.getElementById('pmsDetail-' + type).textContent = data && data.detail ? data.detail : '';
+  document.getElementById('pmsTs-' + type).textContent = data && data.last_sync ? 'Last synced: ' + (_timeAgo(data.last_sync) || data.last_sync) : 'Not synced';
+  _setIcon(type, state || 'idle');
+}
+
+// ════════════════════════════════════════════════
+// PMS STATUS & SYNC
+// ════════════════════════════════════════════════
+async function loadPmsStatus(){
+  try {
+    document.getElementById('pmsHeader').style.display = 'flex';
+    document.getElementById('pmsNoPms').style.display = 'none';
+    document.getElementById('pmsCards').style.display = 'grid';
+    disableBtns(true);
+    var resp = await api('/knowledge/sync/crm/status');
+    _pmsStatus = resp;
+    var prov = resp.crm_provider || '';
+    document.getElementById('pmsProviderName').textContent = prov ? prov.charAt(0).toUpperCase() + prov.slice(1) : '\u2014';
+    if(!prov){
+      document.getElementById('pmsNoPms').style.display = '';
+      document.getElementById('pmsHeader').style.display = 'none';
+      document.getElementById('pmsCards').style.display = 'none';
+      return;
+    }
+    var lastSync = resp.last_sync_at;
+    document.getElementById('pmsLastSync').textContent = lastSync ? 'Last sync: ' + (_timeAgo(lastSync) || lastSync) : 'Not synced';
+    ['services','practitioners','clinic'].forEach(function(t){
+      var s = resp[t] || {count:0, last_sync:null};
+      renderCard(t, s, s.last_sync ? 'idle' : 'idle');
+    });
+    disableBtns(false);
+  } catch(e){
+    document.getElementById('pmsNoPms').style.display = '';
+    document.getElementById('pmsNoPms').innerHTML = '<p class="muted">Could not load sync status.</p>';
+    document.getElementById('pmsHeader').style.display = 'none';
+    document.getElementById('pmsCards').style.display = 'none';
+  }
+}
+
+async function syncPms(types){
+  if(_pmsSyncing) return;
+  _pmsSyncing = true;
+  disableBtns(true);
+  var typeList = types || ['services','practitioners','clinic'];
+  typeList.forEach(function(t){ _setIcon(t, 'loading'); });
+  if(typeList.length === 3) updateGlobalStatus('loading', 'Syncing all data\u2026');
+  else updateGlobalStatus('loading', 'Syncing ' + typeList[0] + '\u2026');
+  try {
+    var resp = await api('/knowledge/sync/crm', {method:'POST', body:{types:typeList}});
+    var hasErrors = false;
+    var allOk = true;
+    typeList.forEach(function(t){
+      var r = resp[t];
+      if(r){
+        if(r.errors && r.errors.length){
+          _setIcon(t, 'error');
+          renderCard(t, {count: r.imported, last_sync: null}, 'error');
+          hasErrors = true;
+          allOk = false;
+        } else {
+          _setIcon(t, 'success');
+          renderCard(t, {count: r.imported, last_sync: new Date().toISOString()}, 'success');
+        }
+      }
+    });
+    if(hasErrors) updateGlobalStatus('partial', 'Synced with errors. Check individual sections.');
+    else if(allOk) updateGlobalStatus('ok', 'All data synced successfully.');
+    await loadPmsStatus();
+  } catch(e){
+    updateGlobalStatus('err', 'Sync failed: ' + e.message);
+    typeList.forEach(function(t){ _setIcon(t, 'error'); });
+  }
+  disableBtns(false);
+  _pmsSyncing = false;
+}
+
+function syncAll(){ syncPms(['services','practitioners','clinic']); }
+
+async function reindexFromSql(){
+  if(!confirm('Reindex all PMS data from SQL to Chroma? This will not call the CRM API.')) return;
+  updateGlobalStatus('loading', 'Reindexing from SQL\u2026');
+  try {
+    var resp = await api('/knowledge/sync/crm/reindex', {method:'POST'});
+    var msg = [];
+    ['services','practitioners','clinic'].forEach(function(t){
+      var r = resp[t] || {};
+      if(r.imported > 0) msg.push(t + ': ' + r.imported + ' chunks');
+    });
+    updateGlobalStatus('ok', 'Reindex complete: ' + (msg.join(', ') || 'nothing to reindex'));
+    await loadPmsStatus();
+  } catch(e){
+    updateGlobalStatus('err', 'Reindex failed: ' + e.message);
+  }
+}
+
+// Quick sync (PMS Quick Status bar at top)
+function syncQuick(){ syncPms(['services','practitioners','clinic']); }
 
 // ════════════════════════════════════════════════
 // FOLDER TREE
 // ════════════════════════════════════════════════
 async function loadFolders(){
-  document.getElementById('folderTree').style.display='none';
-  document.getElementById('folderSkeleton').style.display='';
+  document.getElementById('folderTree').style.display = 'none';
+  document.getElementById('folderSkeleton').style.display = '';
   var folders = await api('/knowledge/folders');
   var tree = document.getElementById('folderTree');
-  var html = '<div class="kb-folder-item root' + (_selectedFolder === '' ? ' active' : '') + '" data-id="" onclick="selectFolder(\'\')"><span class="kb-folder-icon">📁</span> All files</div>';
+  var html = '<div class="kb-folder-item root' + (_selectedFolder === '' ? ' active' : '') + '" data-id="" onclick="selectFolder(\'\')"><span class="kb-folder-icon">&#128193;</span> All files</div>';
   html += buildTree(folders, null, {});
   tree.innerHTML = html;
-  document.getElementById('folderTree').style.display='';
-  document.getElementById('folderSkeleton').style.display='none';
+  document.getElementById('folderTree').style.display = '';
+  document.getElementById('folderSkeleton').style.display = 'none';
 }
 function buildTree(folders, parentId, fileCounts){
   var children = folders.filter(function(f){ return f.parent_id === parentId; });
@@ -424,12 +687,12 @@ function buildTree(folders, parentId, fileCounts){
     var active = _selectedFolder === f.id ? ' active' : '';
     var cnt = fileCounts[f.id];
     html += '<div class="kb-folder-item' + active + '" data-id="' + f.id + '" data-name="' + esc(f.name) + '" onclick="selectFolder(\'' + f.id + '\')">';
-    html += '<span class="kb-folder-icon">📁</span>';
+    html += '<span class="kb-folder-icon">&#128193;</span>';
     html += esc(f.name);
     if(cnt !== undefined) html += '<span class="kb-folder-count">' + cnt + '</span>';
     html += '<span class="kb-folder-actions">';
-    html += '<button class="ghost sm" onclick="event.stopPropagation();showFolderModal(\'' + f.id + '\')" title="Rename">✏️</button>';
-    html += '<button class="ghost sm" onclick="event.stopPropagation();deleteFolder(\'' + f.id + '\',\'' + esc(f.name).replace(/'/g,"\\'") + '\')" title="Delete">🗑️</button>';
+    html += '<button class="ghost sm" onclick="event.stopPropagation();showFolderModal(\'' + f.id + '\')" title="Rename">&#9997;&#65039;</button>';
+    html += '<button class="ghost sm" onclick="event.stopPropagation();deleteFolder(\'' + f.id + '\',\'' + esc(f.name).replace(/'/g,"\\'") + '\')" title="Delete">&#128465;&#65039;</button>';
     html += '</span></div>';
     var childHtml = buildTree(folders, f.id, fileCounts);
     if(childHtml) html += '<div class="kb-folder-children">' + childHtml + '</div>';
@@ -463,7 +726,6 @@ async function showFolderModal(parentId){
 }
 function closeFolderModal(){ unlockScroll(); document.getElementById('folderModal').classList.remove('show'); }
 document.getElementById('folderModal').addEventListener('click', function(e){ if(e.target === this) closeFolderModal(); });
-
 async function saveFolder(){
   var name = document.getElementById('folderNameInput').value.trim();
   if(!name){ document.getElementById('folderErr').textContent = 'Name is required'; return; }
@@ -495,6 +757,19 @@ async function deleteFolder(id, name){
 // ════════════════════════════════════════════════
 // FILE LIST
 // ════════════════════════════════════════════════
+function showSkeletons(){
+  document.getElementById('folderTree').style.display = 'none';
+  document.getElementById('folderSkeleton').style.display = '';
+  document.getElementById('summarySkeleton').style.display = 'grid';
+  document.getElementById('kbSummary').style.display = 'none';
+  document.getElementById('tbl').innerHTML = _skelRows;
+}
+function hideSkeletons(){
+  document.getElementById('folderTree').style.display = '';
+  document.getElementById('folderSkeleton').style.display = 'none';
+  document.getElementById('summarySkeleton').style.display = 'none';
+}
+
 async function refresh() {
   showSkeletons();
   try {
@@ -504,8 +779,6 @@ async function refresh() {
     var urlRows = data[2];
     var folderMap = {};
     folders.forEach(function(f){ folderMap[f.id] = f.name; });
-
-    // Normalize URL rows to look like file rows
     var urlNormalized = (urlRows || []).map(function(u){
       return {
         id: u.id,
@@ -520,26 +793,21 @@ async function refresh() {
       };
     });
     var allRows = fileRows.concat(urlNormalized);
-
-    // rebuild folder tree
     var fileCounts = {};
     allRows.forEach(function(r){ if(r.folder_id){ fileCounts[r.folder_id] = (fileCounts[r.folder_id] || 0) + 1; } });
     var tree = document.getElementById('folderTree');
-    var thtml = '<div class="kb-folder-item root' + (_selectedFolder === '' ? ' active' : '') + '" data-id="" onclick="selectFolder(\'\')"><span class="kb-folder-icon">📁</span> All files</div>';
+    var thtml = '<div class="kb-folder-item root' + (_selectedFolder === '' ? ' active' : '') + '" data-id="" onclick="selectFolder(\'\')"><span class="kb-folder-icon">&#128193;</span> All files</div>';
     thtml += buildTree(folders, null, fileCounts);
     tree.innerHTML = thtml;
-
     var rows = _selectedFolder ? allRows.filter(function(r){ return r.folder_id === _selectedFolder; }) : allRows;
     var ready = rows.filter(function(r){ return r.status === 'ready'; });
     var totalSize = rows.reduce(function(a, r){ return a + (r.size_bytes || 0); }, 0);
     var totalChunks = ready.reduce(function(a, r){ return a + (r.chunks_total || 0); }, 0);
     var maxMB = 50;
     var pct = Math.min((totalSize / (maxMB * 1024 * 1024)) * 100, 100);
-
     var types = {};
     rows.forEach(function(r){ if(r._is_url){ types['URL'] = (types['URL'] || 0) + 1; } else { var ext = r.filename.split('.').pop().toUpperCase(); types[ext] = (types[ext] || 0) + 1; } });
     var typeLabels = Object.keys(types).sort().map(function(t){ return types[t] + ' ' + t; });
-
     document.getElementById('sumFiles').textContent = ready.length + ' file' + (ready.length !== 1 ? 's' : '');
     document.getElementById('sumTypes').textContent = typeLabels.length ? typeLabels.join(', ') : 'No files';
     document.getElementById('sumSize').textContent = totalSize > 1048576 ? (totalSize/1048576).toFixed(1) + ' MB' : (totalSize/1024).toFixed(0) + ' KB';
@@ -548,18 +816,14 @@ async function refresh() {
     document.getElementById('sumChunks').textContent = totalChunks;
     document.getElementById('sumAvg').textContent = ready.length ? Math.round(totalChunks / ready.length) + ' avg/file' : '\u2014';
     document.getElementById('kbSummary').style.display = 'grid';
-
     var hasFiles = allRows.length > 0;
     var hasProcessing = allRows.some(function(r){ return r.status === 'processing' || r.status === 'pending'; });
     document.getElementById('clearAllBtn').style.display = hasFiles ? '' : 'none';
-
     document.getElementById('kbFileListTitle').textContent = _selectedFolder ? 'Files in ' + (folderMap[_selectedFolder] || 'folder') : 'Files';
-
     document.getElementById('tbl').innerHTML = rows.map(function(r){
       var cls = r.status === 'ready' ? 'ok' : (r.status === 'failed' ? 'err' : 'warn');
       var label = r.status === 'processing' ? 'Processing' : r.status;
       var fname = (r.folder_id && folderMap[r.folder_id]) ? folderMap[r.folder_id] : '\u2014';
-
       var nameHtml, sizeHtml;
       if(r._is_url){
         var encName = encodeURIComponent(r.filename);
@@ -570,7 +834,6 @@ async function refresh() {
         nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',false,\'' + encName + '\');return false">' + esc(r.filename) + '</a></strong>';
         sizeHtml = r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB';
       }
-
       return '<tr>'
         + '<td>' + nameHtml + '</td>'
         + '<td><span class="pill ' + cls + '">' + label + '</span></td>'
@@ -578,11 +841,10 @@ async function refresh() {
         + '<td style="text-align:right">' + (r.chunks_total || '\u2014') + '</td>'
         + '<td>' + (r.created_at ? r.created_at.slice(0, 10) : '\u2014') + '</td>'
         + '<td style="font-size:12px;color:var(--muted2)">' + esc(fname) + '</td>'
-        + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '" data-isurl="' + (r._is_url ? '1' : '0') + '">✕</button></td></tr>';
+        + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '" data-isurl="' + (r._is_url ? '1' : '0') + '">&#10005;</button></td></tr>';
     }).join('') || '<tr><td colspan="7" class="muted" style="text-align:center;padding:16px">No files in this folder.</td></tr>';
-
     document.getElementById('procMsg').style.display = hasProcessing ? '' : 'none';
-    if(hasProcessing && !_pollingActive) pollProcessing();
+    if(hasProcessing && !_idDocPoll) pollProcessing();
     hideSkeletons();
   } catch(e) { console.error('kb refresh error:', e); hideSkeletons(); }
 }
@@ -636,28 +898,24 @@ async function refreshFileRows() {
         + '<td style="text-align:right">' + (r.chunks_total || '\u2014') + '</td>'
         + '<td>' + (r.created_at ? r.created_at.slice(0, 10) : '\u2014') + '</td>'
         + '<td style="font-size:12px;color:var(--muted2)">' + esc(fname) + '</td>'
-        + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '" data-isurl="' + (r._is_url ? '1' : '0') + '">\u2715</button></td></tr>';
+        + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '" data-isurl="' + (r._is_url ? '1' : '0') + '">&#10005;</button></td></tr>';
     }).join('') || '<tr><td colspan="7" class="muted" style="text-align:center;padding:16px">No files in this folder.</td></tr>';
     document.getElementById('procMsg').style.display = hasProcessing ? '' : 'none';
-    if(hasProcessing && !_pollingActive) pollProcessing();
+    if(hasProcessing && !_idDocPoll) pollProcessing();
   } catch(e) { console.error('refreshFileRows error:', e); }
 }
 
 async function pollProcessing(){
-  if(_pollingActive) return;
-  _pollingActive = true;
-  try {
-    for(var i = 0; i < 600; i++){
-      var data = await Promise.all([api('/knowledge/files'), api('/knowledge/urls')]);
-      var all = data[0].concat(data[1]);
-      var pending = all.filter(function(r){ return r.status === 'processing' || r.status === 'pending'; });
-      var pMsg = document.getElementById('procMsg');
-      if(!pending.length) { pMsg.style.display = 'none'; _pollingActive = false; await refreshFileRows(); return; }
-      pMsg.style.display = '';
-      await new Promise(function(r){ setTimeout(r, 2000); });
-    }
-  } catch(e) { console.error('poll error:', e); }
-  _pollingActive = false;
+  if(_idDocPoll) return;
+  for(var i = 0; i < 600; i++){
+    var data = await Promise.all([api('/knowledge/files'), api('/knowledge/urls')]);
+    var all = data[0].concat(data[1]);
+    var pending = all.filter(function(r){ return r.status === 'processing' || r.status === 'pending'; });
+    var pMsg = document.getElementById('procMsg');
+    if(!pending.length) { pMsg.style.display = 'none'; await refreshFileRows(); return; }
+    pMsg.style.display = '';
+    await new Promise(function(r){ setTimeout(r, 2000); });
+  }
 }
 
 async function del(btn){
@@ -672,6 +930,7 @@ async function del(btn){
     closeConfirm(true);
   }, shortName || 'Confirm');
 }
+
 async function clearAll(){
   showConfirm('Delete all documents?', async function(){
     setConfirmLoading(true);
@@ -697,25 +956,19 @@ function showUploadModal(){
   document.getElementById('urlErr').textContent = '';
   document.getElementById('uploadErr').textContent = '';
   document.getElementById('uploadProg').innerHTML = '';
-  document.getElementById('crmGlobalStatus').style.display = 'none';
-  document.getElementById('crmGlobalStatus').className = 'crm-global-status';
 }
 function closeUploadModal(){ unlockScroll(); document.getElementById('uploadModal').classList.remove('show'); }
 document.getElementById('uploadModal').addEventListener('click', function(e){ if(e.target === this) closeUploadModal(); });
 
-// Upload tab switching
-document.querySelectorAll('.ch-tabs[style] .ch-tab, #uploadModal .ch-tab').forEach(function(tab){
-  var tabs = tab.parentElement;
-  if(!tabs.closest('#uploadModal')) return;
+document.querySelectorAll('#uploadModal .ch-tab').forEach(function(tab){
   tab.addEventListener('click', function(){
-    tabs.querySelectorAll('.ch-tab').forEach(function(t){ t.classList.remove('active'); });
+    tab.parentElement.querySelectorAll('.ch-tab').forEach(function(t){ t.classList.remove('active'); });
     document.querySelectorAll('#uploadModal .ch-panel').forEach(function(p){ p.classList.remove('active'); });
     tab.classList.add('active');
     document.getElementById('upanel-' + tab.getAttribute('data-utab')).classList.add('active');
   });
 });
 
-// File upload
 var uploadDrop = document.getElementById('uploadDrop');
 uploadDrop.addEventListener('click', function(){ document.getElementById('uploadFileInput').click(); });
 uploadDrop.addEventListener('dragover', function(e){ e.preventDefault(); uploadDrop.classList.add('hot'); });
@@ -739,7 +992,6 @@ async function uploadFiles(files){
   closeUploadModal();
 }
 
-// URL import
 function toggleImportBtn(){
   document.getElementById('importUrlBtn').disabled = !document.getElementById('urlInput').value.trim() || !document.getElementById('urlTitle').value.trim();
 }
@@ -751,7 +1003,7 @@ async function importUrl(){
   document.getElementById('urlErr').textContent = '';
   document.getElementById('urlStatus').textContent = 'Importing...';
   try {
-    var resp = await api('/knowledge/urls', {method:'POST', body:{url:url, title:title, folder_id:_selectedFolder || null}});
+    await api('/knowledge/urls', {method:'POST', body:{url:url, title:title, folder_id:_selectedFolder || null}});
     await refreshFileRows();
     closeUploadModal();
   } catch(e){ document.getElementById('urlErr').textContent = e.message; }
@@ -765,7 +1017,6 @@ async function openChunkViewer(fileId, isUrl, name){
   document.getElementById('chunkModalTitle').textContent = name ? decodeURIComponent(name) : 'Chunks';
   document.getElementById('chunkModalBody').innerHTML = '<div class="chunk-loading"><span class="kb-spinner"></span>Loading chunks...</div>';
   document.getElementById('chunkModal').classList.add('show');
-
   try {
     var ep = isUrl ? '/knowledge/urls/' : '/knowledge/files/';
     var chunkData = await api(ep + fileId + '/chunks');
@@ -787,11 +1038,11 @@ function closeChunkViewer(){
   document.getElementById('chunkModalBody').innerHTML = '';
   unlockScroll();
 }
+document.getElementById('chunkModal').addEventListener('click', function(e){ if(e.target === this) closeChunkViewer(); });
 
 // ════════════════════════════════════════════════
 // RAG SIMULATOR
 // ════════════════════════════════════════════════
-
 function renderMarkdown(t){
   var h = esc(t);
   h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -809,41 +1060,37 @@ async function simulate(){
   document.getElementById('simError').style.display = 'none';
   try {
     var data = await api('/knowledge/simulate', {method:'POST', body:{query:query, top_k:5}});
-
     var html = '<div class="sim-a">' + renderMarkdown(data.answer) + '</div>';
-
     var sources = data.sources || [];
     if(sources.length){
-      // Group by filename
       var groups = {};
       sources.forEach(function(s){
         var key = s.filename || 'Unknown';
         if(!groups[key]) groups[key] = [];
         groups[key].push(s);
       });
-
       var docCount = Object.keys(groups).length;
       var chunkCount = sources.length;
       html += '<div class="sim-sources-header" onclick="toggleSources(this)">';
       html += docCount + ' ' + (docCount === 1 ? 'source' : 'sources');
-      html += ' · ' + chunkCount + ' ' + (chunkCount === 1 ? 'excerpt' : 'excerpts');
-      html += '<span class="sim-source-arrow">▶</span>';
+      html += ' &middot; ' + chunkCount + ' ' + (chunkCount === 1 ? 'excerpt' : 'excerpts');
+      html += '<span class="sim-source-arrow">&#9654;</span>';
       html += '</div>';
       html += '<div class="sim-sources-body">';
-
       Object.keys(groups).forEach(function(fname){
         var chunks = groups[fname];
+        var isPms = chunks.some(function(s){ return s.file_id && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s.file_id); });
         html += '<div class="sim-source-group">';
         html += '<div class="sim-source-header">';
-        html += '<span style="font-size:14px;opacity:.5">📄</span>';
+        html += '<span style="font-size:14px;opacity:.5">' + (isPms ? '&#127973;' : '&#128196;') + '</span>';
         html += '<span class="sim-source-name" title="' + esc(fname) + '">' + esc(fname) + '</span>';
         html += '</div>';
         html += '<div class="sim-source-chunks">';
         chunks.forEach(function(s){
-          var shortText = s.chunk.length > 250 ? s.chunk.slice(0, 250) + '…' : s.chunk;
+          var shortText = s.chunk.length > 250 ? s.chunk.slice(0, 250) + '\u2026' : s.chunk;
           html += '<div class="sim-chunk-item">';
           if(s.section){
-            html += '<div style="font-size:11px;color:var(--muted2);margin-bottom:2px">§ ' + esc(s.section) + '</div>';
+            html += '<div style="font-size:11px;color:var(--muted2);margin-bottom:2px">\u00a7 ' + esc(s.section) + '</div>';
           }
           html += '<div style="font-size:11px;color:var(--accent);margin-bottom:3px">Match ' + (s.score ? (s.score * 100).toFixed(0) : '?') + '%</div>';
           html += '<div class="sim-chunk-text">' + esc(shortText) + '</div>';
@@ -853,7 +1100,6 @@ async function simulate(){
       });
       html += '</div>';
     }
-
     document.getElementById('simResults').innerHTML = html;
     document.getElementById('simResults').style.display = '';
     document.getElementById('simClearBtn').style.display = '';
@@ -874,16 +1120,14 @@ function clearResults(){
   document.getElementById('simQuery').focus();
 }
 
-// Toggle sources collapse / expand
 function toggleSources(header){
   var body = header.nextElementSibling;
   var arrow = header.querySelector('.sim-source-arrow');
   if(!body || !arrow) return;
   var expanded = body.style.display === 'block';
   body.style.display = expanded ? 'none' : 'block';
-  arrow.textContent = expanded ? '▶' : '▼';
+  arrow.textContent = expanded ? '\u25B6' : '\u25BC';
 }
-
 
 document.getElementById('simQuery').addEventListener('keydown', function(e){ if(e.key === 'Enter') simulate(); });
 
@@ -915,17 +1159,20 @@ function closeConfirm(force){
 document.getElementById('confirmModal').addEventListener('click', function(e){
   if(e.target === this) closeConfirm();
 });
-document.getElementById('chunkModal').addEventListener('click', function(e){
-  if(e.target === this) closeChunkViewer();
-});
 document.getElementById('confirmBtn').addEventListener('click', function(){
   if(_confirmCb) { _confirmCb(); }
   if(!_confirmLoading) closeConfirm();
 });
 
 // ════════════════════════════════════════════════
-// INIT
+// ROLE-BASED TAB VISIBILITY
 // ════════════════════════════════════════════════
-refresh();
+(function(){
+  var role = '{{ tenant_role }}' || 'owner';
+  document.querySelectorAll('.kb-tab[data-role]').forEach(function(a){
+    var allowed = (a.getAttribute('data-role') || '').split(',');
+    if(allowed.indexOf(role) === -1) { a.style.display = 'none'; }
+  });
+})();
 </script>
 {% endblock %}

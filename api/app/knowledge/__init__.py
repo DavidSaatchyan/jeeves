@@ -8,19 +8,20 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, File
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, UploadFile, File
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from pydantic import BaseModel
 
 from ..rag.chunking import file_sha256, sanitize_filename
+from ..rag.engine import count_chunks_by_source
 from ..auth.deps import get_current_tenant
 from .. import rag
 from ..config import get_settings
 from ..core.ai.generator import naturalize_answer
 from ..db import get_db, engine
-from ..models import FileRecord, KnowledgeFolder, KnowledgeUrl, Tenant
+from ..models import FileRecord, KbActivity, KnowledgeFolder, KnowledgeUrl, PmsClinic, PmsPractitioner, PmsService, Tenant
 from ..schemas import BatchUploadOut, BatchUploadResultItem
 from . import sync as _sync
 
@@ -28,6 +29,85 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 router.include_router(_sync.router, prefix="/sync")
+
+
+@router.get("/overview")
+def knowledge_overview(
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    file_count = db.execute(
+        select(func.count(FileRecord.id)).where(FileRecord.tenant_id == tenant.id, FileRecord.file_type == "document"),
+    ).scalar() or 0
+
+    url_count = db.execute(
+        select(func.count(KnowledgeUrl.id)).where(KnowledgeUrl.tenant_id == tenant.id),
+    ).scalar() or 0
+
+    size_result = db.execute(
+        select(func.coalesce(func.sum(FileRecord.size_bytes), 0)).where(FileRecord.tenant_id == tenant.id),
+    ).scalar() or 0
+    total_size = int(size_result)
+
+    pms_service_count = db.execute(
+        select(func.count(PmsService.id)).where(PmsService.tenant_id == tenant.id),
+    ).scalar() or 0
+
+    pms_practitioner_count = db.execute(
+        select(func.count(PmsPractitioner.id)).where(PmsPractitioner.tenant_id == tenant.id),
+    ).scalar() or 0
+
+    pms_clinic_count = db.execute(
+        select(func.count(PmsClinic.id)).where(PmsClinic.tenant_id == tenant.id),
+    ).scalar() or 0
+
+    chunks = count_chunks_by_source(tenant.id)
+    config = tenant.crm_config or {}
+
+    return {
+        "files": {"count": file_count + url_count, "size_bytes": total_size, "chunks": chunks.get("kb", 0)},
+        "pms": {
+            "services": pms_service_count,
+            "practitioners": pms_practitioner_count,
+            "clinic": pms_clinic_count,
+            "chunks": chunks.get("pms", 0),
+            "last_sync_at": config.get("last_sync_at"),
+        },
+        "chunks": chunks,
+    }
+
+
+class _ActivityOut(BaseModel):
+    id: str
+    event_type: str
+    description: str
+    ref_id: str | None
+    created_at: str
+
+
+@router.get("/activity")
+def list_activity(
+    limit: int = Query(50, ge=1, le=200),
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    rows = db.execute(
+        select(KbActivity)
+        .where(KbActivity.tenant_id == tenant.id)
+        .order_by(KbActivity.created_at.desc())
+        .limit(limit)
+    ).scalars().all()
+    return [
+        _ActivityOut(
+            id=str(r.id),
+            event_type=r.event_type,
+            description=r.description,
+            ref_id=r.ref_id,
+            created_at=_iso_utc(r.created_at),
+        )
+        for r in rows
+    ]
+
 
 _settings = get_settings()
 
@@ -86,6 +166,16 @@ def _total_size(tenant_id: uuid.UUID) -> int:
     return total
 
 
+def _log_activity(
+    db: Session,
+    tenant_id: uuid.UUID,
+    event_type: str,
+    description: str,
+    ref_id: str | None = None,
+) -> None:
+    db.add(KbActivity(tenant_id=tenant_id, event_type=event_type, description=description, ref_id=ref_id))
+
+
 async def _index_document(
     data: bytes,
     original_filename: str,
@@ -137,6 +227,8 @@ async def _index_document(
         size_bytes=len(data),
     )
     db.add(rec)
+    db.commit()
+    _log_activity(db, tenant.id, "file_uploaded", f"Uploaded {safe_filename}", str(file_id))
     db.commit()
 
     asyncio.create_task(_background_index(tenant.id, file_id, dest))
@@ -202,6 +294,8 @@ async def upload_file(
         size_bytes=len(data),
     )
     db.add(rec)
+    db.commit()
+    _log_activity(db, tenant.id, "file_uploaded", f"Uploaded {safe_filename}", str(file_id))
     db.commit()
 
     # Index asynchronously in background thread
@@ -350,7 +444,7 @@ async def simulate(
         answer = await naturalize_answer(str(tenant.id), answer)
 
     sources = [
-        {"chunk": r["text"][:500], "filename": r["filename"], "section": r["section"], "score": r["score"]}
+        {"chunk": r["text"][:500], "filename": r["filename"], "section": r["section"], "score": r["score"], "file_id": r.get("file_id", "")}
         for r in results
     ]
 
@@ -400,6 +494,8 @@ def delete_file(
 
     # Delete DB record
     db.delete(rec)
+    db.commit()
+    _log_activity(db, tenant.id, "file_deleted", f"Deleted {rec.filename}", str(file_id))
     db.commit()
 
     # Delete from Chroma (can be slow, do after DB commit so user sees it gone)
@@ -491,6 +587,8 @@ def create_folder(
     f = KnowledgeFolder(tenant_id=tenant.id, name=body.name, parent_id=body.parent_id)
     db.add(f)
     db.commit()
+    _log_activity(db, tenant.id, "folder_created", f"Created folder {body.name}", str(f.id))
+    db.commit()
     return {"id": str(f.id), "name": f.name, "parent_id": str(f.parent_id) if f.parent_id else None}
 
 
@@ -526,6 +624,8 @@ def delete_folder(
     if not f:
         raise HTTPException(404, "folder not found")
     db.delete(f)
+    db.commit()
+    _log_activity(db, tenant.id, "folder_deleted", f"Deleted folder {f.name}", str(folder_id))
     db.commit()
 
 
@@ -736,6 +836,8 @@ async def import_url(
     )
     db.add(rec)
     db.commit()
+    _log_activity(db, tenant.id, "url_imported", f"Imported URL {body.url}", str(rec.id))
+    db.commit()
 
     asyncio.create_task(_background_index_url(tenant.id, rec.id, body.url, body.title))
     return {"id": str(rec.id), "url": rec.url, "title": rec.title, "status": rec.status}
@@ -800,6 +902,8 @@ def delete_url(
         pass
 
     db.delete(rec)
+    db.commit()
+    _log_activity(db, tenant.id, "url_deleted", f"Deleted URL {rec.url}", str(url_id))
     db.commit()
 
 

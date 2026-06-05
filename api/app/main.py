@@ -7,7 +7,7 @@ from pathlib import Path
 from alembic.config import Config
 from alembic import command
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 
@@ -266,12 +266,9 @@ def health_db() -> dict:
 _STATIC = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=str(_STATIC)), name="static")
 
-_LANDING = Path(__file__).parent / "templates" / "landing.html"
-
-
-@app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=RedirectResponse)
 def landing():
-    return _LANDING.read_text(encoding="utf-8")
+    return RedirectResponse(url="/docs")
 
 
 _TERMS = Path(__file__).parent / "templates" / "terms.html"

@@ -375,7 +375,7 @@ class TestDeleteFile:
         resp = client.delete(f"/knowledge/files/{file_id}")
         assert resp.status_code == 204
         mock_db.delete.assert_called_once_with(rec)
-        mock_db.commit.assert_called_once()
+        mock_db.commit.assert_called()
         mock_rag["delete_file"].assert_called_once()
 
     def test_delete_not_found(self, client, mock_db, mock_rag):
@@ -586,7 +586,10 @@ class TestImportUrl:
         assert data["status"] == "processing"
         assert "id" in data
         assert data["url"] == "https://example.com/page"
-        mock_db.add.assert_called_once()
+        assert mock_db.add.called
+        # First add call should be the KnowledgeUrl
+        first_args = mock_db.add.call_args_list[0][0][0]
+        assert first_args.url == "https://example.com/page"
 
     def test_import_url_empty_raises(self, client, mock_db, mock_rag, mock_chunking):
         resp = client.post("/knowledge/urls", json={"url": "", "title": "Test"})
@@ -627,7 +630,7 @@ class TestImportUrl:
         resp = client.delete(f"/knowledge/urls/{mock_rec.id}")
         assert resp.status_code == 204
         mock_db.delete.assert_called_once_with(mock_rec)
-        mock_db.commit.assert_called_once()
+        mock_db.commit.assert_called()
         mock_rag["delete_file"].assert_called_once()
 
     def test_delete_url_not_found(self, client, mock_db, mock_rag):
@@ -666,6 +669,51 @@ class TestImportUrlAuthGuard:
         app.dependency_overrides.clear()
         with TestClient(app) as c:
             resp = c.delete(f"/knowledge/urls/{uuid4()}")
+        assert resp.status_code in (401, 403)
+
+
+# ── Overview ────────────────────────────────────────────────────────────────
+
+
+class TestOverview:
+    def test_overview_returns_structure(self, client, mock_db, mock_rag):
+        """/knowledge/overview returns the expected shape with all keys."""
+        mock_db.execute.return_value.scalar.return_value = 0
+        resp = client.get("/knowledge/overview")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "files" in data
+        assert "pms" in data
+        assert "chunks" in data
+        assert "count" in data["files"]
+        assert "size_bytes" in data["files"]
+        assert "chunks" in data["files"]
+        assert "services" in data["pms"]
+        assert "practitioners" in data["pms"]
+        assert "clinic" in data["pms"]
+        assert "chunks" in data["pms"]
+        assert "kb" in data["chunks"]
+        assert "pms" in data["chunks"]
+
+    def test_overview_with_data(self, client, mock_db, mock_rag):
+        """Overview returns correct counts when data exists."""
+        def scalar_side_effect():
+            counts = [12, 3, 45000, 8, 4, 1]
+            return iter(counts).__next__
+        mock_db.execute.return_value.scalar.side_effect = [12, 3, 45000, 8, 4, 1]
+        resp = client.get("/knowledge/overview")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["files"]["count"] == 15
+        assert data["files"]["size_bytes"] == 45000
+        assert data["pms"]["services"] == 8
+        assert data["pms"]["practitioners"] == 4
+        assert data["pms"]["clinic"] == 1
+
+    def test_overview_auth_guard(self, app):
+        app.dependency_overrides.clear()
+        with TestClient(app) as c:
+            resp = c.get("/knowledge/overview")
         assert resp.status_code in (401, 403)
 
 
