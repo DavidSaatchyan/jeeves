@@ -108,7 +108,7 @@
     </div>
     <div class="modal-step" id="crmApiKeyStep">
       <div class="modal-step-label">API Key</div>
-      <div class="input-wrap"><input type="password" id="crmApiKey" placeholder="Paste your API key"><button class="eye-btn" onclick="toggleEye('crmApiKey',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      <div class="input-wrap"><input type="password" id="crmApiKey" placeholder="Paste your API key" autocomplete="new-password"><button class="eye-btn" onclick="toggleEye('crmApiKey',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
       <p class="modal-step-hint">Paste your API key to sync patients and appointments.
         <span class="hint-toggle" onclick="toggleHint(this)">
           Where can I find it? <span class="chevron">▼</span>
@@ -132,7 +132,7 @@
     </div>
     <div class="modal-step" id="crmWebhookStep" style="display:none">
       <div class="modal-step-label">Webhook Secret (optional)</div>
-      <div class="input-wrap"><input type="password" id="crmWebhookSecret" placeholder="Webhook secret for Pabau"><button class="eye-btn" onclick="toggleEye('crmWebhookSecret',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      <div class="input-wrap"><input type="password" id="crmWebhookSecret" placeholder="Webhook secret for Pabau" autocomplete="new-password"><button class="eye-btn" onclick="toggleEye('crmWebhookSecret',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
     </div>
     <div class="modal-result" id="crmResult"></div>
     <div class="modal-actions">
@@ -167,11 +167,11 @@
       </div>
       <div class="modal-step">
         <div class="modal-step-label">Access Token</div>
-        <div class="input-wrap"><input type="password" id="waAccessToken" placeholder="Permanent access token"><button class="eye-btn" onclick="toggleEye('waAccessToken',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+        <div class="input-wrap"><input type="password" id="waAccessToken" placeholder="Permanent access token" autocomplete="new-password"><button class="eye-btn" onclick="toggleEye('waAccessToken',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
       </div>
       <div class="modal-step">
         <div class="modal-step-label">Verify Token</div>
-        <div class="input-wrap"><input type="password" id="waVerifyToken" placeholder="Your webhook verify token"><button class="eye-btn" onclick="toggleEye('waVerifyToken',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+        <div class="input-wrap"><input type="password" id="waVerifyToken" placeholder="Your webhook verify token" autocomplete="new-password"><button class="eye-btn" onclick="toggleEye('waVerifyToken',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
       </div>
       <div class="modal-step">
         <div class="modal-step-label">Business Phone (with country code)</div>
@@ -203,7 +203,7 @@
       <p style="font-size:13px;color:var(--muted2);margin-bottom:16px">Enter your Instagram Graph API credentials manually.</p>
       <div class="modal-step">
         <div class="modal-step-label">Access Token</div>
-        <div class="input-wrap"><input type="password" id="igAccessToken" placeholder="Instagram Graph API access token"><button class="eye-btn" onclick="toggleEye('igAccessToken',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+        <div class="input-wrap"><input type="password" id="igAccessToken" placeholder="Instagram Graph API access token" autocomplete="new-password"><button class="eye-btn" onclick="toggleEye('igAccessToken',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
       </div>
       <div class="modal-step two-col">
         <div>
