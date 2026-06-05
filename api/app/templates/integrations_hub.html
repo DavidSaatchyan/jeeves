@@ -101,7 +101,7 @@
     <div class="modal-result" id="crmResult"></div>
     <div class="modal-actions">
       <button class="ghost" onclick="closeModal('crmModal')">Cancel</button>
-      <button class="btn accent" id="crmConnectBtn" onclick="connectCrm()">Connect</button>
+      <button class="btn sm" id="crmConnectBtn" onclick="connectCrm()">Connect</button>
     </div>
   </div>
 </div>
@@ -144,7 +144,7 @@
       <div class="modal-result" id="waResult"></div>
       <div class="modal-actions">
         <button class="ghost" onclick="closeModal('whatsappModal')">Cancel</button>
-        <button class="btn accent" onclick="connectWhatsApp()">Connect</button>
+        <button class="btn sm" onclick="connectWhatsApp()">Connect</button>
       </div>
     </div>
   </div>
@@ -182,7 +182,7 @@
       <div class="modal-result" id="igResult"></div>
       <div class="modal-actions">
         <button class="ghost" onclick="closeModal('instagramModal')">Cancel</button>
-        <button class="btn accent" onclick="connectInstagram()">Connect</button>
+        <button class="btn sm" onclick="connectInstagram()">Connect</button>
       </div>
     </div>
   </div>
@@ -228,7 +228,7 @@
     <div class="modal-result" id="wResult"></div>
     <div class="modal-actions">
       <button class="ghost" onclick="closeModal('widgetModal')">Cancel</button>
-      <button class="btn accent" onclick="saveWidget()">Save Settings</button>
+      <button class="btn sm" onclick="saveWidget()">Save Settings</button>
     </div>
   </div>
 </div>
@@ -309,7 +309,7 @@ function renderCrmCard(i) {
       <div class="hub-card-name">${i.name}</div>
       <div class="hub-card-meta">${statusBadge(i.status)}</div>
     </div>
-    ${connected ? '<button class="ghost sm danger" onclick="event.stopPropagation();disconnectCrm()">Disconnect</button>' : '<button class="btn accent sm">Connect</button>'}
+    ${connected ? '<button class="ghost sm danger" onclick="event.stopPropagation();disconnectCrm()">Disconnect</button>' : '<button class="btn sm" onclick="event.stopPropagation();openCrmModal(\'' + i.id + '\')">Connect</button>'}
   </div>`;
 }
 
@@ -323,7 +323,7 @@ function renderWidgetCard(i) {
       <div class="hub-card-name">Web Widget</div>
       <div class="hub-card-meta">${statusBadge(st)}</div>
     </div>
-    <button class="btn accent sm">Configure</button>
+    <button class="btn sm">Configure</button>
   </div>`;
 }
 
@@ -387,7 +387,7 @@ function openCrmModal(provider) {
   const btn = document.getElementById('crmConnectBtn');
   btn.disabled = false;
   btn.textContent = 'Connect';
-  btn.className = 'btn accent';
+  btn.className = 'btn sm';
   const apiKeyInput = document.getElementById('crmApiKey');
   apiKeyInput.className = '';
   const int = _integrations.find(i => i.id === provider);
@@ -515,7 +515,7 @@ function renderChannelCard(i) {
       <div class="hub-card-name">${i.name}</div>
       <div class="hub-card-meta">${statusBadge(i.status)}</div>
     </div>
-    ${i.status === 'active' ? '<button class="ghost sm danger" onclick="event.stopPropagation();disconnectChannel(\'' + i.id + '\')">Disconnect</button>' : '<button class="btn accent sm">Connect</button>'}
+    ${i.status === 'active' ? '<button class="ghost sm danger" onclick="event.stopPropagation();disconnectChannel(\'' + i.id + '\')">Disconnect</button>' : ''}
   </div>`;
 }
 
