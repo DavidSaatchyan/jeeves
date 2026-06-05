@@ -48,13 +48,13 @@
   .hint-link:hover { color: var(--accent); text-decoration: underline; }
   .modal-step.two-col { display: flex; gap: 12px; }
   .modal-actions { display: flex; gap: 8px; margin-top: 24px; justify-content: flex-end; }
-  .btn.loading { pointer-events: none; }
-  .btn.loading::after { content: ''; display: inline-block; width: 10px; height: 10px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .6s linear infinite; margin-left: 6px; vertical-align: middle; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .modal-title { font-size: 18px; font-weight: 700; }
   .modal-result { margin-top: 12px; border-radius: 6px; font-size: 13px; max-height: 0; overflow: hidden; padding: 0 14px; border: 1px solid transparent; background: transparent; color: transparent; transition: max-height .2s ease, padding .2s ease, border-color .2s ease, background .2s ease; }
   .modal-result.ok { max-height: 60px; padding: 10px 14px; background: rgba(52,211,153,0.1); color: #34d399; border-color: rgba(52,211,153,0.2); }
   .modal-result.err { max-height: 60px; padding: 10px 14px; background: rgba(239,68,68,0.1); color: #ef4444; border-color: rgba(239,68,68,0.2); }
+  .modal-result.loading { max-height: 60px; padding: 10px 14px; color: var(--muted); }
+  .modal-result.loading::before { content: ''; display: inline-block; width: 12px; height: 12px; border: 2px solid var(--muted2); border-top-color: transparent; border-radius: 50%; animation: spin .6s linear infinite; margin-right: 6px; vertical-align: middle; }
   .snippet-box { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 6px; font-size: 12px; font-family: monospace; white-space: pre-wrap; word-break: break-all; margin-top: 8px; position: relative; }
   .snippet-box .copy-btn { position: absolute; top: 6px; right: 6px; padding: 4px 10px; border-radius: 4px; border: none; background: rgba(255,255,255,.1); color: #fff; cursor: pointer; font-size: 11px; }
   .snippet-box .copy-btn:hover { background: rgba(255,255,255,.2); }
@@ -139,7 +139,6 @@
     </div>
     <div class="modal-result" id="crmResult"></div>
     <div class="modal-actions">
-      <button class="ghost" onclick="closeModal('crmModal')">Cancel</button>
       <button class="btn sm" id="crmConnectBtn" onclick="connectCrm()">Connect</button>
     </div>
   </div>
@@ -182,7 +181,6 @@
       </div>
       <div class="modal-result" id="waResult"></div>
       <div class="modal-actions">
-        <button class="ghost" onclick="closeModal('whatsappModal')">Cancel</button>
         <button class="btn sm" onclick="connectWhatsApp()">Connect</button>
       </div>
     </div>
@@ -220,7 +218,6 @@
       </div>
       <div class="modal-result" id="igResult"></div>
       <div class="modal-actions">
-        <button class="ghost" onclick="closeModal('instagramModal')">Cancel</button>
         <button class="btn sm" onclick="connectInstagram()">Connect</button>
       </div>
     </div>
@@ -266,7 +263,6 @@
     </div>
     <div class="modal-result" id="wResult"></div>
     <div class="modal-actions">
-      <button class="ghost" onclick="closeModal('widgetModal')">Cancel</button>
       <button class="btn sm" onclick="saveWidget()">Save Settings</button>
     </div>
   </div>
@@ -396,21 +392,11 @@ function toggleHint(el) {
   el.addEventListener('focus', function() { this.select(); });
   if (el.value) el.title = el.value;
 });
-// ── CRM: track API key changes to toggle between Save/Disconnect ──
+// ── CRM: enable/disable Connect based on key presence ──
 document.getElementById('crmApiKey').addEventListener('input', function() {
   const btn = document.getElementById('crmConnectBtn');
-  const original = btn.dataset.originalKey || '';
-  const changed = this.value !== original;
   const connected = _integrations.find(i => i.id === crmProvider)?.status === 'connected';
-  if (connected && !changed) {
-    btn.className = 'ghost sm danger';
-    btn.textContent = 'Disconnect';
-    btn.disabled = true;
-  } else {
-    btn.className = 'btn sm';
-    btn.textContent = changed ? 'Save' : 'Connect';
-    btn.disabled = !changed;
-  }
+  btn.disabled = connected ? false : !this.value.trim();
 });
 // ── Confirm dialog ──
 let _confirmCb = null;
@@ -486,24 +472,20 @@ function openCrmModal(provider) {
   const apiKeyInput = document.getElementById('crmApiKey');
   apiKeyInput.className = '';
   const int = _integrations.find(i => i.id === provider);
-  if (int && int.status === 'connected') {
+  const connected = int && int.status === 'connected';
+  if (connected) {
     const meta = int.meta || {};
     apiKeyInput.value = meta.api_key || '';
     btn.className = 'ghost sm danger';
     btn.textContent = 'Disconnect';
-    btn.dataset.saveLabel = 'Disconnect';
-    btn.dataset.originalLabel = 'Disconnect';
   } else {
     apiKeyInput.value = '';
     document.getElementById('crmCompanyId').value = '';
     document.getElementById('crmWebhookSecret').value = '';
     btn.className = 'btn sm';
     btn.textContent = 'Connect';
-    btn.dataset.saveLabel = 'Connect';
-    btn.dataset.originalLabel = 'Connect';
   }
-  btn.dataset.originalKey = apiKeyInput.value;
-  btn.disabled = true;
+  btn.disabled = !connected;
   apiKeyInput.type = 'password';
   apiKeyInput.title = apiKeyInput.value;
   openModal('crmModal');
@@ -512,11 +494,9 @@ function openCrmModal(provider) {
 async function connectCrm() {
   const btn = document.getElementById('crmConnectBtn');
   btn.disabled = true;
-  btn.classList.add('loading');
+  showResult('crmResult', 'Connecting…', 'loading');
   const apiKeyInput = document.getElementById('crmApiKey');
   apiKeyInput.className = '';
-  const result = document.getElementById('crmResult');
-  result.className = 'modal-result';
   try {
     const body = { provider: crmProvider, api_key: apiKeyInput.value };
     if (crmProvider === 'pabau') {
@@ -524,38 +504,26 @@ async function connectCrm() {
       body.webhook_secret = document.getElementById('crmWebhookSecret').value;
     }
     const data = await api('/admin/api/integrations/crm/configure', { method: 'POST', body });
-    btn.classList.remove('loading');
-    const connected = _integrations.find(i => i.id === crmProvider)?.status === 'connected';
     if (data.connected) {
       apiKeyInput.className = 'ok';
-      showResult('crmResult', '✓ Connected successfully!', true);
+      showResult('crmResult', '✓ Connected successfully!', 'ok');
       btn.className = 'ghost sm danger';
       btn.textContent = 'Disconnect';
-      btn.dataset.saveLabel = 'Disconnect';
-      btn.dataset.originalLabel = 'Disconnect';
-      btn.dataset.originalKey = apiKeyInput.value;
-      btn.disabled = true;
+      btn.disabled = false;
       _refreshOnClose = true;
     } else {
       apiKeyInput.className = 'err';
-      showResult('crmResult', '✗ ' + (data.message || 'Invalid API key. Please check and try again.'), false);
+      showResult('crmResult', '✗ ' + (data.message || 'Invalid API key. Please check and try again.'), 'err');
       btn.disabled = false;
-      if (connected) {
-        btn.className = 'btn sm';
-        btn.textContent = 'Save';
-      } else {
-        btn.className = 'btn sm';
-        btn.textContent = 'Connect';
-      }
+      btn.className = 'btn sm';
+      btn.textContent = 'Connect';
     }
   } catch (e) {
-    btn.classList.remove('loading');
     apiKeyInput.className = 'err';
-    showResult('crmResult', '✗ ' + e.message, false);
+    showResult('crmResult', '✗ ' + e.message, 'err');
     btn.disabled = false;
     btn.className = 'btn sm';
-    const connected = _integrations.find(i => i.id === crmProvider)?.status === 'connected';
-    btn.textContent = connected ? 'Save' : 'Connect';
+    btn.textContent = 'Connect';
   }
 }
 
@@ -654,8 +622,7 @@ function renderChannelCard(i) {
 async function connectWhatsApp() {
   const btn = event.target;
   btn.disabled = true;
-  btn.classList.add('loading');
-  document.getElementById('waResult').className = 'modal-result';
+  showResult('waResult', 'Connecting…', 'loading');
   try {
     const body = {
       phone_number_id: document.getElementById('waPhoneNumberId').value,
@@ -664,14 +631,12 @@ async function connectWhatsApp() {
       business_phone: document.getElementById('waBusinessPhone').value,
     };
     await api('/admin/api/integrations/whatsapp/configure', { method: 'POST', body });
-    btn.classList.remove('loading');
-    showResult('waResult', '✓ WhatsApp connected!', true);
+    showResult('waResult', '✓ WhatsApp connected!', 'ok');
     btn.textContent = 'Configured';
     btn.disabled = true;
     _refreshOnClose = true;
   } catch (e) {
-    btn.classList.remove('loading');
-    showResult('waResult', '✗ ' + e.message, false);
+    showResult('waResult', '✗ ' + e.message, 'err');
     btn.disabled = false;
     btn.textContent = 'Connect';
   }
@@ -697,8 +662,7 @@ function loginWithFacebook() {
 async function connectInstagram() {
   const btn = event.target;
   btn.disabled = true;
-  btn.classList.add('loading');
-  document.getElementById('igResult').className = 'modal-result';
+  showResult('igResult', 'Connecting…', 'loading');
   try {
     const body = {
       access_token: document.getElementById('igAccessToken').value,
@@ -706,14 +670,12 @@ async function connectInstagram() {
       instagram_account_id: document.getElementById('igAccountId').value,
     };
     await api('/admin/api/integrations/instagram/configure', { method: 'POST', body });
-    btn.classList.remove('loading');
-    showResult('igResult', '✓ Instagram connected!', true);
+    showResult('igResult', '✓ Instagram connected!', 'ok');
     btn.textContent = 'Configured';
     btn.disabled = true;
     _refreshOnClose = true;
   } catch (e) {
-    btn.classList.remove('loading');
-    showResult('igResult', '✗ ' + e.message, false);
+    showResult('igResult', '✗ ' + e.message, 'err');
     btn.disabled = false;
     btn.textContent = 'Connect';
   }
@@ -788,18 +750,18 @@ async function saveWidget() {
   };
   try {
     await api('/admin/api/integrations/widget/configure', { method: 'POST', body });
-    showResult('wResult', 'Widget settings saved!', true);
+    showResult('wResult', 'Widget settings saved!', 'ok');
     loadIntegrations();
   } catch (e) {
-    showResult('wResult', e.message, false);
+    showResult('wResult', e.message, 'err');
   }
 }
 
 // ── Utils ──
-function showResult(id, msg, ok) {
+function showResult(id, msg, className) {
   const el = document.getElementById(id);
   el.textContent = msg;
-  el.className = 'modal-result ' + (ok ? 'ok' : 'err');
+  el.className = 'modal-result ' + (className || '');
 }
 
 loadIntegrations();
