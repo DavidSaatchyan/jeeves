@@ -59,6 +59,8 @@
   .snippet-box .copy-btn { position: absolute; top: 6px; right: 6px; padding: 4px 10px; border-radius: 4px; border: none; background: rgba(255,255,255,.1); color: #fff; cursor: pointer; font-size: 11px; }
   .snippet-box .copy-btn:hover { background: rgba(255,255,255,.2); }
   .confirm-icon { font-size: 32px; margin-bottom: 12px; }
+  .confirm-icon.spinner { font-size: 0; }
+  .confirm-icon.spinner::before { content: ''; display: inline-block; width: 32px; height: 32px; border: 3px solid var(--muted2); border-top-color: transparent; border-radius: 50%; animation: spin .6s linear infinite; }
   .confirm-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
   .confirm-desc { font-size: 13px; color: var(--muted2); margin-bottom: 20px; line-height: 1.5; }
   .confirm-actions { display: flex; gap: 8px; justify-content: center; }
@@ -302,8 +304,7 @@ async function loadIntegrations() {
     const channels = integrations.filter(i => i.category === 'channel' && i.id !== 'widget');
     const widget = integrations.find(i => i.id === 'widget');
 
-    renderGrid('crmGrid', crm, renderCrmCard);
-    renderGrid('channelGrid', channels, renderChannelCard);
+    renderGrid('crmGrid', crm, renderCrmCard);    renderGrid('channelGrid', channels, renderChannelCard);
     renderGrid('widgetGrid', widget ? [widget] : [], renderWidgetCard);
     ['crmSkeleton','channelSkeleton','widgetSkeleton'].forEach(id => {
       const el = document.getElementById(id);
@@ -363,14 +364,18 @@ function renderWidgetCard(i) {
 }
 
 // ── Modal helpers ──
-let _refreshOnClose = false;
+function refreshCards() {
+  renderGrid('crmGrid', _integrations.filter(i => i.category === 'crm'), renderCrmCard);
+  renderGrid('channelGrid', _integrations.filter(i => i.category === 'channel' && i.id !== 'widget'), renderChannelCard);
+  const widget = _integrations.find(i => i.id === 'widget');
+  renderGrid('widgetGrid', widget ? [widget] : [], renderWidgetCard);
+}
 
 function closeModal(id) {
   const el = document.getElementById(id);
   if (!el) return;
   el.classList.remove('show');
   unlockScroll();
-  if (_refreshOnClose) { _refreshOnClose = false; loadIntegrations(); }
 }
 
 function openModal(id) { document.getElementById(id).classList.add('show'); lockScroll(); }
@@ -510,7 +515,9 @@ async function connectCrm() {
       btn.className = 'ghost sm danger';
       btn.textContent = 'Disconnect';
       btn.disabled = false;
-      _refreshOnClose = true;
+      const int = _integrations.find(i => i.id === crmProvider);
+      if (int) int.status = 'connected';
+      refreshCards();
     } else {
       apiKeyInput.className = 'err';
       showResult('crmResult', '✗ ' + (data.message || 'Invalid API key. Please check and try again.'), 'err');
@@ -529,7 +536,7 @@ async function connectCrm() {
 
 async function disconnectCrm() {
   const confirmEl = document.getElementById('confirmModal');
-  document.getElementById('confirmIcon').textContent = '⏳';
+  document.getElementById('confirmIcon').className = 'confirm-icon spinner';
   document.getElementById('confirmTitle').textContent = 'Disconnecting...';
   document.getElementById('confirmDesc').textContent = 'Please wait...';
   document.getElementById('confirmBtn').style.display = 'none';
@@ -539,13 +546,16 @@ async function disconnectCrm() {
     await api('/admin/api/integrations/crm/disconnect', { method: 'POST' });
     confirmEl.classList.remove('show');
     unlockScroll();
-    loadIntegrations();
+    _integrations.filter(i => i.category === 'crm').forEach(i => { i.status = 'not_configured'; i.meta = {}; });
+    refreshCards();
   } catch (e) {
+    document.getElementById('confirmIcon').className = 'confirm-icon';
+    document.getElementById('confirmIcon').textContent = '❌';
     document.getElementById('confirmTitle').textContent = 'Error';
     document.getElementById('confirmDesc').textContent = e.message;
     document.getElementById('confirmBtn').style.display = '';
     document.getElementById('confirmBtn').textContent = 'Close';
-    _confirmCb = () => { closeConfirm(); loadIntegrations(); };
+    _confirmCb = () => { closeConfirm(); };
   }
 }
 
@@ -634,7 +644,9 @@ async function connectWhatsApp() {
     showResult('waResult', '✓ WhatsApp connected!', 'ok');
     btn.textContent = 'Configured';
     btn.disabled = true;
-    _refreshOnClose = true;
+    const int = _integrations.find(i => i.id === 'whatsapp');
+    if (int) int.status = 'active';
+    refreshCards();
   } catch (e) {
     showResult('waResult', '✗ ' + e.message, 'err');
     btn.disabled = false;
@@ -673,7 +685,9 @@ async function connectInstagram() {
     showResult('igResult', '✓ Instagram connected!', 'ok');
     btn.textContent = 'Configured';
     btn.disabled = true;
-    _refreshOnClose = true;
+    const int = _integrations.find(i => i.id === 'instagram');
+    if (int) int.status = 'active';
+    refreshCards();
   } catch (e) {
     showResult('igResult', '✗ ' + e.message, 'err');
     btn.disabled = false;
@@ -685,7 +699,7 @@ async function connectInstagram() {
 async function disconnectChannel(channelType) {
   const names = { whatsapp: 'WhatsApp', instagram: 'Instagram' };
   const confirmEl = document.getElementById('confirmModal');
-  document.getElementById('confirmIcon').textContent = '⏳';
+  document.getElementById('confirmIcon').className = 'confirm-icon spinner';
   document.getElementById('confirmTitle').textContent = `Disconnecting ${names[channelType] || channelType}...`;
   document.getElementById('confirmDesc').textContent = 'Please wait...';
   document.getElementById('confirmBtn').style.display = 'none';
@@ -695,13 +709,17 @@ async function disconnectChannel(channelType) {
     await api('/admin/api/integrations/' + channelType + '/disconnect', { method: 'POST' });
     confirmEl.classList.remove('show');
     unlockScroll();
-    loadIntegrations();
+    const int = _integrations.find(i => i.id === channelType);
+    if (int) int.status = 'not_configured';
+    refreshCards();
   } catch (e) {
+    document.getElementById('confirmIcon').className = 'confirm-icon';
+    document.getElementById('confirmIcon').textContent = '❌';
     document.getElementById('confirmTitle').textContent = 'Error';
     document.getElementById('confirmDesc').textContent = e.message;
     document.getElementById('confirmBtn').style.display = '';
     document.getElementById('confirmBtn').textContent = 'Close';
-    _confirmCb = () => { closeConfirm(); loadIntegrations(); };
+    _confirmCb = () => { closeConfirm(); };
   }
 }
 
@@ -751,7 +769,9 @@ async function saveWidget() {
   try {
     await api('/admin/api/integrations/widget/configure', { method: 'POST', body });
     showResult('wResult', 'Widget settings saved!', 'ok');
-    loadIntegrations();
+    const w = _integrations.find(i => i.id === 'widget');
+    if (w) w.status = 'active';
+    refreshCards();
   } catch (e) {
     showResult('wResult', e.message, 'err');
   }
