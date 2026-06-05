@@ -21,6 +21,7 @@ from ..config import get_settings
 from ..core.ai.generator import naturalize_answer
 from ..db import get_db, engine
 from ..models import FileRecord, KnowledgeFolder, KnowledgeUrl, Tenant
+from ..schemas import BatchUploadOut, BatchUploadResultItem
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +82,63 @@ def _total_size(tenant_id: uuid.UUID) -> int:
         for f in files:
             total += os.path.getsize(os.path.join(root, f))
     return total
+
+
+async def _index_document(
+    data: bytes,
+    original_filename: str,
+    safe_filename: str,
+    ext: str,
+    folder_id: uuid.UUID | None,
+    tenant: Tenant,
+    db: Session,
+) -> dict:
+    """Validate, save, and index a single document.
+
+    Returns a result dict (success or error). Never raises HTTPException.
+    Does NOT check total tenant size — caller is responsible for that.
+    Does NOT validate folder existence — caller is responsible for that.
+    """
+    if ext not in ALLOWED_EXT:
+        return {"filename": original_filename, "error": f"Unsupported type {ext}. Allowed: {sorted(ALLOWED_EXT)}"}
+
+    content_hash = file_sha256(data)
+    duplicate = db.execute(
+        select(FileRecord).where(
+            FileRecord.tenant_id == tenant.id,
+            FileRecord.content_hash == content_hash,
+            FileRecord.status != "failed",
+        ).order_by(FileRecord.created_at.desc())
+    ).scalars().first()
+    if duplicate:
+        return {
+            "id": str(duplicate.id),
+            "filename": duplicate.filename,
+            "status": duplicate.status,
+            "duplicate": True,
+        }
+
+    file_id = uuid.uuid4()
+    tenant_dir = _tenant_dir(tenant.id) / str(file_id)
+    tenant_dir.mkdir(parents=True, exist_ok=True)
+    dest = tenant_dir / safe_filename
+    dest.write_bytes(data)
+
+    rec = FileRecord(
+        id=file_id,
+        tenant_id=tenant.id,
+        folder_id=folder_id,
+        filename=safe_filename,
+        s3_key=str(dest),
+        status="processing",
+        content_hash=content_hash,
+        size_bytes=len(data),
+    )
+    db.add(rec)
+    db.commit()
+
+    asyncio.create_task(_background_index(tenant.id, file_id, dest))
+    return {"id": str(file_id), "filename": safe_filename, "status": "processing", "chunks": 0, "folder_id": str(folder_id) if folder_id else None}
 
 
 @router.post("/files", status_code=201)
@@ -147,6 +205,45 @@ async def upload_file(
     # Index asynchronously in background thread
     asyncio.create_task(_background_index(tenant.id, file_id, dest))
     return {"id": str(file_id), "status": "processing", "chunks": 0, "folder_id": str(folder_id) if folder_id else None}
+
+
+@router.post("/files/batch", status_code=201)
+async def upload_files_batch(
+    files: list[UploadFile] = File(default=[]),
+    folder_id: uuid.UUID | None = Form(None),
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    if not files:
+        return BatchUploadOut(results=[])
+
+    if folder_id:
+        folder = db.execute(select(KnowledgeFolder).where(
+            KnowledgeFolder.id == folder_id,
+            KnowledgeFolder.tenant_id == tenant.id,
+        )).scalar_one_or_none()
+        if not folder:
+            raise HTTPException(404, "folder not found")
+
+    total_new_size = 0
+    entries: list[tuple[bytes, str, str, str]] = []  # (data, original_name, safe_name, ext)
+    for f in files:
+        data = await f.read()
+        original = f.filename or "unnamed"
+        safe = sanitize_filename(original)
+        ext = Path(safe).suffix.lower()
+        entries.append((data, original, safe, ext))
+        total_new_size += len(data)
+
+    if _total_size(tenant.id) + total_new_size > MAX_SIZE_MB * 1024 * 1024:
+        raise HTTPException(413, f"Total knowledge size would exceed {MAX_SIZE_MB} MB")
+
+    results: list[dict] = []
+    for data, original, safe, ext in entries:
+        result = await _index_document(data, original, safe, ext, folder_id, tenant, db)
+        results.append(result)
+
+    return BatchUploadOut(results=[BatchUploadResultItem(**r) for r in results])
 
 
 class _SimulateIn(BaseModel):

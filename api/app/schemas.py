@@ -64,6 +64,20 @@ class FileOut(BaseModel):
     file_type: str = "document"
 
 
+class BatchUploadResultItem(BaseModel):
+    id: str | None = None
+    filename: str
+    status: str | None = None
+    duplicate: bool | None = None
+    error: str | None = None
+    chunks: int = 0
+    folder_id: str | None = None
+
+
+class BatchUploadOut(BaseModel):
+    results: list[BatchUploadResultItem]
+
+
 class WebhookConfigIn(BaseModel):
     incoming_url: str | None = None
     incoming_secret: str | None = None

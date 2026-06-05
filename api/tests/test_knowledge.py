@@ -122,6 +122,118 @@ def _mock_db_execute_scalar_one_or_none(db: MagicMock, return_value):
     db.execute.return_value = result
 
 
+# ── Batch upload tests ────────────────────────────────────────────────────
+
+
+class TestUploadFilesBatch:
+    def test_empty_list(self, client, mock_db, mock_rag, mock_chunking, tmp_path):
+        with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
+            resp = client.post("/knowledge/files/batch", files=[])
+        assert resp.status_code == 201
+        assert resp.json() == {"results": []}
+
+    def test_single_file_success(self, client, mock_db, mock_rag, mock_chunking, tmp_path):
+        _mock_db_execute_first(mock_db, None)
+        mock_db.add.return_value = None
+        with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
+            resp = client.post(
+                "/knowledge/files/batch",
+                files=[("files", ("hello.txt", io.BytesIO(b"hello"), "text/plain"))],
+            )
+        assert resp.status_code == 201
+        data = resp.json()
+        assert len(data["results"]) == 1
+        r = data["results"][0]
+        assert r["status"] == "processing"
+        assert r["duplicate"] is None
+        assert "id" in r
+        assert r["filename"] == "hello.txt"
+
+    def test_multiple_files_all_succeed(self, client, mock_db, mock_rag, mock_chunking, tmp_path):
+        _mock_db_execute_first(mock_db, None)
+        mock_db.add.return_value = None
+        with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
+            resp = client.post(
+                "/knowledge/files/batch",
+                files=[
+                    ("files", ("a.txt", io.BytesIO(b"aaa"), "text/plain")),
+                    ("files", ("b.txt", io.BytesIO(b"bbb"), "text/plain")),
+                    ("files", ("c.txt", io.BytesIO(b"ccc"), "text/plain")),
+                ],
+            )
+        assert resp.status_code == 201
+        data = resp.json()
+        assert len(data["results"]) == 3
+        for r in data["results"]:
+            assert r["status"] == "processing"
+            assert r["duplicate"] is None
+            assert "id" in r
+
+    def test_mixed_valid_and_invalid_extensions(self, client, mock_db, mock_rag, mock_chunking, tmp_path):
+        _mock_db_execute_first(mock_db, None)
+        mock_db.add.return_value = None
+        with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
+            resp = client.post(
+                "/knowledge/files/batch",
+                files=[
+                    ("files", ("good.txt", io.BytesIO(b"ok"), "text/plain")),
+                    ("files", ("bad.exe", io.BytesIO(b"nope"), "application/octet-stream")),
+                    ("files", ("also_good.md", io.BytesIO(b"fine"), "text/markdown")),
+                ],
+            )
+        assert resp.status_code == 201
+        data = resp.json()
+        assert len(data["results"]) == 3
+        assert data["results"][0]["status"] == "processing"
+        assert data["results"][1]["error"] is not None
+        assert "Unsupported" in data["results"][1]["error"]
+        assert data["results"][2]["status"] == "processing"
+
+    def test_duplicate_in_batch(self, client, mock_db, mock_rag, mock_chunking, tmp_path):
+        existing = MagicMock()
+        existing.id = uuid4()
+        existing.status = "ready"
+        existing.filename = "dup.txt"
+        # First file: no duplicate; second file: duplicate
+        mock_db.execute.return_value.scalars.return_value.first.side_effect = [None, existing]
+        mock_db.add.return_value = None
+        with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
+            resp = client.post(
+                "/knowledge/files/batch",
+                files=[
+                    ("files", ("new.txt", io.BytesIO(b"new content"), "text/plain")),
+                    ("files", ("dup.txt", io.BytesIO(b"existing content"), "text/plain")),
+                ],
+            )
+        assert resp.status_code == 201
+        data = resp.json()
+        assert len(data["results"]) == 2
+        assert data["results"][0]["status"] == "processing"
+        assert data["results"][0]["duplicate"] is None
+        assert data["results"][1]["duplicate"] is True
+        assert str(existing.id) == data["results"][1]["id"]
+
+    def test_total_size_exceeded(self, client, mock_db, mock_rag, mock_chunking, tmp_path):
+        _mock_db_execute_first(mock_db, None)
+        oversized = b"x" * (MAX_SIZE_MB * 1024 * 1024 + 1)
+        with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
+            resp = client.post(
+                "/knowledge/files/batch",
+                files=[("files", ("big.txt", io.BytesIO(oversized), "text/plain"))],
+            )
+        assert resp.status_code == 413
+
+    def test_folder_not_found(self, client, mock_db, mock_rag, mock_chunking, tmp_path):
+        _mock_db_execute_scalar_one_or_none(mock_db, None)  # folder lookup returns None
+        with patch("app.knowledge._settings.knowledge_dir", str(tmp_path)):
+            resp = client.post(
+                "/knowledge/files/batch",
+                files=[("files", ("a.txt", io.BytesIO(b"data"), "text/plain"))],
+                data={"folder_id": str(uuid4())},
+            )
+        assert resp.status_code == 404
+
+
 # ── Upload tests ───────────────────────────────────────────────────────────
 
 
