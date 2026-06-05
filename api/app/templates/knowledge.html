@@ -144,11 +144,11 @@
 
       <div class="ch-panel" id="upanel-url">
         <label class="kb-label">Page URL</label>
-        <input id="urlInput" type="url" class="kb-input" placeholder="https://example.com/page" />
+        <input id="urlInput" type="url" class="kb-input" placeholder="https://example.com/page" oninput="toggleImportBtn()" />
         <label class="kb-label mt-12">Title</label>
-        <input id="urlTitle" type="text" class="kb-input" placeholder="My page" />
+        <input id="urlTitle" type="text" class="kb-input" placeholder="My page" oninput="toggleImportBtn()" />
         <div class="mt-12">
-          <button class="btn sm" onclick="importUrl()">Import</button>
+          <button id="importUrlBtn" class="btn sm" onclick="importUrl()" disabled>Import</button>
         </div>
         <div id="urlStatus" class="muted mt-12" style="font-size:13px"></div>
         <div class="err-msg" id="urlErr"></div>
@@ -659,6 +659,9 @@ async function clearAll(){
 function showUploadModal(){
   lockScroll();
   document.getElementById('uploadModal').classList.add('show');
+  document.getElementById('urlInput').value = '';
+  document.getElementById('urlTitle').value = '';
+  document.getElementById('importUrlBtn').disabled = true;
   document.getElementById('urlStatus').textContent = '';
   document.getElementById('urlErr').textContent = '';
   document.getElementById('uploadErr').textContent = '';
@@ -706,6 +709,9 @@ async function uploadFiles(files){
 }
 
 // URL import
+function toggleImportBtn(){
+  document.getElementById('importUrlBtn').disabled = !document.getElementById('urlInput').value.trim() || !document.getElementById('urlTitle').value.trim();
+}
 async function importUrl(){
   var url = document.getElementById('urlInput').value.trim();
   var title = document.getElementById('urlTitle').value.trim();
