@@ -43,7 +43,6 @@
       <span id="kbCurrentFolder" class="kb-current-folder">All files</span>
       <div class="kb-toolbar-actions">
         <button class="btn sm" onclick="showUploadModal()">+ Upload</button>
-        <span id="crmBadge" class="crm-badge" style="display:none" onclick="showUploadModal();setTimeout(function(){document.querySelector('.ch-tab[data-utab=\"crm\"]').click();},50)"></span>
       </div>
     </div>
 
@@ -108,6 +107,9 @@
       <div id="procMsg" class="kb-proc"><span class="kb-spinner"></span> Processing...</div>
     </div>
 
+    <div class="pms-redirect">
+      <a href="/admin/practice">Practice data synchronization →</a>
+    </div>
 
   </main>
 </div>
@@ -124,7 +126,6 @@
     <div class="ch-tabs" style="margin-bottom:16px">
       <button class="ch-tab active" data-utab="file">File</button>
       <button class="ch-tab" data-utab="url">Import URL</button>
-      <button class="ch-tab" data-utab="crm">Sync from CRM</button>
     </div>
 
     <!-- Tab panels (fixed-height container — no jumping) -->
@@ -152,12 +153,7 @@
         <div class="err-msg" id="urlErr"></div>
       </div>
 
-      <div class="ch-panel" id="upanel-crm">
-        <div class="crm-header">
-          <div>
-            <strong style="font-size:15px">Sync from CRM</strong>
-            <span class="muted" style="font-size:13px;margin-left:8px" id="crmProvider"></span>
-          </div>
+    </div>
           <span class="muted" id="crmLastSync">Last sync: —</span>
         </div>
 
@@ -371,48 +367,9 @@
 
 .mt-12{margin-top:12px}
 
-/* ── Skeleton loaders ── */
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.skeleton{background:linear-gradient(90deg,var(--border) 25%,rgba(255,255,255,0.06) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.5s ease-in-out infinite;border-radius:5px}
-.skel-line{height:14px;margin-bottom:8px;width:100%}
-.skel-line.w60{width:60%}.skel-line.w40{width:40%}.skel-line.w80{width:80%}.skel-line.w30{width:30%}.skel-line.w25{width:25%}.skel-line.w50{width:50%}.skel-line.w70{width:70%}
-.skel-tr .skel-line{margin:0;height:13px}
-.skel-tr td{padding:10px 14px;border-bottom:1px solid var(--border)}
-.kb-table-skeleton{display:none}
-.skel-stat{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;display:flex;flex-direction:column;gap:10px}
-.skel-stat .skel-line{margin:0}
-.skel-stat-header{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.skel-folder-item{display:flex;align-items:center;padding:5px 8px}
-.skel-folder-item .skel-line{height:11px;margin:0}
-.skel-folder-item.root .skel-line{height:13px}
-.skel-folder-children{padding-left:18px}
-#confirmTitle,#confirmMsg{word-break:break-word;overflow-wrap:break-word}
-
-/* ── CRM sync panel ── */
-.crm-section{border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;transition:border-color .2s}
-.crm-section:hover{border-color:var(--border-bright)}
-.crm-section-header{display:flex;align-items:center;gap:10px;margin-bottom:4px}
-.crm-section-icon{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.crm-section-icon .crm-spinner{width:16px;height:16px;border-width:2px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:kb-spin .6s linear infinite;display:inline-block}
-.crm-section-icon .crm-check{color:var(--green);font-size:16px;font-weight:700}
-.crm-section-icon .crm-cross{color:var(--red);font-size:16px;font-weight:700}
-.crm-section-icon .crm-dot{color:var(--muted2);font-size:16px}
-.crm-section-title{font-size:14px;font-weight:700;flex:1}
-.crm-section-count{font-size:13px;color:var(--muted)}
-.crm-section-detail{font-size:12px;color:var(--muted2);margin:2px 0 0 24px;line-height:1.5}
-.crm-section-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
-.crm-timestamp{font-size:11px;color:var(--muted2)}
-.crm-sync-btn{font-size:12px;padding:4px 12px}
-.crm-global-status{margin-top:16px;padding:10px 14px;border-radius:var(--radius);font-size:13px;display:flex;align-items:center;gap:8px}
-.crm-global-status.crm-ok{background:rgba(34,197,94,0.08);color:var(--green)}
-.crm-global-status.crm-err{background:rgba(248,113,113,0.08);color:var(--red)}
-.crm-global-status.crm-loading{background:rgba(99,102,241,0.08);color:var(--accent)}
-.crm-global-status.crm-partial{background:rgba(234,179,8,0.08);color:#eab308}
-.crm-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:6px}
-.crm-header .muted{font-size:13px}
-.crm-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted2);cursor:pointer;padding:3px 8px;border-radius:4px;transition:background .12s;margin-left:8px}
-.crm-badge:hover{background:rgba(255,255,255,0.04)}
-.crm-badge-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.pms-redirect{margin-top:16px;padding:10px 16px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);text-align:center}
+.pms-redirect a{font-size:13px;font-weight:600;color:var(--accent);text-decoration:none}
+.pms-redirect a:hover{color:#fff}
 </style>
 <script>
 // ════════════════════════════════════════════════
@@ -755,7 +712,6 @@ document.querySelectorAll('.ch-tabs[style] .ch-tab, #uploadModal .ch-tab').forEa
     document.querySelectorAll('#uploadModal .ch-panel').forEach(function(p){ p.classList.remove('active'); });
     tab.classList.add('active');
     document.getElementById('upanel-' + tab.getAttribute('data-utab')).classList.add('active');
-    if(tab.getAttribute('data-utab') === 'crm') loadCrmStatus();
   });
 });
 
@@ -799,139 +755,6 @@ async function importUrl(){
     await refreshFileRows();
     closeUploadModal();
   } catch(e){ document.getElementById('urlErr').textContent = e.message; }
-}
-
-// CRM sync
-var _crmSyncing = false;
-var _crmStatus = null;
-
-function _timeAgo(iso){
-  if(!iso) return null;
-  var diff = Date.now() - new Date(iso + (iso.endsWith('Z')?'':'Z')).getTime();
-  var mins = Math.floor(diff / 60000);
-  if(mins < 1) return 'just now';
-  if(mins < 60) return mins + 'm ago';
-  var hrs = Math.floor(mins / 60);
-  if(hrs < 24) return hrs + 'h ago';
-  return new Date(iso).toLocaleDateString();
-}
-
-function _setCrmIcon(type, state){
-  var el = document.getElementById('crmIcon-' + type);
-  if(state === 'loading') el.innerHTML = '<span class="crm-spinner"></span>';
-  else if(state === 'success') el.innerHTML = '<span class="crm-check">✓</span>';
-  else if(state === 'error') el.innerHTML = '<span class="crm-cross">✗</span>';
-  else el.innerHTML = '<span class="crm-dot">●</span>';
-}
-
-function _disableCrmBtns(disabled){
-  document.getElementById('crmSyncAllBtn').disabled = disabled;
-  ['services','practitioners','clinic'].forEach(function(t){
-    document.getElementById('crmBtn-' + t).disabled = disabled;
-  });
-}
-
-function updateCrmGlobalStatus(state, message){
-  var el = document.getElementById('crmGlobalStatus');
-  if(!message){ el.style.display = 'none'; return; }
-  el.style.display = 'flex';
-  el.className = 'crm-global-status crm-' + state;
-  el.innerHTML = '<span>' + message + '</span>';
-}
-
-function renderCrmSection(type, data, state){
-  var labels = {services:'Services', practitioners:'Practitioners', clinic:'Clinic'};
-  var detail = data && data.detail ? data.detail : '';
-  document.getElementById('crmCount-' + type).textContent = data && data.count != null ? data.count + ' ' + labels[type].toLowerCase() : '—';
-  document.getElementById('crmDetail-' + type).textContent = detail;
-  document.getElementById('crmTs-' + type).textContent = data && data.last_sync ? 'Last synced: ' + (_timeAgo(data.last_sync) || data.last_sync) : 'Not synced';
-  _setCrmIcon(type, state || 'idle');
-}
-
-async function loadCrmStatus(){
-  try {
-    document.getElementById('crmNoCrm').style.display = 'none';
-    document.getElementById('crmSections').style.display = '';
-    _disableCrmBtns(true);
-    var resp = await api('/knowledge/sync/crm/status');
-    _crmStatus = resp;
-    document.getElementById('crmProvider').textContent = resp.crm_provider ? '(' + resp.crm_provider + ')' : '';
-
-    if(!resp.crm_provider){
-      document.getElementById('crmNoCrm').style.display = '';
-      document.getElementById('crmSections').style.display = 'none';
-      return;
-    }
-
-    var lastSync = resp.last_sync_at;
-    document.getElementById('crmLastSync').textContent = lastSync ? 'Last sync: ' + (_timeAgo(lastSync) || lastSync) : 'Last sync: —';
-
-    ['services','practitioners','clinic'].forEach(function(t){
-      var s = resp[t] || {count:0, last_sync:null};
-      renderCrmSection(t, s, s.last_sync ? 'idle' : 'idle');
-    });
-
-    _disableCrmBtns(false);
-
-    // Update badge
-    var badge = document.getElementById('crmBadge');
-    if(lastSync){
-      var ago = _timeAgo(lastSync);
-      badge.style.display = 'inline-flex';
-      var allOk = ['services','practitioners','clinic'].every(function(t){ return (resp[t]||{}).last_sync; });
-      badge.innerHTML = '<span class="crm-badge-dot" style="background:' + (allOk ? 'var(--green)' : 'var(--muted2)') + '"></span> Synced ' + ago;
-    } else {
-      badge.style.display = 'none';
-    }
-  } catch(e){
-    document.getElementById('crmNoCrm').style.display = '';
-    document.getElementById('crmNoCrm').innerHTML = '<p class="muted" style="margin-bottom:12px">Could not load sync status.</p>';
-    document.getElementById('crmSections').style.display = 'none';
-  }
-}
-
-async function syncCrm(types){
-  if(_crmSyncing) return;
-  _crmSyncing = true;
-  _disableCrmBtns(true);
-
-  var typeList = types || ['services','practitioners','clinic'];
-  typeList.forEach(function(t){ _setCrmIcon(t, 'loading'); });
-  if(typeList.length === 3) updateCrmGlobalStatus('loading', 'Syncing all data...');
-  else updateCrmGlobalStatus('loading', 'Syncing ' + typeList[0] + '...');
-
-  try {
-    var resp = await api('/knowledge/sync/crm', {method:'POST', body:{types:typeList}});
-    var hasErrors = false;
-    var allOk = true;
-
-    typeList.forEach(function(t){
-      var r = resp[t];
-      if(r){
-        if(r.errors && r.errors.length){
-          _setCrmIcon(t, 'error');
-          renderCrmSection(t, {count: r.imported, last_sync: null}, 'error');
-          hasErrors = true;
-          allOk = false;
-        } else {
-          _setCrmIcon(t, 'success');
-          renderCrmSection(t, {count: r.imported, last_sync: new Date().toISOString()}, 'success');
-        }
-      }
-    });
-
-    if(hasErrors) updateCrmGlobalStatus('partial', 'Synced with errors. Check individual sections.');
-    else if(allOk) updateCrmGlobalStatus('ok', 'All data synced successfully.');
-
-    await refreshFileRows();
-    await loadCrmStatus();
-  } catch(e){
-    updateCrmGlobalStatus('err', 'Sync failed: ' + e.message);
-    typeList.forEach(function(t){ _setCrmIcon(t, 'error'); });
-  }
-
-  _disableCrmBtns(false);
-  _crmSyncing = false;
 }
 
 // ════════════════════════════════════════════════
