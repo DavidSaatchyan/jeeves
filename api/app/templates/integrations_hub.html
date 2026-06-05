@@ -12,14 +12,16 @@
   .hub-section-count { font-size: 12px; color: var(--muted2); }
   .hub-section-divider { height: 1px; background: var(--border); margin-bottom: 16px; }
   .hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+  @keyframes cardEnter {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
   .hub-card {
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
     padding: 20px; cursor: pointer; transition: all .2s cubic-bezier(.22,1,.36,1);
     display: flex; align-items: flex-start; gap: 16px;
     box-shadow: 0 1px 2px rgba(0,0,0,.2);
-    opacity: 0; transform: translateY(12px);
   }
-  .hub-card.visible { opacity: 1; transform: translateY(0); }
   .hub-card:hover {
     border-color: var(--border-bright);
     background: rgba(255,255,255,0.03);
@@ -403,11 +405,9 @@ async function loadIntegrations() {
 
 function renderGrid(gridId, items, renderFn) {
   const grid = document.getElementById(gridId);
-  grid.innerHTML = items.map(renderFn).join('');
-  requestAnimationFrame(() => {
-    grid.querySelectorAll('.hub-card').forEach((el, i) => {
-      setTimeout(() => el.classList.add('visible'), i * 60);
-    });
+  grid.innerHTML = items.map((item, i) => renderFn(item, i)).join('');
+  grid.querySelectorAll('.hub-card').forEach((el, i) => {
+    el.style.animation = `cardEnter .35s ease ${i * 60}ms forwards`;
   });
 }
 
