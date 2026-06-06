@@ -9,13 +9,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, UploadFile, File
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from pydantic import BaseModel
 
 from ..rag.chunking import file_sha256, sanitize_filename
-from ..rag.engine import count_chunks_by_source
+
 from ..auth.deps import get_current_tenant
 from .. import rag
 from ..config import get_settings
@@ -30,51 +30,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 router.include_router(_sync.router, prefix="/sync")
 
-
-@router.get("/overview")
-def knowledge_overview(
-    tenant: Tenant = Depends(get_current_tenant),
-    db: Session = Depends(get_db),
-):
-    file_count = db.execute(
-        select(func.count(FileRecord.id)).where(FileRecord.tenant_id == tenant.id, FileRecord.file_type == "document"),
-    ).scalar() or 0
-
-    url_count = db.execute(
-        select(func.count(KnowledgeUrl.id)).where(KnowledgeUrl.tenant_id == tenant.id),
-    ).scalar() or 0
-
-    size_result = db.execute(
-        select(func.coalesce(func.sum(FileRecord.size_bytes), 0)).where(FileRecord.tenant_id == tenant.id),
-    ).scalar() or 0
-    total_size = int(size_result)
-
-    pms_service_count = db.execute(
-        select(func.count(PmsService.id)).where(PmsService.tenant_id == tenant.id),
-    ).scalar() or 0
-
-    pms_practitioner_count = db.execute(
-        select(func.count(PmsPractitioner.id)).where(PmsPractitioner.tenant_id == tenant.id),
-    ).scalar() or 0
-
-    pms_clinic_count = db.execute(
-        select(func.count(PmsClinic.id)).where(PmsClinic.tenant_id == tenant.id),
-    ).scalar() or 0
-
-    chunks = count_chunks_by_source(tenant.id)
-    config = tenant.crm_config or {}
-
-    return {
-        "files": {"count": file_count + url_count, "size_bytes": total_size, "chunks": chunks.get("kb", 0)},
-        "pms": {
-            "services": pms_service_count,
-            "practitioners": pms_practitioner_count,
-            "clinic": pms_clinic_count,
-            "chunks": chunks.get("pms", 0),
-            "last_sync_at": config.get("last_sync_at"),
-        },
-        "chunks": chunks,
-    }
 
 
 class _ActivityOut(BaseModel):

@@ -26,41 +26,8 @@
 
 <!-- ═══════════════ TAB BAR ═══════════════ -->
 <div class="kb-tabs">
-  <a class="kb-tab active" data-tab="overview" onclick="switchTab('overview')">📊 Overview</a>
-  <a class="kb-tab" data-tab="documents" data-role="owner,manager" onclick="switchTab('documents')">📄 Documents</a>
+  <a class="kb-tab active" data-tab="documents" data-role="owner,manager" onclick="switchTab('documents')">📄 Documents</a>
   <a class="kb-tab" data-tab="practice" data-role="owner,manager" onclick="switchTab('practice')">🏥 Practice Data</a>
-</div>
-
-<!-- ═══════════════ TAB: OVERVIEW ═══════════════ -->
-<div id="tab-overview" class="kb-tab-content" style="display:none">
-  <div id="ov-error" class="err-msg" style="display:none">Failed to load overview data.</div>
-  <div id="ov-skeleton">
-    <div class="stats">
-      <div class="stat"><div class="n skeleton" style="display:inline-block;width:60px;height:32px">&nbsp;</div><div class="l skeleton" style="width:120px;height:14px;margin-top:8px">&nbsp;</div></div>
-      <div class="stat"><div class="n skeleton" style="display:inline-block;width:60px;height:32px">&nbsp;</div><div class="l skeleton" style="width:120px;height:14px;margin-top:8px">&nbsp;</div></div>
-      <div class="stat"><div class="n skeleton" style="display:inline-block;width:60px;height:32px">&nbsp;</div><div class="l skeleton" style="width:120px;height:14px;margin-top:8px">&nbsp;</div></div>
-    </div>
-  </div>
-  <div class="stats" id="ov-cards" style="display:none">
-    <div class="stat">
-      <div class="n" id="ov-files">0</div>
-      <div class="l">KB files &amp; URLs</div>
-      <div class="sub"><span id="ov-chunks">0</span> chunks · <span id="ov-size">0 KB</span></div>
-    </div>
-    <div class="stat">
-      <div class="n"><span id="ov-pms-services">0</span> · <span id="ov-pms-practitioners">0</span> · <span id="ov-pms-clinic">0</span></div>
-      <div class="l">PMS records (S · P · C)</div>
-      <div class="sub"><span id="ov-pms-chunks">0</span> chunks · <span id="ov-pms-sync"></span></div>
-    </div>
-    <div class="stat">
-      <div class="n" id="ov-total-chunks">0</div>
-      <div class="l">Total chunks indexed</div>
-    </div>
-  </div>
-  <div class="ov-activity" id="ov-activity" style="display:none">
-    <div class="ov-activity-header">Recent activity</div>
-    <div id="ov-activity-list"></div>
-  </div>
 </div>
 
 <!-- ═══════════════ TAB: DOCUMENTS ═══════════════ -->
@@ -398,17 +365,6 @@
 .drop{border:2px dashed var(--border);border-radius:var(--radius);padding:32px;text-align:center;cursor:pointer;transition:all .25s}
 .drop.hot,.drop:hover{border-color:var(--accent);background:rgba(99,102,241,0.04)}
 .mt-12{margin-top:12px}
-.ov-activity{border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:20px}
-.ov-activity-header{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-.ov-activity-item{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13px}
-.ov-activity-item+.ov-activity-item{border-top:1px solid rgba(255,255,255,0.03)}
-.ov-activity-icon{flex-shrink:0;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px}
-.ov-activity-icon.upload{background:rgba(52,211,153,0.12);color:#34d399}
-.ov-activity-icon.delete{background:rgba(248,113,113,0.12);color:#f87171}
-.ov-activity-icon.folder{background:rgba(96,165,250,0.12);color:#60a5fa}
-.ov-activity-icon.sync{background:rgba(251,191,36,0.12);color:#fbbf24}
-.ov-activity-desc{flex:1;min-width:0;color:var(--text)}
-.ov-activity-time{flex-shrink:0;font-size:11px;color:var(--muted2);white-space:nowrap}
 </style>
 <script>
 var _selectedFolder = '';
@@ -424,7 +380,7 @@ var _skelRows = '';
 // ════════════════════════════════════════════════
 // TAB MANAGEMENT
 // ════════════════════════════════════════════════
-var _activeTab = 'overview';
+var _activeTab = 'documents';
 var _savedFolder = '';
 var _idDocPoll = null;
 var _idPmsPoll = null;
@@ -432,15 +388,15 @@ var _pmsSyncing = false;
 var _pmsStatus = null;
 
 (function(){
-  var hash = location.hash.replace('#', '') || 'overview';
-  if(['overview','documents','practice'].indexOf(hash) >= 0) {
+  var hash = location.hash.replace('#', '') || 'documents';
+  if(['documents','practice'].indexOf(hash) >= 0) {
     switchTab(hash, false);
   }
 })();
 
 window.addEventListener('hashchange', function(){
-  var hash = location.hash.replace('#', '') || 'overview';
-  if(['overview','documents','practice'].indexOf(hash) >= 0) {
+  var hash = location.hash.replace('#', '') || 'documents';
+  if(['documents','practice'].indexOf(hash) >= 0) {
     switchTab(hash, false);
   }
 });
@@ -467,7 +423,6 @@ function switchTab(tab, pushState) {
   var tabEl = document.querySelector('.kb-tab[data-tab="' + tab + '"]');
   if(tabEl) tabEl.classList.add('active');
   try {
-    if(tab === 'overview') { loadOverview(); }
     if(tab === 'documents') {
       if(_savedFolder) { _selectedFolder = _savedFolder; selectFolder(_savedFolder); }
       loadFolders();
@@ -479,52 +434,6 @@ function switchTab(tab, pushState) {
       _idPmsPoll = setInterval(loadPmsStatus, 30000);
     }
   } catch(e) { console.error('switchTab error:', e); }
-}
-
-// ════════════════════════════════════════════════
-// OVERVIEW TAB
-// ════════════════════════════════════════════════
-async function loadOverview() {
-  var el = document.getElementById('ov-skeleton');
-  if(el) el.style.display = '';
-  try {
-    var data = await api('/knowledge/overview');
-    document.getElementById('ov-files').textContent = data.files.count;
-    document.getElementById('ov-chunks').textContent = data.files.chunks;
-    document.getElementById('ov-size').textContent = (data.files.size_bytes / 1024).toFixed(0) + ' KB';
-    document.getElementById('ov-pms-services').textContent = data.pms.services;
-    document.getElementById('ov-pms-practitioners').textContent = data.pms.practitioners;
-    document.getElementById('ov-pms-clinic').textContent = data.pms.clinic;
-    document.getElementById('ov-pms-chunks').textContent = data.pms.chunks;
-    document.getElementById('ov-total-chunks').textContent = (data.chunks.kb || 0) + (data.chunks.pms || 0);
-    if(data.pms.last_sync_at) {
-      document.getElementById('ov-pms-sync').textContent = 'Last sync: ' + _timeAgo(data.pms.last_sync_at);
-    }
-    document.getElementById('ov-cards').style.display = 'grid';
-    if(el) el.style.display = 'none';
-    loadActivity();
-  } catch(e) {
-    console.error('loadOverview error:', e);
-    document.getElementById('ov-error').style.display = '';
-    if(el) el.style.display = 'none';
-  }
-}
-
-async function loadActivity() {
-  try {
-    var data = await api('/knowledge/activity?limit=15');
-    var container = document.getElementById('ov-activity');
-    var list = document.getElementById('ov-activity-list');
-    if(!data.length) { container.style.display = 'none'; return; }
-    var icons = {file_uploaded:'upload',file_deleted:'delete',url_imported:'upload',url_deleted:'delete',folder_created:'folder',folder_deleted:'delete',pms_synced:'sync'};
-    var labels = {file_uploaded:'\u2191',file_deleted:'\u2716',url_imported:'\u2191',url_deleted:'\u2716',folder_created:'+',folder_deleted:'\u2716',pms_synced:'\u21bb'};
-    list.innerHTML = data.map(function(a){
-      var ic = icons[a.event_type] || 'upload';
-      var lb = labels[a.event_type] || '\u2022';
-      return '<div class="ov-activity-item"><div class="ov-activity-icon ' + ic + '">' + lb + '</div><div class="ov-activity-desc">' + esc(a.description) + '</div><div class="ov-activity-time">' + _timeAgo(a.created_at) + '</div></div>';
-    }).join('');
-    container.style.display = '';
-  } catch(e) { console.error('loadActivity error:', e); }
 }
 
 // ════════════════════════════════════════════════

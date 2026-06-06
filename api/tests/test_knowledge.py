@@ -672,51 +672,6 @@ class TestImportUrlAuthGuard:
         assert resp.status_code in (401, 403)
 
 
-# ── Overview ────────────────────────────────────────────────────────────────
-
-
-class TestOverview:
-    def test_overview_returns_structure(self, client, mock_db, mock_rag):
-        """/knowledge/overview returns the expected shape with all keys."""
-        mock_db.execute.return_value.scalar.return_value = 0
-        resp = client.get("/knowledge/overview")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert "files" in data
-        assert "pms" in data
-        assert "chunks" in data
-        assert "count" in data["files"]
-        assert "size_bytes" in data["files"]
-        assert "chunks" in data["files"]
-        assert "services" in data["pms"]
-        assert "practitioners" in data["pms"]
-        assert "clinic" in data["pms"]
-        assert "chunks" in data["pms"]
-        assert "kb" in data["chunks"]
-        assert "pms" in data["chunks"]
-
-    def test_overview_with_data(self, client, mock_db, mock_rag):
-        """Overview returns correct counts when data exists."""
-        def scalar_side_effect():
-            counts = [12, 3, 45000, 8, 4, 1]
-            return iter(counts).__next__
-        mock_db.execute.return_value.scalar.side_effect = [12, 3, 45000, 8, 4, 1]
-        resp = client.get("/knowledge/overview")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert data["files"]["count"] == 15
-        assert data["files"]["size_bytes"] == 45000
-        assert data["pms"]["services"] == 8
-        assert data["pms"]["practitioners"] == 4
-        assert data["pms"]["clinic"] == 1
-
-    def test_overview_auth_guard(self, app):
-        app.dependency_overrides.clear()
-        with TestClient(app) as c:
-            resp = c.get("/knowledge/overview")
-        assert resp.status_code in (401, 403)
-
-
 # ── Auth guard ──────────────────────────────────────────────────────────────
 
 
