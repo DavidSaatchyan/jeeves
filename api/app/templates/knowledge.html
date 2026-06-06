@@ -1048,6 +1048,7 @@ function showConfirm(msg, cb, title){
   document.getElementById('confirmTitle').textContent = title || 'Confirm';
   document.getElementById('confirmMsg').textContent = msg;
   document.getElementById('confirmActions').style.display = '';
+  document.getElementById('confirmButtons').style.display = '';
   document.getElementById('confirmLoader').style.display = 'none';
   document.getElementById('confirmModal').classList.add('show');
   _confirmCb = cb;
