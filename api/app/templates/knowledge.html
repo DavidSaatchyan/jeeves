@@ -428,6 +428,8 @@ function switchTab(tab, pushState) {
       loadFolders();
       refresh();
       _idDocPoll = setInterval(refreshFileRows, 2000);
+      refreshQuickStatus();
+      if(!window._idQuickPoll) window._idQuickPoll = setInterval(refreshQuickStatus, 60000);
     }
     if(tab === 'practice') {
       loadPmsStatus();
@@ -544,6 +546,7 @@ async function syncPms(types){
     if(hasErrors) updateGlobalStatus('partial', 'Synced with errors. Check individual sections.');
     else if(allOk) updateGlobalStatus('ok', 'All data synced successfully.');
     await loadPmsStatus();
+    refreshQuickStatus();
   } catch(e){
     updateGlobalStatus('err', 'Sync failed: ' + e.message);
     typeList.forEach(function(t){ _setIcon(t, 'error'); });
@@ -573,6 +576,27 @@ async function reindexFromSql(){
 
 // Quick sync (PMS Quick Status bar at top)
 function syncQuick(){ syncPms(['services','practitioners','clinic']); }
+
+// Refresh the Quick Status bar from API
+async function refreshQuickStatus() {
+  var el = document.getElementById('pmsQuickStatus');
+  if(!el) return;
+  try {
+    var data = await api('/knowledge/sync/crm/status');
+    var name = data.crm_provider || 'CRM';
+    document.getElementById('pmsQuickProvider').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+    document.getElementById('pmsQuickSync').textContent = data.last_sync_at
+      ? 'Last sync: ' + _timeAgo(data.last_sync_at)
+      : 'Not synced';
+    var icon = document.getElementById('pmsQuickIcon');
+    icon.style.background = name === 'cliniko' ? 'rgba(0,163,224,0.15)' : 'rgba(99,102,241,0.15)';
+    icon.style.color = name === 'cliniko' ? '#00a3e0' : '#6366f1';
+    icon.style.borderRadius = '4px';
+    icon.style.fontWeight = '700';
+    icon.style.fontSize = '11px';
+    icon.textContent = name.charAt(0).toUpperCase();
+  } catch(e) { /* silent */ }
+}
 
 // ════════════════════════════════════════════════
 // FOLDER TREE
