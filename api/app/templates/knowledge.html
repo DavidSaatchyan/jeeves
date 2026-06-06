@@ -355,7 +355,18 @@
 .drop{border:2px dashed var(--border);border-radius:var(--radius);padding:32px;text-align:center;cursor:pointer;transition:all .25s}
 .drop.hot,.drop:hover{border-color:var(--accent);background:rgba(99,102,241,0.04)}
 .mt-12{margin-top:12px}
-</style>
+.skeleton{background:rgba(255,255,255,0.06);border-radius:4px;animation:shimmer 1.2s ease-in-out infinite;background-image:linear-gradient(90deg,rgba(255,255,255,0.06) 25%,rgba(255,255,255,0.1) 50%,rgba(255,255,255,0.06) 75%);background-size:200% 100%}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-line{display:block;height:14px;border-radius:4px}
+.skel-tr{opacity:.5}
+.skel-tr td{padding:10px 14px!important}
+.skel-folder-item{padding:5px 8px}
+.skel-stat{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px}
+.skel-stat-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.kb-table-skeleton{display:table-row-group}
+.kb-table-skeleton:empty{display:none}
+.w80{width:80%}.w70{width:70%}.w65{width:65%}.w60{width:60%}.w55{width:55%}.w45{width:45%}.w40{width:40%}
+
 <script>
 var _selectedFolder = '';
 var _confirmCb = null;
