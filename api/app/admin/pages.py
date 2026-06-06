@@ -108,8 +108,7 @@ def settings_legacy_redirect():
 def knowledge_page(request: Request, tenant: Tenant = Depends(get_admin_tenant)):
     from ..rag.engine import count_chunks_by_source
     chunks = count_chunks_by_source(tenant.id)
-    config = tenant.crm_config or {}
-    ctx = _ctx(request, tenant=tenant, chunks=chunks, crm_provider=tenant.crm_provider or "", last_sync_at=config.get("last_sync_at"))
+    ctx = _ctx(request, tenant=tenant, chunks=chunks)
     ctx["tenant_id"] = str(tenant.id)
     return templates.TemplateResponse(request, "knowledge.html", context=ctx)
 

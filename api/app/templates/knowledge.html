@@ -14,16 +14,6 @@
   <div id="simError" class="err-msg" style="display:none"></div>
 </div>
 
-<!-- ═══════════════ PMS QUICK STATUS ═══════════════ -->
-{% if crm_provider %}
-<div class="pms-header" id="pmsQuickStatus">
-  <span class="pms-icon" id="pmsQuickIcon"></span>
-  <span id="pmsQuickProvider">{{ crm_provider }}</span>
-  <span id="pmsQuickSync" class="muted">{% if last_sync_at %}Last sync: {{ last_sync_at }}{% else %}Not synced{% endif %}</span>
-  <button class="btn sm" onclick="syncQuick()" id="pmsQuickBtn">⟳ Quick Sync</button>
-</div>
-{% endif %}
-
 <!-- ═══════════════ TAB BAR ═══════════════ -->
 <div class="kb-tabs">
   <a class="kb-tab active" data-tab="documents" data-role="owner,manager" onclick="switchTab('documents')">📄 Documents</a>
@@ -437,7 +427,7 @@ function switchTab(tab, pushState) {
 }
 
 // ════════════════════════════════════════════════
-// PMS HELPERS (also used by Quick Status)
+// PMS HELPERS
 // ════════════════════════════════════════════════
 function _timeAgo(iso){
   if(!iso) return null;
@@ -571,8 +561,6 @@ async function reindexFromSql(){
   }
 }
 
-// Quick sync (PMS Quick Status bar at top)
-function syncQuick(){ syncPms(['services','practitioners','clinic']); }
 
 // ════════════════════════════════════════════════
 // FOLDER TREE
