@@ -9,7 +9,7 @@ HMS_FIELD_SCHEMAS: dict[str, dict[str, set[str]]] = {
     "cliniko": {
         "service": {"id", "name", "item_type", "price"},
         "practitioner": {"id", "first_name", "last_name"},
-        "clinic": {"id", "name", "business_name"},
+        "clinic": {"id", "business_name"},
     },
     "pabau": {
         "service": {"id", "name"},

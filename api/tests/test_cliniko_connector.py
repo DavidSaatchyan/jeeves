@@ -339,10 +339,10 @@ class TestClinikoAppointmentTypes:
 class TestClinikoBillableItems:
     def test_get_billable_items_returns_list(self):
         c = _make_connector()
-        with patch.object(c, "_request", return_value={"billable_items": [{"id": 1, "name": "Consult", "price": 15000}]}) as mock:
+        with patch.object(c, "_request", return_value={"billable_items": [{"id": 1, "name": "Consult", "price": 15000, "item_type": "Service"}]}) as mock:
             result = c.get_billable_items(item_type="Service")
-        assert result == [{"id": 1, "name": "Consult", "price": 15000}]
-        assert "item_type:=Service" in str(mock.call_args)
+        assert result == [{"id": 1, "name": "Consult", "price": 15000, "item_type": "Service"}]
+        assert "item_type" not in str(mock.call_args)
 
     def test_get_billable_items_with_updated_since(self):
         c = _make_connector()
@@ -353,13 +353,14 @@ class TestClinikoBillableItems:
     def test_get_billable_items_no_filter(self):
         c = _make_connector()
         with patch.object(c, "_request", return_value={"billable_items": [{"id": 1}]}) as mock:
-            c.get_billable_items(item_type=None)
-        assert "item_type:=" not in str(mock.call_args)
+            result = c.get_billable_items(item_type=None)
+        assert result == [{"id": 1}]
+        assert "item_type" not in str(mock.call_args)
 
     def test_get_billable_items_paginates(self):
         c = _make_connector()
-        page1 = {"billable_items": [{"id": 1}], "links": {"next": "/v1/billable_items?page=2&per_page=100"}}
-        page2 = {"billable_items": [{"id": 2}], "links": {}}
+        page1 = {"billable_items": [{"id": 1, "item_type": "Service"}], "links": {"next": "/v1/billable_items?page=2&per_page=100"}}
+        page2 = {"billable_items": [{"id": 2, "item_type": "Service"}], "links": {}}
         with patch.object(c, "_request", side_effect=[page1, page2]) as mock:
             result = c.get_billable_items(item_type="Service")
         assert len(result) == 2

@@ -137,16 +137,14 @@ class ClinikoConnector(AbstractCrmConnector, HmsConnector):
         item_type: str | None = "Service",
         updated_since: str | None = None,
     ) -> list[dict[str, Any]]:
-        """Fetch billable items, optionally filtered by type and/or updated_since."""
+        """Fetch billable items, optionally filtered by type (client-side) and/or updated_since."""
         params: dict[str, Any] = {"per_page": "100"}
-        q_filters: list[str] = []
-        if item_type:
-            q_filters.append(f"item_type:={item_type}")
         if updated_since:
-            q_filters.append(f"updated_at:>{updated_since}")
-        if q_filters:
-            params["q[]"] = q_filters if len(q_filters) > 1 else q_filters[0]
-        return self._paginate_all("/billable_items", params)
+            params["q[]"] = f"updated_at:>{updated_since}"
+        items = self._paginate_all("/billable_items", params)
+        if item_type:
+            items = [i for i in items if i.get("item_type") == item_type]
+        return items
 
     def get_appointment_type_billable_items(
         self,

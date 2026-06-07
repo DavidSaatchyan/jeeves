@@ -21,7 +21,6 @@ class TestHmsFieldSchemas:
     def test_cliniko_clinic_schema(self):
         schema = HMS_FIELD_SCHEMAS["cliniko"]["clinic"]
         assert "id" in schema
-        assert "name" in schema
         assert "business_name" in schema
 
     def test_pabau_service_schema(self):
