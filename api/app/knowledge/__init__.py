@@ -329,7 +329,7 @@ async def simulate(
     raw = await asyncio.to_thread(rag.search, tenant.id, body.query, top_k=body.top_k)
 
     # Filter out orphan chunks whose file_id no longer exists in DB
-    # Synthetic file_ids (PMS, non-UUID) are kept — they have no DB record.
+    # Synthetic file_ids (HMS, non-UUID) are kept — they have no DB record.
     file_ids = [r["file_id"] for r in raw if r.get("file_id")]
     if file_ids:
         uuids = []

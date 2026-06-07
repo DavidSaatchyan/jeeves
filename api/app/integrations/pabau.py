@@ -10,13 +10,14 @@ import httpx
 
 from .base import AbstractCrmConnector
 from .exceptions import ConnectorAuthError, ConnectorError, ConnectorNotFoundError, ConnectorRateLimitError
+from .hms import HmsConnector
 
 logger = logging.getLogger("jeeves.pabau")
 
 _PABAU_API_BASE = "https://api.oauth.pabau.com"
 
 
-class PabauConnector(AbstractCrmConnector):
+class PabauConnector(AbstractCrmConnector, HmsConnector):
     """Pabau CRM connector — patients + appointments via Pabau REST API."""
 
     provider = "pabau"
@@ -84,6 +85,17 @@ class PabauConnector(AbstractCrmConnector):
 
     def get_businesses(self) -> list[dict[str, Any]]:
         return []
+
+    # HmsConnector interface
+
+    def fetch_services(self, updated_since: str | None = None) -> list[dict[str, Any]]:
+        return self.get_services()
+
+    def fetch_practitioners(self) -> list[dict[str, Any]]:
+        return self.get_practitioners()
+
+    def fetch_clinics(self) -> list[dict[str, Any]]:
+        return self.get_businesses()
 
     # Patients
 

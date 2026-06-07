@@ -118,7 +118,7 @@ class KbActivity(Base, _TenantScoped, _CreatedAt):
     """KB activity feed — file uploads, syncs, deletes."""
     __tablename__ = "kb_activity"
 
-    event_type = Column(String(32), nullable=False)  # file_uploaded | file_deleted | url_imported | url_deleted | folder_created | folder_deleted | pms_synced
+    event_type = Column(String(32), nullable=False)  # file_uploaded | file_deleted | url_imported | url_deleted | folder_created | folder_deleted | hms_synced
     description = Column(Text, nullable=False, default="")
     ref_id = Column(String(36), nullable=True)  # UUID of the related entity (file, url, folder)
 
@@ -487,9 +487,9 @@ class Provider(Base, _TenantScoped, _CreatedAt, _UpdatedAt):
     schedule = Column(JSONB, default=dict)                  # availability rules
 
 
-class PmsService(Base, _TenantScoped, _CreatedAt, _UpdatedAt):
-    """PMS service/billable item — source of truth for sync data."""
-    __tablename__ = "pms_services"
+class HmsService(Base, _TenantScoped, _CreatedAt, _UpdatedAt):
+    """HMS service/billable item — source of truth for sync data."""
+    __tablename__ = "hms_services"
 
     external_id = Column(Text, nullable=False, index=True)
     name = Column(Text, nullable=False)
@@ -502,9 +502,9 @@ class PmsService(Base, _TenantScoped, _CreatedAt, _UpdatedAt):
     raw_data = Column(JSONB, default=dict)
 
 
-class PmsPractitioner(Base, _TenantScoped, _CreatedAt, _UpdatedAt):
-    """PMS practitioner/provider — source of truth for sync data."""
-    __tablename__ = "pms_practitioners"
+class HmsPractitioner(Base, _TenantScoped, _CreatedAt, _UpdatedAt):
+    """HMS practitioner/provider — source of truth for sync data."""
+    __tablename__ = "hms_practitioners"
 
     external_id = Column(Text, nullable=False, index=True)
     display_name = Column(Text, nullable=False)
@@ -515,9 +515,9 @@ class PmsPractitioner(Base, _TenantScoped, _CreatedAt, _UpdatedAt):
     raw_data = Column(JSONB, default=dict)
 
 
-class PmsClinic(Base, _TenantScoped, _CreatedAt, _UpdatedAt):
-    """PMS clinic/business — source of truth for sync data (1 per tenant)."""
-    __tablename__ = "pms_clinic"
+class HmsClinic(Base, _TenantScoped, _CreatedAt, _UpdatedAt):
+    """HMS clinic/business — source of truth for sync data (1 per tenant)."""
+    __tablename__ = "hms_clinic"
 
     external_id = Column(Text, nullable=False)
     business_name = Column(Text, nullable=False)

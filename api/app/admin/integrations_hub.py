@@ -3,12 +3,13 @@ from __future__ import annotations
 import base64
 import datetime
 import io
+import logging
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import httpx
 import qrcode
-from fastapi import Depends, HTTPException, Query, Request, status
+from fastapi import BackgroundTasks, Depends, HTTPException, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -20,6 +21,8 @@ from ..integrations.resolver import get_crm_adapter_for_tenant
 from ..models import Tenant
 from .deps import _ctx, get_admin_tenant
 from .router import router, templates
+
+logger = logging.getLogger("jeeves")
 
 _CLINIKO_SHARDS = ["au1", "au2", "au3", "au4", "au5", "eu1", "us1", "ca1", "uk1", "nz1", "sg1"]
 _KNOWN_SHARDS = set(_CLINIKO_SHARDS)
@@ -162,6 +165,7 @@ class _CrmConfigureBody(BaseModel):
 @router.post("/api/integrations/crm/configure")
 def configure_crm(
     body: _CrmConfigureBody,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     tenant: Tenant = Depends(get_admin_tenant),
 ):
@@ -197,6 +201,12 @@ def configure_crm(
     db.flush()
     db.commit()
     log_activity(db, tenant.id, tenant.email, "config_change", f"Connected CRM: {provider.title()}", api_status="success")
+
+    # Auto-first-sync in background so Practice Data is ready immediately
+    from ..core.crm_sync import poll_crm_changes
+    background_tasks.add_task(poll_crm_changes, tenant.id)
+    logger.info("Auto-sync after CRM configure: enqueued for tenant %s", tenant.id)
+
     return {"ok": True, "connected": True, "message": f"Connected to {provider.title()}"}
 
 

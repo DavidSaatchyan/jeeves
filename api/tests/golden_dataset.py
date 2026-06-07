@@ -9,7 +9,7 @@ from pathlib import Path
 class GoldenSample:
     query: str
     reference_answer: str
-    source_type: str  # kb | pms | general
+    source_type: str  # kb | hms | general
     language: str       # en | de | fr | es | it
     specialty: str
     difficulty: str     # easy | medium | hard

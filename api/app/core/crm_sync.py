@@ -8,12 +8,14 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from ..config import get_settings
 from ..db import SessionLocal
-from ..integrations.cliniko import enrich_services_with_descriptions
-from ..integrations.resolver import get_crm_adapter_for_tenant
-from ..models import PmsClinic, PmsPractitioner, PmsService, Tenant
+from ..integrations.hms import HmsConnector
+from ..integrations.resolver import get_crm_adapter_for_tenant, get_hms_adapter_for_tenant
+from ..models import HmsClinic, HmsPractitioner, HmsService, Tenant
 from ..rag import crm_indexer
-from ..shared.pms_fields import clinic_fields, practitioner_fields, service_fields, upsert_objects
+from ..shared.hms_schemas import validate_hms_records
+from ..shared.hms_fields import clinic_fields, practitioner_fields, service_fields, upsert_objects
 
 logger = logging.getLogger(__name__)
 
@@ -28,15 +30,60 @@ def _save_sync_result(tenant: Tenant, result: dict[str, Any], db: Session) -> No
     config = dict(tenant.crm_config or {})
     config["last_sync_at"] = now.isoformat()
     sync_counts: dict[str, Any] = config.get("sync_counts", {})
+    config["prev_sync_counts"] = dict(sync_counts)
+    sync_errors: dict[str, Any] = {}
     for type_key in ("services", "practitioners", "clinic"):
-        if type_key in result and not result[type_key].get("errors"):
+        if type_key not in result:
+            continue
+        if result[type_key].get("errors"):
+            sync_errors[type_key] = result[type_key]["errors"][:500]
+        else:
             sync_counts[type_key] = {
                 "count": result[type_key]["imported"],
                 "last_sync": now.isoformat(),
             }
     config["sync_counts"] = sync_counts
+    config["sync_errors"] = sync_errors
     tenant.crm_config = config
     db.commit()
+
+
+def _sync_services_hms(hms: HmsConnector, tenant: Tenant, last_sync: str | None, batch_id: str, db: Session) -> dict[str, Any]:
+    try:
+        services = hms.fetch_services(updated_since=last_sync)
+        validate_hms_records(hms.provider, "service", services)
+        written = upsert_objects(db, HmsService, tenant.id, services, "id", service_fields)
+        imported = crm_indexer.index_services(tenant.id, services, batch_id)
+        return {"imported": imported, "written_sql": written, "errors": []}
+    except Exception as e:
+        logger.error("CRM poll services failed: %s", e)
+        return {"imported": 0, "written_sql": 0, "errors": [str(e)[:500]]}
+
+
+def _sync_practitioners_hms(hms: HmsConnector, tenant: Tenant, batch_id: str, db: Session) -> dict[str, Any]:
+    try:
+        practitioners = hms.fetch_practitioners()
+        validate_hms_records(hms.provider, "practitioner", practitioners)
+        written = upsert_objects(db, HmsPractitioner, tenant.id, practitioners, "id", practitioner_fields)
+        imported = crm_indexer.index_practitioners(tenant.id, practitioners, batch_id)
+        return {"imported": imported, "written_sql": written, "errors": []}
+    except Exception as e:
+        logger.error("CRM poll practitioners failed: %s", e)
+        return {"imported": 0, "written_sql": 0, "errors": [str(e)[:500]]}
+
+
+def _sync_clinic_hms(hms: HmsConnector, tenant: Tenant, batch_id: str, db: Session) -> dict[str, Any]:
+    try:
+        clinics = hms.fetch_clinics()
+        validate_hms_records(hms.provider, "clinic", clinics)
+        clinic = clinics[0] if clinics else None
+        items = [clinic] if clinic else []
+        written = upsert_objects(db, HmsClinic, tenant.id, items, "id", clinic_fields)
+        imported = crm_indexer.index_clinic(tenant.id, clinic, batch_id)
+        return {"imported": imported, "written_sql": written, "errors": []}
+    except Exception as e:
+        logger.error("CRM poll clinic failed: %s", e)
+        return {"imported": 0, "written_sql": 0, "errors": [str(e)[:500]]}
 
 
 def poll_crm_changes(tenant_id: str | UUID) -> dict[str, Any]:
@@ -51,9 +98,30 @@ def poll_crm_changes(tenant_id: str | UUID) -> dict[str, Any]:
         if not tenant:
             return {"error": "Tenant not found"}
 
-        adapter = get_crm_adapter_for_tenant(tenant.id)
+        settings = get_settings()
+        if settings.feature_use_hms_connector:
+            hms = get_hms_adapter_for_tenant(tenant)
+            if not hms:
+                return {"error": "No HMS adapter configured"}
+
+            last_sync = _get_last_sync(tenant)
+            batch_id = f"crm-poll-{tenant.id}-{datetime.now(timezone.utc).isoformat()}"
+            result: dict[str, Any] = {}
+
+            result["services"] = _sync_services_hms(hms, tenant, last_sync, batch_id, db)
+            result["practitioners"] = _sync_practitioners_hms(hms, tenant, batch_id, db)
+            result["clinic"] = _sync_clinic_hms(hms, tenant, batch_id, db)
+
+            _save_sync_result(tenant, result, db)
+            result["batch_id"] = batch_id
+            return result
+
+        # Legacy path via AbstractCrmConnector
+        adapter = get_crm_adapter_for_tenant(tenant)
         if not adapter:
             return {"error": "No CRM adapter configured"}
+
+        from ..integrations.cliniko import enrich_services_with_descriptions
 
         last_sync = _get_last_sync(tenant)
         batch_id = f"crm-poll-{tenant.id}-{datetime.now(timezone.utc).isoformat()}"
@@ -65,7 +133,7 @@ def poll_crm_changes(tenant_id: str | UUID) -> dict[str, Any]:
             appointment_types = adapter.get_appointment_types(updated_since=last_sync)
             links = adapter.get_appointment_type_billable_items()
             services = enrich_services_with_descriptions(billable_items, appointment_types, links)
-            written = upsert_objects(db, PmsService, tenant.id, services, "id", service_fields)
+            written = upsert_objects(db, HmsService, tenant.id, services, "id", service_fields)
             imported = crm_indexer.index_services(tenant.id, services, batch_id)
             result["services"] = {"imported": imported, "written_sql": written, "errors": []}
         except Exception as e:
@@ -75,7 +143,7 @@ def poll_crm_changes(tenant_id: str | UUID) -> dict[str, Any]:
         # Practitioners (incremental)
         try:
             practitioners = adapter.get_practitioners()
-            written = upsert_objects(db, PmsPractitioner, tenant.id, practitioners, "id", practitioner_fields)
+            written = upsert_objects(db, HmsPractitioner, tenant.id, practitioners, "id", practitioner_fields)
             imported = crm_indexer.index_practitioners(tenant.id, practitioners, batch_id)
             result["practitioners"] = {"imported": imported, "written_sql": written, "errors": []}
         except Exception as e:
@@ -87,7 +155,7 @@ def poll_crm_changes(tenant_id: str | UUID) -> dict[str, Any]:
             businesses = adapter.get_businesses()
             clinic = businesses[0] if businesses else None
             items = [clinic] if clinic else []
-            written = upsert_objects(db, PmsClinic, tenant.id, items, "id", clinic_fields)
+            written = upsert_objects(db, HmsClinic, tenant.id, items, "id", clinic_fields)
             imported = crm_indexer.index_clinic(tenant.id, clinic, batch_id)
             result["clinic"] = {"imported": imported, "written_sql": written, "errors": []}
         except Exception as e:

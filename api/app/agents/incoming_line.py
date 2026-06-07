@@ -93,11 +93,11 @@ async def _handle_kb_query(message: str, tenant_id: str, config: dict) -> tuple[
         results = cached
     else:
         kb_fut = translate_and_search(tenant_id, message, 10, CHAT_THRESHOLD, kb_where)
-        pms_fut = translate_and_search(tenant_id, message, 10, CHAT_THRESHOLD, {"source": "pms"})
+        hms_fut = translate_and_search(tenant_id, message, 10, CHAT_THRESHOLD, {"source": "hms"})
 
-        kb_results, pms_results = await asyncio.gather(kb_fut, pms_fut)
+        kb_results, hms_results = await asyncio.gather(kb_fut, hms_fut)
 
-        results = _rrf_merge(kb_results, pms_results, weights=[1.0, 1.2])
+        results = _rrf_merge(kb_results, hms_results, weights=[1.0, 1.2])
 
         if rerank_docs:
             rerank_top_k = 15

@@ -7,9 +7,15 @@ from sqlalchemy.orm import Session
 from ..models import Tenant
 from .base import AbstractCrmConnector
 from .cliniko import ClinikoConnector
+from .hms import HmsConnector
 from .pabau import PabauConnector
 
 CRM_PROVIDERS: dict[str, type[AbstractCrmConnector]] = {
+    "pabau": PabauConnector,
+    "cliniko": ClinikoConnector,
+}
+
+HMS_PROVIDERS: dict[str, type[HmsConnector]] = {
     "pabau": PabauConnector,
     "cliniko": ClinikoConnector,
 }
@@ -31,6 +37,16 @@ def get_crm_adapter_for_tenant(tenant: Tenant) -> AbstractCrmConnector | None:
         return None
     provider = tenant.crm_provider or "pabau"
     cls = CRM_PROVIDERS.get(provider)
+    if not cls:
+        return None
+    return cls(tenant.crm_config)
+
+
+def get_hms_adapter_for_tenant(tenant: Tenant) -> HmsConnector | None:
+    if not tenant.crm_config:
+        return None
+    provider = tenant.crm_provider or "pabau"
+    cls = HMS_PROVIDERS.get(provider)
     if not cls:
         return None
     return cls(tenant.crm_config)

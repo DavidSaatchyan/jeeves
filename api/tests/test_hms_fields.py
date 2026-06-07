@@ -1,4 +1,4 @@
-"""Tests for shared/pms_fields.py — upsert_objects + field maps."""
+"""Tests for shared/hms_fields.py — upsert_objects + field maps."""
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -6,8 +6,8 @@ from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
-from app.models import PmsService
-from app.shared.pms_fields import clinic_fields, practitioner_fields, service_fields, upsert_objects
+from app.models import HmsService
+from app.shared.hms_fields import clinic_fields, practitioner_fields, service_fields, upsert_objects
 
 
 class TestUpsertObjects:
@@ -16,8 +16,8 @@ class TestUpsertObjects:
         db.execute.return_value.scalars.return_value.all.return_value = []
         tenant_id = uuid4()
         items = [{"id": "ext-1", "name": "Alpha"}, {"id": "ext-2", "name": "Beta"}]
-        with patch("app.shared.pms_fields.select"):
-            count = upsert_objects(db, PmsService, tenant_id, items, "id", lambda x: {"name": x["name"]})
+        with patch("app.shared.hms_fields.select"):
+            count = upsert_objects(db, HmsService, tenant_id, items, "id", lambda x: {"name": x["name"]})
         assert count == 2
         assert db.add.call_count == 2
         db.flush.assert_called_once()
@@ -29,23 +29,23 @@ class TestUpsertObjects:
         db.execute.return_value.scalars.return_value.all.return_value = [existing]
         tenant_id = uuid4()
         items = [{"id": "ext-1", "name": "Updated"}]
-        with patch("app.shared.pms_fields.select"):
-            count = upsert_objects(db, PmsService, tenant_id, items, "id", lambda x: {"name": x["name"]})
+        with patch("app.shared.hms_fields.select"):
+            count = upsert_objects(db, HmsService, tenant_id, items, "id", lambda x: {"name": x["name"]})
         assert count == 1
         assert existing.name == "Updated"
         assert db.add.call_count == 0
 
     def test_empty_items(self):
         db = MagicMock(spec=Session)
-        count = upsert_objects(db, PmsService, uuid4(), [], "id", lambda x: {})
+        count = upsert_objects(db, HmsService, uuid4(), [], "id", lambda x: {})
         assert count == 0
         db.execute.assert_not_called()
 
     def test_missing_id_skipped(self):
         db = MagicMock(spec=Session)
         items = [{"name": "NoId"}]
-        with patch("app.shared.pms_fields.select"):
-            count = upsert_objects(db, PmsService, uuid4(), items, "id", lambda x: {"name": x["name"]})
+        with patch("app.shared.hms_fields.select"):
+            count = upsert_objects(db, HmsService, uuid4(), items, "id", lambda x: {"name": x["name"]})
         assert count == 0
         assert db.add.call_count == 0
 
@@ -56,8 +56,8 @@ class TestUpsertObjects:
         db = MagicMock(spec=Session)
         db.execute.return_value.scalars.return_value.all.return_value = [existing]
         items = [{"id": "ext-1", "name": "Changed"}, {"id": "ext-2", "name": "New"}]
-        with patch("app.shared.pms_fields.select"):
-            count = upsert_objects(db, PmsService, uuid4(), items, "id", lambda x: {"name": x["name"]})
+        with patch("app.shared.hms_fields.select"):
+            count = upsert_objects(db, HmsService, uuid4(), items, "id", lambda x: {"name": x["name"]})
         assert count == 2
         assert existing.name == "Changed"
         assert db.add.call_count == 1
@@ -154,7 +154,7 @@ class TestClinicFields:
 
 
 class TestFieldMapsImport:
-    """Verify knowledge/sync.py and core/crm_sync.py import from shared.pms_fields."""
+    """Verify knowledge/sync.py and core/crm_sync.py import from shared.hms_fields."""
 
     def test_knowledge_sync_imports(self):
         from app.knowledge import sync as ks

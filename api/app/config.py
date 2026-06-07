@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     facebook_app_id: str = ""
     facebook_app_secret: str = ""
     facebook_redirect_uri: str = ""
+    # Feature flags
+    feature_use_hms_connector: bool = True
+
     # Compliance / data governance
     compliance_gdpr_enabled: bool = True
     compliance_hipaa_enabled: bool = False

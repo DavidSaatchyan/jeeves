@@ -29,7 +29,7 @@ from app.core.eval import RAGEvaluator
 
 
 SYNTHETIC_KB = Path(__file__).parent / "synthetic_kb"
-SYNTHETIC_PMS = Path(__file__).parent / "synthetic_pms"
+SYNTHETIC_HMS = Path(__file__).parent / "synthetic_hms"
 GOLDEN_DATASET = Path(__file__).parent / "golden_dataset.jsonl"
 BASELINE_OUT = Path(__file__).parent / "rag_baseline.json"
 
@@ -37,7 +37,7 @@ TENANT_ID = "00000000-0000-0000-0000-000000000001"
 
 
 async def _index_synthetic() -> None:
-    """Index all synthetic KB docs and PMS data into Chroma."""
+    """Index all synthetic KB docs and HMS data into Chroma."""
     loaded: list[str] = []
 
     for fpath in sorted(SYNTHETIC_KB.iterdir()):
@@ -52,10 +52,10 @@ async def _index_synthetic() -> None:
         loaded.append(fid)
         print(f"  indexed KB: {fpath.name}")
 
-    for fpath in sorted(SYNTHETIC_PMS.iterdir()):
+    for fpath in sorted(SYNTHETIC_HMS.iterdir()):
         if fpath.suffix not in (".txt",):
             continue
-        fid = f"synthetic-pms-{fpath.stem}"
+        fid = f"synthetic-hms-{fpath.stem}"
         try:
             delete_file(TENANT_ID, fid)
         except Exception:
@@ -63,7 +63,7 @@ async def _index_synthetic() -> None:
         text = fpath.read_text(encoding="utf-8")
         index_text(TENANT_ID, fid, text, fpath.name, section="Pricing")
         loaded.append(fid)
-        print(f"  indexed PMS: {fpath.name}")
+        print(f"  indexed HMS: {fpath.name}")
 
     print(f"  total indexed: {len(loaded)} files")
 

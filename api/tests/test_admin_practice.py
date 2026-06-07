@@ -50,9 +50,9 @@ class TestPracticeDataInUnifiedPage:
         resp = client.get("/admin/knowledge")
         assert resp.status_code == 200
         assert "Sync all data" in resp.text
-        assert "pmsSyncAllBtn" in resp.text
+        assert "hmsSyncAllBtn" in resp.text
         for t in ("services", "practitioners", "clinic"):
-            assert f"pmsBtn-{t}" in resp.text
+            assert f"hmsBtn-{t}" in resp.text
 
     def test_no_crm_tab_in_upload_modal(self, client: TestClient) -> None:
         resp = client.get("/admin/knowledge")

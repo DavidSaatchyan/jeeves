@@ -54,7 +54,7 @@ class TestRAGEvaluator:
         assert loaded.faithfulness == 0.85
 
     @pytest.mark.skip(reason="Requires real LLM calls and indexed data — run manually with --run-eval")
-    def test_full_eval(self, golden_dataset: list[dict], synthetic_kb_loader: list[str], synthetic_pms_loader: list[str]):
+    def test_full_eval(self, golden_dataset: list[dict], synthetic_kb_loader: list[str], synthetic_hms_loader: list[str]):
         """Full eval pipeline — requires --run-eval flag."""
         ev = RAGEvaluator()
         samples = []

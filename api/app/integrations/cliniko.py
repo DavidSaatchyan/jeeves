@@ -12,13 +12,14 @@ import httpx
 
 from .base import AbstractCrmConnector
 from .exceptions import ConnectorAuthError, ConnectorError, ConnectorNotFoundError, ConnectorRateLimitError
+from .hms import HmsConnector
 
 logger = logging.getLogger("jeeves.cliniko")
 
 _CLINIKO_API_BASE = "https://api.{shard}.cliniko.com/v1"
 
 
-class ClinikoConnector(AbstractCrmConnector):
+class ClinikoConnector(AbstractCrmConnector, HmsConnector):
     """Cliniko CRM connector — patients + appointments via Cliniko REST API."""
 
     provider = "cliniko"
@@ -162,6 +163,20 @@ class ClinikoConnector(AbstractCrmConnector):
     def get_businesses(self) -> list[dict[str, Any]]:
         """Fetch all businesses (clinic info)."""
         return self._paginate_all("/businesses")
+
+    # HmsConnector interface
+
+    def fetch_services(self, updated_since: str | None = None) -> list[dict[str, Any]]:
+        billable_items = self.get_billable_items(item_type="Service", updated_since=updated_since)
+        appointment_types = self.get_appointment_types(updated_since=updated_since)
+        links = self.get_appointment_type_billable_items()
+        return enrich_services_with_descriptions(billable_items, appointment_types, links)
+
+    def fetch_practitioners(self) -> list[dict[str, Any]]:
+        return self.get_practitioners()
+
+    def fetch_clinics(self) -> list[dict[str, Any]]:
+        return self.get_businesses()
 
     # Patients
 

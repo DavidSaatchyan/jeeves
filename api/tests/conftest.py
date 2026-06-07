@@ -94,7 +94,7 @@ def sample_pdf(tmp_path: Path) -> Path:
 
 _GOLDEN_DATASET_PATH = Path(__file__).parent / "golden_dataset.jsonl"
 _SYNTHETIC_KB_DIR = Path(__file__).parent / "synthetic_kb"
-_SYNTHETIC_PMS_DIR = Path(__file__).parent / "synthetic_pms"
+_SYNTHETIC_HMS_DIR = Path(__file__).parent / "synthetic_hms"
 
 
 @pytest.fixture(scope="session")
@@ -135,14 +135,14 @@ def synthetic_kb_loader(tenant_id: str):
 
 
 @pytest.fixture
-def synthetic_pms_loader(tenant_id: str):
-    """Index synthetic PMS data into Chroma for eval tenant."""
+def synthetic_hms_loader(tenant_id: str):
+    """Index synthetic HMS data into Chroma for eval tenant."""
     from app.rag import index_text, delete_file
     loaded: list[str] = []
-    for fpath in sorted(_SYNTHETIC_PMS_DIR.iterdir()):
+    for fpath in sorted(_SYNTHETIC_HMS_DIR.iterdir()):
         if fpath.suffix not in (".txt",):
             continue
-        fid = f"synthetic-pms-{fpath.stem}"
+        fid = f"synthetic-hms-{fpath.stem}"
         try:
             delete_file(tenant_id, fid)
         except Exception:

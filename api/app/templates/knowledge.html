@@ -114,65 +114,69 @@
 
 <!-- ═══════════════ TAB: PRACTICE DATA ═══════════════ -->
 <div id="tab-practice" class="kb-tab-content" style="display:none">
-  <div id="pmsNoPms" class="help" style="display:none">
+  <div id="hmsNoPms" class="help" style="display:none">
     <h3>No practice management system connected</h3>
     <p>Connect Cliniko or Pabau in <a href="/integrations">Integrations</a> to sync practice data.</p>
   </div>
 
-  <div id="pmsHeader" class="pms-header">
-    <span class="pms-icon" id="pmsProviderIcon"></span>
-    <span id="pmsProviderName">&mdash;</span>
-    <span id="pmsLastSync" class="muted">Not synced</span>
-    <button class="btn sm" onclick="syncAll()" id="pmsSyncAllBtn" disabled>&#10227; Sync all data</button>
+  <div id="hmsHeader" class="hms-header">
+    <span class="hms-icon" id="hmsProviderIcon"></span>
+    <span id="hmsProviderName">&mdash;</span>
+    <span id="hmsLastSync" class="muted">Not synced</span>
+    <button class="btn sm" onclick="syncAll()" id="hmsSyncAllBtn" disabled>&#10227; Sync all data</button>
+  </div>
+  <div id="hmsOnboardingBanner" class="hms-onboarding-banner" style="display:none">
+    <span id="hmsOnboardingText">Practice data is being synced. This may take up to 2 minutes.</span>
+    <button class="ghost sm" onclick="dismissOnboarding()" style="margin-left:auto;flex-shrink:0">&times;</button>
   </div>
 
-  <div class="pms-cards" id="pmsCards">
-    <div class="pms-card" id="pmsCard-services">
-      <div class="pms-card-header">
-        <span class="pms-card-icon" id="pmsIcon-services"><span class="pms-dot">&#9679;</span></span>
-        <span class="pms-card-title">Services</span>
-        <span class="pms-card-count" id="pmsCount-services">&mdash;</span>
+  <div class="hms-cards" id="hmsCards">
+    <div class="hms-card" id="hmsCard-services">
+      <div class="hms-card-header">
+        <span class="hms-card-icon" id="hmsIcon-services"><span class="hms-dot">&#9679;</span></span>
+        <span class="hms-card-title">Services</span>
+        <span class="hms-card-count" id="hmsCount-services" style="cursor:pointer" onclick="previewCrmType('services')">&mdash;</span>
       </div>
-      <div class="pms-card-detail" id="pmsDetail-services"></div>
-      <div class="pms-card-footer">
-        <span class="pms-card-timestamp" id="pmsTs-services">Not synced</span>
-        <button class="ghost sm pms-sync-btn" onclick="syncPms(['services'])" id="pmsBtn-services" disabled>&#10227; Sync</button>
-      </div>
-    </div>
-
-    <div class="pms-card" id="pmsCard-practitioners">
-      <div class="pms-card-header">
-        <span class="pms-card-icon" id="pmsIcon-practitioners"><span class="pms-dot">&#9679;</span></span>
-        <span class="pms-card-title">Practitioners</span>
-        <span class="pms-card-count" id="pmsCount-practitioners">&mdash;</span>
-      </div>
-      <div class="pms-card-detail" id="pmsDetail-practitioners"></div>
-      <div class="pms-card-footer">
-        <span class="pms-card-timestamp" id="pmsTs-practitioners">Not synced</span>
-        <button class="ghost sm pms-sync-btn" onclick="syncPms(['practitioners'])" id="pmsBtn-practitioners" disabled>&#10227; Sync</button>
+      <div class="hms-card-detail" id="hmsDetail-services"></div>
+      <div class="hms-card-footer">
+        <span class="hms-card-timestamp" id="hmsTs-services">Not synced</span>
+        <button class="ghost sm hms-sync-btn" onclick="syncPms(['services'])" id="hmsBtn-services" disabled>&#10227; Sync</button>
       </div>
     </div>
 
-    <div class="pms-card" id="pmsCard-clinic">
-      <div class="pms-card-header">
-        <span class="pms-card-icon" id="pmsIcon-clinic"><span class="pms-dot">&#9679;</span></span>
-        <span class="pms-card-title">Clinic</span>
-        <span class="pms-card-count" id="pmsCount-clinic">&mdash;</span>
+    <div class="hms-card" id="hmsCard-practitioners">
+      <div class="hms-card-header">
+        <span class="hms-card-icon" id="hmsIcon-practitioners"><span class="hms-dot">&#9679;</span></span>
+        <span class="hms-card-title">Practitioners</span>
+        <span class="hms-card-count" id="hmsCount-practitioners" style="cursor:pointer" onclick="previewCrmType('practitioners')">&mdash;</span>
       </div>
-      <div class="pms-card-detail" id="pmsDetail-clinic"></div>
-      <div class="pms-card-footer">
-        <span class="pms-card-timestamp" id="pmsTs-clinic">Not synced</span>
-        <button class="ghost sm pms-sync-btn" onclick="syncPms(['clinic'])" id="pmsBtn-clinic" disabled>&#10227; Sync</button>
+      <div class="hms-card-detail" id="hmsDetail-practitioners"></div>
+      <div class="hms-card-footer">
+        <span class="hms-card-timestamp" id="hmsTs-practitioners">Not synced</span>
+        <button class="ghost sm hms-sync-btn" onclick="syncPms(['practitioners'])" id="hmsBtn-practitioners" disabled>&#10227; Sync</button>
+      </div>
+    </div>
+
+    <div class="hms-card" id="hmsCard-clinic">
+      <div class="hms-card-header">
+        <span class="hms-card-icon" id="hmsIcon-clinic"><span class="hms-dot">&#9679;</span></span>
+        <span class="hms-card-title">Clinic</span>
+        <span class="hms-card-count" id="hmsCount-clinic" style="cursor:pointer" onclick="previewCrmType('clinic')">&mdash;</span>
+      </div>
+      <div class="hms-card-detail" id="hmsDetail-clinic"></div>
+      <div class="hms-card-footer">
+        <span class="hms-card-timestamp" id="hmsTs-clinic">Not synced</span>
+        <button class="ghost sm hms-sync-btn" onclick="syncPms(['clinic'])" id="hmsBtn-clinic" disabled>&#10227; Sync</button>
       </div>
     </div>
   </div>
 
-  <div id="pmsGlobalStatus" class="pms-global-status" style="display:none"></div>
+  <div id="hmsGlobalStatus" class="hms-global-status" style="display:none"></div>
 
-  <div class="pms-metrics">
-    <div class="pms-metric"><span class="pms-metric-value">{{ chunks.total }}</span> total chunks</div>
-    <div class="pms-metric"><span class="pms-metric-value">{{ chunks.pms }}</span> PMS chunks</div>
-    <div class="pms-metric"><span class="pms-metric-value">{{ chunks.kb }}</span> KB chunks</div>
+  <div class="hms-metrics">
+    <div class="hms-metric"><span class="hms-metric-value">{{ chunks.total }}</span> total chunks</div>
+    <div class="hms-metric"><span class="hms-metric-value">{{ chunks.hms }}</span> HMS chunks</div>
+    <div class="hms-metric"><span class="hms-metric-value">{{ chunks.kb }}</span> KB chunks</div>
     <button class="btn sm" id="reindexBtn" onclick="reindexFromSql()" style="display:none">&#10227; Reindex from SQL</button>
   </div>
 </div>
@@ -261,6 +265,21 @@
       <button class="close-btn" onclick="closeChunkViewer()">&times;</button>
     </div>
     <div id="chunkModalBody" class="chunk-modal-body"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ HMS PREVIEW MODAL ═══════════════ -->
+<div class="modal-overlay" id="hmsPreviewModal">
+  <div class="modal" style="max-width:700px;max-height:80vh;display:flex;flex-direction:column">
+    <div class="modal-header">
+      <h2 id="hmsPreviewTitle">Records</h2>
+      <button class="close-btn" onclick="closePmsPreview()">&times;</button>
+    </div>
+    <div id="hmsPreviewBody" class="hms-preview-body" style="flex:1;overflow-y:auto;padding:4px 0;min-height:200px">
+      <div class="hms-preview-loading" style="display:flex;align-items:center;justify-content:center;height:200px;gap:12px;color:var(--muted);font-size:14px">
+        <span class="kb-spinner"></span> Loading...
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
@@ -367,6 +386,15 @@
 .kb-table-skeleton{display:table-row-group}
 .kb-table-skeleton:empty{display:none}
 .w80{width:80%}.w70{width:70%}.w65{width:65%}.w60{width:60%}.w55{width:55%}.w45{width:45%}.w40{width:40%}
+.hms-error-text{color:var(--red);font-size:12px;cursor:help;border-bottom:1px dotted rgba(248,113,113,.3)}
+.hms-diff{font-size:11px;font-weight:600;color:var(--accent);margin-left:6px}
+.hms-diff-ok{color:var(--muted2)}
+.hms-preview-body{scrollbar-width:thin;scrollbar-color:transparent transparent}
+.hms-preview-body:hover{scrollbar-color:var(--border) transparent}
+.hms-preview-item{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px}
+.hms-onboarding-banner{display:flex;align-items:center;gap:12px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:var(--radius);padding:10px 14px;margin-top:12px;font-size:13px;color:var(--text)}
+.hms-preview-item:last-child{border-bottom:none}
+.hms-preview-item strong{color:var(--text)}
 </style>
 <script>
 var _selectedFolder = '';
@@ -386,8 +414,8 @@ var _activeTab = 'documents';
 var _savedFolder = '';
 var _idDocPoll = null;
 var _idPmsPoll = null;
-var _pmsSyncing = false;
-var _pmsStatus = null;
+var _hmsSyncing = false;
+var _hmsStatus = null;
 
 (function(){
   var hash = location.hash.replace('#', '') || 'documents';
@@ -439,7 +467,7 @@ function switchTab(tab, pushState) {
 }
 
 // ════════════════════════════════════════════════
-// PMS HELPERS
+// HMS HELPERS
 // ════════════════════════════════════════════════
 function _timeAgo(iso){
   if(!iso) return null;
@@ -453,73 +481,92 @@ function _timeAgo(iso){
 }
 
 function _setIcon(type, state){
-  var el = document.getElementById('pmsIcon-' + type);
-  if(state === 'loading') el.innerHTML = '<span class="pms-spinner"></span>';
-  else if(state === 'success') el.innerHTML = '<span class="pms-check">&#10003;</span>';
-  else if(state === 'error') el.innerHTML = '<span class="pms-cross">&#10007;</span>';
-  else el.innerHTML = '<span class="pms-dot">&#9679;</span>';
+  var el = document.getElementById('hmsIcon-' + type);
+  if(state === 'loading') el.innerHTML = '<span class="hms-spinner"></span>';
+  else if(state === 'success') el.innerHTML = '<span class="hms-check">&#10003;</span>';
+  else if(state === 'error') el.innerHTML = '<span class="hms-cross">&#10007;</span>';
+  else el.innerHTML = '<span class="hms-dot">&#9679;</span>';
 }
 
 function updateGlobalStatus(state, msg){
-  var el = document.getElementById('pmsGlobalStatus');
+  var el = document.getElementById('hmsGlobalStatus');
   if(!msg){ el.style.display = 'none'; return; }
   el.style.display = 'flex';
-  el.className = 'pms-global-status pms-' + state;
+  el.className = 'hms-global-status hms-' + state;
   el.innerHTML = '<span>' + msg + '</span>';
 }
 
 function disableBtns(disabled){
-  document.getElementById('pmsSyncAllBtn').disabled = disabled;
+  document.getElementById('hmsSyncAllBtn').disabled = disabled;
   ['services','practitioners','clinic'].forEach(function(t){
-    document.getElementById('pmsBtn-' + t).disabled = disabled;
+    document.getElementById('hmsBtn-' + t).disabled = disabled;
   });
 }
 
-function renderCard(type, data, state){
+function renderCard(type, data, state, errors, diffVal){
   var labels = {services:'Services', practitioners:'Practitioners', clinic:'Clinic'};
-  document.getElementById('pmsCount-' + type).textContent = data && data.count != null ? data.count + ' ' + labels[type].toLowerCase() : '\u2014';
-  document.getElementById('pmsDetail-' + type).textContent = data && data.detail ? data.detail : '';
-  document.getElementById('pmsTs-' + type).textContent = data && data.last_sync ? 'Last synced: ' + (_timeAgo(data.last_sync) || data.last_sync) : 'Not synced';
+  var countText = data && data.count != null ? data.count + ' ' + labels[type].toLowerCase() : '\u2014';
+  if(diffVal != null && diffVal > 0) countText += ' <span class="hms-diff">+' + diffVal + ' new</span>';
+  else if(diffVal != null && diffVal === 0 && data && data.count > 0) countText += ' <span class="hms-diff hms-diff-ok">unchanged</span>';
+  document.getElementById('hmsCount-' + type).innerHTML = countText;
+  var detailEl = document.getElementById('hmsDetail-' + type);
+  if(errors && errors.length){
+    var errText = errors.join('; ');
+    if(errText.length > 120) errText = errText.slice(0, 120) + '...';
+    detailEl.innerHTML = '<span class="hms-error-text" title="' + esc(errors.join('; ')) + '">' + esc(errText) + '</span>';
+  } else {
+    detailEl.textContent = data && data.detail ? data.detail : '';
+  }
+  document.getElementById('hmsTs-' + type).textContent = data && data.last_sync ? 'Last synced: ' + (_timeAgo(data.last_sync) || data.last_sync) : 'Not synced';
   _setIcon(type, state || 'idle');
 }
 
 // ════════════════════════════════════════════════
-// PMS STATUS & SYNC
+// HMS STATUS & SYNC
 // ════════════════════════════════════════════════
 async function loadPmsStatus(){
   try {
-    document.getElementById('pmsHeader').style.display = 'flex';
-    document.getElementById('pmsNoPms').style.display = 'none';
-    document.getElementById('pmsCards').style.display = 'grid';
+    document.getElementById('hmsHeader').style.display = 'flex';
+    document.getElementById('hmsNoPms').style.display = 'none';
+    document.getElementById('hmsCards').style.display = 'grid';
     disableBtns(true);
     var resp = await api('/knowledge/sync/crm/status');
-    _pmsStatus = resp;
+    _hmsStatus = resp;
     var prov = resp.crm_provider || '';
-    document.getElementById('pmsProviderName').textContent = prov ? prov.charAt(0).toUpperCase() + prov.slice(1) : '\u2014';
+    document.getElementById('hmsProviderName').textContent = prov ? prov.charAt(0).toUpperCase() + prov.slice(1) : '\u2014';
     if(!prov){
-      document.getElementById('pmsNoPms').style.display = '';
-      document.getElementById('pmsHeader').style.display = 'none';
-      document.getElementById('pmsCards').style.display = 'none';
+      document.getElementById('hmsNoPms').style.display = '';
+      document.getElementById('hmsHeader').style.display = 'none';
+      document.getElementById('hmsCards').style.display = 'none';
       return;
     }
     var lastSync = resp.last_sync_at;
-    document.getElementById('pmsLastSync').textContent = lastSync ? 'Last sync: ' + (_timeAgo(lastSync) || lastSync) : 'Not synced';
+    document.getElementById('hmsLastSync').textContent = lastSync ? 'Last sync: ' + (_timeAgo(lastSync) || lastSync) : 'Not synced';
+    var banner = document.getElementById('hmsOnboardingBanner');
+    if(prov && !lastSync && !localStorage.getItem('hmsOnboardingDismissed')){
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
+    var errors = resp.errors || {};
+    var diffs = resp.diff || {};
     ['services','practitioners','clinic'].forEach(function(t){
       var s = resp[t] || {count:0, last_sync:null};
-      renderCard(t, s, s.last_sync ? 'idle' : 'idle');
+      var typeErrors = errors[t] || null;
+      renderCard(t, s, typeErrors ? 'error' : (s.last_sync ? 'idle' : 'idle'), typeErrors, diffs[t]);
     });
     disableBtns(false);
   } catch(e){
-    document.getElementById('pmsNoPms').style.display = '';
-    document.getElementById('pmsNoPms').innerHTML = '<p class="muted">Could not load sync status.</p>';
-    document.getElementById('pmsHeader').style.display = 'none';
-    document.getElementById('pmsCards').style.display = 'none';
+    document.getElementById('hmsNoPms').style.display = '';
+    document.getElementById('hmsNoPms').innerHTML = '<p class="muted">Could not load sync status.</p>';
+    document.getElementById('hmsHeader').style.display = 'none';
+    document.getElementById('hmsCards').style.display = 'none';
   }
 }
 
 async function syncPms(types){
-  if(_pmsSyncing) return;
-  _pmsSyncing = true;
+  if(_hmsSyncing) return;
+  _hmsSyncing = true;
   disableBtns(true);
   var typeList = types || ['services','practitioners','clinic'];
   typeList.forEach(function(t){ _setIcon(t, 'loading'); });
@@ -534,12 +581,12 @@ async function syncPms(types){
       if(r){
         if(r.errors && r.errors.length){
           _setIcon(t, 'error');
-          renderCard(t, {count: r.imported, last_sync: null}, 'error');
+          renderCard(t, {count: r.imported, last_sync: null}, 'error', null, null);
           hasErrors = true;
           allOk = false;
         } else {
           _setIcon(t, 'success');
-          renderCard(t, {count: r.imported, last_sync: new Date().toISOString()}, 'success');
+          renderCard(t, {count: r.imported, last_sync: new Date().toISOString()}, 'success', null, null);
         }
       }
     });
@@ -551,13 +598,55 @@ async function syncPms(types){
     typeList.forEach(function(t){ _setIcon(t, 'error'); });
   }
   disableBtns(false);
-  _pmsSyncing = false;
+  _hmsSyncing = false;
 }
 
 function syncAll(){ syncPms(['services','practitioners','clinic']); }
 
+function closePmsPreview(){ document.getElementById('hmsPreviewModal').classList.remove('show'); unlockScroll(); }
+function dismissOnboarding(){ document.getElementById('hmsOnboardingBanner').style.display = 'none'; localStorage.setItem('hmsOnboardingDismissed', '1'); }
+document.getElementById('hmsPreviewModal') && document.getElementById('hmsPreviewModal').addEventListener('click', function(e){ if(e.target === this) closePmsPreview(); });
+
+async function previewCrmType(type){
+  var labels = {services:'Services', practitioners:'Practitioners', clinic:'Clinic'};
+  var labelMap = {services:'Name', practitioners:'Name', clinic:'Business'};
+  document.getElementById('hmsPreviewTitle').textContent = labels[type] || type;
+  document.getElementById('hmsPreviewBody').innerHTML = '<div class="hms-preview-loading" style="display:flex;align-items:center;justify-content:center;height:200px;gap:12px;color:var(--muted);font-size:14px"><span class="kb-spinner"></span> Loading...</div>';
+  lockScroll();
+  document.getElementById('hmsPreviewModal').classList.add('show');
+  try {
+    var data = await api('/knowledge/sync/crm/' + type);
+    if(!data || !data.length){
+      document.getElementById('hmsPreviewBody').innerHTML = '<div class="muted" style="padding:40px;text-align:center;font-size:14px">No records synced yet.</div>';
+      return;
+    }
+    var nameKey = type === 'clinic' ? 'business_name' : 'name';
+    var html = '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted2);padding:8px 12px;border-bottom:1px solid var(--border)">' + data.length + ' record' + (data.length !== 1 ? 's' : '') + '</div>';
+    data.forEach(function(item){
+      html += '<div class="hms-preview-item"><strong>' + esc(item[nameKey] || '(unnamed)') + '</strong>';
+      if(type === 'services'){
+        if(item.price_cents != null) html += ' &mdash; $' + (item.price_cents / 100).toFixed(2);
+        if(item.duration_minutes) html += ' &middot; ' + item.duration_minutes + ' min';
+        if(item.category) html += ' &middot; ' + esc(item.category);
+        if(item.description) html += '<div style="font-size:12px;color:var(--muted);margin-top:3px">' + esc(item.description.slice(0, 120)) + '</div>';
+      } else if(type === 'practitioners'){
+        if(item.title) html += ' &mdash; ' + esc(item.title);
+        if(item.designation) html += ' &middot; ' + esc(item.designation);
+        if(item.active === false) html += ' <span class="muted" style="font-size:11px">(inactive)</span>';
+      } else if(type === 'clinic'){
+        if(item.address) html += '<div style="font-size:12px;color:var(--muted)">' + esc(item.address) + (item.city ? ', ' + esc(item.city) : '') + (item.state ? ', ' + esc(item.state) : '') + '</div>';
+        if(item.phone) html += '<div style="font-size:12px;color:var(--muted)">' + esc(item.phone) + '</div>';
+      }
+      html += '</div>';
+    });
+    document.getElementById('hmsPreviewBody').innerHTML = html;
+  } catch(e){
+    document.getElementById('hmsPreviewBody').innerHTML = '<div class="err-msg" style="padding:20px;text-align:center">Failed to load: ' + esc(e.message) + '</div>';
+  }
+}
+
 async function reindexFromSql(){
-  if(!confirm('Reindex all PMS data from SQL to Chroma? This will not call the CRM API.')) return;
+  if(!confirm('Reindex all HMS data from SQL to Chroma? This will not call the CRM API.')) return;
   updateGlobalStatus('loading', 'Reindexing from SQL\u2026');
   try {
     var resp = await api('/knowledge/sync/crm/reindex', {method:'POST'});

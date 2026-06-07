@@ -27,11 +27,11 @@ def count_chunks_by_source(tenant_id: UUID | str) -> dict[str, int]:
     try:
         col = _collection(tenant_id)
         total = col.count()
-        pms = col.count(where={"source": "pms"})
+        hms = col.count(where={"source": "hms"})
         kb = col.count(where={"source": "kb"})
-        return {"total": total, "pms": pms, "kb": kb, "other": total - pms - kb}
+        return {"total": total, "hms": hms, "kb": kb, "other": total - hms - kb}
     except Exception:
-        return {"total": 0, "pms": 0, "kb": 0, "other": 0}
+        return {"total": 0, "hms": 0, "kb": 0, "other": 0}
 
 
 def _add_chunks(tenant_id: UUID | str, file_id: UUID | str, chunks: list[chunking.Chunk], folder_id: str = "") -> int:

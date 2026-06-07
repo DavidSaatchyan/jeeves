@@ -15,6 +15,7 @@ def tenant_id() -> UUID:
 @pytest.fixture
 def mock_adapter():
     adapter = MagicMock()
+    adapter.provider = "cliniko"
     adapter.get_billable_items.return_value = [
         {"id": 1, "name": "Consult", "price": 15000},
         {"id": 2, "name": "XRay", "price": 20000},
@@ -31,6 +32,16 @@ def mock_adapter():
     adapter.get_businesses.return_value = [
         {"id": "b1", "business_name": "Test Clinic"},
     ]
+    adapter.fetch_services.return_value = [
+        {"id": 1, "name": "Consult", "item_type": "Service", "price": 15000, "description": "Checkup", "duration_in_minutes": 30},
+        {"id": 2, "name": "XRay", "item_type": "Service", "price": 20000},
+    ]
+    adapter.fetch_practitioners.return_value = [
+        {"id": "p1", "display_name": "Dr. Smith", "first_name": "Dr.", "last_name": "Smith"},
+    ]
+    adapter.fetch_clinics.return_value = [
+        {"id": "b1", "business_name": "Test Clinic", "name": "Test Clinic"},
+    ]
     return adapter
 
 
@@ -38,7 +49,7 @@ def mock_adapter():
 def client_with_adapter(client: TestClient, mock_adapter):
     _index_clinic = MagicMock(side_effect=lambda tid, clinic, bid: 1 if clinic else 0)
     patches = [
-        patch("app.knowledge.sync.get_crm_adapter_for_tenant", return_value=mock_adapter),
+        patch("app.knowledge.sync.get_hms_adapter_for_tenant", return_value=mock_adapter),
         patch("app.knowledge.sync.crm_indexer.index_services", return_value=2),
         patch("app.knowledge.sync.crm_indexer.index_practitioners", return_value=1),
         patch("app.knowledge.sync.crm_indexer.index_clinic", _index_clinic),
@@ -106,13 +117,13 @@ class TestSyncCrmPost:
         assert data["clinic"]["imported"] == 1
 
     def test_no_crm_returns_400(self, client: TestClient):
-        with patch("app.knowledge.sync.get_crm_adapter_for_tenant", return_value=None):
+        with patch("app.knowledge.sync.get_hms_adapter_for_tenant", return_value=None):
             resp = client.post("/knowledge/sync/crm", json={})
         assert resp.status_code == 400
-        assert "No CRM adapter" in resp.json()["detail"]
+        assert "No CRM" in resp.json()["detail"]
 
     def test_sync_with_errors_handles_partial_failure(self, client_with_adapter: TestClient, mock_adapter):
-        mock_adapter.get_billable_items.side_effect = Exception("Cliniko API error")
+        mock_adapter.fetch_services.side_effect = Exception("Cliniko API error")
         resp = client_with_adapter.post("/knowledge/sync/crm", json={})
         assert resp.status_code == 200
         data = resp.json()
@@ -120,7 +131,7 @@ class TestSyncCrmPost:
         assert "Cliniko API error" in data["services"]["errors"][0]
 
     def test_empty_businesses_returns_zero_clinic(self, client_with_adapter: TestClient, mock_adapter):
-        mock_adapter.get_businesses.return_value = []
+        mock_adapter.fetch_clinics.return_value = []
         resp = client_with_adapter.post("/knowledge/sync/crm", json={})
         data = resp.json()
         assert data["clinic"]["imported"] == 0

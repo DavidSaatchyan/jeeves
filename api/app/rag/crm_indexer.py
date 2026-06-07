@@ -10,7 +10,7 @@ from . import chunking
 from .batch import batch_add, batch_delete_ids
 from .client import _collection, embed_batch
 from .maintenance import _all_chunks
-from ..models import PmsClinic, PmsPractitioner, PmsService
+from ..models import HmsClinic, HmsPractitioner, HmsService
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ def _delete_by_type_and_batch(
     col = _collection(tenant_id)
     try:
         before = col.count()
-        col.delete(where={"$and": [{"source": "pms"}, {"type": doc_type}]})
+        col.delete(where={"$and": [{"source": "hms"}, {"type": doc_type}]})
         after = col.count()
         removed = before - after
         if removed:
@@ -131,20 +131,20 @@ def _index_type(
     for i, item in enumerate(items):
         item_id = str(item.get(id_field, "") or f"unknown-{i}")
         sections = extract_sections_fn(item)
-        filename = f"pms-{doc_type}-{item_id}.txt"
+        filename = f"hms-{doc_type}-{item_id}.txt"
         chunks = chunking.build_chunks_from_sections(sections, filename)
         name = str(item.get("name", item.get("display_name", item.get("business_name", ""))))
 
         for c in chunks:
-            chunk_id = f"pms-{doc_type}-{batch_id}-{item_id}-{c.chunk_hash}"
+            chunk_id = f"hms-{doc_type}-{batch_id}-{item_id}-{c.chunk_hash}"
             meta: dict[str, Any] = {
-                "source": "pms",
+                "source": "hms",
                 "folder_id": "",
                 "type": doc_type,
                 f"{doc_type}_id": item_id,
                 "name": name,
                 "import_batch": batch_id,
-                "file_id": f"pms-{batch_id}",
+                "file_id": f"hms-{batch_id}",
                 "filename": filename,
                 "section": c.section,
                 "chunk_hash": c.chunk_hash,
@@ -206,7 +206,7 @@ def delete_by_type_and_batch(
 
 
 def cleanup_orphans(tenant_id: UUID | str, db_session: Any) -> dict[str, int]:
-    """Remove PMS chunks from Chroma whose external_id no longer exists in SQL DB."""
+    """Remove HMS chunks from Chroma whose external_id no longer exists in SQL DB."""
     col = _collection(tenant_id)
     ids, metas = _all_chunks(tenant_id)
     if not ids:
@@ -215,11 +215,11 @@ def cleanup_orphans(tenant_id: UUID | str, db_session: Any) -> dict[str, int]:
     # Gather active external IDs from SQL
     active: dict[str, set[str]] = {"service": set(), "practitioner": set(), "clinic": set()}
     try:
-        for row in db_session.execute(select(PmsService.external_id).where(PmsService.tenant_id == tenant_id)).all():
+        for row in db_session.execute(select(HmsService.external_id).where(HmsService.tenant_id == tenant_id)).all():
             active["service"].add(str(row[0]))
-        for row in db_session.execute(select(PmsPractitioner.external_id).where(PmsPractitioner.tenant_id == tenant_id)).all():
+        for row in db_session.execute(select(HmsPractitioner.external_id).where(HmsPractitioner.tenant_id == tenant_id)).all():
             active["practitioner"].add(str(row[0]))
-        for row in db_session.execute(select(PmsClinic.external_id).where(PmsClinic.tenant_id == tenant_id)).all():
+        for row in db_session.execute(select(HmsClinic.external_id).where(HmsClinic.tenant_id == tenant_id)).all():
             active["clinic"].add(str(row[0]))
     except Exception as e:
         logger.error("cleanup_orphans: failed to query SQL: %s", e)
@@ -228,7 +228,7 @@ def cleanup_orphans(tenant_id: UUID | str, db_session: Any) -> dict[str, int]:
     to_delete: list[str] = []
     for cid, meta in zip(ids, metas):
         src = (meta or {}).get("source", "")
-        if src != "pms":
+        if src != "hms":
             continue
         dtype = (meta or {}).get("type", "")
         eid = (meta or {}).get(f"{dtype}_id", "")
@@ -237,7 +237,7 @@ def cleanup_orphans(tenant_id: UUID | str, db_session: Any) -> dict[str, int]:
 
     if to_delete:
         batch_delete_ids(col, to_delete)
-        logger.info("cleanup_orphans: removed %d orphan PMS chunks", len(to_delete))
+        logger.info("cleanup_orphans: removed %d orphan HMS chunks", len(to_delete))
 
     return {"total": len(ids), "removed": len(to_delete), "errors": 0}
 
