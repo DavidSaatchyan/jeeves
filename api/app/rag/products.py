@@ -5,6 +5,7 @@ import logging
 from typing import Any
 from uuid import UUID
 
+from .batch import batch_add
 from .client import _collection, embed_batch
 
 logger = logging.getLogger(__name__)
@@ -79,7 +80,7 @@ def index_products(
         ids.append(chunk_id)
 
     embeddings = embed_batch(texts)
-    col.add(ids=ids, embeddings=embeddings, documents=texts, metadatas=metadatas)
+    batch_add(col, ids, embeddings, texts, metadatas)
     logger.info("index_products: indexed %d products (batch=%s)", len(products), import_batch)
     return len(products)
 

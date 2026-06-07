@@ -1,0 +1,46 @@
+Service Pricing — Berlin Premium Clinic
+
+Initial Consultation: €80
+Follow-up Consultation: €50
+Emergency Consultation: €120
+
+General Practice:
+  Blood Test (basic): €30
+  Blood Test (comprehensive): €90
+  Vaccination (standard): €40
+  Travel Health Advice: €50
+  ECG: €60
+
+Dermatology:
+  Mole Check: €80
+  Acne Laser Treatment: €200 per session
+  Eczema Consultation: €90
+  Psoriasis Treatment: €150 per session
+  Full Skin Cancer Screening: €180
+
+Gynecology:
+  Annual Exam: €120
+  IUD Insertion: €250
+  Contraceptive Counseling: €60
+  Prenatal Checkup: €100
+  Ultrasound: €90
+
+Aesthetic Medicine:
+  Botox (per area): €200-350
+  Profhilo: €400 per session
+  Sculptra: €500 per session
+  Laser Hair Removal — Underarms: €80 per session
+  Laser Hair Removal — Full Legs: €200 per session
+  Laser Hair Removal — Bikini: €60 per session
+  Dermal Fillers (1ml): €350
+  Chemical Peel: €120 per session
+  Microneedling: €180 per session
+
+Dentistry:
+  Checkup: €80
+  Professional Cleaning: €100
+  Filling (composite): €120-200
+  Crown (ceramic): €800
+  Implant: €2000
+  Teeth Whitening (in-office): €350
+  Teeth Whitening (take-home kit): €180

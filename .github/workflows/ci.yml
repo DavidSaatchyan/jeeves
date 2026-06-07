@@ -44,6 +44,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r api/requirements.txt
 
+      - name: Check golden dataset age (< 30 days)
+        run: |
+          if [ -f api/tests/golden_dataset.jsonl ]; then
+            AGE_DAYS=$(( ($(date +%s) - $(stat -c %Y api/tests/golden_dataset.jsonl) ) / 86400 ))
+            echo "golden_dataset.jsonl age: $AGE_DAYS days"
+            if [ "$AGE_DAYS" -gt 30 ]; then
+              echo "::warning title=Stale dataset::golden_dataset.jsonl is $AGE_DAYS days old (> 30 days). Consider updating."
+            fi
+          else
+            echo "::warning title=Missing dataset::golden_dataset.jsonl not found"
+          fi
+
       - name: Lint with ruff
         run: |
           pip install ruff

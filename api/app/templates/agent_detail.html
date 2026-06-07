@@ -305,16 +305,16 @@ let knowledgeFiles = [];
 async function loadKnowledgeTree() {
   try {
     const data = await api('/admin/api/knowledge/tree');
-    knowledgeFiles = data.files || [];
+    const folders = data.folders || [];
     const selected = currentConfig.knowledge_folders || [];
-    const html = knowledgeFiles.map(f => `
+    const html = folders.map(f => `
       <label class="chk-row">
         <input type="checkbox" value="${f.id}" ${selected.includes(f.id) ? 'checked' : ''}>
-        ${esc(f.filename)}
-        <span style="font-size:11px;color:var(--muted2);margin-left:auto">${f.file_type || ''}</span>
+        ${esc(f.name)}
+        <span style="font-size:11px;color:var(--muted2);margin-left:auto">folder</span>
       </label>
     `).join('');
-    document.getElementById('knowledgeList').innerHTML = html || '<p style="color:var(--muted2);font-size:13px">No knowledge files uploaded yet.</p>';
+    document.getElementById('knowledgeList').innerHTML = html || '<p style="color:var(--muted2);font-size:13px">No folders created yet. <a href="/admin/knowledge">Create folders</a> in Knowledge Base.</p>';
   } catch (e) {
     document.getElementById('knowledgeList').innerHTML = '<p style="color:var(--muted2);font-size:13px">Error loading knowledge tree.</p>';
   }

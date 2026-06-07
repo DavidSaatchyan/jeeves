@@ -1,0 +1,27 @@
+Tarifs des Services — Clinique Premium Berlin
+
+Consultation Initiale: 80 €
+Consultation de Suivi: 50 €
+Consultation d'Urgence: 120 €
+
+Médecine Générale:
+  Prise de Sang (de base): 30 €
+  Prise de Sang (complète): 90 €
+  Vaccination (standard): 40 €
+  Conseil Santé Voyage: 50 €
+  ECG: 60 €
+
+Dermatologie:
+  Examen des Grains de Beauté: 80 €
+  Traitement Acné au Laser: 200 € par séance
+  Traitement Eczéma: 90 €
+  Traitement Psoriasis: 150 € par séance
+  Dépistage Cancer de la Peau: 180 €
+
+Médecine Esthétique:
+  Botox (par zone): 200-350 €
+  Profhilo: 400 € par séance
+  Sculptra: 500 € par séance
+  Épilation Laser — Aisselles: 80 € par séance
+  Épilation Laser — Jambes Complètes: 200 € par séance
+  Épilation Laser — Maillot: 60 € par séance

@@ -1,59 +1,81 @@
+booking:
+  buffer_minutes: 5
+  default_end_hour: 17
+  default_start_hour: 9
+  max_slots_to_offer: 5
+  reminders:
+    no_show_window_minutes: 30
+    send_24h: true
+    send_2h: true
+  slot_duration_minutes: 30
 compliance:
+  phi_patterns:
+    email: \S+@\S+
+    name: \b[A-Z][a-z]+\s[A-Z][a-z]+\b
+    phone: \+\d{7,15}
   retention:
+    appointments: 1095
     audit_log: 1095
     consent_log: 2190
     messages: 730
     patient_records: 3650
-    appointments: 1095
-  phi_patterns:
-    phone: '\+\d{7,15}'
-    email: '\S+@\S+'
-    name: '\b[A-Z][a-z]+\s[A-Z][a-z]+\b'
-
-booking:
-  slot_duration_minutes: 30
-  buffer_minutes: 5
-  max_slots_to_offer: 5
-  default_start_hour: 9
-  default_end_hour: 17
-  reminders:
-    send_24h: true
-    send_2h: true
-    no_show_window_minutes: 30
-
-marketing:
+crm_sync:
   enabled: true
-  max_campaigns_per_patient_per_month: 4
-  cooldown_days_between_campaigns: 7
-  nurture_sequence_length: 3
-  nurture_days_between_steps: 3
-
+  poll_interval_minutes: 60
 followup:
-  enabled: true
   day_1_delay_hours: 24
-  day_7_delay_days: 7
   day_30_delay_days: 30
+  day_7_delay_days: 7
+  enabled: true
+  escalate_on_negative_response: true
   medication_adherence_delay_days: 14
   satisfaction_survey_delay_days: 7
-  escalate_on_negative_response: true
-
-crm_sync:
-  poll_interval_minutes: 60
+llm_provider:
+  provider: openai
+marketing:
+  cooldown_days_between_campaigns: 7
   enabled: true
-
+  max_campaigns_per_patient_per_month: 4
+  nurture_days_between_steps: 3
+  nurture_sequence_length: 3
 policies:
-  retry:
-    max_attempts: 3
-    retry_windows: [300, 3600, 86400]
-    cooldown_minutes: 5
+  approval:
+    allowed_save_actions:
+    - pause
+    - skip
+    - delay
+    requires_approval:
+    - discount
+    - credit
+    - refund
   communication:
-    max_outreach_per_workflow: 3
+    allowed_channels:
+    - email
+    - widget
+    - whatsapp
     cooldown_between_messages: 24
-    allowed_channels: [email, widget, whatsapp]
+    max_outreach_per_workflow: 3
   escalation:
     frustration_threshold: medium
     max_failures_before_escalation: 3
     sla_hours: 24
-  approval:
-    requires_approval: [discount, credit, refund]
-    allowed_save_actions: [pause, skip, delay]
+  retry:
+    cooldown_minutes: 5
+    max_attempts: 3
+    retry_windows:
+    - 300
+    - 3600
+    - 86400
+rag:
+  chat_threshold: 0.8
+  citation_guard: false
+  distance_threshold: 0.85
+  embedding_model: text-embedding-3-small
+  mmr_lambda: 0.0
+  query_translation: true
+  reranker:
+    api_key: ''
+    model: rerank-v3.5
+    provider: ''
+  semantic_cache: false
+  top_k: 15

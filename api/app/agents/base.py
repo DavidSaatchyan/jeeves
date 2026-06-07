@@ -20,6 +20,7 @@ class AgentResult:
     actions: list[AgentAction] = field(default_factory=list)
     escalate: bool = False
     intent: str | None = None
+    citations: list[dict] = field(default_factory=list)
 
 
 class Agent(ABC):

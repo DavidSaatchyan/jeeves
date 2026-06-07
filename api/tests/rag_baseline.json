@@ -1,0 +1,7 @@
+{
+  "faithfulness": 0.3211,
+  "answer_relevancy": 0.4766,
+  "context_precision": 0.3216,
+  "context_recall": 0.298,
+  "model": "gpt-4o-mini"
+}

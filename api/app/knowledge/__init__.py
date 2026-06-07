@@ -21,7 +21,7 @@ from .. import rag
 from ..config import get_settings
 from ..core.ai.generator import naturalize_answer
 from ..db import get_db, engine
-from ..models import FileRecord, KbActivity, KnowledgeFolder, KnowledgeUrl, PmsClinic, PmsPractitioner, PmsService, Tenant
+from ..models import FileRecord, KbActivity, KnowledgeFolder, KnowledgeUrl, Tenant
 from ..schemas import BatchUploadOut, BatchUploadResultItem
 from . import sync as _sync
 
@@ -72,21 +72,28 @@ ALLOWED_EXT = {".txt", ".pdf", ".md"}
 
 async def _background_index(tenant_id: uuid.UUID, file_id: uuid.UUID, file_path: Path):
     """Run RAG indexing in a background thread to avoid blocking the HTTP request."""
-    import logging
     try:
-        logging.info("[index] Starting indexing file %s at %s", file_id, file_path)
-        n = await asyncio.to_thread(rag.index_file, tenant_id, file_id, file_path)
-        logging.info("[index] Indexed %s chunks for file %s, updating DB", n, file_id)
+        logger.info("[index] Starting indexing file %s at %s", file_id, file_path)
+        # Read folder_id from DB
+        try:
+            from sqlalchemy import text as sa_text
+            with engine.connect() as conn:
+                row = conn.execute(sa_text("SELECT folder_id FROM files WHERE id=:fid"), {"fid": str(file_id)}).fetchone()
+                folder_id = str(row[0]) if row and row[0] else ""
+        except Exception:
+            folder_id = ""
+        n = await asyncio.to_thread(rag.index_file, tenant_id, file_id, file_path, folder_id)
+        logger.info("[index] Indexed %s chunks for file %s, updating DB", n, file_id)
         with engine.begin() as conn:
             from sqlalchemy import text
             conn.execute(
                 text("UPDATE files SET status='ready', chunks_total=:n, error=NULL WHERE id=:fid"),
                 {"fid": str(file_id), "n": n},
             )
-        logging.info("[index] File %s marked as ready", file_id)
+        logger.info("[index] File %s marked as ready", file_id)
     except Exception as e:
         import traceback
-        logging.error("[index] Failed to index file %s: %s", file_id, traceback.format_exc())
+        logger.error("[index] Failed to index file %s: %s", file_id, traceback.format_exc())
         try:
             with engine.begin() as conn:
                 from sqlalchemy import text
@@ -95,7 +102,7 @@ async def _background_index(tenant_id: uuid.UUID, file_id: uuid.UUID, file_path:
                     {"fid": str(file_id), "error": str(e)[:2000]},
                 )
         except Exception as db_err:
-            logging.error("[index] Failed to update DB status for %s: %s", file_id, db_err)
+            logger.error("[index] Failed to update DB status for %s: %s", file_id, db_err)
 
 
 def _iso_utc(dt) -> str:
@@ -386,17 +393,17 @@ async def simulate(
             "State that this information is not present in the knowledge base. Do not guess or make up an answer."
         )
 
-    from openai import AsyncOpenAI
-    client = AsyncOpenAI(api_key=_settings.openai_api_key)
-    resp = await client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": body.query}],
-        temperature=0.0,
-        max_tokens=1000,
-    )
-    answer = resp.choices[0].message.content or ""
-    if answer:
-        answer = await naturalize_answer(str(tenant.id), answer)
+    from ..schemas import KBResponse
+    from ..core.ai.generator import call_structured, deterministic_naturalize
+
+    kb_result = await call_structured(str(tenant.id), system_prompt, body.query, KBResponse, temperature=0.0)
+
+    if kb_result is None:
+        answer = "I don't have this information in the knowledge base."
+    else:
+        answer = deterministic_naturalize(kb_result) or "I don't have this information in the knowledge base."
+        if answer:
+            answer = await naturalize_answer(str(tenant.id), answer)
 
     sources = [
         {"chunk": r["text"][:500], "filename": r["filename"], "section": r["section"], "score": r["score"], "file_id": r.get("file_id", "")}
@@ -673,13 +680,14 @@ async def update_file_content(
     file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.write_text(body.content, encoding="utf-8")
 
-    # Re-index: delete old chunks, re-index
+    # Re-index: delete old chunks, re-index with folder_id preserved
     try:
         rag.delete_file(tenant.id, file_id)
     except Exception:
         pass
 
-    n = await asyncio.to_thread(rag.index_file, tenant.id, file_id, file_path)
+    folder_id = str(rec.folder_id) if rec.folder_id else ""
+    n = await asyncio.to_thread(rag.index_file, tenant.id, file_id, file_path, folder_id)
     rec.status = "ready"
     rec.chunks_total = n
     db.commit()
@@ -711,25 +719,36 @@ def list_file_chunks(
 
 async def _background_index_url(tenant_id: uuid.UUID, url_id: uuid.UUID, url: str | None, title: str | None):
     """Fetch URL, extract structured sections, index into Chroma in background thread."""
-    import logging
     try:
         from .url_extractor import fetch_url_structured
-        logging.info("[url-index] Fetching URL %s for url_id %s", url, url_id)
+        logger.info("[url-index] Fetching URL %s for url_id %s", url, url_id)
         resolved_title, sections = await fetch_url_structured(url or "")
         display_name = (title or resolved_title or url or "untitled").strip()
         total_len = sum(len(body) for _, body in sections)
-        n = await asyncio.to_thread(rag.index_structured_text, tenant_id, url_id, sections, display_name)
-        logging.info("[url-index] Indexed %s chunks for url %s, updating DB", n, url_id)
+        # Compute content hash for staleness detection
+        all_text = "".join(body for _, body in sections)
+        import hashlib
+        content_hash = hashlib.sha256(all_text.encode()).hexdigest()
+        # Read folder_id from DB
+        try:
+            from sqlalchemy import text as sa_text2
+            with engine.connect() as conn:
+                row = conn.execute(sa_text2("SELECT folder_id FROM knowledge_urls WHERE id=:uid"), {"uid": str(url_id)}).fetchone()
+                folder_id = str(row[0]) if row and row[0] else ""
+        except Exception:
+            folder_id = ""
+        n = await asyncio.to_thread(rag.index_structured_text, tenant_id, url_id, sections, display_name, folder_id)
+        logger.info("[url-index] Indexed %s chunks for url %s, updating DB", n, url_id)
         with engine.begin() as conn:
-            from sqlalchemy import text
+            from sqlalchemy import text as sa_text3
             conn.execute(
-                text("UPDATE knowledge_urls SET status='ready', chunks_total=:n, size_bytes=:sz, error=NULL WHERE id=:uid"),
-                {"uid": str(url_id), "n": n, "sz": total_len},
+                sa_text3("UPDATE knowledge_urls SET status='ready', chunks_total=:n, size_bytes=:sz, content_hash=:ch, last_fetched_at=:lfa, error=NULL WHERE id=:uid"),
+                {"uid": str(url_id), "n": n, "sz": total_len, "ch": content_hash, "lfa": datetime.now(timezone.utc)},
             )
-        logging.info("[url-index] URL %s marked as ready", url_id)
+        logger.info("[url-index] URL %s marked as ready", url_id)
     except Exception as e:
         import traceback
-        logging.error("[url-index] Failed to index URL %s: %s", url_id, traceback.format_exc())
+        logger.error("[url-index] Failed to index URL %s: %s", url_id, traceback.format_exc())
         try:
             with engine.begin() as conn:
                 from sqlalchemy import text
@@ -738,7 +757,7 @@ async def _background_index_url(tenant_id: uuid.UUID, url_id: uuid.UUID, url: st
                     {"uid": str(url_id), "error": str(e)[:2000]},
                 )
         except Exception as db_err:
-            logging.error("[url-index] Failed to update DB status for %s: %s", url_id, db_err)
+            logger.error("[url-index] Failed to update DB status for %s: %s", url_id, db_err)
 
 
 class _UrlImportIn(BaseModel):
@@ -817,8 +836,10 @@ def list_urls(
             "folder_id": str(r.folder_id) if r.folder_id else None,
             "chunks_total": r.chunks_total or 0,
             "size_bytes": r.size_bytes or 0,
+            "content_hash": r.content_hash or "",
             "error": r.error,
             "created_at": _iso_utc(r.created_at),
+            "last_fetched_at": _iso_utc(r.last_fetched_at) if r.last_fetched_at else None,
         }
         for r in rows
     ]
@@ -860,6 +881,86 @@ def delete_url(
     db.commit()
     _log_activity(db, tenant.id, "url_deleted", f"Deleted URL {rec.url}", str(url_id))
     db.commit()
+
+
+@router.get("/urls/stale")
+def list_stale_urls(
+    max_age_hours: int = Query(72, ge=1),
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    """Return URLs that haven't been refreshed within max_age_hours."""
+    from datetime import timedelta
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=max_age_hours)
+    rows = db.execute(
+        select(KnowledgeUrl)
+        .where(
+            KnowledgeUrl.tenant_id == tenant.id,
+            KnowledgeUrl.status == "ready",
+            KnowledgeUrl.last_fetched_at < cutoff,
+        )
+        .order_by(KnowledgeUrl.last_fetched_at.asc().nullsfirst())
+    ).scalars().all()
+    return [
+        {
+            "id": str(r.id),
+            "url": r.url,
+            "title": r.title,
+            "last_fetched_at": _iso_utc(r.last_fetched_at) if r.last_fetched_at else None,
+            "stale_hours": round((datetime.now(timezone.utc) - (r.last_fetched_at or datetime.now(timezone.utc))).total_seconds() / 3600, 1),
+        }
+        for r in rows
+    ]
+
+
+@router.post("/urls/{url_id}/refresh")
+async def refresh_url(
+    url_id: uuid.UUID,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    """Re-fetch URL content and re-index if content has changed.
+
+    Returns whether the content was stale and re-indexed.
+    """
+    rec = db.execute(select(KnowledgeUrl).where(
+        KnowledgeUrl.id == url_id, KnowledgeUrl.tenant_id == tenant.id,
+    )).scalar_one_or_none()
+    if not rec:
+        raise HTTPException(404, "url not found")
+
+    from .url_extractor import fetch_url_structured
+    import hashlib
+
+    try:
+        resolved_title, sections = await fetch_url_structured(rec.url or "")
+        all_text = "".join(body for _, body in sections)
+        current_hash = hashlib.sha256(all_text.encode()).hexdigest()
+    except Exception as e:
+        raise HTTPException(502, f"Failed to fetch URL: {e}")
+
+    if current_hash == rec.content_hash:
+        return {"refreshed": False, "message": "Content unchanged"}
+
+    # Content changed — re-index
+    try:
+        rag.delete_file(tenant.id, url_id)
+    except Exception:
+        pass
+
+    display_name = (rec.title or resolved_title or rec.url or "untitled").strip()
+    total_len = sum(len(body) for _, body in sections)
+    n = await asyncio.to_thread(rag.index_structured_text, tenant.id, url_id, sections, display_name)
+
+    rec.status = "ready"
+    rec.chunks_total = n
+    rec.size_bytes = total_len
+    rec.content_hash = current_hash
+    rec.last_fetched_at = datetime.now(timezone.utc)
+    rec.error = None
+    db.commit()
+
+    return {"refreshed": True, "chunks": n, "size_bytes": total_len}
 
 
 # ── CRM sync is now in knowledge/sync.py (included via router.include_router) ──

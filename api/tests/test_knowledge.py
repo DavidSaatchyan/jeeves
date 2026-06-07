@@ -76,20 +76,11 @@ def mock_chunking():
 
 @pytest.fixture
 def mock_openai_chat():
-    """Patch openai.AsyncOpenAI so knowledge.py's lazy import uses our mock.
-    Uses AsyncMock for the create method since MagicMock is not awaitable."""
-    mock_completion = MagicMock()
-    mock_completion.choices = [MagicMock(message=MagicMock(content="Mocked response."))]
-
-    create_mock = AsyncMock(return_value=mock_completion)
-    completions_mock = MagicMock()
-    completions_mock.create = create_mock
-    chat_mock = MagicMock()
-    chat_mock.completions = completions_mock
-    client_mock = MagicMock()
-    client_mock.chat = chat_mock
-
-    with patch("openai.AsyncOpenAI", return_value=client_mock):
+    """Patch call_structured so knowledge.py's simulate endpoint uses our mock."""
+    from app.schemas import KBResponse
+    async def _mock_call_structured(*args, **kwargs):
+        return KBResponse(answer="Mocked response.", citations=[], confidence="high", missing_info=False)
+    with patch("app.core.ai.generator.call_structured", side_effect=_mock_call_structured):
         yield
 
 
@@ -445,10 +436,11 @@ class TestSimulate:
     def test_simulate_openai_error(self, client, mock_db, mock_rag):
         mock_rag["search"].return_value = []
 
-        with patch("openai.AsyncOpenAI") as mock_oa:
-            mock_oa.return_value.chat.completions.create.side_effect = Exception("API error")
-            with pytest.raises(Exception):
-                client.post("/knowledge/simulate", json={"query": "Hi"})
+        with patch("app.core.ai.generator.call_structured", return_value=None):
+            resp = client.post("/knowledge/simulate", json={"query": "Hi"})
+            assert resp.status_code == 200
+            data = resp.json()
+            assert "I don't have" in data["answer"]
 
 
 # ── Cleanup ────────────────────────────────────────────────────────────────
@@ -552,7 +544,7 @@ class TestBackgroundIndexUrl:
                 mock_begin.return_value.__enter__.return_value = mock_conn
                 await _background_index_url(tenant_id, url_id, "https://example.com", None)
                 mock_conn.execute.assert_called_once()
-                mock_rag["index_structured_text"].assert_called_once_with(tenant_id, url_id, [("", "Extracted text content")], "Page Title")
+                mock_rag["index_structured_text"].assert_called_once_with(tenant_id, url_id, [("", "Extracted text content")], "Page Title", "")
 
     @pytest.mark.asyncio
     async def test_index_url_failure_marks_failed(self, mock_rag):

@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from uuid import UUID
 
+from .batch import batch_delete_ids
 from .client import _collection
 
 logger = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ def deduplicate_collection(tenant_id: UUID | str) -> dict:
             to_delete.append(cid)
 
     if to_delete:
-        col.delete(ids=to_delete)
+        batch_delete_ids(col, to_delete)
         logger.info("dedup: removed %d duplicate chunks, %d unique remain",
                      len(to_delete), len(by_key))
     else:
@@ -52,12 +53,14 @@ def purge_orphans(tenant_id: UUID | str, active_file_ids: set[str]) -> dict:
 
     to_delete: list[str] = []
     for cid, meta in zip(ids, metas):
+        if meta.get("source") == "pms":
+            continue  # PMS chunks are managed by the sync — never purge
         fid = meta.get("file_id") or ""
         if fid not in active_file_ids:
             to_delete.append(cid)
 
     if to_delete:
-        col.delete(ids=to_delete)
+        batch_delete_ids(col, to_delete)
         logger.info("purge: removed %d orphan chunks (active=%d, total=%d)",
                      len(to_delete), len(active_file_ids), len(ids))
     else:

@@ -4,8 +4,13 @@ import logging
 from typing import Any, Callable
 from uuid import UUID
 
+from sqlalchemy import select
+
 from . import chunking
+from .batch import batch_add, batch_delete_ids
 from .client import _collection, embed_batch
+from .maintenance import _all_chunks
+from ..models import PmsClinic, PmsPractitioner, PmsService
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +139,7 @@ def _index_type(
             chunk_id = f"pms-{doc_type}-{batch_id}-{item_id}-{c.chunk_hash}"
             meta: dict[str, Any] = {
                 "source": "pms",
+                "folder_id": "",
                 "type": doc_type,
                 f"{doc_type}_id": item_id,
                 "name": name,
@@ -161,7 +167,7 @@ def _index_type(
 
     embeddings = embed_batch(texts)
     col = _collection(tenant_id)
-    col.add(ids=ids, embeddings=embeddings, documents=texts, metadatas=metadatas)
+    batch_add(col, ids, embeddings, texts, metadatas)
     logger.info("crm_indexer: indexed %d chunks for %d %s items (batch=%s)", len(texts), len(items), doc_type, batch_id)
     return len(texts)
 
@@ -197,3 +203,43 @@ def delete_by_type_and_batch(
     batch_id: str,
 ) -> int:
     return _delete_by_type_and_batch(tenant_id, doc_type, batch_id)
+
+
+def cleanup_orphans(tenant_id: UUID | str, db_session: Any) -> dict[str, int]:
+    """Remove PMS chunks from Chroma whose external_id no longer exists in SQL DB."""
+    col = _collection(tenant_id)
+    ids, metas = _all_chunks(tenant_id)
+    if not ids:
+        return {"total": 0, "removed": 0, "errors": 0}
+
+    # Gather active external IDs from SQL
+    active: dict[str, set[str]] = {"service": set(), "practitioner": set(), "clinic": set()}
+    try:
+        for row in db_session.execute(select(PmsService.external_id).where(PmsService.tenant_id == tenant_id)).all():
+            active["service"].add(str(row[0]))
+        for row in db_session.execute(select(PmsPractitioner.external_id).where(PmsPractitioner.tenant_id == tenant_id)).all():
+            active["practitioner"].add(str(row[0]))
+        for row in db_session.execute(select(PmsClinic.external_id).where(PmsClinic.tenant_id == tenant_id)).all():
+            active["clinic"].add(str(row[0]))
+    except Exception as e:
+        logger.error("cleanup_orphans: failed to query SQL: %s", e)
+        return {"total": 0, "removed": 0, "errors": 1}
+
+    to_delete: list[str] = []
+    for cid, meta in zip(ids, metas):
+        src = (meta or {}).get("source", "")
+        if src != "pms":
+            continue
+        dtype = (meta or {}).get("type", "")
+        eid = (meta or {}).get(f"{dtype}_id", "")
+        if dtype in active and eid not in active[dtype]:
+            to_delete.append(cid)
+
+    if to_delete:
+        batch_delete_ids(col, to_delete)
+        logger.info("cleanup_orphans: removed %d orphan PMS chunks", len(to_delete))
+
+    return {"total": len(ids), "removed": len(to_delete), "errors": 0}
+
+
+

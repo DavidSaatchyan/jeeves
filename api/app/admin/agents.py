@@ -15,7 +15,7 @@ from ..models import (
     AIInteraction,
     ChatLog,
     Communication,
-    FileRecord,
+    KnowledgeFolder,
     Tenant,
     TimelineEvent,
     Workflow,
@@ -284,14 +284,13 @@ def api_knowledge_tree(
     tenant: Tenant = Depends(get_admin_tenant),
     db: Session = Depends(get_db),
 ):
-    files = db.execute(select(FileRecord).where(
-        FileRecord.tenant_id == tenant.id,
-        FileRecord.status == "ready",
-    ).order_by(FileRecord.filename)).scalars().all()
+    folders = db.execute(select(KnowledgeFolder).where(
+        KnowledgeFolder.tenant_id == tenant.id,
+    ).order_by(KnowledgeFolder.name)).scalars().all()
     return {
-        "files": [
-            {"id": str(f.id), "filename": f.filename, "file_type": f.file_type}
-            for f in files
+        "folders": [
+            {"id": str(f.id), "name": f.name}
+            for f in folders
         ],
     }
 

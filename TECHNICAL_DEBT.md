@@ -16,6 +16,18 @@
 
 ---
 
+---
+
+## Sprint 3 — Deferred Items
+
+| Area | Issue | Status | Priority |
+|------|-------|--------|----------|
+| Streaming (T-3.1.3) | Frontend `EventSource` to consume `/chat/stream` in widget. Backend done, frontend pending. | Deferred — no frontend repo | Medium |
+| Embedding model (T-2.6) | Compare text-embedding-3-small vs large on golden dataset. Analytical, no code. | Deferred — manual eval | Low |
+| Rule-based classifier (T-3.5) | Implement after T-0.5 classification audit if confidence > 0.95 > 30%. | Blocked on T-0.5 | Medium |
+
+---
+
 ## Existing Items (from AGENTS.md)
 
 | Area | Issue | Priority |

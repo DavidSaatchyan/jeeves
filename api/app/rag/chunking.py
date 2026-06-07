@@ -43,11 +43,11 @@ class Chunk:
     char_end: int = 0
     chunk_hash: str = ""        # sha1 of text, stable across reindex
 
-    def to_metadata(self, file_id: str) -> dict:
-        # Chroma 0.5.x does not accept None in metadata values.
+    def to_metadata(self, file_id: str, folder_id: str = "") -> dict:
         m = {
             "source": "kb",
             "file_id": file_id,
+            "folder_id": folder_id,
             "filename": self.filename,
             "section": self.section or "",
             "char_start": int(self.char_start),

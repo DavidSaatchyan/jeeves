@@ -327,12 +327,22 @@ class TestChunkToMetadata:
         )
         m = c.to_metadata("file-uuid")
         assert m["file_id"] == "file-uuid"
+        assert m["folder_id"] == ""
         assert m["filename"] == "f.txt"
         assert m["section"] == "S"
         assert m["char_start"] == 0
         assert m["char_end"] == 4
         assert m["chunk_hash"] == "abc"
         assert "page" not in m
+
+    def test_metadata_with_folder_id(self):
+        c = Chunk(
+            text="test", filename="f.txt", section="S",
+            char_start=0, char_end=4, chunk_hash="abc",
+        )
+        m = c.to_metadata("file-uuid", "folder-xyz")
+        assert m["file_id"] == "file-uuid"
+        assert m["folder_id"] == "folder-xyz"
 
     def test_metadata_with_page(self):
         c = Chunk(

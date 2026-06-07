@@ -88,3 +88,71 @@ def sample_pdf(tmp_path: Path) -> Path:
     writer.write(str(p))
     writer.close()
     return p
+
+
+# ── Golden dataset fixtures (Sprint 0) ──────────────────────────────────────
+
+_GOLDEN_DATASET_PATH = Path(__file__).parent / "golden_dataset.jsonl"
+_SYNTHETIC_KB_DIR = Path(__file__).parent / "synthetic_kb"
+_SYNTHETIC_PMS_DIR = Path(__file__).parent / "synthetic_pms"
+
+
+@pytest.fixture(scope="session")
+def golden_dataset() -> list[dict]:
+    """Load golden dataset from JSONL."""
+    import json
+    samples = []
+    with open(_GOLDEN_DATASET_PATH, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                samples.append(json.loads(line))
+    return samples
+
+
+@pytest.fixture
+def synthetic_kb_loader(tenant_id: str):
+    """Index synthetic KB docs into Chroma for eval tenant."""
+    from app.rag import index_file, delete_file
+    loaded: list[str] = []
+    for fpath in sorted(_SYNTHETIC_KB_DIR.iterdir()):
+        if fpath.suffix not in (".txt", ".md"):
+            continue
+        fid = f"synthetic-{fpath.stem}"
+        try:
+            delete_file(tenant_id, fid)
+        except Exception:
+            pass
+        index_file(tenant_id, fid, fpath)
+        loaded.append(fid)
+    yield loaded
+    # Cleanup
+    for fid in loaded:
+        try:
+            delete_file(tenant_id, fid)
+        except Exception:
+            pass
+
+
+@pytest.fixture
+def synthetic_pms_loader(tenant_id: str):
+    """Index synthetic PMS data into Chroma for eval tenant."""
+    from app.rag import index_text, delete_file
+    loaded: list[str] = []
+    for fpath in sorted(_SYNTHETIC_PMS_DIR.iterdir()):
+        if fpath.suffix not in (".txt",):
+            continue
+        fid = f"synthetic-pms-{fpath.stem}"
+        try:
+            delete_file(tenant_id, fid)
+        except Exception:
+            pass
+        text = fpath.read_text(encoding="utf-8")
+        index_text(tenant_id, fid, text, fpath.name, section="Pricing")
+        loaded.append(fid)
+    yield loaded
+    for fid in loaded:
+        try:
+            delete_file(tenant_id, fid)
+        except Exception:
+            pass

@@ -109,7 +109,9 @@ class KnowledgeUrl(Base, _TenantScoped, _CreatedAt):
     folder_id = Column(UUID(as_uuid=True), ForeignKey("knowledge_folders.id", ondelete="SET NULL"), nullable=True, index=True)
     chunks_total = Column(Integer, default=0)
     size_bytes = Column(Integer, default=0)
+    content_hash = Column(String(64), nullable=True)
     error = Column(Text)
+    last_fetched_at = Column(DateTime, nullable=True)
 
 
 class KbActivity(Base, _TenantScoped, _CreatedAt):

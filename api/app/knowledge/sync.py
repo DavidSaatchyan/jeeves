@@ -13,8 +13,10 @@ from ..auth.deps import get_current_tenant
 from ..db import get_db
 from ..integrations.cliniko import enrich_services_with_descriptions
 from ..integrations.resolver import get_crm_adapter_for_tenant
+from ..shared.timer import timed
 from ..models import PmsClinic, PmsPractitioner, PmsService, Tenant
 from ..rag import crm_indexer
+from ..rag.crm_indexer import cleanup_orphans as pms_cleanup_orphans
 from ..shared.pms_fields import clinic_fields, practitioner_fields, service_fields, upsert_objects
 
 logger = logging.getLogger(__name__)
@@ -26,6 +28,7 @@ class _SyncCrmIn(BaseModel):
     types: list[str] | None = None
 
 
+@timed("sync.crm")
 @router.post("/crm")
 def sync_crm(
     body: _SyncCrmIn | None = None,
@@ -95,6 +98,15 @@ def sync_crm(
     db.commit()
 
     result["batch_id"] = batch_id
+
+    # Clean up orphans after sync
+    try:
+        orphan_result = pms_cleanup_orphans(tenant.id, db)
+        result["orphans_cleaned"] = orphan_result.get("removed", 0)
+    except Exception as e:
+        logger.error("CRM sync orphan cleanup failed: %s", e)
+        result["orphans_cleaned"] = -1
+
     return result
 
 
@@ -152,6 +164,19 @@ def reindex_crm_from_sql(
 
     result["batch_id"] = batch_id
     return result
+
+
+@router.post("/crm/orphans")
+def cleanup_crm_orphans(
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    """Remove PMS chunks from Chroma whose external_id no longer exists in SQL DB."""
+    try:
+        result = pms_cleanup_orphans(tenant.id, db)
+        return result
+    except Exception as e:
+        raise HTTPException(500, f"Orphan cleanup failed: {e}")
 
 
 @router.get("/crm/status")

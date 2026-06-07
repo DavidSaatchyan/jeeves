@@ -47,6 +47,23 @@ class ChatOut(BaseModel):
     latency_ms: int
     escalated: bool = False
     resolution: str | None = None
+    citations: list[str] = Field(default_factory=list)
+
+
+class KBResponse(BaseModel):
+    """Structured output from KB query — replaces free-text LLM extraction."""
+    answer: str
+    citations: list[str]
+    confidence: str = "medium"
+    missing_info: bool = False
+
+
+class CitationOut(BaseModel):
+    """A single cited document reference."""
+    source: str
+    section: str = ""
+    text_snippet: str = ""
+    relevance: float = 0.0
 
 
 class WidgetChatIn(BaseModel):

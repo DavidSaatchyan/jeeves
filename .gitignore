@@ -58,6 +58,20 @@ docker-compose.yml
 # Render (we use Railway)
 render.yaml
 
+# Databases
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Chroma vector stores
+chroma_data/
+.chroma_eval/
+
+# Temp test data
+test_data/
+# Note: specific .jsonl test fixtures (golden_dataset.jsonl) are force-added
+
 # Scratch files
 integrations.txt
 spec.txt

@@ -5,7 +5,9 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
+from ..shared.timer import timed
 from . import chunking
+from .batch import batch_add
 from .client import _collection, embed_batch
 from .config import DISTANCE_THRESHOLD, TOP_K
 
@@ -32,36 +34,59 @@ def count_chunks_by_source(tenant_id: UUID | str) -> dict[str, int]:
         return {"total": 0, "pms": 0, "kb": 0, "other": 0}
 
 
-def _add_chunks(tenant_id: UUID | str, file_id: UUID | str, chunks: list[chunking.Chunk]) -> int:
+def _add_chunks(tenant_id: UUID | str, file_id: UUID | str, chunks: list[chunking.Chunk], folder_id: str = "") -> int:
     if not chunks:
         return 0
     col = _collection(tenant_id)
     ids = [f"{file_id}-{i}-{c.chunk_hash}" for i, c in enumerate(chunks)]
     texts = [c.text for c in chunks]
-    metadatas = [c.to_metadata(str(file_id)) for c in chunks]
+    metadatas = [c.to_metadata(str(file_id), folder_id) for c in chunks]
+
+    # Snapshot old chunks for this file_id — restore on failure
+    snapshot: dict[str, list] = {"ids": [], "embeddings": [], "documents": [], "metadatas": []}
+    try:
+        old = col.get(where={"file_id": str(file_id)}, include=["embeddings", "documents", "metadatas"])
+        if old and old.get("ids"):
+            snapshot = old
+    except Exception:
+        pass
+
     try:
         col.delete(where={"file_id": str(file_id)})
     except Exception:
         pass
-    embeddings = embed_batch(texts)
-    col.add(ids=ids, embeddings=embeddings, documents=texts, metadatas=metadatas)
+
+    try:
+        embeddings = embed_batch(texts)
+        batch_add(col, ids, embeddings, texts, metadatas)
+    except Exception:
+        if snapshot.get("ids"):
+            try:
+                batch_add(col, snapshot["ids"], snapshot["embeddings"],
+                          snapshot["documents"], snapshot["metadatas"])
+                logger.warning("restored snapshot for file_id=%s after add failure", file_id)
+            except Exception as restore_err:
+                logger.error("failed to restore snapshot for file_id=%s: %s", file_id, restore_err)
+        raise
     return len(chunks)
 
 
-def index_file(tenant_id: UUID | str, file_id: UUID | str, path: Path) -> int:
+@timed("rag.index_file")
+def index_file(tenant_id: UUID | str, file_id: UUID | str, path: Path, folder_id: str = "") -> int:
     chunks = chunking.build_chunks(path)
-    return _add_chunks(tenant_id, file_id, chunks)
+    return _add_chunks(tenant_id, file_id, chunks, folder_id)
 
 
-def index_text(tenant_id: UUID | str, file_id: UUID | str, text: str, filename: str, section: str = "") -> int:
+@timed("rag.index_text")
+def index_text(tenant_id: UUID | str, file_id: UUID | str, text: str, filename: str, section: str = "", folder_id: str = "") -> int:
     chunks = chunking.build_chunks_from_text(text, filename, section)
-    return _add_chunks(tenant_id, file_id, chunks)
+    return _add_chunks(tenant_id, file_id, chunks, folder_id)
 
 
-def index_structured_text(tenant_id: UUID | str, file_id: UUID | str, sections: list[tuple[str, str]], filename: str) -> int:
+def index_structured_text(tenant_id: UUID | str, file_id: UUID | str, sections: list[tuple[str, str]], filename: str, folder_id: str = "") -> int:
     """Index structured (heading, body) sections — deterministic, no heading heuristics."""
     chunks = chunking.build_chunks_from_sections(sections, filename)
-    return _add_chunks(tenant_id, file_id, chunks)
+    return _add_chunks(tenant_id, file_id, chunks, folder_id)
 
 
 def delete_file(tenant_id: UUID | str, file_id: UUID | str):
@@ -104,6 +129,7 @@ def get_chunks_for_file(tenant_id: UUID | str, file_id: UUID | str) -> list[dict
         return []
 
 
+@timed("rag.search")
 def search(
     tenant_id: UUID | str,
     query: str,

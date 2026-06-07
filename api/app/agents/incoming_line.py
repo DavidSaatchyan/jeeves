@@ -9,12 +9,22 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from ..core.ai import classify
-from ..core.ai.generator import naturalize_answer, simple_llm_response
+from ..core.ai.generator import call_structured, deterministic_naturalize, simple_llm_response
 from ..core.booking import get_available_slots
 from ..integrations.resolver import get_crm_adapter_for_tenant
 from ..core.activity_log import log_activity
 from ..models import Tenant
-from ..rag import search as rag_search
+from ..rag import (
+    CHAT_THRESHOLD,
+    MMR_LAMBDA,
+    cache_lookup,
+    cache_store,
+    mmr_diversify,
+    rerank_docs,
+    translate_and_search,
+    validate_citations,
+    search as rag_search,
+)
 from .base import Agent, AgentAction, AgentResult
 from .default_config import get_default_agent_config
 from .registry import register
@@ -71,25 +81,37 @@ def _build_slot_text(slots: list) -> str:
     return "\n".join(lines)
 
 
-async def _handle_kb_query(message: str, tenant_id: str, config: dict) -> str:
+async def _handle_kb_query(message: str, tenant_id: str, config: dict) -> tuple[str, list[dict]]:
     knowledge_folders = config.get("knowledge_folders", [])
 
     kb_where: dict[str, Any] = {"source": "kb"}
     if knowledge_folders:
-        kb_where["file_id"] = {"$in": knowledge_folders}
+        kb_where["folder_id"] = {"$in": knowledge_folders}
 
-    kb_fut = asyncio.to_thread(rag_search, tenant_id, message, 4, 0.8, kb_where)
-    pms_fut = asyncio.to_thread(rag_search, tenant_id, message, 3, 0.8, {"source": "pms"})
+    cached = cache_lookup(message)
+    if cached is not None:
+        results = cached
+    else:
+        kb_fut = translate_and_search(tenant_id, message, 10, CHAT_THRESHOLD, kb_where)
+        pms_fut = translate_and_search(tenant_id, message, 10, CHAT_THRESHOLD, {"source": "pms"})
 
-    kb_results, pms_results = await asyncio.gather(kb_fut, pms_fut)
+        kb_results, pms_results = await asyncio.gather(kb_fut, pms_fut)
 
-    results = _rrf_merge(kb_results, pms_results, weights=[1.0, 1.2])
+        results = _rrf_merge(kb_results, pms_results, weights=[1.0, 1.2])
 
-    # Diversity: ensure at most 3 from same source in top-5
-    results = _diversify_results(results, key_fn=lambda r: r.get("source", ""), max_per_group=3)[:5]
+        if rerank_docs:
+            rerank_top_k = 15
+            results = await asyncio.to_thread(rerank_docs, message, results, rerank_top_k)
+
+        if MMR_LAMBDA > 0.0:
+            results = mmr_diversify(results, message, lambda_=MMR_LAMBDA, top_k=5)
+        else:
+            results = _diversify_results(results, key_fn=lambda r: r.get("source", ""), max_per_group=3)[:5]
+
+        cache_store(message, results)
 
     if not results:
-        return "I don't have that information in my knowledge base."
+        return "I don't have that information in my knowledge base.", []
 
     blocks = []
     for i, r in enumerate(results, 1):
@@ -105,23 +127,46 @@ async def _handle_kb_query(message: str, tenant_id: str, config: dict) -> str:
         )
     context = "\n\n".join(blocks)
 
-    kb_prompt = (
+    system_prompt = (
+        "You are a medical clinic assistant. Extract information only from the context provided."
+    )
+    user_prompt = (
         "Answer the patient's question using only the knowledge base excerpts below.\n\n"
         "RULES:\n"
         "- Answer ONLY using text that appears verbatim in the context.\n"
-        "- For every claim, quote the exact source text in quotation marks and cite the document.\n"
-        "- If the context does not contain the answer, say you don't have that information.\n"
+        "- For every claim, reference the exact document by number [Document N].\n"
+        "- If the context does not contain the answer, set missing_info to true.\n"
         "- Do NOT combine separate facts into relationships unless the source text explicitly states that relationship.\n"
-        "- Do NOT use your training knowledge to supplement or interpret the context."
+        "- Do NOT use your training knowledge to supplement or interpret the context.\n\n"
+        f"CONTEXT:\n{context}\n\n"
+        f"Patient question: {message}"
     )
-    full_prompt = f"{kb_prompt}\n\nCONTEXT:\n{context}\n\nPatient question: {message}"
-    result = await simple_llm_response(
-        tenant_id, full_prompt,
-        system_override="You are a medical clinic assistant. Extract information only from the context provided.",
-        temperature=0.0,
-    )
-    cited = result.get("response", "I don't have that information.")
-    return await naturalize_answer(tenant_id, cited)
+    from ..schemas import KBResponse
+
+    kb_result = await call_structured(tenant_id, system_prompt, user_prompt, KBResponse, temperature=0.0)
+
+    if kb_result is None:
+        old_prompt = f"{system_prompt}\n\n{user_prompt}"
+        result = await simple_llm_response(
+            tenant_id, old_prompt,
+            system_override=system_prompt,
+            temperature=0.0,
+        )
+        return result.get("response", "I don't have that information."), []
+
+    guard_passed = True
+    if kb_result.citations:
+        citation_texts = [c if isinstance(c, str) else str(c) for c in kb_result.citations]
+        guard_passed, guard_failures = validate_citations(kb_result.answer, citation_texts, results)
+        if not guard_passed:
+            logger.warning("Citation guard blocked %d citations, returning fallback", len(guard_failures))
+            return "I don't have that information.", []
+
+    answer = deterministic_naturalize(kb_result)
+    if answer:
+        citations = [{"source": r.get("filename", "?"), "section": r.get("section", ""), "text_snippet": r["text"][:500], "relevance": r.get("score", 0.0)} for r in results]
+        return answer, citations
+    return "I don't have that information.", []
 
 
 async def _handle_appointment(
@@ -239,9 +284,9 @@ class IncomingLineAgent(Agent):
             )
 
         if intent in ("kb_query",):
-            response_text = await _handle_kb_query(message, str(tenant.id), config)
+            response_text, citations = await _handle_kb_query(message, str(tenant.id), config)
             log_activity(db, tenant.id, config.get("personality", {}).get("name", "Agent"), "kb_query", "Answered knowledge base query", patient_reference=customer_id, api_status="success")
-            return AgentResult(response=response_text, intent=intent)
+            return AgentResult(response=response_text, intent=intent, citations=citations)
 
         if intent in ("appointment", "reschedule", "availability"):
             return await _handle_appointment(message, tenant, db, customer_id, config)

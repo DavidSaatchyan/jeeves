@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from ..shared.inbox_writer import add_message, get_or_create_conversation
 from ..shared.moderation import moderate
 from ..shared.rate_limit import check_rate_limit
+from ..shared.timer import timed
 from ..models import ChatLog
 from .registry import dispatch
 
@@ -27,8 +28,10 @@ class ProcessMessageResult:
     conversation_id: str | None = None
     is_new_conversation: bool = False
     latency_ms: int = 0
+    citations: list[dict] = field(default_factory=list)
 
 
+@timed("process_message")
 async def process_message(
     *,
     tenant_id: str,
@@ -90,4 +93,5 @@ async def process_message(
         conversation_id=conv_id,
         is_new_conversation=is_new,
         latency_ms=latency,
+        citations=result.citations,
     )
