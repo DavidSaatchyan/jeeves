@@ -42,7 +42,7 @@ class TestPracticeDataInUnifiedPage:
     def test_contains_practice_tab(self, client: TestClient) -> None:
         resp = client.get("/admin/knowledge")
         assert resp.status_code == 200
-        assert "Practice Data" in resp.text
+        assert "HMS Data" in resp.text
         assert 'data-tab="practice"' in resp.text
         assert "/admin/practice" not in resp.text
 
@@ -51,8 +51,8 @@ class TestPracticeDataInUnifiedPage:
         assert resp.status_code == 200
         assert "Sync all data" in resp.text
         assert "hmsSyncAllBtn" in resp.text
-        for t in ("services", "practitioners", "clinic"):
-            assert f"hmsBtn-{t}" in resp.text
+        assert "hmsTypeTabs" in resp.text
+        assert "hmsTableSection" in resp.text
 
     def test_no_crm_tab_in_upload_modal(self, client: TestClient) -> None:
         resp = client.get("/admin/knowledge")

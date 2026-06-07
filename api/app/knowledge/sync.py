@@ -4,9 +4,9 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from ..auth.deps import get_current_tenant
@@ -297,6 +297,79 @@ _PREVIEW_FIELDS: dict[str, list[str]] = {
     "practitioners": ["display_name", "title", "designation", "description", "active"],
     "clinic": ["business_name", "address", "city", "state", "postcode", "country", "phone", "email", "website"],
 }
+
+_SORT_FIELDS: dict[str, str] = {
+    "services": "name",
+    "practitioners": "display_name",
+    "clinic": "business_name",
+}
+
+_SEARCH_FIELDS: dict[str, list[str]] = {
+    "services": ["name", "description", "category"],
+    "practitioners": ["display_name", "title", "designation", "description"],
+    "clinic": ["business_name", "address", "city", "state", "postcode", "country", "phone", "email"],
+}
+
+
+@router.get("/crm/counts")
+def crm_counts(
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+) -> dict[str, int]:
+    """Return total record count per entity type."""
+    result: dict[str, int] = {}
+    for key, model in _PREVIEW_MODEL.items():
+        count = db.execute(
+            select(func.count(model.id)).where(model.tenant_id == tenant.id),
+        ).scalar() or 0
+        result[key] = count
+    return result
+
+
+@router.get("/crm/{type}/table")
+def crm_table(
+    type: str,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(50, ge=1, le=200),
+    sort: str | None = Query(None),
+    order: str = Query("asc"),
+    search: str | None = Query(None),
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    """Paginated table view of synced records with sort and search."""
+    model = _PREVIEW_MODEL.get(type)
+    if not model:
+        raise HTTPException(404, f"Unknown type: {type}")
+
+    fields = _PREVIEW_FIELDS.get(type, [])
+    default_sort = _SORT_FIELDS.get(type, fields[0] if fields else "id")
+    sort_field = sort if sort in fields or sort in ("id", "updated_at", "created_at") else default_sort
+
+    base = select(model).where(model.tenant_id == tenant.id)
+
+    if search:
+        searchable = _SEARCH_FIELDS.get(type, [])
+        filters = [getattr(model, f).ilike(f"%{search}%") for f in searchable if hasattr(model, f)]
+        if filters:
+            base = base.where(or_(*filters))
+
+    total: int = db.execute(select(func.count()).select_from(base.subquery())).scalar() or 0
+
+    sort_col = getattr(model, sort_field, None)
+    if sort_col is not None:
+        base = base.order_by(sort_col.asc() if order == "asc" else sort_col.desc(), model.created_at)
+
+    rows = db.execute(base.offset((page - 1) * per_page).limit(per_page)).scalars().all()
+
+    result_rows: list[dict[str, Any]] = []
+    for row in rows:
+        item: dict[str, Any] = {"id": row.external_id, "updated_at": row.updated_at.isoformat() if row.updated_at else None}
+        for f in fields:
+            item[f] = getattr(row, f, None)
+        result_rows.append(item)
+
+    return {"rows": result_rows, "total": total, "page": page, "per_page": per_page}
 
 
 @router.get("/crm/{type}")
