@@ -59,7 +59,7 @@ def practitioner_fields(item: dict[str, Any]) -> dict[str, Any]:
         "display_name": item.get("display_name", item.get("first_name", "")),
         "title": item.get("title", ""),
         "designation": item.get("designation", ""),
-        "description": item.get("description", ""),
+        "description": item.get("description", item.get("notes", "")),
         "active": bool(item.get("active", True)),
         "raw_data": item,
     }

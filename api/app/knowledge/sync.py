@@ -302,8 +302,9 @@ _RAW_FIELDS: dict[str, list[tuple[str, str | list[str]]]] = {
     "practitioners": [
         ("email", "email"),
         ("phone", ["phone", "mobile"]),
-        ("qualification", "qualification"),
-        ("practitioner_type", "practitioner_type"),
+        ("first_name", "first_name"),
+        ("last_name", "last_name"),
+        ("description", ["description", "notes"]),
         ("allow_online_booking", "allow_online_booking"),
     ],
 }

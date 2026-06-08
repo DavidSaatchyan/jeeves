@@ -531,12 +531,12 @@ var _HMS_COLUMNS = {
     {id:'updated_at', label:'Updated'},
   ],
   practitioners: [
-    {id:'display_name', label:'Name'},
+    {id:'_name', label:'Name'},
     {id:'title', label:'Title'},
     {id:'designation', label:'Designation'},
-    {id:'qualification', label:'Qualification', sortable:false},
     {id:'email', label:'Email', sortable:false},
     {id:'phone', label:'Phone', sortable:false},
+    {id:'description', label:'Description', sortable:false},
     {id:'allow_online_booking', label:'Online Booking', sortable:false},
     {id:'active', label:'Active'},
     {id:'updated_at', label:'Updated'},
@@ -593,10 +593,15 @@ function buildHmsThead(type){
 }
 
 function renderHmsRow(item, type){
-  var nameKey = type === 'clinic' ? 'business_name' : type === 'practitioners' ? 'display_name' : 'name';
-  var name = esc(item[nameKey] || '(unnamed)');
+  var name = '';
   var rowId = item.id || item.external_id || '';
-  var html = '<td><strong>' + name + '</strong></td>';
+  if(type === 'practitioners'){
+    name = [item.title, item.first_name, item.last_name].filter(Boolean).join(' ') || item.display_name || '(unnamed)';
+  } else {
+    var nameKey = type === 'clinic' ? 'business_name' : 'name';
+    name = item[nameKey] || '(unnamed)';
+  }
+  var html = '<td><strong>' + esc(name) + '</strong></td>';
   if(type === 'services'){
     html += '<td class="hms-price">' + (item.price_cents != null ? '$' + (item.price_cents / 100).toFixed(2) : '<span class="hms-cell-idle">&mdash;</span>') + '</td>';
     html += '<td class="hms-duration">' + (item.duration_minutes ? item.duration_minutes + ' min' : '<span class="hms-cell-idle">&mdash;</span>') + '</td>';
@@ -606,9 +611,9 @@ function renderHmsRow(item, type){
   } else if(type === 'practitioners'){
     html += '<td>' + esc(item.title || '') + '</td>';
     html += '<td>' + esc(item.designation || '') + '</td>';
-    html += '<td class="hms-credential">' + esc(item.qualification || '') + '</td>';
     html += '<td class="hms-contact">' + esc(item.email || '') + '</td>';
     html += '<td class="hms-contact">' + esc(item.phone || '') + '</td>';
+    html += '<td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">' + esc(item.description || '') + '</td>';
     html += '<td>' + (item.allow_online_booking ? '<span class="hms-bool-yes">Yes</span>' : '<span class="hms-bool-no">No</span>') + '</td>';
     html += '<td>' + (item.active !== false ? '<span class="hms-bool-yes">Active</span>' : '<span class="hms-bool-no">Inactive</span>') + '</td>';
     html += '<td class="hms-timestamp">' + _timeAgo(item.updated_at) + '</td>';
