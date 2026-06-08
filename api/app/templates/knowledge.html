@@ -405,6 +405,9 @@
 .hms-table .hms-bool-yes{color:var(--green)}
 .hms-table .hms-bool-no{color:var(--muted2)}
 .hms-table .hms-timestamp{white-space:nowrap;font-size:12px;color:var(--muted2)}
+.hms-table .hms-credential{color:var(--text);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hms-table .hms-contact{color:var(--text)}
+.hms-table th.hms-th-unsortable{cursor:default;color:var(--muted2)}
 .hms-paginator{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px 0}
 .hms-page-info{font-size:12px;color:var(--muted2)}
 .hms-count-badge{font-size:12px;color:var(--muted2)}
@@ -531,8 +534,11 @@ var _HMS_COLUMNS = {
     {id:'display_name', label:'Name'},
     {id:'title', label:'Title'},
     {id:'designation', label:'Designation'},
+    {id:'qualification', label:'Qualification', sortable:false},
+    {id:'email', label:'Email', sortable:false},
+    {id:'phone', label:'Phone', sortable:false},
+    {id:'allow_online_booking', label:'Online Booking', sortable:false},
     {id:'active', label:'Active'},
-    {id:'description', label:'Description'},
     {id:'updated_at', label:'Updated'},
   ],
   clinic: [
@@ -578,7 +584,9 @@ function buildHmsThead(type){
     var isSorted = _hmsSort === c.id;
     var arrow = '';
     if(isSorted) arrow = _hmsOrder === 'asc' ? ' &#9650;' : ' &#9660;';
-    html += '<th class="' + (isSorted ? 'sorted' : '') + '" onclick="onHmsSort(\'' + c.id + '\')">' + c.label + '<span class="hms-sort-icon">' + (arrow || '&#9650;&#9660;') + '</span></th>';
+    var click = c.sortable === false ? '' : ' onclick="onHmsSort(\'' + c.id + '\')"';
+    var cls = (isSorted ? 'sorted' : '') + (c.sortable === false ? ' hms-th-unsortable' : '');
+    html += '<th class="' + cls + '"' + click + '>' + c.label + '<span class="hms-sort-icon">' + (arrow || '&#9650;&#9660;') + '</span></th>';
   });
   html += '</tr>';
   return html;
@@ -598,8 +606,11 @@ function renderHmsRow(item, type){
   } else if(type === 'practitioners'){
     html += '<td>' + esc(item.title || '') + '</td>';
     html += '<td>' + esc(item.designation || '') + '</td>';
-    html += '<td>' + (item.active !== false ? '<span class="hms-bool-yes">Yes</span>' : '<span class="hms-bool-no">No</span>') + '</td>';
-    html += '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">' + esc(item.description ? item.description.slice(0, 60) : '') + '</td>';
+    html += '<td class="hms-credential">' + esc(item.qualification || '') + '</td>';
+    html += '<td class="hms-contact">' + esc(item.email || '') + '</td>';
+    html += '<td class="hms-contact">' + esc(item.phone || '') + '</td>';
+    html += '<td>' + (item.allow_online_booking ? '<span class="hms-bool-yes">Yes</span>' : '<span class="hms-bool-no">No</span>') + '</td>';
+    html += '<td>' + (item.active !== false ? '<span class="hms-bool-yes">Active</span>' : '<span class="hms-bool-no">Inactive</span>') + '</td>';
     html += '<td class="hms-timestamp">' + _timeAgo(item.updated_at) + '</td>';
   } else if(type === 'clinic'){
     html += '<td>' + esc(item.city || '') + '</td>';

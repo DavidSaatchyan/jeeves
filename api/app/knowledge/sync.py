@@ -298,6 +298,16 @@ _PREVIEW_FIELDS: dict[str, list[str]] = {
     "clinic": ["business_name", "address", "city", "state", "postcode", "country", "phone", "email", "website"],
 }
 
+_RAW_FIELDS: dict[str, list[tuple[str, str | list[str]]]] = {
+    "practitioners": [
+        ("email", "email"),
+        ("phone", ["phone", "mobile"]),
+        ("qualification", "qualification"),
+        ("practitioner_type", "practitioner_type"),
+        ("allow_online_booking", "allow_online_booking"),
+    ],
+}
+
 _SORT_FIELDS: dict[str, str] = {
     "services": "name",
     "practitioners": "display_name",
@@ -343,6 +353,8 @@ def crm_table(
         raise HTTPException(404, f"Unknown type: {type}")
 
     fields = _PREVIEW_FIELDS.get(type, [])
+    raw_fields = _RAW_FIELDS.get(type, [])
+    raw_field_keys = {k for k, _ in raw_fields}
     default_sort = _SORT_FIELDS.get(type, fields[0] if fields else "id")
     sort_field = sort if sort in fields or sort in ("id", "updated_at", "created_at") else default_sort
 
@@ -367,6 +379,19 @@ def crm_table(
         item: dict[str, Any] = {"id": row.external_id, "updated_at": row.updated_at.isoformat() if row.updated_at else None}
         for f in fields:
             item[f] = getattr(row, f, None)
+        if raw_fields:
+            raw = row.raw_data or {}
+            for output_key, source in raw_fields:
+                if isinstance(source, list):
+                    for key in source:
+                        val = raw.get(key)
+                        if val:
+                            break
+                    else:
+                        val = None
+                else:
+                    val = raw.get(source)
+                item[output_key] = val
         result_rows.append(item)
 
     return {"rows": result_rows, "total": total, "page": page, "per_page": per_page}
