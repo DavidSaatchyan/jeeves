@@ -119,12 +119,10 @@
     <p>Connect Cliniko or Pabau in <a href="/integrations">Integrations</a> to sync practice data.</p>
   </div>
 
-  <div id="hmsHeader" class="hms-header">
-    <span class="hms-icon" id="hmsProviderIcon"></span>
-    <span id="hmsProviderName">&mdash;</span>
-    <span id="hmsLastSync" class="muted">Not synced</span>
-    <span id="hmsCountBadge" class="hms-count-badge" style="margin-left:12px"></span>
-    <button class="btn sm" onclick="syncAll()" id="hmsSyncAllBtn" disabled style="margin-left:auto">&#10227; Sync all data</button>
+  <div id="hmsHeader" class="hms-source-bar">
+    <span class="hms-source-tag" id="hmsSourceTag">Cliniko</span>
+    <span class="hms-source-date" id="hmsLastSyncDate"></span>
+    <button class="btn sm" onclick="syncAll()" id="hmsSyncAllBtn" disabled>Sync</button>
   </div>
   <div id="hmsOnboardingBanner" class="hms-onboarding-banner" style="display:none">
     <span id="hmsOnboardingText">Practice data is being synced. This may take up to 2 minutes.</span>
@@ -409,9 +407,12 @@
 .hms-table .hms-desc{max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:help;color:var(--text)}
 .hms-paginator{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px 0}
 .hms-page-info{font-size:12px;color:var(--muted2)}
-.hms-count-badge{font-size:12px;color:var(--muted2)}
-.hms-count-badge strong{color:var(--text);font-weight:700}
 .hms-data-row:hover td{background:rgba(255,255,255,0.04)!important}
+.hms-source-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.hms-source-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;font-size:12px;font-weight:600;border-radius:100px;background:rgba(99,102,241,0.1);color:var(--accent);border:1px solid rgba(99,102,241,0.2)}
+.hms-source-tag::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.hms-source-date{font-size:12px;color:var(--muted2);margin-right:auto}
+.hms-source-bar .btn{margin-left:auto}
 </style>
 <script>
 var _selectedFolder = '';
@@ -503,6 +504,12 @@ function _timeAgo(iso){
   var hrs = Math.floor(mins / 60);
   if(hrs < 24) return hrs + 'h ago';
   return new Date(iso).toLocaleDateString();
+}
+function _formatDateTime(iso){
+  if(!iso) return '';
+  var d = new Date(iso + (iso.endsWith('Z')?'':'Z'));
+  var pad = function(n){ return String(n).padStart(2,'0'); };
+  return pad(d.getDate()) + '.' + pad(d.getMonth()+1) + '.' + d.getFullYear() + ', ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
 }
 
 function updateGlobalStatus(state, msg){
@@ -692,7 +699,7 @@ async function loadPmsStatus(){
     var resp = await api('/knowledge/sync/crm/status');
     _hmsStatus = resp;
     var prov = resp.crm_provider || '';
-    document.getElementById('hmsProviderName').textContent = prov ? prov.charAt(0).toUpperCase() + prov.slice(1) : '\u2014';
+    document.getElementById('hmsSourceTag').textContent = prov ? prov.charAt(0).toUpperCase() + prov.slice(1) : '\u2014';
     if(!prov){
       document.getElementById('hmsNoPms').style.display = '';
       document.getElementById('hmsHeader').style.display = 'none';
@@ -700,7 +707,8 @@ async function loadPmsStatus(){
       return;
     }
     var lastSync = resp.last_sync_at;
-    document.getElementById('hmsLastSync').textContent = lastSync ? 'Last sync: ' + (_timeAgo(lastSync) || lastSync) : 'Not synced';
+    document.getElementById('hmsLastSyncDate').textContent = lastSync ? '\u21bb ' + _formatDateTime(lastSync) : '';
+    document.getElementById('hmsLastSyncDate').title = lastSync ? _timeAgo(lastSync) : '';
 
     var banner = document.getElementById('hmsOnboardingBanner');
     if(prov && !lastSync && !localStorage.getItem('hmsOnboardingDismissed')){
@@ -708,10 +716,6 @@ async function loadPmsStatus(){
     } else {
       banner.style.display = 'none';
     }
-
-    var countsResp = await api('/knowledge/sync/crm/counts');
-    var badgeEl = document.getElementById('hmsCountBadge');
-    badgeEl.innerHTML = 'Services: <strong>' + (countsResp.services || 0) + '</strong> &middot; Practitioners: <strong>' + (countsResp.practitioners || 0) + '</strong> &middot; Clinic: <strong>' + (countsResp.clinic || 0) + '</strong>';
 
     disableBtns(false);
   } catch(e){
