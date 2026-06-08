@@ -412,11 +412,13 @@
 .hms-page-info{font-size:12px;color:var(--muted2)}
 .hms-data-row:hover td{background:rgba(255,255,255,0.04)!important}
 .hms-source-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-.hms-source-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;font-size:12px;font-weight:600;border-radius:100px;background:rgba(99,102,241,0.1);color:var(--accent);border:1px solid rgba(99,102,241,0.2);cursor:pointer;transition:all .15s;font-family:inherit}
-.hms-source-btn:hover{background:rgba(99,102,241,0.18);border-color:var(--accent)}
+.hms-source-btn{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;font-size:12px;font-weight:600;border-radius:100px;background:rgba(94,106,210,0.12);color:var(--accent);border:1px solid rgba(94,106,210,0.25);cursor:pointer;transition:background .15s,border-color .15s;font-family:inherit}
+.hms-source-btn:hover{background:rgba(94,106,210,0.2);border-color:var(--accent)}
 .hms-source-btn:disabled{opacity:.5;cursor:default;pointer-events:none}
 .hms-source-btn:disabled .hms-source-sync-icon{animation:none}
+.hms-source-btn:not(:disabled):active{transform:scale(.97)}
 .hms-source-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.hms-source-btn.has-data .hms-source-dot{background:var(--green);box-shadow:0 0 6px rgba(34,166,126,.35)}
 .hms-source-sync-icon{font-size:13px;opacity:.6;transition:transform .3s;line-height:1;display:inline-block;margin-top:1px}
 .hms-source-btn:not(:disabled):hover .hms-source-sync-icon{transform:rotate(180deg)}
 .hms-source-date{font-size:12px;color:var(--muted2)}
@@ -703,7 +705,6 @@ async function loadPmsStatus(){
     document.getElementById('hmsHeader').style.display = 'flex';
     document.getElementById('hmsNoPms').style.display = 'none';
     document.getElementById('hmsTableSection').style.display = '';
-    disableBtns(true);
     var resp = await api('/knowledge/sync/crm/status');
     _hmsStatus = resp;
     var prov = resp.crm_provider || '';
@@ -717,6 +718,7 @@ async function loadPmsStatus(){
     var lastSync = resp.last_sync_at;
     document.getElementById('hmsLastSyncDate').textContent = lastSync ? 'Last sync: ' + _formatDateTime(lastSync) : '';
     document.getElementById('hmsLastSyncDate').title = lastSync ? _timeAgo(lastSync) : '';
+    document.getElementById('hmsSyncAllBtn').classList.toggle('has-data', !!lastSync);
 
     var banner = document.getElementById('hmsOnboardingBanner');
     if(prov && !lastSync && !localStorage.getItem('hmsOnboardingDismissed')){
@@ -724,8 +726,6 @@ async function loadPmsStatus(){
     } else {
       banner.style.display = 'none';
     }
-
-    disableBtns(false);
   } catch(e){
     document.getElementById('hmsNoPms').style.display = '';
     document.getElementById('hmsNoPms').innerHTML = '<p class="muted">Could not load sync status.</p>';
