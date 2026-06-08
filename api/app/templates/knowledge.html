@@ -400,25 +400,16 @@
 .hms-table .hms-cell-idle{color:var(--muted2);font-size:11px}
 .hms-table .hms-cell-inactive{opacity:.5}
 .hms-table .hms-empty-row td{text-align:center;padding:40px;color:var(--muted);font-size:14px}
-.hms-table .hms-name-cell{cursor:pointer;font-weight:500}
-.hms-table .hms-name-cell:hover{color:var(--accent)}
 .hms-table .hms-price{text-align:right;font-variant-numeric:tabular-nums}
 .hms-table .hms-duration{text-align:right;font-variant-numeric:tabular-nums}
 .hms-table .hms-bool-yes{color:var(--green)}
 .hms-table .hms-bool-no{color:var(--muted2)}
+.hms-table .hms-timestamp{white-space:nowrap;font-size:12px;color:var(--muted2)}
 .hms-paginator{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px 0}
 .hms-page-info{font-size:12px;color:var(--muted2)}
 .hms-count-badge{font-size:12px;color:var(--muted2)}
 .hms-count-badge strong{color:var(--text);font-weight:700}
-.hms-data-row{cursor:pointer;transition:background .12s}
 .hms-data-row:hover td{background:rgba(255,255,255,0.04)!important}
-.hms-detail-row td{padding:0!important;background:rgba(255,255,255,0.02)}
-.hms-detail-panel{padding:16px 20px;border-bottom:1px solid var(--border)}
-.hms-detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px 20px}
-.hms-detail-field{display:flex;flex-direction:column;gap:2px}
-.hms-detail-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted2)}
-.hms-detail-value{font-size:13px;color:var(--text);word-break:break-word}
-.hms-detail-blank{color:var(--muted2)}
 </style>
 <script>
 var _selectedFolder = '';
@@ -501,8 +492,6 @@ var _hmsSearch = '';
 var _hmsSyncing = false;
 var _hmsStatus = null;
 var _hmsSearchTimer = null;
-var _hmsRows = [];
-
 function _timeAgo(iso){
   if(!iso) return null;
   var diff = Date.now() - new Date(iso + (iso.endsWith('Z')?'':'Z')).getTime();
@@ -536,13 +525,15 @@ var _HMS_COLUMNS = {
     {id:'duration_minutes', label:'Duration'},
     {id:'category', label:'Category'},
     {id:'description', label:'Description'},
+    {id:'updated_at', label:'Updated'},
   ],
   practitioners: [
     {id:'display_name', label:'Name'},
     {id:'title', label:'Title'},
     {id:'designation', label:'Designation'},
-    {id:'description', label:'Description'},
     {id:'active', label:'Active'},
+    {id:'description', label:'Description'},
+    {id:'updated_at', label:'Updated'},
   ],
   clinic: [
     {id:'business_name', label:'Business'},
@@ -550,6 +541,7 @@ var _HMS_COLUMNS = {
     {id:'state', label:'State'},
     {id:'phone', label:'Phone'},
     {id:'email', label:'Email'},
+    {id:'updated_at', label:'Updated'},
   ],
 };
 
@@ -592,82 +584,31 @@ function buildHmsThead(type){
   return html;
 }
 
-function renderHmsDetailPanel(item, type){
-  var html = '<div class="hms-detail-panel">';
-  html += '<div class="hms-detail-grid">';
-  var allFields = {
-    services: [
-      {k:'name', l:'Name'}, {k:'price_cents', l:'Price', f:function(v){return v != null ? '$' + (v/100).toFixed(2) : '—';}},
-      {k:'duration_minutes', l:'Duration', f:function(v){return v ? v + ' min' : '—';}},
-      {k:'category', l:'Category'}, {k:'telehealth_enabled', l:'Telehealth'},
-      {k:'online_bookable', l:'Online Bookable'}, {k:'description', l:'Description'},
-    ],
-    practitioners: [
-      {k:'display_name', l:'Name'}, {k:'title', l:'Title'}, {k:'designation', l:'Designation'},
-      {k:'active', l:'Active'}, {k:'description', l:'Description'},
-    ],
-    clinic: [
-      {k:'business_name', l:'Business'}, {k:'address', l:'Address'}, {k:'city', l:'City'},
-      {k:'state', l:'State'}, {k:'postcode', l:'Postcode'}, {k:'country', l:'Country'},
-      {k:'phone', l:'Phone'}, {k:'email', l:'Email'}, {k:'website', l:'Website'},
-    ],
-  };
-  var fields = allFields[type] || [];
-  fields.forEach(function(f){
-    var val = f.f ? f.f(item[f.k]) : (item[f.k] != null ? item[f.k] : '');
-    if(val === '' || val === null || val === undefined) val = '<span class="hms-detail-blank">—</span>';
-    html += '<div class="hms-detail-field"><span class="hms-detail-label">' + f.l + '</span><span class="hms-detail-value">' + esc(String(val)) + '</span></div>';
-  });
-  if(item.updated_at){
-    html += '<div class="hms-detail-field"><span class="hms-detail-label">Updated</span><span class="hms-detail-value">' + _timeAgo(item.updated_at) + '</span></div>';
-  }
-  html += '</div></div>';
-  return html;
-}
-
 function renderHmsRow(item, type){
-  var nameKey = type === 'clinic' ? 'business_name' : 'name';
+  var nameKey = type === 'clinic' ? 'business_name' : type === 'practitioners' ? 'display_name' : 'name';
   var name = esc(item[nameKey] || '(unnamed)');
   var rowId = item.id || item.external_id || '';
-  var html = '<td class="hms-name-cell" onclick="toggleHmsDetail(\'' + esc(rowId) + '\')"><strong>' + name + '</strong></td>';
+  var html = '<td><strong>' + name + '</strong></td>';
   if(type === 'services'){
     html += '<td class="hms-price">' + (item.price_cents != null ? '$' + (item.price_cents / 100).toFixed(2) : '<span class="hms-cell-idle">&mdash;</span>') + '</td>';
     html += '<td class="hms-duration">' + (item.duration_minutes ? item.duration_minutes + ' min' : '<span class="hms-cell-idle">&mdash;</span>') + '</td>';
     html += '<td>' + esc(item.category || '') + '</td>';
     html += '<td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">' + esc(item.description ? item.description.slice(0, 80) : '') + '</td>';
+    html += '<td class="hms-timestamp">' + _timeAgo(item.updated_at) + '</td>';
   } else if(type === 'practitioners'){
     html += '<td>' + esc(item.title || '') + '</td>';
     html += '<td>' + esc(item.designation || '') + '</td>';
-    html += '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">' + esc(item.description ? item.description.slice(0, 60) : '') + '</td>';
     html += '<td>' + (item.active !== false ? '<span class="hms-bool-yes">Yes</span>' : '<span class="hms-bool-no">No</span>') + '</td>';
+    html += '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">' + esc(item.description ? item.description.slice(0, 60) : '') + '</td>';
+    html += '<td class="hms-timestamp">' + _timeAgo(item.updated_at) + '</td>';
   } else if(type === 'clinic'){
     html += '<td>' + esc(item.city || '') + '</td>';
     html += '<td>' + esc(item.state || '') + '</td>';
     html += '<td>' + esc(item.phone || '') + '</td>';
     html += '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">' + esc(item.email || '') + '</td>';
+    html += '<td class="hms-timestamp">' + _timeAgo(item.updated_at) + '</td>';
   }
-  return '<tr class="hms-data-row ' + (item.active === false ? 'hms-cell-inactive' : '') + '" data-id="' + esc(rowId) + '">' + html + '</tr>';
-}
-
-function toggleHmsDetail(id){
-  var existingRow = document.getElementById('hms-detail-' + id);
-  if(existingRow){
-    existingRow.remove();
-    return;
-  }
-  var allDetails = document.querySelectorAll('.hms-detail-row');
-  for(var i=0;i<allDetails.length;i++) allDetails[i].remove();
-  var item = null;
-  for(var i=0;i<_hmsRows.length;i++){
-    var rid = _hmsRows[i].id || _hmsRows[i].external_id || '';
-    if(rid === id){ item = _hmsRows[i]; break; }
-  }
-  if(!item) return;
-  var dataRow = document.querySelector('.hms-data-row[data-id="' + id + '"]');
-  if(!dataRow) return;
-  var colCount = (_HMS_COLUMNS[_hmsType] || []).length || 5;
-  var detailHtml = '<tr id="hms-detail-' + id + '" class="hms-detail-row"><td colspan="' + colCount + '">' + renderHmsDetailPanel(item, _hmsType) + '</td></tr>';
-  dataRow.insertAdjacentHTML('afterend', detailHtml);
+  return '<tr class="hms-data-row ' + (item.active === false ? 'hms-cell-inactive' : '') + '">' + html + '</tr>';
 }
 
 async function loadHmsTable(){
@@ -681,11 +622,11 @@ async function loadHmsTable(){
     if(_hmsSort) params += '&sort=' + _hmsSort + '&order=' + _hmsOrder;
     if(_hmsSearch) params += '&search=' + encodeURIComponent(_hmsSearch);
     var data = await api('/knowledge/sync/crm/' + _hmsType + '/table' + params);
-    _hmsRows = data.rows || [];
 
     tbody.innerHTML = '';
     if(!data.rows || data.rows.length === 0){
-      tbody.innerHTML = '<tr><td colspan="6" class="hms-empty-row">' + (_hmsSearch ? 'No records match your search.' : 'No records synced yet.') + '</td></tr>';
+      var colCount = (_HMS_COLUMNS[_hmsType] || []).length || 6;
+      tbody.innerHTML = '<tr><td colspan="' + colCount + '" class="hms-empty-row">' + (_hmsSearch ? 'No records match your search.' : 'No records synced yet.') + '</td></tr>';
     } else {
       data.rows.forEach(function(item){
         tbody.innerHTML += renderHmsRow(item, _hmsType);
@@ -699,7 +640,8 @@ async function loadHmsTable(){
     document.getElementById('hmsNextBtn').disabled = data.page >= totalPages;
     document.getElementById('hmsCountLabel').textContent = total + ' ' + _hmsType;
   } catch(e){
-    tbody.innerHTML = '<tr><td colspan="6" class="hms-empty-row">Failed to load: ' + esc(e.message) + '</td></tr>';
+    var colCount = (_HMS_COLUMNS[_hmsType] || []).length || 6;
+    tbody.innerHTML = '<tr><td colspan="' + colCount + '" class="hms-empty-row">Failed to load: ' + esc(e.message) + '</td></tr>';
   }
 }
 
