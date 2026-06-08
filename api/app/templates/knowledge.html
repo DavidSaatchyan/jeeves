@@ -477,7 +477,7 @@ function switchTab(tab, pushState) {
       _idDocPoll = setInterval(refreshFileRows, 2000);
     }
     if(tab === 'practice') {
-      loadPmsStatus();
+      loadPmsStatus().then(function(){ loadHmsTable(); });
       _idPmsPoll = setInterval(loadPmsStatus, 30000);
     }
   } catch(e) { console.error('switchTab error:', e); }
@@ -713,7 +713,6 @@ async function loadPmsStatus(){
     var badgeEl = document.getElementById('hmsCountBadge');
     badgeEl.innerHTML = 'Services: <strong>' + (countsResp.services || 0) + '</strong> &middot; Practitioners: <strong>' + (countsResp.practitioners || 0) + '</strong> &middot; Clinic: <strong>' + (countsResp.clinic || 0) + '</strong>';
 
-    loadHmsTable();
     disableBtns(false);
   } catch(e){
     document.getElementById('hmsNoPms').style.display = '';
@@ -740,6 +739,7 @@ async function syncPms(types){
     if(hasErrors) updateGlobalStatus('partial', 'Synced with errors. Check individual sections.');
     else updateGlobalStatus('ok', 'All data synced successfully.');
     await loadPmsStatus();
+    loadHmsTable();
   } catch(e){
     updateGlobalStatus('err', 'Sync failed: ' + e.message);
   }
@@ -803,6 +803,7 @@ async function reindexFromSql(){
     });
     updateGlobalStatus('ok', 'Reindex complete: ' + (msg.join(', ') || 'nothing to reindex'));
     await loadPmsStatus();
+    loadHmsTable();
   } catch(e){
     updateGlobalStatus('err', 'Reindex failed: ' + e.message);
   }
