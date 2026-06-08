@@ -120,9 +120,12 @@
   </div>
 
   <div id="hmsHeader" class="hms-source-bar">
-    <span class="hms-source-tag" id="hmsSourceTag">Cliniko</span>
+    <button class="hms-source-btn" id="hmsSyncAllBtn" onclick="syncAll()" disabled>
+      <span class="hms-source-dot"></span>
+      <span id="hmsSourceTag">Cliniko</span>
+      <span class="hms-source-sync-icon">&#10227;</span>
+    </button>
     <span class="hms-source-date" id="hmsLastSyncDate"></span>
-    <button class="btn sm" onclick="syncAll()" id="hmsSyncAllBtn" disabled>Sync</button>
   </div>
   <div id="hmsOnboardingBanner" class="hms-onboarding-banner" style="display:none">
     <span id="hmsOnboardingText">Practice data is being synced. This may take up to 2 minutes.</span>
@@ -409,10 +412,14 @@
 .hms-page-info{font-size:12px;color:var(--muted2)}
 .hms-data-row:hover td{background:rgba(255,255,255,0.04)!important}
 .hms-source-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-.hms-source-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;font-size:12px;font-weight:600;border-radius:100px;background:rgba(99,102,241,0.1);color:var(--accent);border:1px solid rgba(99,102,241,0.2)}
-.hms-source-tag::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}
-.hms-source-date{font-size:12px;color:var(--muted2);margin-right:auto}
-.hms-source-bar .btn{margin-left:auto}
+.hms-source-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;font-size:12px;font-weight:600;border-radius:100px;background:rgba(99,102,241,0.1);color:var(--accent);border:1px solid rgba(99,102,241,0.2);cursor:pointer;transition:all .15s;font-family:inherit}
+.hms-source-btn:hover{background:rgba(99,102,241,0.18);border-color:var(--accent)}
+.hms-source-btn:disabled{opacity:.5;cursor:default;pointer-events:none}
+.hms-source-btn:disabled .hms-source-sync-icon{animation:none}
+.hms-source-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.hms-source-sync-icon{font-size:13px;opacity:.6;transition:transform .3s}
+.hms-source-btn:not(:disabled):hover .hms-source-sync-icon{transform:rotate(180deg)}
+.hms-source-date{font-size:12px;color:var(--muted2)}
 </style>
 <script>
 var _selectedFolder = '';
@@ -497,7 +504,7 @@ var _hmsStatus = null;
 var _hmsSearchTimer = null;
 function _timeAgo(iso){
   if(!iso) return null;
-  var diff = Date.now() - new Date(iso + (iso.endsWith('Z')?'':'Z')).getTime();
+  var diff = Date.now() - new Date(iso).getTime();
   var mins = Math.floor(diff / 60000);
   if(mins < 1) return 'just now';
   if(mins < 60) return mins + 'm ago';
@@ -507,7 +514,8 @@ function _timeAgo(iso){
 }
 function _formatDateTime(iso){
   if(!iso) return '';
-  var d = new Date(iso + (iso.endsWith('Z')?'':'Z'));
+  var d = new Date(iso);
+  if(isNaN(d.getTime())) return '';
   var pad = function(n){ return String(n).padStart(2,'0'); };
   return pad(d.getDate()) + '.' + pad(d.getMonth()+1) + '.' + d.getFullYear() + ', ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
 }
