@@ -405,9 +405,9 @@
 .hms-table .hms-bool-yes{color:var(--green)}
 .hms-table .hms-bool-no{color:var(--muted2)}
 .hms-table .hms-timestamp{white-space:nowrap;font-size:12px;color:var(--muted2)}
-.hms-table .hms-credential{color:var(--text);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hms-table .hms-contact{color:var(--text)}
 .hms-table th.hms-th-unsortable{cursor:default;color:var(--muted2)}
+.hms-table .hms-desc{max-width:320px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.4;cursor:help;color:var(--text)}
 .hms-paginator{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px 0}
 .hms-page-info{font-size:12px;color:var(--muted2)}
 .hms-count-badge{font-size:12px;color:var(--muted2)}
@@ -532,10 +532,7 @@ var _HMS_COLUMNS = {
   ],
   practitioners: [
     {id:'_name', label:'Name'},
-    {id:'title', label:'Title'},
     {id:'designation', label:'Designation'},
-    {id:'email', label:'Email', sortable:false},
-    {id:'phone', label:'Phone', sortable:false},
     {id:'description', label:'Description', sortable:false},
     {id:'allow_online_booking', label:'Online Booking', sortable:false},
     {id:'active', label:'Active'},
@@ -609,11 +606,8 @@ function renderHmsRow(item, type){
     html += '<td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">' + esc(item.description ? item.description.slice(0, 80) : '') + '</td>';
     html += '<td class="hms-timestamp">' + _timeAgo(item.updated_at) + '</td>';
   } else if(type === 'practitioners'){
-    html += '<td>' + esc(item.title || '') + '</td>';
     html += '<td>' + esc(item.designation || '') + '</td>';
-    html += '<td class="hms-contact">' + esc(item.email || '') + '</td>';
-    html += '<td class="hms-contact">' + esc(item.phone || '') + '</td>';
-    html += '<td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">' + esc(item.description || '') + '</td>';
+    html += '<td class="hms-desc" title="' + esc(item.description || '') + '">' + esc(item.description || '') + '</td>';
     html += '<td>' + (item.allow_online_booking ? '<span class="hms-bool-yes">Yes</span>' : '<span class="hms-bool-no">No</span>') + '</td>';
     html += '<td>' + (item.active !== false ? '<span class="hms-bool-yes">Active</span>' : '<span class="hms-bool-no">Inactive</span>') + '</td>';
     html += '<td class="hms-timestamp">' + _timeAgo(item.updated_at) + '</td>';
