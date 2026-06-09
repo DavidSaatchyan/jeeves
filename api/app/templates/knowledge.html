@@ -625,8 +625,8 @@ function disableBtns(disabled){
 var _HMS_COLUMNS = {
   services: [
     {id:'name', label:'Name', width:'22%'},
-    {id:'price_cents', label:'Price', width:'10%'},
-    {id:'duration_minutes', label:'Duration', width:'12%'},
+    {id:'price_cents', label:'Price', width:'10%', textAlign:'right'},
+    {id:'duration_minutes', label:'Duration', width:'12%', textAlign:'right'},
     {id:'category', label:'Category', width:'14%'},
     {id:'description', label:'Description', width:'28%'},
     {id:'updated_at', label:'Updated', width:'14%'},
@@ -691,7 +691,7 @@ function buildHmsThead(type){
     if(isSorted) arrow = _hmsOrder === 'asc' ? ' &#9650;' : ' &#9660;';
     var click = c.sortable === false ? '' : ' onclick="onHmsSort(\'' + c.id + '\')"';
     var cls = (isSorted ? 'sorted' : '') + (c.sortable === false ? ' hms-th-unsortable' : '');
-    html += '<th class="' + cls + '" style="width:' + c.width + '"' + click + '>' + c.label + '<span class="hms-sort-icon">' + (arrow || '&#9650;&#9660;') + '</span></th>';
+    html += '<th class="' + cls + '" style="width:' + c.width + (c.textAlign ? ';text-align:' + c.textAlign : '') + '"' + click + '>' + c.label + '<span class="hms-sort-icon">' + (arrow || '&#9650;&#9660;') + '</span></th>';
   });
   html += '</tr>';
   return html;
