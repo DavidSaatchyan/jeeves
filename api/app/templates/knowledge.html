@@ -572,6 +572,7 @@ function switchTab(tab, pushState) {
       }, 30000);
     }
     if(tab === 'practice') {
+      document.getElementById('hmsTbody').innerHTML = _hmsSkeletonRows();
       loadPmsStatus().then(function(){ loadHmsTable(); });
       _idPmsPoll = setInterval(loadPmsStatus, 30000);
     }
