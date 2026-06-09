@@ -976,6 +976,8 @@ async def refresh_url(
         raise HTTPException(502, f"Failed to fetch URL: {e}")
 
     if current_hash == rec.content_hash:
+        rec.last_fetched_at = datetime.now(timezone.utc)
+        db.commit()
         return {"refreshed": False, "message": "Content unchanged"}
 
     # Content changed — re-index

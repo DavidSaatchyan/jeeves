@@ -499,6 +499,9 @@
 #wpTable .col-chunks{width:9%}
 #wpTable .col-fetched{width:15%}
 #wpTable .col-actions{width:13%}
+.edit-actions{display:flex;flex-direction:column;gap:4px}
+.edit-actions .btn{padding:4px 10px;font-size:11px;white-space:nowrap}
+.kb-table td .kb-input{width:100%;box-sizing:border-box}
 .import-bar{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;padding:14px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius)}
 .import-bar-row{display:flex;gap:8px;align-items:center}
 
@@ -1561,13 +1564,21 @@ function editWebPage(id) {
   if (!row) return;
   var urlCell = row.querySelector('.col-url-val');
   var titleCell = row.querySelector('.col-title-val');
+  var actionsCell = row.querySelector('.col-actions');
   var currentUrl = urlCell.textContent;
   var currentTitle = titleCell.textContent;
+  urlCell.removeAttribute('onclick');
   urlCell.innerHTML = '<input type="url" class="kb-input" value="' + esc(currentUrl) + '" id="edit-url-' + id + '" />';
   titleCell.innerHTML = '<input type="text" class="kb-input" value="' + esc(currentTitle) + '" id="edit-title-' + id + '" />';
-  row.querySelector('.col-actions').innerHTML =
+  actionsCell.innerHTML =
+    '<div class="edit-actions">' +
     '<button onclick="saveEdit(\'' + id + '\')" class="btn sm accent">Save</button>' +
-    '<button onclick="loadWebPages()" class="btn sm ghost">Cancel</button>';
+    '<button onclick="cancelEdit(\'' + id + '\')" class="btn sm ghost">Cancel</button>' +
+    '</div>';
+}
+
+function cancelEdit(id) {
+  loadWebPages();
 }
 
 async function saveEdit(id) {
