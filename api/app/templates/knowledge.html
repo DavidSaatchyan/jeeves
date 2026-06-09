@@ -346,6 +346,7 @@
 .kb-stat-sub{font-size:12px;color:var(--muted)}
 .kb-table{width:100%;border-collapse:collapse}
 .kb-table th,.kb-table td{padding:10px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--border)}
+#wpTable{table-layout:fixed}
 .col-name{width:auto}.col-status{width:100px;text-align:center}.col-size{width:80px;text-align:right}.col-chunks{width:80px;text-align:right}.col-date{width:115px;white-space:nowrap}.col-folder{width:130px}.col-actions{width:60px;text-align:center}
 .kb-table th.col-status,.kb-table td.col-status{text-align:center}
 .kb-table th.col-size,.kb-table td.col-size{text-align:right}
@@ -399,7 +400,6 @@
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .skel-line{display:block;height:14px;border-radius:4px}
 .skel-tr{opacity:.5}
-.skel-tr td{padding:10px 14px!important}
 .skel-folder-item{padding:5px 8px}
 .skel-folder-item + .skel-folder-item{margin-top:2px}
 .skel-stat{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;display:flex;flex-direction:column;gap:10px}
@@ -457,18 +457,24 @@
 .hms-source-sync-icon{font-size:13px;opacity:.6;transition:transform .3s;line-height:1;display:inline-block;margin-top:1px}
 .hms-source-btn:not(:disabled):hover .hms-source-sync-icon{transform:rotate(180deg)}
 .hms-source-date{font-size:12px;color:var(--muted2)}
-.col-url{width:38%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.col-url-val{color:var(--accent);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:38%}
-.col-title{width:14%}
-.col-title-val{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:14%}
-.col-status{width:90px;text-align:center}
-.col-chunks{width:75px;text-align:right}
-.col-fetched{width:115px;white-space:nowrap;text-align:right}
+.col-url{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.col-url-val{color:var(--accent);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.col-title{white-space:nowrap}
+.col-title-val{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.col-status{text-align:center}
+.col-chunks{text-align:right}
+.col-fetched{white-space:nowrap;text-align:right}
 .kb-table th.col-url,.kb-table td.col-url{text-align:left}
 .kb-table th.col-status,.kb-table td.col-status{text-align:center}
 .kb-table th.col-chunks,.kb-table td.col-chunks{text-align:right}
 .kb-table th.col-fetched,.kb-table td.col-fetched{text-align:right}
-.kb-table th.col-actions,.kb-table td.col-actions{text-align:center;width:44px}
+.kb-table th.col-actions,.kb-table td.col-actions{text-align:center}
+#wpTable .col-url{width:35%}
+#wpTable .col-title{width:18%}
+#wpTable .col-status{width:10%}
+#wpTable .col-chunks{width:9%}
+#wpTable .col-fetched{width:15%}
+#wpTable .col-actions{width:13%}
 .import-bar{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;padding:14px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius)}
 .import-bar-row{display:flex;gap:8px;align-items:center}
 
@@ -667,7 +673,9 @@ function _hmsSkeletonRows(){
   for(var i=0;i<5;i++){
     html += '<tr class="skel-tr">';
     cols.forEach(function(c, j){
-      html += '<td class="' + (clsMap[j] || '') + '"><div class="skel-line ' + skelWidths[(j + i) % skelWidths.length] + ' skeleton"></div></td>';
+      var extraCls = clsMap[j] || '';
+      var w = c.width ? ' style="width:' + c.width + '"' : '';
+      html += '<td class="' + extraCls + '"' + w + '><div class="skel-line ' + skelWidths[(j + i) % skelWidths.length] + ' skeleton"></div></td>';
     });
     html += '</tr>';
   }
@@ -1363,12 +1371,12 @@ function showTableLoading(show) {
     var html = '';
     for (var i = 0; i < 5; i++) {
       html += '<tr class="skel-tr">'
-        + '<td><div class="skel-line ' + widths[(i)%6] + ' skeleton"></div></td>'
-        + '<td><div class="skel-line ' + widths[(i+1)%6] + ' skeleton"></div></td>'
-        + '<td><div class="skel-line w40 skeleton" style="margin:0 auto"></div></td>'
-        + '<td><div class="skel-line w30 skeleton" style="margin-left:auto"></div></td>'
-        + '<td><div class="skel-line w40 skeleton"></div></td>'
-        + '<td><div style="width:20px;height:20px"></div></td></tr>';
+        + '<td class="col-url-val"><div class="skel-line ' + widths[(i)%6] + ' skeleton"></div></td>'
+        + '<td class="col-title-val"><div class="skel-line ' + widths[(i+1)%6] + ' skeleton"></div></td>'
+        + '<td class="col-status"><div class="skel-line w40 skeleton" style="margin:0 auto"></div></td>'
+        + '<td class="col-chunks"><div class="skel-line w30 skeleton" style="margin-left:auto"></div></td>'
+        + '<td class="col-fetched"><div class="skel-line w40 skeleton"></div></td>'
+        + '<td class="col-actions"><div style="width:20px;height:20px"></div></td></tr>';
     }
     document.getElementById('wpBody').innerHTML = html;
   }
