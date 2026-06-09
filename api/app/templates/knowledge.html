@@ -1420,7 +1420,6 @@ function toggleKebab(btn) {
 function renderActions(status, id, name) {
   var items = [];
   if (status === 'ready' || status === 'stale') {
-    items.push('<button onclick="event.stopPropagation();openChunkViewer(\'' + id + '\',true,\'' + esc(name) + '\');closeAllKebabs()"><span>\u2295</span> View chunks</button>');
     items.push('<button onclick="event.stopPropagation();refreshWebPage(\'' + id + '\');closeAllKebabs()"><span>\u21BB</span> Refresh</button>');
   }
   if (status === 'failed') items.push('<button onclick="event.stopPropagation();refreshWebPage(\'' + id + '\');closeAllKebabs()"><span>\u21BB</span> Retry</button>');
@@ -1444,9 +1443,9 @@ function renderTable(urls) {
     return '<tr data-url-id="' + u.id + '">'
       + '<td class="col-url-val" title="' + esc(u.url) + '" onclick="openChunkViewer(\'' + u.id + '\',true,\'' + esc(u.title || u.url) + '\')">' + truncateUrl(u.url) + '</td>'
       + '<td class="col-title-val">' + esc(u.title || u.url) + '</td>'
-      + '<td><span class="pill ' + (STATUS_PILLS[status] || 'muted') + '"' + errorTitle + '>' + status + '</span></td>'
-      + '<td>' + (u.chunks_total != null ? u.chunks_total : '\u2014') + '</td>'
-      + '<td>' + (u.last_fetched_at ? timeAgo(u.last_fetched_at) : '\u2014') + '</td>'
+      + '<td class="col-status"><span class="pill ' + (STATUS_PILLS[status] || 'muted') + '"' + errorTitle + '>' + status + '</span></td>'
+      + '<td class="col-chunks">' + (u.chunks_total != null ? u.chunks_total : '\u2014') + '</td>'
+      + '<td class="col-fetched">' + (u.last_fetched_at ? timeAgo(u.last_fetched_at) : '\u2014') + '</td>'
       + '<td class="col-actions">' + renderActions(status, u.id, u.title || u.url) + '</td></tr>';
   }).join('');
 }
