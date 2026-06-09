@@ -509,7 +509,7 @@ var _confirmLoading = false;
 var _skelRows = '';
 (function(){
   for(var i=0;i<6;i++){
-    _skelRows += '<tr class="skel-tr"><td><div class="skel-line w80 skeleton"></div></td><td><div class="skel-line w60 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w40 skeleton" style="margin-left:auto"></div></td><td><div class="skel-line w40 skeleton" style="margin-left:auto"></div></td><td><div class="skel-line w60 skeleton"></div></td><td><div class="skel-line w60 skeleton"></div></td><td><div style="width:20px;height:20px"></div></td></tr>';
+    _skelRows += '<tr class="skel-tr"><td class="col-name"><div class="skel-line w80 skeleton"></div></td><td class="col-status"><div class="skel-line w60 skeleton" style="margin:0 auto"></div></td><td class="col-size"><div class="skel-line w40 skeleton" style="margin-left:auto"></div></td><td class="col-chunks"><div class="skel-line w40 skeleton" style="margin-left:auto"></div></td><td class="col-date"><div class="skel-line w60 skeleton"></div></td><td class="col-folder"><div class="skel-line w60 skeleton"></div></td><td class="col-actions"><div style="width:20px;height:20px"></div></td></tr>';
   }
 })();
 
@@ -1062,13 +1062,13 @@ async function refresh() {
       var nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',false,\'' + encName + '\');return false">' + esc(r.filename) + '</a></strong>';
       var sizeHtml = r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB';
       return '<tr>'
-        + '<td>' + nameHtml + '</td>'
-        + '<td><span class="pill ' + cls + '">' + label + '</span></td>'
-        + '<td style="text-align:right">' + sizeHtml + '</td>'
-        + '<td style="text-align:right">' + (r.chunks_total || '\u2014') + '</td>'
-        + '<td>' + (r.created_at ? r.created_at.slice(0, 10) : '\u2014') + '</td>'
-        + '<td style="font-size:12px;color:var(--muted2)">' + esc(fname) + '</td>'
-        + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '">&#10005;</button></td></tr>';
+        + '<td class="col-name">' + nameHtml + '</td>'
+        + '<td class="col-status"><span class="pill ' + cls + '">' + label + '</span></td>'
+        + '<td class="col-size">' + sizeHtml + '</td>'
+        + '<td class="col-chunks">' + (r.chunks_total || '\u2014') + '</td>'
+        + '<td class="col-date">' + (r.created_at ? r.created_at.slice(0, 10) : '\u2014') + '</td>'
+        + '<td class="col-folder" style="font-size:12px;color:var(--muted2)">' + esc(fname) + '</td>'
+        + '<td class="col-actions"><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '">&#10005;</button></td></tr>';
     }).join('') || '<tr><td colspan="7" class="muted" style="text-align:center;padding:16px">No files in this folder.</td></tr>';
     document.getElementById('procMsg').style.display = hasProcessing ? '' : 'none';
     if(hasProcessing && !_idDocPoll) pollProcessing();
@@ -1100,13 +1100,13 @@ async function refreshFileRows() {
       var nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',false,\'' + encName + '\');return false">' + esc(r.filename) + '</a></strong>';
       var sizeHtml = r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB';
       return '<tr>'
-        + '<td>' + nameHtml + '</td>'
-        + '<td><span class="pill ' + cls + '">' + label + '</span></td>'
-        + '<td style="text-align:right">' + sizeHtml + '</td>'
-        + '<td style="text-align:right">' + (r.chunks_total || '\u2014') + '</td>'
-        + '<td>' + (r.created_at ? r.created_at.slice(0, 10) : '\u2014') + '</td>'
-        + '<td style="font-size:12px;color:var(--muted2)">' + esc(fname) + '</td>'
-        + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '">&#10005;</button></td></tr>';
+        + '<td class="col-name">' + nameHtml + '</td>'
+        + '<td class="col-status"><span class="pill ' + cls + '">' + label + '</span></td>'
+        + '<td class="col-size">' + sizeHtml + '</td>'
+        + '<td class="col-chunks">' + (r.chunks_total || '\u2014') + '</td>'
+        + '<td class="col-date">' + (r.created_at ? r.created_at.slice(0, 10) : '\u2014') + '</td>'
+        + '<td class="col-folder" style="font-size:12px;color:var(--muted2)">' + esc(fname) + '</td>'
+        + '<td class="col-actions"><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '">&#10005;</button></td></tr>';
     }).join('') || '<tr><td colspan="7" class="muted" style="text-align:center;padding:16px">No files in this folder.</td></tr>';
     document.getElementById('procMsg').style.display = hasProcessing ? '' : 'none';
     if(!hasProcessing && _idDocPoll) { clearInterval(_idDocPoll); _idDocPoll = null; }
