@@ -1462,7 +1462,7 @@ async function importWebPage() {
   btn.disabled = true;
   btn.innerHTML = '<span class="kb-spinner"></span>';
   try {
-    await api('/knowledge/urls', { method: 'POST', body: JSON.stringify({ url: url, title: title }) });
+    await api('/knowledge/urls', { method: 'POST', body: { url: url, title: title } });
     showResult('wpImportResult', 'Imported \u2713', 'ok');
     document.getElementById('wpUrlInput').value = '';
     document.getElementById('wpTitleInput').value = '';
@@ -1494,7 +1494,7 @@ async function saveEdit(id) {
   var newUrl = document.getElementById('edit-url-' + id).value.trim();
   var newTitle = document.getElementById('edit-title-' + id).value.trim();
   if (!newUrl || !URL_RE.test(newUrl)) return;
-  await api('/knowledge/urls/' + id, { method: 'PATCH', body: JSON.stringify({ url: newUrl, title: newTitle }) });
+  await api('/knowledge/urls/' + id, { method: 'PATCH', body: { url: newUrl, title: newTitle } });
   loadWebPages();
 }
 
