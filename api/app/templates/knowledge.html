@@ -174,7 +174,7 @@
     <div class="import-bar-row">
       <input type="url" id="wpUrlInput" placeholder="https://example.com/clinic-policies"
              class="kb-input" style="flex:2" oninput="validateUrlInput()" />
-      <input type="text" id="wpTitleInput" placeholder="Page title (required)" class="kb-input" style="flex:1" />
+      <input type="text" id="wpTitleInput" placeholder="Title" class="kb-input" style="flex:1" />
       <button onclick="importWebPage()" class="btn sm accent" id="wpImportBtn">+ Import</button>
     </div>
     <div id="wpImportResult" class="import-result" style="display:none"></div>
@@ -201,7 +201,7 @@
             <th class="col-status">Status</th>
             <th class="col-chunks">Chunks</th>
             <th class="col-fetched">Last fetched</th>
-            <th class="col-actions">Actions</th>
+            <th class="col-actions"></th>
           </tr>
         </thead>
         <tbody id="wpBody"></tbody>
@@ -457,18 +457,18 @@
 .hms-source-sync-icon{font-size:13px;opacity:.6;transition:transform .3s;line-height:1;display:inline-block;margin-top:1px}
 .hms-source-btn:not(:disabled):hover .hms-source-sync-icon{transform:rotate(180deg)}
 .hms-source-date{font-size:12px;color:var(--muted2)}
-.col-url{width:38%;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.col-url{width:34%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .col-url-val{color:var(--accent);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.col-title{width:22%;min-width:130px}
+.col-title{width:18%}
 .col-title-val{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.col-status{width:88px;text-align:center}
-.col-chunks{width:72px;text-align:right}
-.col-fetched{width:110px;white-space:nowrap;text-align:right}
+.col-status{width:90px;text-align:center}
+.col-chunks{width:75px;text-align:right}
+.col-fetched{width:115px;white-space:nowrap;text-align:right}
 .kb-table th.col-url,.kb-table td.col-url{text-align:left}
 .kb-table th.col-status,.kb-table td.col-status{text-align:center}
 .kb-table th.col-chunks,.kb-table td.col-chunks{text-align:right}
 .kb-table th.col-fetched,.kb-table td.col-fetched{text-align:right}
-.kb-table th.col-actions,.kb-table td.col-actions{text-align:center;width:48px}
+.kb-table th.col-actions,.kb-table td.col-actions{text-align:center;width:44px}
 .import-bar{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;padding:14px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius)}
 .import-bar-row{display:flex;gap:8px;align-items:center}
 
@@ -476,7 +476,7 @@
 .kebab-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:17px;line-height:1;letter-spacing:2px;transition:all.1s;vertical-align:middle;opacity:0}
 tr:hover .kebab-btn{opacity:1}
 .kebab-btn:hover{background:rgba(255,255,255,0.06);color:var(--text);border-color:var(--border);opacity:1}
-.kebab-menu{position:absolute;right:0;top:100%;z-index:100;min-width:150px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.35);padding:4px;display:none}
+.kebab-menu{min-width:150px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.35);padding:4px;display:none;z-index:200}
 .kebab-menu button{display:flex;width:100%;padding:7px 12px;font-size:12.5px;font-weight:500;background:none;border:none;color:var(--text);border-radius:4px;cursor:pointer;white-space:nowrap;gap:8px;align-items:center;text-align:left}
 .kebab-menu button:hover{background:rgba(255,255,255,0.06)}
 .kebab-menu button.danger{color:var(--red)}
@@ -1403,7 +1403,18 @@ document.addEventListener('click', closeAllKebabs);
 function toggleKebab(btn) {
   closeAllKebabs();
   var menu = btn.nextElementSibling;
-  if (menu) menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  if (!menu) return;
+  var rect = btn.getBoundingClientRect();
+  var menuH = Math.min(200, window.innerHeight - 16);
+  var spaceBelow = window.innerHeight - rect.bottom - 8;
+  var openUp = spaceBelow < menuH && rect.top > menuH;
+  menu.style.position = 'fixed';
+  menu.style.left = Math.max(8, Math.min(rect.right - 150, window.innerWidth - 158)) + 'px';
+  menu.style.top = openUp ? (rect.top - 8 - menuH) + 'px' : (rect.bottom + 4) + 'px';
+  menu.style.bottom = 'auto';
+  menu.style.maxHeight = menuH + 'px';
+  menu.style.overflowY = 'auto';
+  menu.style.display = 'block';
 }
 
 function renderActions(status, id, name) {
