@@ -7,7 +7,7 @@
 <div id="simSection" class="sim-section">
   <div class="sim-bar">
     <input id="simQuery" type="text" class="sim-input" placeholder="Ask a question related to your knowledge base..." />
-    <button id="simBtn" class="btn sm" onclick="simulate()">Search</button>
+    <button id="simBtn" class="ghost sm" onclick="simulate()">Search</button>
     <button id="simClearBtn" class="ghost sm" onclick="clearResults()" style="display:none">✕</button>
   </div>
   <div id="simResults" class="sim-results" style="display:none"></div>
@@ -47,7 +47,7 @@
       <div class="kb-toolbar">
         <span id="kbCurrentFolder" class="kb-current-folder">All files</span>
         <div class="kb-toolbar-actions">
-          <button class="btn sm" onclick="showUploadModal()">+ Upload</button>
+          <button class="btn sm accent" onclick="showUploadModal()">+ Upload</button>
         </div>
       </div>
 
@@ -175,7 +175,7 @@
       <input type="url" id="wpUrlInput" placeholder="https://example.com/clinic-policies"
              class="kb-input" style="flex:2" oninput="validateUrlInput()" />
       <input type="text" id="wpTitleInput" placeholder="Page title (required)" class="kb-input" style="flex:1" />
-      <button onclick="importWebPage()" class="btn sm" id="wpImportBtn">+ Import</button>
+      <button onclick="importWebPage()" class="btn sm accent" id="wpImportBtn">+ Import</button>
     </div>
     <div id="wpImportResult" class="import-result" style="display:none"></div>
   </div>
@@ -457,13 +457,29 @@
 .hms-source-sync-icon{font-size:13px;opacity:.6;transition:transform .3s;line-height:1;display:inline-block;margin-top:1px}
 .hms-source-btn:not(:disabled):hover .hms-source-sync-icon{transform:rotate(180deg)}
 .hms-source-date{font-size:12px;color:var(--muted2)}
-.col-url{width:auto;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.col-url-val{color:var(--accent);cursor:pointer}
-.col-title-val{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.col-fetched{width:115px;white-space:nowrap}
+.col-url{width:38%;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.col-url-val{color:var(--accent);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.col-title{width:22%;min-width:130px}
+.col-title-val{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.col-status{width:88px;text-align:center}
+.col-chunks{width:72px;text-align:right}
+.col-fetched{width:110px;white-space:nowrap;text-align:right}
 .kb-table th.col-url,.kb-table td.col-url{text-align:left}
+.kb-table th.col-status,.kb-table td.col-status{text-align:center}
+.kb-table th.col-chunks,.kb-table td.col-chunks{text-align:right}
+.kb-table th.col-fetched,.kb-table td.col-fetched{text-align:right}
+.kb-table th.col-actions,.kb-table td.col-actions{text-align:center;width:48px}
 .import-bar{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;padding:14px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius)}
 .import-bar-row{display:flex;gap:8px;align-items:center}
+
+.kebab-wrap{position:relative;display:inline-block}
+.kebab-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:17px;line-height:1;letter-spacing:2px;transition:all.1s;vertical-align:middle}
+.kebab-btn:hover{background:rgba(255,255,255,0.06);color:var(--text);border-color:var(--border)}
+.kebab-menu{position:absolute;right:0;top:100%;z-index:100;min-width:150px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.35);padding:4px;display:none}
+.kebab-menu button{display:flex;width:100%;padding:7px 12px;font-size:12.5px;font-weight:500;background:none;border:none;color:var(--text);border-radius:4px;cursor:pointer;white-space:nowrap;gap:8px;align-items:center;text-align:left}
+.kebab-menu button:hover{background:rgba(255,255,255,0.06)}
+.kebab-menu button.danger{color:var(--red)}
+.kebab-menu button.danger:hover{background:rgba(229,72,77,0.1)}
 
 .import-result{font-size:13px;padding:6px 0}
 .import-result.ok{color:var(--green)}
@@ -1378,16 +1394,27 @@ function timeAgo(date) {
   return Math.floor(diff / 86400000) + 'd ago';
 }
 
+function closeAllKebabs() {
+  document.querySelectorAll('.kebab-menu').forEach(function(m){ m.style.display = 'none'; });
+}
+document.addEventListener('click', closeAllKebabs);
+
+function toggleKebab(btn) {
+  closeAllKebabs();
+  var menu = btn.nextElementSibling;
+  if (menu) menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+}
+
 function renderActions(status, id, name) {
-  var actions = [];
+  var items = [];
   if (status === 'ready' || status === 'stale') {
-    actions.push('<button onclick="openChunkViewer(\'' + id + '\',true,\'' + esc(name) + '\')" class="btn xs ghost" title="View chunks">\u2295</button>');
-    actions.push('<button onclick="refreshWebPage(\'' + id + '\')" class="btn xs ghost" title="Refresh">\u21BB</button>');
+    items.push('<button onclick="event.stopPropagation();openChunkViewer(\'' + id + '\',true,\'' + esc(name) + '\');closeAllKebabs()"><span>\u2295</span> View chunks</button>');
+    items.push('<button onclick="event.stopPropagation();refreshWebPage(\'' + id + '\');closeAllKebabs()"><span>\u21BB</span> Refresh</button>');
   }
-  if (status === 'failed') actions.push('<button onclick="refreshWebPage(\'' + id + '\')" class="btn xs ghost" title="Retry">\u21BB</button>');
-  actions.push('<button onclick="editWebPage(\'' + id + '\')" class="btn xs ghost" title="Edit">\u270E</button>');
-  if (status !== 'processing') actions.push('<button onclick="deleteWebPage(\'' + id + '\')" class="btn xs ghost danger" title="Delete">\u2715</button>');
-  return actions.join(' ');
+  if (status === 'failed') items.push('<button onclick="event.stopPropagation();refreshWebPage(\'' + id + '\');closeAllKebabs()"><span>\u21BB</span> Retry</button>');
+  items.push('<button onclick="event.stopPropagation();editWebPage(\'' + id + '\');closeAllKebabs()"><span>\u270E</span> Edit</button>');
+  if (status !== 'processing') items.push('<button onclick="event.stopPropagation();deleteWebPage(\'' + id + '\');closeAllKebabs()" class="danger"><span>\u2715</span> Delete</button>');
+  return '<div class="kebab-wrap"><button class="kebab-btn" onclick="event.stopPropagation();toggleKebab(this)">\u22EE</button><div class="kebab-menu" onclick="event.stopPropagation()">' + items.join('') + '</div></div>';
 }
 
 function renderTable(urls) {
