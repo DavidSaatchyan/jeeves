@@ -170,7 +170,7 @@
 
 <!-- ═══════════════ TAB: WEB PAGES ═══════════════ -->
 <div id="tab-webpages" class="kb-tab-content" style="display:none">
-  <div class="kb-toolbar" id="wpToolbar" style="margin-bottom:12px">
+  <div class="kb-toolbar" id="wpToolbar">
     <span class="kb-current-folder" id="wpCurrentFolder">All URLs</span>
     <div class="kb-toolbar-actions">
       <select id="wpFolderFilter" class="kb-input" style="width:200px" onchange="_currentWpFolder=this.value; loadWebPages(this.value)">
@@ -183,7 +183,7 @@
     <div class="import-bar-row">
       <input type="url" id="wpUrlInput" placeholder="https://example.com/clinic-policies"
              class="kb-input flex-2" oninput="validateUrlInput()" />
-      <input type="text" id="wpTitleInput" placeholder="Page title" class="kb-input flex-1" />
+      <input type="text" id="wpTitleInput" placeholder="Page title (required)" class="kb-input flex-1" />
       <select id="wpFolderSelect" class="kb-input">
         <option value="">No folder</option>
       </select>
@@ -201,29 +201,33 @@
     <button onclick="this.parentElement.style.display='none'" class="ghost sm">Dismiss</button>
   </div>
 
-  <div class="kb-table-skeleton" id="wpLoading" style="display:none">
-    <table class="kb-table"><tbody>
-      <tr class="skel-tr"><td><div class="skel-line w80 skeleton"></div></td><td><div class="skel-line w60 skeleton"></div></td><td><div class="skel-line w40 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w50 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w30 skeleton" style="margin-left:auto"></div></td><td><div class="skel-line w40 skeleton"></div></td><td><div style="width:20px;height:20px"></div></td></tr>
-      <tr class="skel-tr"><td><div class="skel-line w70 skeleton"></div></td><td><div class="skel-line w50 skeleton"></div></td><td><div class="skel-line w40 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w50 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w30 skeleton" style="margin-left:auto"></div></td><td><div class="skel-line w35 skeleton"></div></td><td><div style="width:20px;height:20px"></div></td></tr>
-      <tr class="skel-tr"><td><div class="skel-line w85 skeleton"></div></td><td><div class="skel-line w65 skeleton"></div></td><td><div class="skel-line w40 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w50 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w30 skeleton" style="margin-left:auto"></div></td><td><div class="skel-line w50 skeleton"></div></td><td><div style="width:20px;height:20px"></div></td></tr>
-    </tbody></table>
-  </div>
+  <tbody class="kb-table-skeleton" id="wpLoading" style="display:none">
+    <tr class="skel-tr"><td><div class="skel-line w80 skeleton"></div></td><td><div class="skel-line w60 skeleton"></div></td><td><div class="skel-line w40 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w50 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w30 skeleton" style="margin-left:auto"></div></td><td><div class="skel-line w40 skeleton"></div></td><td><div style="width:20px;height:20px"></div></td></tr>
+    <tr class="skel-tr"><td><div class="skel-line w70 skeleton"></div></td><td><div class="skel-line w50 skeleton"></div></td><td><div class="skel-line w40 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w50 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w30 skeleton" style="margin-left:auto"></div></td><td><div class="skel-line w35 skeleton"></div></td><td><div style="width:20px;height:20px"></div></td></tr>
+    <tr class="skel-tr"><td><div class="skel-line w85 skeleton"></div></td><td><div class="skel-line w65 skeleton"></div></td><td><div class="skel-line w40 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w50 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w30 skeleton" style="margin-left:auto"></div></td><td><div class="skel-line w50 skeleton"></div></td><td><div style="width:20px;height:20px"></div></td></tr>
+  </tbody>
 
-  <div class="kb-table-wrap" style="overflow-x:auto">
-    <table class="kb-table" id="wpTable">
-      <thead>
-        <tr>
-          <th class="col-url">URL</th>
-          <th class="col-title">Title</th>
-          <th class="col-folder">Folder</th>
-          <th class="col-status">Status</th>
-          <th class="col-chunks">Chunks</th>
-          <th class="col-fetched">Last fetched</th>
-          <th class="col-actions">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="wpBody"></tbody>
-    </table>
+  <div class="card" style="margin-top:4px">
+    <div class="card-header">
+      <h2>Web Pages</h2>
+      <button id="wpClearAllBtn" class="ghost sm" style="display:none" onclick="clearAllWebPages()">Clear all</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="kb-table" id="wpTable">
+        <thead>
+          <tr>
+            <th class="col-url">URL</th>
+            <th class="col-title">Title</th>
+            <th class="col-folder">Folder</th>
+            <th class="col-status">Status</th>
+            <th class="col-chunks">Chunks</th>
+            <th class="col-fetched">Last fetched</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="wpBody"></tbody>
+      </table>
+    </div>
   </div>
 
   <div id="wpEmpty" class="empty-state" style="display:none">
@@ -485,6 +489,17 @@
 .import-result{font-size:13px;padding:6px 0}
 .import-result.ok{color:var(--green)}
 .import-result.err{color:var(--red)}
+.alert{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--radius);font-size:13px;margin-bottom:16px}
+.alert.warn{background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.2);color:var(--amber)}
+.alert-icon{font-size:16px;flex-shrink:0}
+#staleCount{font-weight:700;color:var(--amber)}
+.col-title{width:auto;min-width:140px}
+.col-folder{width:130px}
+.err-cell{padding:24px;text-align:center;color:var(--red);font-size:14px}
+.empty-state-icon{font-size:32px;margin-bottom:12px;opacity:.4}
+.empty-state-title{font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text)}
+.empty-state-desc{font-size:13px;line-height:1.6;color:var(--muted);max-width:400px;margin:0 auto}
+.kb-input.err{border-color:var(--red)}
 </style>
 <script>
 var _selectedFolder = '';
@@ -505,6 +520,7 @@ var _savedFolder = '';
 var _idDocPoll = null;
 var _idPmsPoll = null;
 var _idWpPoll = null;
+var _idWpProcPoll = null;
 var _currentWpFolder = null;
 var _wpFolderMap = {};
 var _hmsSyncing = false;
@@ -540,6 +556,7 @@ function switchTab(tab, pushState) {
   if(_idDocPoll) { clearInterval(_idDocPoll); _idDocPoll = null; }
   if(_idPmsPoll) { clearInterval(_idPmsPoll); _idPmsPoll = null; }
   if(_idWpPoll) { clearInterval(_idWpPoll); _idWpPoll = null; }
+  if(_idWpProcPoll) { clearInterval(_idWpProcPoll); _idWpProcPoll = null; }
   _activeTab = tab;
   document.querySelectorAll('.kb-tab-content').forEach(function(el){ el.style.display = 'none'; });
   document.getElementById('tab-' + tab).style.display = '';
@@ -1380,7 +1397,7 @@ function renderActions(status, id, name) {
     actions.push('<button onclick="openChunkViewer(\'' + id + '\',true,\'' + esc(name) + '\')" class="btn xs ghost" title="View chunks">\u2295</button>');
     actions.push('<button onclick="refreshWebPage(\'' + id + '\')" class="btn xs ghost" title="Refresh">\u21BB</button>');
   }
-  if (status === 'failed') actions.push('<button onclick="retryWebPage(\'' + id + '\')" class="btn xs ghost" title="Retry">\u21BB</button>');
+  if (status === 'failed') actions.push('<button onclick="refreshWebPage(\'' + id + '\')" class="btn xs ghost" title="Retry">\u21BB</button>');
   actions.push('<button onclick="editWebPage(\'' + id + '\')" class="btn xs ghost" title="Edit">\u270E</button>');
   if (status !== 'processing') actions.push('<button onclick="deleteWebPage(\'' + id + '\')" class="btn xs ghost danger" title="Delete">\u2715</button>');
   return actions.join(' ');
@@ -1427,6 +1444,10 @@ async function loadWebPages(folderId) {
     walk(folders.folders || []);
     renderTable(urls || []);
     updateStaleAlert(staleData.stale_urls ? staleData.stale_urls.length : 0);
+    var hasEntries = urls && urls.length > 0;
+    document.getElementById('wpClearAllBtn').style.display = hasEntries ? '' : 'none';
+    var hasProcessing = urls && urls.some(function(u){ return u.status === 'processing' || u.status === 'pending'; });
+    if (hasProcessing) startWpProcPoll(); else stopWpProcPoll();
   } catch(e) {
     document.getElementById('wpBody').innerHTML = '<tr><td colspan="7" class="err-cell">Error: ' + esc(e.message) + '</td></tr>';
   } finally {
@@ -1441,6 +1462,16 @@ function updateStaleAlert(count) {
   document.getElementById('staleCount').textContent = count;
 }
 
+function startWpProcPoll() {
+  if (_idWpProcPoll) return;
+  _idWpProcPoll = setInterval(function(){
+    if (_activeTab === 'webpages') loadWebPages(_currentWpFolder);
+  }, 3000);
+}
+function stopWpProcPoll() {
+  if (_idWpProcPoll) { clearInterval(_idWpProcPoll); _idWpProcPoll = null; }
+}
+
 var _importing = false;
 
 async function importWebPage() {
@@ -1452,7 +1483,9 @@ async function importWebPage() {
   if (!URL_RE.test(url)) return showResult('wpImportResult', 'URL must start with http:// or https://', 'err');
   if (!title) return showResult('wpImportResult', 'Title is required', 'err');
   _importing = true;
-  document.getElementById('wpImportBtn').disabled = true;
+  var btn = document.getElementById('wpImportBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="kb-spinner"></span> Importing...';
   try {
     await api('/knowledge/urls', { method: 'POST', body: JSON.stringify({ url: url, title: title, folder_id: folderId || null }) });
     showResult('wpImportResult', 'Imported \u2713', 'ok');
@@ -1463,7 +1496,8 @@ async function importWebPage() {
     showResult('wpImportResult', e.message, 'err');
   } finally {
     _importing = false;
-    document.getElementById('wpImportBtn').disabled = false;
+    btn.disabled = false;
+    btn.innerHTML = '<span class="btn-icon">\u2197</span> Import';
   }
 }
 
@@ -1501,8 +1535,14 @@ async function deleteWebPage(id) {
   }, 'Delete web page?');
 }
 
-async function retryWebPage(id) {
-  await refreshWebPage(id);
+async function clearAllWebPages() {
+  showConfirm('Delete all imported web pages?', async function(){
+    var urls = await api('/knowledge/urls');
+    for (var i = 0; i < urls.length; i++) {
+      await api('/knowledge/urls/' + urls[i].id, { method: 'DELETE' });
+    }
+    loadWebPages(_currentWpFolder);
+  }, 'All web pages');
 }
 
 async function refreshAllStale() {
