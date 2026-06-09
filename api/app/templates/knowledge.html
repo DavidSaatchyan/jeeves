@@ -424,12 +424,12 @@
 .hms-search{flex:1;max-width:320px}
 .hms-count-label{font-size:12px;color:var(--muted2);white-space:nowrap}
 .hms-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius)}
-.hms-table{width:100%;border-collapse:collapse;font-size:13px}
-.hms-table th{background:rgba(255,255,255,0.03);padding:10px 14px;text-align:left;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+.hms-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:13px}
+.hms-table th{background:rgba(255,255,255,0.03);padding:10px 14px;text-align:left;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;user-select:none}
 .hms-table th:hover{color:var(--text)}
 .hms-table th .hms-sort-icon{display:inline-block;margin-left:4px;font-size:10px;color:var(--muted2)}
 .hms-table th.sorted .hms-sort-icon{color:var(--accent)}
-.hms-table td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text)}
+.hms-table td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hms-table tr:hover td{background:rgba(255,255,255,0.03)}
 .hms-table tr:last-child td{border-bottom:none}
 .hms-table .hms-cell-id{font-weight:600;color:var(--muted)}
@@ -442,7 +442,7 @@
 .hms-table .hms-bool-no{color:var(--muted2)}
 .hms-table .hms-timestamp{white-space:nowrap;font-size:12px;color:var(--muted2)}
 .hms-table th.hms-th-unsortable{cursor:default;color:var(--muted2)}
-.hms-table .hms-desc{max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:help;color:var(--text)}
+.hms-table .hms-desc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:help}
 .hms-paginator{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px 0}
 .hms-page-info{font-size:12px;color:var(--muted2)}
 .hms-data-row:hover td{background:rgba(255,255,255,0.04)!important}
@@ -618,28 +618,28 @@ function disableBtns(disabled){
 // ════════════════════════════════════════════════
 var _HMS_COLUMNS = {
   services: [
-    {id:'name', label:'Name'},
-    {id:'price_cents', label:'Price'},
-    {id:'duration_minutes', label:'Duration'},
-    {id:'category', label:'Category'},
-    {id:'description', label:'Description'},
-    {id:'updated_at', label:'Updated'},
+    {id:'name', label:'Name', width:'22%'},
+    {id:'price_cents', label:'Price', width:'10%'},
+    {id:'duration_minutes', label:'Duration', width:'12%'},
+    {id:'category', label:'Category', width:'14%'},
+    {id:'description', label:'Description', width:'28%'},
+    {id:'updated_at', label:'Updated', width:'14%'},
   ],
   practitioners: [
-    {id:'_name', label:'Name'},
-    {id:'designation', label:'Designation'},
-    {id:'description', label:'Description', sortable:false},
-    {id:'allow_online_booking', label:'Online Booking', sortable:false},
-    {id:'active', label:'Active'},
-    {id:'updated_at', label:'Updated'},
+    {id:'_name', label:'Name', width:'24%'},
+    {id:'designation', label:'Designation', width:'16%'},
+    {id:'description', label:'Description', sortable:false, width:'26%'},
+    {id:'allow_online_booking', label:'Online Booking', sortable:false, width:'14%'},
+    {id:'active', label:'Active', width:'10%'},
+    {id:'updated_at', label:'Updated', width:'10%'},
   ],
   clinic: [
-    {id:'business_name', label:'Business'},
-    {id:'city', label:'City'},
-    {id:'state', label:'State'},
-    {id:'phone', label:'Phone'},
-    {id:'email', label:'Email'},
-    {id:'updated_at', label:'Updated'},
+    {id:'business_name', label:'Business', width:'24%'},
+    {id:'city', label:'City', width:'12%'},
+    {id:'state', label:'State', width:'10%'},
+    {id:'phone', label:'Phone', width:'14%'},
+    {id:'email', label:'Email', width:'26%'},
+    {id:'updated_at', label:'Updated', width:'14%'},
   ],
 };
 
@@ -656,14 +656,19 @@ function switchHmsType(type){
 
 function _hmsSkeletonRows(){
   var cols = _HMS_COLUMNS[_hmsType] || [];
-  var widths = ['w80','w60','w55','w45','w40'];
+  var skelWidths = ['w80','w60','w55','w45','w40'];
+  var colClasses = {
+    services:['','hms-price','hms-duration','','','hms-timestamp'],
+    practitioners:['','','hms-desc','','','hms-timestamp'],
+    clinic:['','','','','','hms-timestamp'],
+  };
+  var clsMap = colClasses[_hmsType] || [];
   var html = '';
   for(var i=0;i<5;i++){
     html += '<tr class="skel-tr">';
-    html += '<td><div class="skel-line w65 skeleton"></div></td>';
-    for(var j=1;j<cols.length;j++){
-      html += '<td><div class="skel-line ' + widths[(j + i) % widths.length] + ' skeleton"></div></td>';
-    }
+    cols.forEach(function(c, j){
+      html += '<td class="' + (clsMap[j] || '') + '"><div class="skel-line ' + skelWidths[(j + i) % skelWidths.length] + ' skeleton"></div></td>';
+    });
     html += '</tr>';
   }
   return html;
@@ -678,7 +683,7 @@ function buildHmsThead(type){
     if(isSorted) arrow = _hmsOrder === 'asc' ? ' &#9650;' : ' &#9660;';
     var click = c.sortable === false ? '' : ' onclick="onHmsSort(\'' + c.id + '\')"';
     var cls = (isSorted ? 'sorted' : '') + (c.sortable === false ? ' hms-th-unsortable' : '');
-    html += '<th class="' + cls + '"' + click + '>' + c.label + '<span class="hms-sort-icon">' + (arrow || '&#9650;&#9660;') + '</span></th>';
+    html += '<th class="' + cls + '" style="width:' + c.width + '"' + click + '>' + c.label + '<span class="hms-sort-icon">' + (arrow || '&#9650;&#9660;') + '</span></th>';
   });
   html += '</tr>';
   return html;
@@ -698,7 +703,7 @@ function renderHmsRow(item, type){
     html += '<td class="hms-price">' + (item.price_cents != null ? '$' + (item.price_cents / 100).toFixed(2) : '<span class="hms-cell-idle">&mdash;</span>') + '</td>';
     html += '<td class="hms-duration">' + (item.duration_minutes ? item.duration_minutes + ' min' : '<span class="hms-cell-idle">&mdash;</span>') + '</td>';
     html += '<td>' + esc(item.category || '') + '</td>';
-    html += '<td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">' + esc(item.description ? item.description.slice(0, 80) : '') + '</td>';
+    html += '<td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">' + esc(item.description ? item.description.slice(0, 80) : '') + '</td>';
     html += '<td class="hms-timestamp">' + _timeAgo(item.updated_at) + '</td>';
   } else if(type === 'practitioners'){
     html += '<td>' + esc(item.designation || '') + '</td>';
@@ -710,7 +715,7 @@ function renderHmsRow(item, type){
     html += '<td>' + esc(item.city || '') + '</td>';
     html += '<td>' + esc(item.state || '') + '</td>';
     html += '<td>' + esc(item.phone || '') + '</td>';
-    html += '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">' + esc(item.email || '') + '</td>';
+    html += '<td style="overflow:hidden;text-overflow:ellipsis">' + esc(item.email || '') + '</td>';
     html += '<td class="hms-timestamp">' + _timeAgo(item.updated_at) + '</td>';
   }
   return '<tr class="hms-data-row ' + (item.active === false ? 'hms-cell-inactive' : '') + '">' + html + '</tr>';
