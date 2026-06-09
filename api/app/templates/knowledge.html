@@ -519,13 +519,6 @@ var _idWpProcPoll = null;
 var _hmsSyncing = false;
 var _hmsStatus = null;
 
-(function(){
-  var hash = location.hash.replace('#', '') || 'documents';
-  if(['documents','webpages','practice'].indexOf(hash) >= 0) {
-    switchTab(hash, false);
-  }
-})();
-
 window.addEventListener('hashchange', function(){
   var hash = location.hash.replace('#', '') || 'documents';
   if(['documents','webpages','practice'].indexOf(hash) >= 0) {
@@ -1587,6 +1580,16 @@ async function refreshAllStale() {
     var allowed = (a.getAttribute('data-role') || '').split(',');
     if(allowed.indexOf(role) === -1) { a.style.display = 'none'; }
   });
+})();
+
+// ════════════════════════════════════════════════
+// INIT — runs last so all var assignments have executed
+// ════════════════════════════════════════════════
+(function(){
+  var hash = location.hash.replace('#', '') || 'documents';
+  if(['documents','webpages','practice'].indexOf(hash) >= 0) {
+    switchTab(hash, false);
+  }
 })();
 </script>
 {% endblock %}
