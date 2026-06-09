@@ -473,8 +473,9 @@
 .import-bar-row{display:flex;gap:8px;align-items:center}
 
 .kebab-wrap{position:relative;display:inline-block}
-.kebab-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:17px;line-height:1;letter-spacing:2px;transition:all.1s;vertical-align:middle}
-.kebab-btn:hover{background:rgba(255,255,255,0.06);color:var(--text);border-color:var(--border)}
+.kebab-btn{background:none;border:1px solid transparent;color:var(--muted2);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:17px;line-height:1;letter-spacing:2px;transition:all.1s;vertical-align:middle;opacity:0}
+tr:hover .kebab-btn{opacity:1}
+.kebab-btn:hover{background:rgba(255,255,255,0.06);color:var(--text);border-color:var(--border);opacity:1}
 .kebab-menu{position:absolute;right:0;top:100%;z-index:100;min-width:150px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.35);padding:4px;display:none}
 .kebab-menu button{display:flex;width:100%;padding:7px 12px;font-size:12.5px;font-weight:500;background:none;border:none;color:var(--text);border-radius:4px;cursor:pointer;white-space:nowrap;gap:8px;align-items:center;text-align:left}
 .kebab-menu button:hover{background:rgba(255,255,255,0.06)}
