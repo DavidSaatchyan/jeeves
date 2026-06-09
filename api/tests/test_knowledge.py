@@ -594,9 +594,9 @@ class TestImportUrl:
         })
         assert resp.status_code == 404
 
-    def test_import_url_empty_title_raises(self, client, mock_db, mock_rag, mock_chunking):
+    def test_import_url_empty_title_falls_back_to_url(self, client, mock_db, mock_rag, mock_chunking):
         resp = client.post("/knowledge/urls", json={"url": "https://example.com/page", "title": ""})
-        assert resp.status_code == 400
+        assert resp.status_code == 201
 
     def test_list_urls(self, client, mock_db, mock_rag):
         mock_rec = MagicMock()
@@ -661,6 +661,117 @@ class TestImportUrlAuthGuard:
         app.dependency_overrides.clear()
         with TestClient(app) as c:
             resp = c.delete(f"/knowledge/urls/{uuid4()}")
+        assert resp.status_code in (401, 403)
+
+
+# ── URL management (PATCH, refresh, stale) ────────────────────────────────
+
+
+class TestManageUrls:
+    def test_patch_url_success(self, client, mock_db, mock_rag, mock_chunking):
+        rec = MagicMock()
+        rec.id = uuid4()
+        rec.url = "https://example.com/old"
+        rec.title = "Old Title"
+        _mock_db_execute_scalar_one_or_none(mock_db, rec)
+        with patch("app.knowledge.asyncio.create_task") as mock_task:
+            resp = client.patch(f"/knowledge/urls/{rec.id}", json={"url": "https://example.com/new"})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is True
+        assert data["changed"] is True
+        assert rec.url == "https://example.com/new"
+        mock_task.assert_called_once()
+
+    def test_patch_url_title_only_no_reindex(self, client, mock_db, mock_rag, mock_chunking):
+        rec = MagicMock()
+        rec.id = uuid4()
+        rec.url = "https://example.com/page"
+        rec.title = "Old Title"
+        _mock_db_execute_scalar_one_or_none(mock_db, rec)
+        with patch("app.knowledge.asyncio.create_task") as mock_task:
+            resp = client.patch(f"/knowledge/urls/{rec.id}", json={"title": "New Title"})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is True
+        assert data["changed"] is False
+        assert rec.title == "New Title"
+        mock_task.assert_not_called()
+
+    def test_patch_url_no_changes(self, client, mock_db, mock_rag, mock_chunking):
+        rec = MagicMock()
+        rec.id = uuid4()
+        rec.url = "https://example.com/page"
+        rec.title = "Title"
+        _mock_db_execute_scalar_one_or_none(mock_db, rec)
+        with patch("app.knowledge.asyncio.create_task") as mock_task:
+            resp = client.patch(f"/knowledge/urls/{rec.id}", json={})
+        assert resp.status_code == 200
+        assert resp.json()["changed"] is False
+        mock_task.assert_not_called()
+
+    def test_patch_url_not_found(self, client, mock_db, mock_rag, mock_chunking):
+        _mock_db_execute_scalar_one_or_none(mock_db, None)
+        resp = client.patch(f"/knowledge/urls/{uuid4()}", json={"url": "https://example.com"})
+        assert resp.status_code == 404
+
+    @patch("app.knowledge.asyncio.create_task", MagicMock())
+    def test_import_url_no_title_field(self, client, mock_db, mock_rag, mock_chunking):
+        _mock_db_execute_scalar_one_or_none(mock_db, None)
+        resp = client.post("/knowledge/urls", json={"url": "https://example.com/page"})
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["status"] == "processing"
+        assert data["title"] == "https://example.com/page"
+
+    def test_list_stale_urls(self, client, mock_db, mock_rag):
+        rec = MagicMock()
+        rec.id = uuid4()
+        rec.url = "https://example.com"
+        rec.title = "Old"
+        rec.status = "ready"
+        rec.last_fetched_at = None
+        from datetime import datetime, timezone
+        _mock_db_execute_all(mock_db, [rec])
+        resp = client.get("/knowledge/urls/stale?max_age_hours=1")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) == 1
+        assert data[0]["url"] == "https://example.com"
+
+    def test_refresh_stale_batch(self, client, mock_db, mock_rag, mock_chunking):
+        rec = MagicMock()
+        rec.id = uuid4()
+        rec.url = "https://example.com"
+        rec.title = "Test"
+        rec.status = "ready"
+        rec.last_fetched_at = None
+        _mock_db_execute_all(mock_db, [rec])
+        with patch("app.knowledge.asyncio.create_task") as mock_task:
+            resp = client.post("/knowledge/urls/refresh-stale?max_age_hours=1")
+        assert resp.status_code == 200
+        assert resp.json()["refreshed"] == 1
+        assert rec.status == "processing"
+        mock_task.assert_called_once()
+
+    def test_refresh_stale_no_stale(self, client, mock_db, mock_rag, mock_chunking):
+        _mock_db_execute_all(mock_db, [])
+        with patch("app.knowledge.asyncio.create_task") as mock_task:
+            resp = client.post("/knowledge/urls/refresh-stale?max_age_hours=1")
+        assert resp.status_code == 200
+        assert resp.json()["refreshed"] == 0
+        mock_task.assert_not_called()
+
+    def test_refresh_stale_requires_auth(self, app):
+        app.dependency_overrides.clear()
+        with TestClient(app) as c:
+            resp = c.post("/knowledge/urls/refresh-stale")
+        assert resp.status_code in (401, 403)
+
+    def test_patch_url_requires_auth(self, app):
+        app.dependency_overrides.clear()
+        with TestClient(app) as c:
+            resp = c.patch(f"/knowledge/urls/{uuid4()}", json={"url": "https://example.com"})
         assert resp.status_code in (401, 403)
 
 

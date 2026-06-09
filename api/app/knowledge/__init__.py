@@ -762,7 +762,7 @@ async def _background_index_url(tenant_id: uuid.UUID, url_id: uuid.UUID, url: st
 
 class _UrlImportIn(BaseModel):
     url: str
-    title: str
+    title: str | None = None
     folder_id: uuid.UUID | None = None
 
 
@@ -774,8 +774,8 @@ async def import_url(
 ):
     if not body.url.strip():
         raise HTTPException(400, "url is required")
-    if not body.title.strip():
-        raise HTTPException(400, "title is required")
+
+    resolved_title = (body.title or body.url).strip()
 
     if body.folder_id:
         folder = db.execute(select(KnowledgeFolder).where(
@@ -804,7 +804,7 @@ async def import_url(
     rec = KnowledgeUrl(
         tenant_id=tenant.id,
         url=body.url,
-        title=body.title,
+        title=resolved_title,
         folder_id=body.folder_id,
         status="processing",
     )
@@ -813,8 +813,44 @@ async def import_url(
     _log_activity(db, tenant.id, "url_imported", f"Imported URL {body.url}", str(rec.id))
     db.commit()
 
-    asyncio.create_task(_background_index_url(tenant.id, rec.id, body.url, body.title))
+    asyncio.create_task(_background_index_url(tenant.id, rec.id, body.url, resolved_title))
     return {"id": str(rec.id), "url": rec.url, "title": rec.title, "status": rec.status}
+
+
+class _UrlUpdateBody(BaseModel):
+    url: str | None = None
+    title: str | None = None
+
+
+@router.patch("/urls/{url_id}")
+def update_url(
+    url_id: uuid.UUID,
+    body: _UrlUpdateBody,
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    rec = db.execute(
+        select(KnowledgeUrl).where(
+            KnowledgeUrl.id == url_id,
+            KnowledgeUrl.tenant_id == tenant.id,
+        )
+    ).scalar_one_or_none()
+    if not rec:
+        raise HTTPException(404, "url not found")
+
+    changed = False
+    if body.url is not None and body.url != rec.url:
+        rec.url = body.url
+        changed = True
+    if body.title is not None and body.title != rec.title:
+        rec.title = body.title
+
+    db.commit()
+
+    if changed:
+        asyncio.create_task(_background_index_url(tenant.id, rec.id, rec.url, rec.title))
+
+    return {"ok": True, "changed": changed}
 
 
 @router.get("/urls")
@@ -961,6 +997,40 @@ async def refresh_url(
     db.commit()
 
     return {"refreshed": True, "chunks": n, "size_bytes": total_len}
+
+
+@router.post("/urls/refresh-stale")
+def refresh_all_stale_urls(
+    max_age_hours: int = Query(72, ge=1),
+    tenant: Tenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    """Refresh all stale URLs for this tenant with concurrency limit of 5."""
+    from datetime import timedelta
+
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=max_age_hours)
+    stale = db.execute(
+        select(KnowledgeUrl).where(
+            KnowledgeUrl.tenant_id == tenant.id,
+            KnowledgeUrl.status == "ready",
+            KnowledgeUrl.last_fetched_at < cutoff,
+        )
+    ).scalars().all()
+
+    sem = asyncio.Semaphore(5)
+
+    async def _refresh_one(url: KnowledgeUrl) -> None:
+        async with sem:
+            await _background_index_url(tenant.id, url.id, url.url, url.title)
+
+    for url in stale:
+        url.status = "processing"
+    db.commit()
+
+    for url in stale:
+        asyncio.create_task(_refresh_one(url))
+
+    return {"refreshed": len(stale)}
 
 
 # ── CRM sync is now in knowledge/sync.py (included via router.include_router) ──

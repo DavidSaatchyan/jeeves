@@ -46,10 +46,9 @@ class TestPracticeDataInUnifiedPage:
         assert 'data-tab="practice"' in resp.text
         assert "/admin/practice" not in resp.text
 
-    def test_contains_sync_buttons_in_unified_page(self, client: TestClient) -> None:
+    def test_contains_hms_sync_elements(self, client: TestClient) -> None:
         resp = client.get("/admin/knowledge")
         assert resp.status_code == 200
-        assert "Sync all data" in resp.text
         assert "hmsSyncAllBtn" in resp.text
         assert "hmsTypeTabs" in resp.text
         assert "hmsTableSection" in resp.text

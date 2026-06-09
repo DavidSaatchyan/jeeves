@@ -17,6 +17,7 @@
 <!-- ═══════════════ TAB BAR ═══════════════ -->
 <div class="kb-tabs">
   <a class="kb-tab active" data-tab="documents" data-role="owner,manager" onclick="switchTab('documents')">📄 Documents</a>
+  <a class="kb-tab" data-tab="webpages" data-role="owner,manager" onclick="switchTab('webpages')">🌐 Web Pages</a>
   <a class="kb-tab" data-tab="practice" data-role="owner,manager" onclick="switchTab('practice')">🏥 HMS Data</a>
 </div>
 
@@ -167,17 +168,80 @@
   </div>
 </div>
 
+<!-- ═══════════════ TAB: WEB PAGES ═══════════════ -->
+<div id="tab-webpages" class="kb-tab-content" style="display:none">
+  <div class="kb-toolbar" id="wpToolbar" style="margin-bottom:12px">
+    <span class="kb-current-folder" id="wpCurrentFolder">All URLs</span>
+    <div class="kb-toolbar-actions">
+      <select id="wpFolderFilter" class="kb-input" style="width:200px" onchange="_currentWpFolder=this.value; loadWebPages(this.value)">
+        <option value="">All folders</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="webpages-import-bar" class="import-bar">
+    <div class="import-bar-row">
+      <input type="url" id="wpUrlInput" placeholder="https://example.com/clinic-policies"
+             class="kb-input flex-2" oninput="validateUrlInput()" />
+      <input type="text" id="wpTitleInput" placeholder="Page title" class="kb-input flex-1" />
+      <select id="wpFolderSelect" class="kb-input">
+        <option value="">No folder</option>
+      </select>
+      <button onclick="importWebPage()" class="btn accent" id="wpImportBtn">
+        <span class="btn-icon">↗</span> Import
+      </button>
+    </div>
+    <div id="wpImportResult" class="import-result" style="display:none"></div>
+  </div>
+
+  <div id="staleAlert" class="alert warn" style="display:none">
+    <span class="alert-icon">⚡</span>
+    <span id="staleCount">0</span> web pages haven't been refreshed in over 72 hours.
+    <button onclick="refreshAllStale()" class="btn sm accent">Refresh all stale</button>
+    <button onclick="this.parentElement.style.display='none'" class="ghost sm">Dismiss</button>
+  </div>
+
+  <div class="kb-table-skeleton" id="wpLoading" style="display:none">
+    <table class="kb-table"><tbody>
+      <tr class="skel-tr"><td><div class="skel-line w80 skeleton"></div></td><td><div class="skel-line w60 skeleton"></div></td><td><div class="skel-line w40 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w50 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w30 skeleton" style="margin-left:auto"></div></td><td><div class="skel-line w40 skeleton"></div></td><td><div style="width:20px;height:20px"></div></td></tr>
+      <tr class="skel-tr"><td><div class="skel-line w70 skeleton"></div></td><td><div class="skel-line w50 skeleton"></div></td><td><div class="skel-line w40 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w50 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w30 skeleton" style="margin-left:auto"></div></td><td><div class="skel-line w35 skeleton"></div></td><td><div style="width:20px;height:20px"></div></td></tr>
+      <tr class="skel-tr"><td><div class="skel-line w85 skeleton"></div></td><td><div class="skel-line w65 skeleton"></div></td><td><div class="skel-line w40 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w50 skeleton" style="margin:0 auto"></div></td><td><div class="skel-line w30 skeleton" style="margin-left:auto"></div></td><td><div class="skel-line w50 skeleton"></div></td><td><div style="width:20px;height:20px"></div></td></tr>
+    </tbody></table>
+  </div>
+
+  <div class="kb-table-wrap" style="overflow-x:auto">
+    <table class="kb-table" id="wpTable">
+      <thead>
+        <tr>
+          <th class="col-url">URL</th>
+          <th class="col-title">Title</th>
+          <th class="col-folder">Folder</th>
+          <th class="col-status">Status</th>
+          <th class="col-chunks">Chunks</th>
+          <th class="col-fetched">Last fetched</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="wpBody"></tbody>
+    </table>
+  </div>
+
+  <div id="wpEmpty" class="empty-state" style="display:none">
+    <div class="empty-state-icon">🌐</div>
+    <div class="empty-state-title">No web pages imported</div>
+    <div class="empty-state-desc">
+      Import clinic policies, dosage guidelines, or protocol pages from the web.
+      Agents will use this content to answer patient questions.
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════ UPLOAD MODAL ═══════════════ -->
 <div class="modal-overlay" id="uploadModal">
   <div class="modal" style="max-width:560px">
     <div class="modal-header">
       <h2>Upload to memory system</h2>
       <button class="close-btn" onclick="closeUploadModal()">&times;</button>
-    </div>
-
-    <div class="ch-tabs" style="margin-bottom:16px">
-      <button class="ch-tab active" data-utab="file">File</button>
-      <button class="ch-tab" data-utab="url">Import URL</button>
     </div>
 
     <div class="ch-panels">
@@ -190,18 +254,6 @@
         </div>
         <div id="uploadProg" class="muted mt-12" style="min-height:36px"></div>
         <div class="err-msg" id="uploadErr"></div>
-      </div>
-
-      <div class="ch-panel" id="upanel-url">
-        <label class="kb-label">Page URL</label>
-        <input id="urlInput" type="url" class="kb-input" placeholder="https://example.com/page" oninput="toggleImportBtn()" />
-        <label class="kb-label mt-12">Title</label>
-        <input id="urlTitle" type="text" class="kb-input" placeholder="My page" oninput="toggleImportBtn()" />
-        <div class="mt-12">
-          <button id="importUrlBtn" class="btn sm" onclick="importUrl()" disabled>Import</button>
-        </div>
-        <div id="urlStatus" class="muted mt-12" style="font-size:13px"></div>
-        <div class="err-msg" id="urlErr"></div>
       </div>
     </div>
   </div>
@@ -422,6 +474,17 @@
 .hms-source-sync-icon{font-size:13px;opacity:.6;transition:transform .3s;line-height:1;display:inline-block;margin-top:1px}
 .hms-source-btn:not(:disabled):hover .hms-source-sync-icon{transform:rotate(180deg)}
 .hms-source-date{font-size:12px;color:var(--muted2)}
+.col-url{width:auto;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.col-url-val{color:var(--accent);cursor:pointer}
+.col-title-val{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.col-fetched{width:115px;white-space:nowrap}
+.kb-table th.col-url,.kb-table td.col-url{text-align:left}
+.import-bar{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;padding:14px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius)}
+.import-bar-row{display:flex;gap:8px;align-items:center}
+.import-bar-row .flex-1{flex:1}.import-bar-row .flex-2{flex:2}
+.import-result{font-size:13px;padding:6px 0}
+.import-result.ok{color:var(--green)}
+.import-result.err{color:var(--red)}
 </style>
 <script>
 var _selectedFolder = '';
@@ -441,19 +504,22 @@ var _activeTab = 'documents';
 var _savedFolder = '';
 var _idDocPoll = null;
 var _idPmsPoll = null;
+var _idWpPoll = null;
+var _currentWpFolder = null;
+var _wpFolderMap = {};
 var _hmsSyncing = false;
 var _hmsStatus = null;
 
 (function(){
   var hash = location.hash.replace('#', '') || 'documents';
-  if(['documents','practice'].indexOf(hash) >= 0) {
+  if(['documents','webpages','practice'].indexOf(hash) >= 0) {
     switchTab(hash, false);
   }
 })();
 
 window.addEventListener('hashchange', function(){
   var hash = location.hash.replace('#', '') || 'documents';
-  if(['documents','practice'].indexOf(hash) >= 0) {
+  if(['documents','webpages','practice'].indexOf(hash) >= 0) {
     switchTab(hash, false);
   }
 });
@@ -473,6 +539,7 @@ function switchTab(tab, pushState) {
   closeAllModals();
   if(_idDocPoll) { clearInterval(_idDocPoll); _idDocPoll = null; }
   if(_idPmsPoll) { clearInterval(_idPmsPoll); _idPmsPoll = null; }
+  if(_idWpPoll) { clearInterval(_idWpPoll); _idWpPoll = null; }
   _activeTab = tab;
   document.querySelectorAll('.kb-tab-content').forEach(function(el){ el.style.display = 'none'; });
   document.getElementById('tab-' + tab).style.display = '';
@@ -485,6 +552,15 @@ function switchTab(tab, pushState) {
       loadFolders();
       refresh();
       _idDocPoll = setInterval(refreshFileRows, 2000);
+    }
+    if(tab === 'webpages') {
+      loadWpFolderSelect();
+      loadWebPages(_currentWpFolder);
+      _idWpPoll = setInterval(function(){
+        api('/knowledge/urls/stale').then(function(data){
+          updateStaleAlert(data.stale_urls ? data.stale_urls.length : 0);
+        }).catch(function(){});
+      }, 30000);
     }
     if(tab === 'practice') {
       loadPmsStatus().then(function(){ loadHmsTable(); });
@@ -930,40 +1006,25 @@ function hideSkeletons(){
 async function refresh() {
   showSkeletons();
   try {
-    var data = await Promise.all([api('/knowledge/folders'), api('/knowledge/files'), api('/knowledge/urls')]);
+    var data = await Promise.all([api('/knowledge/folders'), api('/knowledge/files')]);
     var folders = data[0];
     var fileRows = data[1];
-    var urlRows = data[2];
     var folderMap = {};
     folders.forEach(function(f){ folderMap[f.id] = f.name; });
-    var urlNormalized = (urlRows || []).map(function(u){
-      return {
-        id: u.id,
-        filename: u.title || u.url,
-        status: u.status,
-        size_bytes: u.size_bytes || 0,
-        chunks_total: u.chunks_total || 0,
-        created_at: u.created_at,
-        folder_id: u.folder_id,
-        _is_url: true,
-        _url: u.url,
-      };
-    });
-    var allRows = fileRows.concat(urlNormalized);
     var fileCounts = {};
-    allRows.forEach(function(r){ if(r.folder_id){ fileCounts[r.folder_id] = (fileCounts[r.folder_id] || 0) + 1; } });
+    fileRows.forEach(function(r){ if(r.folder_id){ fileCounts[r.folder_id] = (fileCounts[r.folder_id] || 0) + 1; } });
     var tree = document.getElementById('folderTree');
     var thtml = '<div class="kb-folder-item root' + (_selectedFolder === '' ? ' active' : '') + '" data-id="" onclick="selectFolder(\'\')"><span class="kb-folder-icon">&#128193;</span> All files</div>';
     thtml += buildTree(folders, null, fileCounts);
     tree.innerHTML = thtml;
-    var rows = _selectedFolder ? allRows.filter(function(r){ return r.folder_id === _selectedFolder; }) : allRows;
+    var rows = _selectedFolder ? fileRows.filter(function(r){ return r.folder_id === _selectedFolder; }) : fileRows;
     var ready = rows.filter(function(r){ return r.status === 'ready'; });
     var totalSize = rows.reduce(function(a, r){ return a + (r.size_bytes || 0); }, 0);
     var totalChunks = ready.reduce(function(a, r){ return a + (r.chunks_total || 0); }, 0);
     var maxMB = 50;
     var pct = Math.min((totalSize / (maxMB * 1024 * 1024)) * 100, 100);
     var types = {};
-    rows.forEach(function(r){ if(r._is_url){ types['URL'] = (types['URL'] || 0) + 1; } else { var ext = r.filename.split('.').pop().toUpperCase(); types[ext] = (types[ext] || 0) + 1; } });
+    rows.forEach(function(r){ var ext = r.filename.split('.').pop().toUpperCase(); types[ext] = (types[ext] || 0) + 1; });
     var typeLabels = Object.keys(types).sort().map(function(t){ return types[t] + ' ' + t; });
     document.getElementById('sumFiles').textContent = ready.length + ' file' + (ready.length !== 1 ? 's' : '');
     document.getElementById('sumTypes').textContent = typeLabels.length ? typeLabels.join(', ') : 'No files';
@@ -973,24 +1034,17 @@ async function refresh() {
     document.getElementById('sumChunks').textContent = totalChunks;
     document.getElementById('sumAvg').textContent = ready.length ? Math.round(totalChunks / ready.length) + ' avg/file' : '\u2014';
     document.getElementById('kbSummary').style.display = 'grid';
-    var hasFiles = allRows.length > 0;
-    var hasProcessing = allRows.some(function(r){ return r.status === 'processing' || r.status === 'pending'; });
+    var hasFiles = fileRows.length > 0;
+    var hasProcessing = fileRows.some(function(r){ return r.status === 'processing' || r.status === 'pending'; });
     document.getElementById('clearAllBtn').style.display = hasFiles ? '' : 'none';
     document.getElementById('kbFileListTitle').textContent = _selectedFolder ? 'Files in ' + (folderMap[_selectedFolder] || 'folder') : 'Files';
     document.getElementById('tbl').innerHTML = rows.map(function(r){
       var cls = r.status === 'ready' ? 'ok' : (r.status === 'failed' ? 'err' : 'warn');
       var label = r.status === 'processing' ? 'Processing' : r.status;
       var fname = (r.folder_id && folderMap[r.folder_id]) ? folderMap[r.folder_id] : '\u2014';
-      var nameHtml, sizeHtml;
-      if(r._is_url){
-        var encName = encodeURIComponent(r.filename);
-        nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',true,\'' + encName + '\');return false" title="' + esc(r._url) + '">' + esc(r.filename) + '</a></strong>';
-        sizeHtml = r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB';
-      } else {
-        var encName = encodeURIComponent(r.filename);
-        nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',false,\'' + encName + '\');return false">' + esc(r.filename) + '</a></strong>';
-        sizeHtml = r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB';
-      }
+      var encName = encodeURIComponent(r.filename);
+      var nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',false,\'' + encName + '\');return false">' + esc(r.filename) + '</a></strong>';
+      var sizeHtml = r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB';
       return '<tr>'
         + '<td>' + nameHtml + '</td>'
         + '<td><span class="pill ' + cls + '">' + label + '</span></td>'
@@ -998,7 +1052,7 @@ async function refresh() {
         + '<td style="text-align:right">' + (r.chunks_total || '\u2014') + '</td>'
         + '<td>' + (r.created_at ? r.created_at.slice(0, 10) : '\u2014') + '</td>'
         + '<td style="font-size:12px;color:var(--muted2)">' + esc(fname) + '</td>'
-        + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '" data-isurl="' + (r._is_url ? '1' : '0') + '">&#10005;</button></td></tr>';
+        + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '">&#10005;</button></td></tr>';
     }).join('') || '<tr><td colspan="7" class="muted" style="text-align:center;padding:16px">No files in this folder.</td></tr>';
     document.getElementById('procMsg').style.display = hasProcessing ? '' : 'none';
     if(hasProcessing && !_idDocPoll) pollProcessing();
@@ -1008,46 +1062,27 @@ async function refresh() {
 
 async function refreshFileRows() {
   try {
-    var data = await Promise.all([api('/knowledge/files'), api('/knowledge/urls')]);
-    var fileRows = data[0];
-    var urlRows = data[1];
-    var urlNormalized = (urlRows || []).map(function(u){
-      return { id: u.id, filename: u.title || u.url, status: u.status, size_bytes: u.size_bytes || 0, chunks_total: u.chunks_total || 0, created_at: u.created_at, folder_id: u.folder_id, _is_url: true, _url: u.url };
-    });
-    var allRows = fileRows.concat(urlNormalized);
-    var rows = _selectedFolder ? allRows.filter(function(r){ return r.folder_id === _selectedFolder; }) : allRows;
+    var fileRows = await api('/knowledge/files');
+    var rows = _selectedFolder ? fileRows.filter(function(r){ return r.folder_id === _selectedFolder; }) : fileRows;
     var ready = rows.filter(function(r){ return r.status === 'ready'; });
     var totalSize = rows.reduce(function(a, r){ return a + (r.size_bytes || 0); }, 0);
     var totalChunks = ready.reduce(function(a, r){ return a + (r.chunks_total || 0); }, 0);
-    var maxMB = 50;
-    var pct = Math.min((totalSize / (maxMB * 1024 * 1024)) * 100, 100);
     var types = {};
-    rows.forEach(function(r){ if(r._is_url){ types['URL'] = (types['URL'] || 0) + 1; } else { var ext = r.filename.split('.').pop().toUpperCase(); types[ext] = (types[ext] || 0) + 1; } });
+    rows.forEach(function(r){ var ext = r.filename.split('.').pop().toUpperCase(); types[ext] = (types[ext] || 0) + 1; });
     var typeLabels = Object.keys(types).sort().map(function(t){ return types[t] + ' ' + t; });
     document.getElementById('sumFiles').textContent = ready.length + ' file' + (ready.length !== 1 ? 's' : '');
     document.getElementById('sumTypes').textContent = typeLabels.length ? typeLabels.join(', ') : 'No files';
     document.getElementById('sumSize').textContent = totalSize > 1048576 ? (totalSize/1048576).toFixed(1) + ' MB' : (totalSize/1024).toFixed(0) + ' KB';
-    document.getElementById('sizeBar').style.width = pct + '%';
-    document.getElementById('sumQuota').textContent = pct.toFixed(1) + '% of 50 MB';
     document.getElementById('sumChunks').textContent = totalChunks;
     document.getElementById('sumAvg').textContent = ready.length ? Math.round(totalChunks / ready.length) + ' avg/file' : '\u2014';
-    var hasFiles = allRows.length > 0;
-    document.getElementById('clearAllBtn').style.display = hasFiles ? '' : 'none';
-    var hasProcessing = allRows.some(function(r){ return r.status === 'processing' || r.status === 'pending'; });
+    var hasProcessing = fileRows.some(function(r){ return r.status === 'processing' || r.status === 'pending'; });
     document.getElementById('tbl').innerHTML = rows.map(function(r){
       var cls = r.status === 'ready' ? 'ok' : (r.status === 'failed' ? 'err' : 'warn');
       var label = r.status === 'processing' ? 'Processing' : r.status;
       var fname = '\u2014';
-      var nameHtml, sizeHtml;
-      if(r._is_url){
-        var encName = encodeURIComponent(r.filename);
-        nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',true,\'' + encName + '\');return false" title="' + esc(r._url) + '">' + esc(r.filename) + '</a></strong>';
-        sizeHtml = r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB';
-      } else {
-        var encName = encodeURIComponent(r.filename);
-        nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',false,\'' + encName + '\');return false">' + esc(r.filename) + '</a></strong>';
-        sizeHtml = r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB';
-      }
+      var encName = encodeURIComponent(r.filename);
+      var nameHtml = '<strong><a href="#" onclick="openChunkViewer(\'' + r.id + '\',false,\'' + encName + '\');return false">' + esc(r.filename) + '</a></strong>';
+      var sizeHtml = r.size_bytes > 1048576 ? (r.size_bytes/1048576).toFixed(1) + ' MB' : (r.size_bytes/1024).toFixed(0) + ' KB';
       return '<tr>'
         + '<td>' + nameHtml + '</td>'
         + '<td><span class="pill ' + cls + '">' + label + '</span></td>'
@@ -1055,10 +1090,10 @@ async function refreshFileRows() {
         + '<td style="text-align:right">' + (r.chunks_total || '\u2014') + '</td>'
         + '<td>' + (r.created_at ? r.created_at.slice(0, 10) : '\u2014') + '</td>'
         + '<td style="font-size:12px;color:var(--muted2)">' + esc(fname) + '</td>'
-        + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '" data-isurl="' + (r._is_url ? '1' : '0') + '">&#10005;</button></td></tr>';
+        + '<td><button class="del-btn" onclick="del(this)" data-id="' + r.id + '" data-name="' + encodeURIComponent(r.filename) + '">&#10005;</button></td></tr>';
     }).join('') || '<tr><td colspan="7" class="muted" style="text-align:center;padding:16px">No files in this folder.</td></tr>';
     document.getElementById('procMsg').style.display = hasProcessing ? '' : 'none';
-    if(hasProcessing && !_idDocPoll) pollProcessing();
+    if(!hasProcessing && _idDocPoll) { clearInterval(_idDocPoll); _idDocPoll = null; }
   } catch(e) { console.error('refreshFileRows error:', e); }
 }
 
@@ -1106,25 +1141,11 @@ async function clearAll(){
 function showUploadModal(){
   lockScroll();
   document.getElementById('uploadModal').classList.add('show');
-  document.getElementById('urlInput').value = '';
-  document.getElementById('urlTitle').value = '';
-  document.getElementById('importUrlBtn').disabled = true;
-  document.getElementById('urlStatus').textContent = '';
-  document.getElementById('urlErr').textContent = '';
   document.getElementById('uploadErr').textContent = '';
   document.getElementById('uploadProg').innerHTML = '';
 }
 function closeUploadModal(){ unlockScroll(); document.getElementById('uploadModal').classList.remove('show'); }
 document.getElementById('uploadModal').addEventListener('click', function(e){ if(e.target === this) closeUploadModal(); });
-
-document.querySelectorAll('#uploadModal .ch-tab').forEach(function(tab){
-  tab.addEventListener('click', function(){
-    tab.parentElement.querySelectorAll('.ch-tab').forEach(function(t){ t.classList.remove('active'); });
-    document.querySelectorAll('#uploadModal .ch-panel').forEach(function(p){ p.classList.remove('active'); });
-    tab.classList.add('active');
-    document.getElementById('upanel-' + tab.getAttribute('data-utab')).classList.add('active');
-  });
-});
 
 var uploadDrop = document.getElementById('uploadDrop');
 uploadDrop.addEventListener('click', function(){ document.getElementById('uploadFileInput').click(); });
@@ -1149,22 +1170,7 @@ async function uploadFiles(files){
   closeUploadModal();
 }
 
-function toggleImportBtn(){
-  document.getElementById('importUrlBtn').disabled = !document.getElementById('urlInput').value.trim() || !document.getElementById('urlTitle').value.trim();
-}
-async function importUrl(){
-  var url = document.getElementById('urlInput').value.trim();
-  var title = document.getElementById('urlTitle').value.trim();
-  if(!url){ document.getElementById('urlErr').textContent = 'URL is required'; return; }
-  if(!title){ document.getElementById('urlErr').textContent = 'Title is required'; return; }
-  document.getElementById('urlErr').textContent = '';
-  document.getElementById('urlStatus').textContent = 'Importing...';
-  try {
-    await api('/knowledge/urls', {method:'POST', body:{url:url, title:title, folder_id:_selectedFolder || null}});
-    await refreshFileRows();
-    closeUploadModal();
-  } catch(e){ document.getElementById('urlErr').textContent = e.message; }
-}
+
 
 // ════════════════════════════════════════════════
 // CHUNK VIEWER
@@ -1321,6 +1327,224 @@ document.getElementById('confirmBtn').addEventListener('click', function(){
   if(_confirmCb) { _confirmCb(); }
   if(!_confirmLoading) closeConfirm();
 });
+
+// ════════════════════════════════════════════════
+// WEB PAGES TAB
+// ════════════════════════════════════════════════
+
+const URL_RE = /^https?:\/\/.+/i;
+
+function showResult(elId, msg, type) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'import-result ' + (type || '');
+  el.style.display = msg ? 'block' : 'none';
+}
+
+function validateUrlInput() {
+  var el = document.getElementById('wpUrlInput');
+  var val = el.value.trim();
+  el.className = 'kb-input flex-2' + (val && !URL_RE.test(val) ? ' err' : '');
+}
+
+function showTableLoading(show) {
+  document.getElementById('wpLoading').style.display = show ? '' : 'none';
+  document.getElementById('wpBody').style.display = show ? 'none' : '';
+  document.getElementById('wpEmpty').style.display = 'none';
+}
+
+const STATUS_PILLS = { ready: 'ok', stale: 'warn', processing: '', pending: 'muted', failed: 'err' };
+
+function isOlderThan(dateStr, hours) {
+  if (!dateStr) return true;
+  return Date.now() - new Date(dateStr).getTime() > hours * 3600000;
+}
+
+function truncateUrl(url, max) {
+  max = max || 50;
+  return url.length > max ? url.slice(0, max) + '\u2026' : url;
+}
+
+function timeAgo(date) {
+  var diff = Date.now() - new Date(date).getTime();
+  if (diff < 60000) return 'just now';
+  if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+  return Math.floor(diff / 86400000) + 'd ago';
+}
+
+function renderActions(status, id, name) {
+  var actions = [];
+  if (status === 'ready' || status === 'stale') {
+    actions.push('<button onclick="openChunkViewer(\'' + id + '\',true,\'' + esc(name) + '\')" class="btn xs ghost" title="View chunks">\u2295</button>');
+    actions.push('<button onclick="refreshWebPage(\'' + id + '\')" class="btn xs ghost" title="Refresh">\u21BB</button>');
+  }
+  if (status === 'failed') actions.push('<button onclick="retryWebPage(\'' + id + '\')" class="btn xs ghost" title="Retry">\u21BB</button>');
+  actions.push('<button onclick="editWebPage(\'' + id + '\')" class="btn xs ghost" title="Edit">\u270E</button>');
+  if (status !== 'processing') actions.push('<button onclick="deleteWebPage(\'' + id + '\')" class="btn xs ghost danger" title="Delete">\u2715</button>');
+  return actions.join(' ');
+}
+
+function _folderName(folderId) {
+  return folderId ? _wpFolderMap[folderId] || '\u2014' : '\u2014';
+}
+
+function renderTable(urls) {
+  var body = document.getElementById('wpBody');
+  if (!urls.length) {
+    document.getElementById('wpEmpty').style.display = 'block';
+    body.innerHTML = '';
+    return;
+  }
+  document.getElementById('wpEmpty').style.display = 'none';
+  body.innerHTML = urls.map(function(u){
+    var isStale = u.status === 'ready' && isOlderThan(u.last_fetched_at, 72);
+    var status = isStale ? 'stale' : u.status;
+    var errorTitle = status === 'failed' && u.error ? ' title="' + esc(u.error) + '"' : '';
+    return '<tr data-url-id="' + u.id + '">'
+      + '<td class="col-url-val" title="' + esc(u.url) + '" onclick="openChunkViewer(\'' + u.id + '\',true,\'' + esc(u.title || u.url) + '\')">' + truncateUrl(u.url) + '</td>'
+      + '<td class="col-title-val">' + esc(u.title || u.url) + '</td>'
+      + '<td>' + _folderName(u.folder_id) + '</td>'
+      + '<td><span class="pill ' + (STATUS_PILLS[status] || 'muted') + '"' + errorTitle + '>' + status + '</span></td>'
+      + '<td>' + (u.chunks_total != null ? u.chunks_total : '\u2014') + '</td>'
+      + '<td>' + (u.last_fetched_at ? timeAgo(u.last_fetched_at) : '\u2014') + '</td>'
+      + '<td class="col-actions">' + renderActions(status, u.id, u.title || u.url) + '</td></tr>';
+  }).join('');
+}
+
+async function loadWebPages(folderId) {
+  showTableLoading(true);
+  try {
+    var data = await Promise.all([api('/knowledge/urls' + (folderId ? '?folder_id=' + folderId : '')), api('/knowledge/urls/stale'), api('/knowledge/folders')]);
+    var urls = data[0];
+    var staleData = data[1];
+    var folders = data[2];
+    _wpFolderMap = {};
+    function walk(fs) {
+      fs.forEach(function(f){ _wpFolderMap[f.id] = f.name; if (f.children) walk(f.children); });
+    }
+    walk(folders.folders || []);
+    renderTable(urls || []);
+    updateStaleAlert(staleData.stale_urls ? staleData.stale_urls.length : 0);
+  } catch(e) {
+    document.getElementById('wpBody').innerHTML = '<tr><td colspan="7" class="err-cell">Error: ' + esc(e.message) + '</td></tr>';
+  } finally {
+    showTableLoading(false);
+  }
+}
+
+function updateStaleAlert(count) {
+  var alert = document.getElementById('staleAlert');
+  if (!alert) return;
+  alert.style.display = count > 0 ? 'flex' : 'none';
+  document.getElementById('staleCount').textContent = count;
+}
+
+var _importing = false;
+
+async function importWebPage() {
+  if (_importing) return;
+  var url = document.getElementById('wpUrlInput').value.trim();
+  var title = document.getElementById('wpTitleInput').value.trim();
+  var folderId = document.getElementById('wpFolderSelect').value;
+  if (!url) return showResult('wpImportResult', 'URL is required', 'err');
+  if (!URL_RE.test(url)) return showResult('wpImportResult', 'URL must start with http:// or https://', 'err');
+  if (!title) return showResult('wpImportResult', 'Title is required', 'err');
+  _importing = true;
+  document.getElementById('wpImportBtn').disabled = true;
+  try {
+    await api('/knowledge/urls', { method: 'POST', body: JSON.stringify({ url: url, title: title, folder_id: folderId || null }) });
+    showResult('wpImportResult', 'Imported \u2713', 'ok');
+    document.getElementById('wpUrlInput').value = '';
+    document.getElementById('wpTitleInput').value = '';
+    loadWebPages(_currentWpFolder);
+  } catch(e) {
+    showResult('wpImportResult', e.message, 'err');
+  } finally {
+    _importing = false;
+    document.getElementById('wpImportBtn').disabled = false;
+  }
+}
+
+function editWebPage(id) {
+  var row = document.querySelector('tr[data-url-id="' + id + '"]');
+  if (!row) return;
+  var urlCell = row.querySelector('.col-url-val');
+  var titleCell = row.querySelector('.col-title-val');
+  var currentUrl = urlCell.textContent;
+  var currentTitle = titleCell.textContent;
+  urlCell.innerHTML = '<input type="url" class="kb-input" value="' + esc(currentUrl) + '" id="edit-url-' + id + '" />';
+  titleCell.innerHTML = '<input type="text" class="kb-input" value="' + esc(currentTitle) + '" id="edit-title-' + id + '" />';
+  row.querySelector('.col-actions').innerHTML =
+    '<button onclick="saveEdit(\'' + id + '\')" class="btn sm accent">Save</button>' +
+    '<button onclick="loadWebPages(_currentWpFolder)" class="btn sm ghost">Cancel</button>';
+}
+
+async function saveEdit(id) {
+  var newUrl = document.getElementById('edit-url-' + id).value.trim();
+  var newTitle = document.getElementById('edit-title-' + id).value.trim();
+  if (!newUrl || !URL_RE.test(newUrl)) return;
+  await api('/knowledge/urls/' + id, { method: 'PATCH', body: JSON.stringify({ url: newUrl, title: newTitle }) });
+  loadWebPages(_currentWpFolder);
+}
+
+async function refreshWebPage(id) {
+  await api('/knowledge/urls/' + id + '/refresh', { method: 'POST' });
+  loadWebPages(_currentWpFolder);
+}
+
+async function deleteWebPage(id) {
+  showConfirm('Chunks will be removed from the knowledge base.', async function(){
+    await api('/knowledge/urls/' + id, { method: 'DELETE' });
+    loadWebPages(_currentWpFolder);
+  }, 'Delete web page?');
+}
+
+async function retryWebPage(id) {
+  await refreshWebPage(id);
+}
+
+async function refreshAllStale() {
+  var btn = document.querySelector('#staleAlert .btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="kb-spinner"></span> Refreshing...'; }
+  try {
+    await api('/knowledge/urls/refresh-stale', { method: 'POST' });
+    var poll = setInterval(async function(){
+      try {
+        var data = await api('/knowledge/urls/stale');
+        if (!data.stale_urls || data.stale_urls.length === 0) {
+          clearInterval(poll);
+          loadWebPages(_currentWpFolder);
+        }
+      } catch(_) {}
+    }, 2000);
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.innerHTML = 'Refresh all stale'; }
+  }
+}
+
+async function loadWpFolderSelect() {
+  try {
+    var data = await api('/knowledge/folders');
+    var folders = data.folders || [];
+    var opts = [['', 'No folder']];
+    function walk(fs, depth) {
+      fs.forEach(function(f){
+        opts.push([f.id, '  '.repeat(depth) + f.name]);
+        if (f.children) walk(f.children, depth + 1);
+      });
+    }
+    walk(folders, 0);
+    var sel = document.getElementById('wpFolderSelect');
+    if (sel) sel.innerHTML = opts.map(function(o){ return '<option value="' + o[0] + '">' + esc(o[1]) + '</option>'; }).join('');
+    var filter = document.getElementById('wpFolderFilter');
+    if (filter) {
+      filter.innerHTML = '<option value="">All folders</option>' +
+        opts.slice(1).map(function(o){ return '<option value="' + o[0] + '"' + (o[0] === _currentWpFolder ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('');
+    }
+  } catch(e) { console.error('loadWpFolderSelect error:', e); }
+}
 
 // ════════════════════════════════════════════════
 // ROLE-BASED TAB VISIBILITY
