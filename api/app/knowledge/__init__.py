@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Query, UploadFile, 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from ..rag.chunking import file_sha256, sanitize_filename
 
@@ -767,8 +767,8 @@ def _normalize_url(url: str) -> str:
 
 
 class _UrlImportIn(BaseModel):
-    url: str
-    title: str | None = None
+    url: str = Field(max_length=2048)
+    title: str | None = Field(None, max_length=512)
     folder_id: uuid.UUID | None = None
 
     @field_validator("url")
@@ -836,8 +836,8 @@ async def import_url(
 
 
 class _UrlUpdateBody(BaseModel):
-    url: str | None = None
-    title: str | None = None
+    url: str | None = Field(None, max_length=2048)
+    title: str | None = Field(None, max_length=512)
 
     @field_validator("url")
     @classmethod
