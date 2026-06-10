@@ -1640,8 +1640,19 @@ async function refreshWebPage(id) {
 
 async function deleteWebPage(id) {
   showConfirm('Chunks will be removed from the knowledge base.', async function(){
-    await api('/knowledge/urls/' + id, { method: 'DELETE' });
-    loadWebPages();
+    setConfirmLoading(true);
+    try {
+      await api('/knowledge/urls/' + id, { method: 'DELETE' });
+      var row = document.querySelector('tr[data-url-id="' + id + '"]');
+      if (row) row.remove();
+      var tbody = document.getElementById('wpBody');
+      if (tbody && !tbody.querySelector('tr[data-url-id]')) {
+        document.getElementById('wpEmpty').style.display = 'block';
+      }
+    } catch(e) {
+      showToast(e.message, 'err');
+    }
+    closeConfirm(true);
   }, 'Delete web page?');
 }
 
