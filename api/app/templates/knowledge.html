@@ -208,7 +208,7 @@
     <button onclick="this.parentElement.style.display='none'" class="ghost sm">Dismiss</button>
   </div>
 
-  <div class="card" style="margin-top:4px">
+  <div class="card" style="margin-top:4px" id="wpTableCard">
     <div class="card-header">
       <h2>Web Pages</h2>
       <button id="wpClearAllBtn" class="ghost sm" style="display:none" onclick="clearAllWebPages()">Clear all</button>
@@ -1487,8 +1487,10 @@ function renderActions(status, id, name) {
 
 function renderTable(urls) {
   var body = document.getElementById('wpBody');
-  if (!urls.length) {
-    document.getElementById('wpEmpty').style.display = 'block';
+  var empty = !urls || !urls.length;
+  document.getElementById('wpEmpty').style.display = empty ? 'block' : 'none';
+  document.getElementById('wpTableCard').style.display = empty ? 'none' : '';
+  if (empty) {
     body.innerHTML = '';
     return;
   }
@@ -1648,6 +1650,7 @@ async function deleteWebPage(id) {
       var tbody = document.getElementById('wpBody');
       if (tbody && !tbody.querySelector('tr[data-url-id]')) {
         document.getElementById('wpEmpty').style.display = 'block';
+        document.getElementById('wpTableCard').style.display = 'none';
       }
     } catch(e) {
       showToast(e.message, 'err');
@@ -1658,11 +1661,21 @@ async function deleteWebPage(id) {
 
 async function clearAllWebPages() {
   showConfirm('Delete all imported web pages?', async function(){
-    var urls = await api('/knowledge/urls');
-    for (var i = 0; i < urls.length; i++) {
-      await api('/knowledge/urls/' + urls[i].id, { method: 'DELETE' });
+    setConfirmLoading(true);
+    try {
+      var urls = await api('/knowledge/urls');
+      for (var i = 0; i < urls.length; i++) {
+        await api('/knowledge/urls/' + urls[i].id, { method: 'DELETE' });
+      }
+      document.getElementById('wpBody').innerHTML = '';
+      document.getElementById('wpEmpty').style.display = 'block';
+      document.getElementById('wpTableCard').style.display = 'none';
+      document.getElementById('wpClearAllBtn').style.display = 'none';
+      stopWpProcPoll();
+    } catch(e) {
+      showToast(e.message, 'err');
     }
-    loadWebPages();
+    closeConfirm(true);
   }, 'All web pages');
 }
 
