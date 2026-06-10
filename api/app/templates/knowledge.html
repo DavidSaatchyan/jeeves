@@ -1487,6 +1487,58 @@ function renderActions(status, id, name) {
   return '<div class="kebab-wrap"><button class="kebab-btn" onclick="event.stopPropagation();toggleKebab(this)">\u22EE</button><div class="kebab-menu" onclick="event.stopPropagation()">' + items.join('') + '</div></div>';
 }
 
+function _renderRow(u) {
+  var isStale = u.status === 'ready' && isOlderThan(u.last_fetched_at, 72);
+  var status = isStale ? 'stale' : u.status;
+  var errorTitle = status === 'failed' && u.error ? ' title="' + esc(u.error) + '"' : '';
+  return '<tr data-url-id="' + u.id + '">'
+    + '<td class="col-url-val" title="' + esc(u.url) + '" onclick="openChunkViewer(\'' + u.id + '\',true,\'' + esc(u.title || u.url) + '\')">' + truncateUrl(u.url) + '</td>'
+    + '<td class="col-title-val">' + esc(u.title || u.url) + '</td>'
+    + '<td class="col-status"><span class="pill ' + (STATUS_PILLS[status] || 'muted') + '"' + errorTitle + '>' + status + '</span></td>'
+    + '<td class="col-chunks">' + (u.chunks_total != null ? u.chunks_total : '\u2014') + '</td>'
+    + '<td class="col-fetched">' + (u.last_fetched_at ? timeAgo(u.last_fetched_at) : '\u2014') + '</td>'
+    + '<td class="col-actions">' + renderActions(status, u.id, u.title || u.url) + '</td></tr>';
+}
+
+function updateWebPageRow(u) {
+  var existing = document.querySelector('tr[data-url-id="' + u.id + '"]');
+  if (existing) {
+    if (existing.querySelector('.kb-input')) return;  // skip if editing
+    existing.outerHTML = _renderRow(u);
+    return;
+  }
+  var body = document.getElementById('wpBody');
+  if (body) body.insertAdjacentHTML('beforeend', _renderRow(u));
+}
+
+async function refreshWebPageTable() {
+  try {
+    var data = await Promise.all([api('/knowledge/urls'), api('/knowledge/urls/stale')]);
+    var urls = data[0] || [];
+    var staleData = data[1];
+    var body = document.getElementById('wpBody');
+    if (!urls.length) {
+      document.getElementById('wpEmpty').style.display = 'block';
+      document.getElementById('wpTableCard').style.display = 'none';
+      body.innerHTML = '';
+    } else {
+      document.getElementById('wpEmpty').style.display = 'none';
+      document.getElementById('wpTableCard').style.display = '';
+      var seen = {};
+      urls.forEach(function(u){ seen[u.id] = true; updateWebPageRow(u); });
+      [].slice.call(body.querySelectorAll('tr[data-url-id]')).forEach(function(tr){
+        if (!seen[tr.getAttribute('data-url-id')]) tr.remove();
+      });
+    }
+    updateStaleAlert(staleData.stale_urls ? staleData.stale_urls.length : 0);
+    document.getElementById('wpClearAllBtn').style.display = urls.length > 0 ? '' : 'none';
+    var hasProcessing = urls.some(function(u){ return u.status === 'processing' || u.status === 'pending'; });
+    if (hasProcessing) startWpProcPoll(); else stopWpProcPoll();
+  } catch(e) {
+    document.getElementById('wpBody').innerHTML = '<tr><td colspan="6" class="err-cell">Error: ' + esc(e.message) + '</td></tr>';
+  }
+}
+
 function renderTable(urls) {
   var body = document.getElementById('wpBody');
   var empty = !urls || !urls.length;
@@ -1538,7 +1590,7 @@ function updateStaleAlert(count) {
 function startWpProcPoll() {
   if (_idWpProcPoll) return;
   _idWpProcPoll = setInterval(function(){
-    if (_activeTab === 'webpages') loadWebPages();
+    if (_activeTab === 'webpages') refreshWebPageTable();
   }, 3000);
 }
 function stopWpProcPoll() {
@@ -1574,8 +1626,8 @@ async function importWebPage() {
       showResult('wpImportResult', 'Imported', 'ok');
       document.getElementById('wpUrlInput').value = '';
       document.getElementById('wpTitleInput').value = '';
-      validateUrlInput();
-      loadWebPages();
+    validateUrlInput();
+    refreshWebPageTable();
     }
   } catch(e) {
     showResult('wpImportResult', e.message, 'err');
@@ -1605,7 +1657,7 @@ function editWebPage(id) {
 }
 
 function cancelEdit(id) {
-  loadWebPages();
+  refreshWebPageTable();
 }
 
 async function saveEdit(id) {
@@ -1629,7 +1681,7 @@ async function saveEdit(id) {
   }
   try {
     await api('/knowledge/urls/' + id, { method: 'PATCH', body: { url: newUrl, title: newTitle } });
-    loadWebPages();
+    refreshWebPageTable();
   } catch(e) {
     showToast(e.message, 'err');
   }
@@ -1637,7 +1689,10 @@ async function saveEdit(id) {
 
 async function refreshWebPage(id) {
   await api('/knowledge/urls/' + id + '/refresh', { method: 'POST' });
-  loadWebPages();
+  var data = await api('/knowledge/urls');
+  var url = data && data.filter(function(u){ return u.id === id; })[0];
+  if (url) updateWebPageRow(url);
+  else refreshWebPageTable();
 }
 
 async function deleteWebPage(id) {
@@ -1689,7 +1744,7 @@ async function refreshAllStale() {
         var data = await api('/knowledge/urls/stale');
         if (!data.stale_urls || data.stale_urls.length === 0) {
           clearInterval(poll);
-          loadWebPages();
+          refreshWebPageTable();
         }
       } catch(_) {}
     }, 2000);
