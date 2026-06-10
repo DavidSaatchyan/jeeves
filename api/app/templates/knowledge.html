@@ -1525,8 +1525,6 @@ async function loadWebPages() {
     if (hasProcessing) startWpProcPoll(); else stopWpProcPoll();
   } catch(e) {
     document.getElementById('wpBody').innerHTML = '<tr><td colspan="6" class="err-cell">Error: ' + esc(e.message) + '</td></tr>';
-  } finally {
-    showTableLoading(false);
   }
 }
 
