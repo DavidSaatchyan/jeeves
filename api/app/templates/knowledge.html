@@ -1383,6 +1383,9 @@ function isValidUrl(str) {
   catch(e) { return false; }
 }
 
+const MAX_URL_LEN = 2048;
+const MAX_TITLE_LEN = 512;
+
 function showToast(msg, type) {
   var el = document.getElementById('kbToast');
   el.innerHTML = '<span class="icon-' + type + '"><svg class="icon"><use href="#icon-' + (type === 'ok' ? 'check' : 'alert-triangle') + '"/></svg></span><span>' + msg + '</span>';
@@ -1402,8 +1405,11 @@ function validateUrlInput() {
   var titleEl = document.getElementById('wpTitleInput');
   var url = urlEl.value.trim();
   var title = titleEl.value.trim();
-  urlEl.className = 'kb-input' + (url && !isValidUrl(url) ? ' err' : '');
-  document.getElementById('wpImportBtn').disabled = !url || !title || !isValidUrl(url);
+  var urlErr = url && (!isValidUrl(url) || url.length > MAX_URL_LEN);
+  var titleErr = title.length > MAX_TITLE_LEN;
+  urlEl.className = 'kb-input' + (urlErr ? ' err' : '');
+  titleEl.className = 'kb-input' + (titleErr ? ' err' : '');
+  document.getElementById('wpImportBtn').disabled = !url || !title || urlErr || titleErr;
 }
 
 function showTableLoading(show) {
@@ -1543,7 +1549,9 @@ async function importWebPage() {
   var title = document.getElementById('wpTitleInput').value.trim();
   if (!url) return showResult('wpImportResult', 'URL is required', 'err');
   if (!isValidUrl(url)) return showResult('wpImportResult', 'URL must start with http:// or https://', 'err');
+  if (url.length > MAX_URL_LEN) return showResult('wpImportResult', 'URL must not exceed 2048 characters', 'err');
   if (!title) return showResult('wpImportResult', 'Title is required', 'err');
+  if (title.length > MAX_TITLE_LEN) return showResult('wpImportResult', 'Title must not exceed 512 characters', 'err');
   _importing = true;
   var btn = document.getElementById('wpImportBtn');
   btn.disabled = true;
@@ -1592,8 +1600,16 @@ async function saveEdit(id) {
     showToast('URL must start with http:// or https://', 'err');
     return;
   }
+  if (newUrl.length > MAX_URL_LEN) {
+    showToast('URL must not exceed 2048 characters', 'err');
+    return;
+  }
   if (!newTitle) {
     showToast('Title is required', 'err');
+    return;
+  }
+  if (newTitle.length > MAX_TITLE_LEN) {
+    showToast('Title must not exceed 512 characters', 'err');
     return;
   }
   try {
