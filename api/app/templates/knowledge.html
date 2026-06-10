@@ -1377,7 +1377,11 @@ document.getElementById('confirmBtn').addEventListener('click', function(){
 // WEB PAGES TAB
 // ════════════════════════════════════════════════
 
-const URL_RE = /^https?:\/\/.+/i;
+function isValidUrl(str) {
+  if (!str || typeof str !== 'string') return false;
+  try { var u = new URL(str); return u.protocol === 'http:' || u.protocol === 'https:'; }
+  catch(e) { return false; }
+}
 
 function showToast(msg, type) {
   var el = document.getElementById('kbToast');
@@ -1398,8 +1402,8 @@ function validateUrlInput() {
   var titleEl = document.getElementById('wpTitleInput');
   var url = urlEl.value.trim();
   var title = titleEl.value.trim();
-  urlEl.className = 'kb-input' + (url && !URL_RE.test(url) ? ' err' : '');
-  document.getElementById('wpImportBtn').disabled = !url || !title;
+  urlEl.className = 'kb-input' + (url && !isValidUrl(url) ? ' err' : '');
+  document.getElementById('wpImportBtn').disabled = !url || !title || !isValidUrl(url);
 }
 
 function showTableLoading(show) {
@@ -1538,7 +1542,7 @@ async function importWebPage() {
   var url = document.getElementById('wpUrlInput').value.trim();
   var title = document.getElementById('wpTitleInput').value.trim();
   if (!url) return showResult('wpImportResult', 'URL is required', 'err');
-  if (!URL_RE.test(url)) return showResult('wpImportResult', 'URL must start with http:// or https://', 'err');
+  if (!isValidUrl(url)) return showResult('wpImportResult', 'URL must start with http:// or https://', 'err');
   if (!title) return showResult('wpImportResult', 'Title is required', 'err');
   _importing = true;
   var btn = document.getElementById('wpImportBtn');
@@ -1584,9 +1588,20 @@ function cancelEdit(id) {
 async function saveEdit(id) {
   var newUrl = document.getElementById('edit-url-' + id).value.trim();
   var newTitle = document.getElementById('edit-title-' + id).value.trim();
-  if (!newUrl || !URL_RE.test(newUrl)) return;
-  await api('/knowledge/urls/' + id, { method: 'PATCH', body: { url: newUrl, title: newTitle } });
-  loadWebPages();
+  if (!newUrl || !isValidUrl(newUrl)) {
+    showToast('URL must start with http:// or https://', 'err');
+    return;
+  }
+  if (!newTitle) {
+    showToast('Title is required', 'err');
+    return;
+  }
+  try {
+    await api('/knowledge/urls/' + id, { method: 'PATCH', body: { url: newUrl, title: newTitle } });
+    loadWebPages();
+  } catch(e) {
+    showToast(e.message, 'err');
+  }
 }
 
 async function refreshWebPage(id) {

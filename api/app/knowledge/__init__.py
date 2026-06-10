@@ -4,15 +4,17 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import re
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, UploadFile, File
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from ..rag.chunking import file_sha256, sanitize_filename
 
@@ -760,10 +762,28 @@ async def _background_index_url(tenant_id: uuid.UUID, url_id: uuid.UUID, url: st
             logger.error("[url-index] Failed to update DB status for %s: %s", url_id, db_err)
 
 
+def _normalize_url(url: str) -> str:
+    return url.strip().lower().rstrip("/")
+
+
 class _UrlImportIn(BaseModel):
     url: str
     title: str | None = None
     folder_id: uuid.UUID | None = None
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("URL is required")
+        if len(v) > 2048:
+            raise ValueError("URL must not exceed 2048 characters")
+        if not re.match(r"https?://", v, re.IGNORECASE):
+            raise ValueError("URL must start with http:// or https://")
+        parsed = urlparse(v)
+        if not parsed.netloc:
+            raise ValueError("Invalid URL: missing hostname")
+        return v.strip()
 
 
 @router.post("/urls", status_code=201)
@@ -772,8 +792,6 @@ async def import_url(
     tenant: Tenant = Depends(get_current_tenant),
     db: Session = Depends(get_db),
 ):
-    if not body.url.strip():
-        raise HTTPException(400, "url is required")
 
     resolved_title = (body.title or body.url).strip()
 
@@ -788,10 +806,10 @@ async def import_url(
     existing = db.execute(
         select(KnowledgeUrl).where(
             KnowledgeUrl.tenant_id == tenant.id,
-            KnowledgeUrl.url == body.url,
             KnowledgeUrl.status != "failed",
-        ).order_by(KnowledgeUrl.created_at.desc())
-    ).scalars().first()
+        )
+    ).scalars().all()
+    existing = next((r for r in existing if _normalize_url(r.url) == _normalize_url(body.url)), None)
     if existing:
         return {
             "id": str(existing.id),
@@ -820,6 +838,23 @@ async def import_url(
 class _UrlUpdateBody(BaseModel):
     url: str | None = None
     title: str | None = None
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        v = v.strip()
+        if not v:
+            raise ValueError("URL is required")
+        if len(v) > 2048:
+            raise ValueError("URL must not exceed 2048 characters")
+        if not re.match(r"https?://", v, re.IGNORECASE):
+            raise ValueError("URL must start with http:// or https://")
+        parsed = urlparse(v)
+        if not parsed.netloc:
+            raise ValueError("Invalid URL: missing hostname")
+        return v
 
 
 @router.patch("/urls/{url_id}")
