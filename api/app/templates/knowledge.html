@@ -1555,18 +1555,23 @@ async function importWebPage() {
   _importing = true;
   var btn = document.getElementById('wpImportBtn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="kb-spinner"></span>';
+  btn.innerHTML = '<span class="kb-spinner" style="width:16px;height:16px;border-width:2px;vertical-align:middle"></span> Import';
   try {
-    await api('/knowledge/urls', { method: 'POST', body: { url: url, title: title } });
-    showResult('wpImportResult', 'Imported', 'ok');
+    var resp = await api('/knowledge/urls', { method: 'POST', body: { url: url, title: title } });
+    if (resp && resp.duplicate) {
+      showResult('wpImportResult', 'Already imported', 'ok');
+    } else {
+      showResult('wpImportResult', 'Imported', 'ok');
+    }
     document.getElementById('wpUrlInput').value = '';
     document.getElementById('wpTitleInput').value = '';
+    validateUrlInput();
     loadWebPages();
   } catch(e) {
     showResult('wpImportResult', e.message, 'err');
   } finally {
     _importing = false;
-    btn.disabled = false;
+    btn.disabled = document.getElementById('wpUrlInput').value.trim() === '' || document.getElementById('wpTitleInput').value.trim() === '';
     btn.innerHTML = '<svg class="icon"><use href="#icon-plus"/></svg> Import';
   }
 }
