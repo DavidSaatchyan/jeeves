@@ -1415,8 +1415,8 @@ function validateUrlInput() {
 }
 
 function showTableLoading(show) {
-  document.getElementById('wpEmpty').style.display = 'none';
   if (show) {
+    document.getElementById('wpEmpty').style.display = 'none';
     var widths = ['w80','w60','w55','w45','w40','w30'];
     var html = '';
     for (var i = 0; i < 5; i++) {
@@ -1429,6 +1429,8 @@ function showTableLoading(show) {
         + '<td class="col-actions"><div style="width:20px;height:20px"></div></td></tr>';
     }
     document.getElementById('wpBody').innerHTML = html;
+  } else {
+    document.getElementById('wpBody').innerHTML = '';
   }
 }
 
