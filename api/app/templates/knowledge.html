@@ -501,6 +501,8 @@
 #wpTable .col-actions{width:13%}
 .edit-actions{display:flex;flex-direction:column;gap:4px}
 .edit-actions .btn{padding:4px 10px;font-size:11px;white-space:nowrap}
+.kb-row-highlight{animation:kbHighlight 2s ease-out}
+@keyframes kbHighlight{0%{background:rgba(245,166,35,.25)}100%{background:transparent}}
 .kb-table td .kb-input{width:100%;box-sizing:border-box}
 .import-bar{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;padding:14px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius)}
 .import-bar-row{display:flex;gap:8px;align-items:center}
@@ -1560,13 +1562,19 @@ async function importWebPage() {
     var resp = await api('/knowledge/urls', { method: 'POST', body: { url: url, title: title } });
     if (resp && resp.duplicate) {
       showResult('wpImportResult', 'Already imported', 'ok');
+      var row = document.querySelector('tr[data-url-id="' + resp.id + '"]');
+      if (row) {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        row.classList.add('kb-row-highlight');
+        setTimeout(function(){ row.classList.remove('kb-row-highlight'); }, 2000);
+      }
     } else {
       showResult('wpImportResult', 'Imported', 'ok');
+      document.getElementById('wpUrlInput').value = '';
+      document.getElementById('wpTitleInput').value = '';
+      validateUrlInput();
+      loadWebPages();
     }
-    document.getElementById('wpUrlInput').value = '';
-    document.getElementById('wpTitleInput').value = '';
-    validateUrlInput();
-    loadWebPages();
   } catch(e) {
     showResult('wpImportResult', e.message, 'err');
   } finally {
