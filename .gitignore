@@ -72,6 +72,9 @@ chroma_data/
 test_data/
 # Note: specific .jsonl test fixtures (golden_dataset.jsonl) are force-added
 
+# OpenFlo runtime state (agent memories, federation keys)
+.openflo-data/
+
 # Scratch files
 integrations.txt
 spec.txt

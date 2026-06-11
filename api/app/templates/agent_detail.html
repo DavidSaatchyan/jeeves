@@ -425,7 +425,7 @@ function esc(v) {
 
 function showToast(msg, isError) {
   const el = document.createElement('div');
-  el.style.cssText = `position:fixed;bottom:24px;right:24px;padding:10px 18px;border-radius:8px;font-size:13px;z-index:999;background:${isError ? 'var(--red)' : 'var(--green)'};color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.3)`;
+  el.style.cssText = `position:fixed;bottom:24px;right:24px;padding:10px 18px;border-radius:8px;font-size:13px;z-index:999;background:${isError ? 'var(--red)' : 'var(--green)'};color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.12)`;
   el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 2500);

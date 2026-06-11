@@ -1,0 +1,146 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "username": "openflo",
+  "default_agent": "swarm",
+  "instructions": ["AGENTS.md"],
+
+  "skills": {
+    "paths": [".opencode/skills"]
+  },
+
+  "agent": {
+    "swarm": {
+      "model": "opencode/deepseek-v4-flash-free",
+      "mode": "primary",
+      "description": "Default OpenFlo agent — orchestrates sub-agents for complex multi-step tasks",
+      "permission": { "edit": "ask", "bash": "ask", "read": "allow" }
+    },
+    "implementer": {
+      "model": "opencode/deepseek-v4-flash-free",
+      "mode": "subagent",
+      "description": "Implementation specialist — writes production code from architectural plans, follows project conventions",
+      "permission": { "edit": "allow", "bash": "allow", "read": "allow" }
+    },
+    "architect": {
+      "model": "opencode/deepseek-v4-flash-free",
+      "mode": "subagent",
+      "description": "Designs software architecture — creates plans, component diagrams, data flow, and tech decisions",
+      "permission": { "edit": "deny", "bash": "ask", "read": "allow" }
+    },
+    "reviewer": {
+      "model": "opencode/deepseek-v4-flash-free",
+      "mode": "subagent",
+      "description": "Reviews code for bugs, security, style, and performance issues",
+      "permission": { "edit": "deny", "bash": "deny", "read": "allow" }
+    },
+    "tester": {
+      "model": "opencode/deepseek-v4-flash-free",
+      "mode": "subagent",
+      "description": "Generates and runs tests — unit, integration, e2e — finds coverage gaps",
+      "permission": { "edit": "allow", "bash": "allow", "read": "allow" }
+    },
+    "security": {
+      "model": "opencode/deepseek-v4-flash-free",
+      "mode": "subagent",
+      "description": "Vulnerability audit — scans for security issues in code and dependencies",
+      "permission": { "edit": "ask", "bash": "ask", "read": "allow" }
+    },
+    "debugger": {
+      "model": "opencode/deepseek-v4-flash-free",
+      "mode": "subagent",
+      "description": "Root cause analysis — debugs test failures, crashes, and production bugs",
+      "permission": { "edit": "ask", "bash": "allow", "read": "allow" }
+    },
+    "refactorer": {
+      "model": "opencode/deepseek-v4-flash-free",
+      "mode": "subagent",
+      "description": "Code restructuring — eliminates duplication, simplifies long functions, improves organization",
+      "permission": { "edit": "allow", "bash": "ask", "read": "allow" }
+    },
+    "documenter": {
+      "model": "opencode/big-pickle",
+      "mode": "subagent",
+      "description": "Documentation — writes README, JSDoc, API docs, ADRs, and inline comments",
+      "permission": { "edit": "allow", "bash": "deny", "read": "allow" }
+    },
+    "researcher": {
+      "model": "opencode/big-pickle",
+      "mode": "subagent",
+      "description": "Codebase exploration — quickly finds files, searches code, and answers how-things-work questions",
+      "permission": { "edit": "ask", "bash": "allow", "read": "allow" }
+    },
+    "devops": {
+      "model": "opencode/big-pickle",
+      "mode": "subagent",
+      "description": "DevOps — CI/CD pipelines, Docker, deployment, infrastructure-as-code",
+      "permission": { "edit": "allow", "bash": "allow", "read": "allow" }
+    },
+    "perf": {
+      "model": "opencode/big-pickle",
+      "mode": "subagent",
+      "description": "Performance — identifies bottlenecks, optimizes code, reduces load times",
+      "permission": { "edit": "allow", "bash": "allow", "read": "allow" }
+    },
+    "migrator": {
+      "model": "opencode/big-pickle",
+      "mode": "subagent",
+      "description": "Migration — handles codebase migrations, framework upgrades, breaking changes",
+      "permission": { "edit": "allow", "bash": "allow", "read": "allow" }
+    },
+    "deps": {
+      "model": "opencode/big-pickle",
+      "mode": "subagent",
+      "description": "Dependencies — manages packages, audits vulnerabilities, updates, resolves conflicts",
+      "permission": { "edit": "allow", "bash": "allow", "read": "allow" }
+    },
+    "i18n": {
+      "model": "opencode/big-pickle",
+      "mode": "subagent",
+      "description": "Internationalization — adds i18n/l10n, extracts strings, manages translations",
+      "permission": { "edit": "allow", "bash": "allow", "read": "allow" }
+    },
+    "legal": {
+      "model": "opencode/big-pickle",
+      "mode": "subagent",
+      "description": "Legal — audits license compliance, checks dependency licenses, open-source compatibility",
+      "permission": { "edit": "allow", "bash": "allow", "read": "allow" }
+    },
+    "ux": {
+      "model": "opencode/deepseek-v4-flash-free",
+      "mode": "subagent",
+      "description": "UX — reviews user experience, accessibility (WCAG), usability, and consistency",
+      "permission": { "edit": "allow", "bash": "deny", "read": "allow" }
+    },
+    "goal": {
+      "model": "opencode/big-pickle",
+      "mode": "subagent",
+      "description": "Goal Planning — decomposes goals, tracks progress, suggests next actions",
+      "permission": { "edit": "allow", "bash": "ask", "read": "allow" }
+    },
+    "consensus": {
+      "model": "opencode/big-pickle",
+      "mode": "subagent",
+      "description": "Consensus — manages multi-agent voting and decision resolution",
+      "permission": { "edit": "deny", "bash": "deny", "read": "allow" }
+    }
+  },
+
+  "mcp": {
+    "openflo-mcp": {
+      "type": "local",
+      "command": ["node", "mcp/openflo-mcp/index.js"],
+      "enabled": true,
+      "env": {}
+    }
+  },
+
+  "plugin": [
+    "./.opencode/plugins/openflo-core.ts",
+    "./.opencode/plugins/aidefence.ts"
+  ],
+
+  "permission": {
+    "edit": "ask",
+    "bash": { "npm test *": "allow", "npx vitest *": "allow", "*": "ask" }
+  }
+}
