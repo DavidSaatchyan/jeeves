@@ -23,7 +23,6 @@ from ..rag import (
     rerank_docs,
     translate_and_search,
     validate_citations,
-    search as rag_search,
 )
 from .base import Agent, AgentAction, AgentResult
 from .default_config import get_default_agent_config
@@ -53,6 +52,22 @@ def _diversify_results(results: list[dict], key_fn: Any, max_per_group: int = 3)
             out.append(r)
             counts[key] = counts.get(key, 0) + 1
     return out
+
+
+def _verify_against_context(answer: str, context_chunks: list[dict]) -> bool:
+    """Quick entity-level check that answer claims exist in context (zero LLM cost)."""
+    import re
+    phrases = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b', answer)
+    if not phrases:
+        return True
+    context_text = " ".join(c.get("text", "") for c in context_chunks).lower()
+    for phrase in phrases:
+        if phrase.lower() not in context_text:
+            if any(phrase.lower().startswith(skip) for skip in ("thank", "please", "your", "would", "medical emergency", "i don't have", "i'm sorry", "i am sorry", "here are", "the following", "available", "call your local", "this is")):
+                continue
+            logger.warning("Verify: '%s' not found in context — possible hallucination", phrase)
+            return False
+    return True
 
 
 def _get_agent_config(tenant: Tenant | None) -> dict:
@@ -128,7 +143,8 @@ async def _handle_kb_query(message: str, tenant_id: str, config: dict) -> tuple[
     context = "\n\n".join(blocks)
 
     system_prompt = (
-        "You are a medical clinic assistant. Extract information only from the context provided."
+        "You are a medical clinic assistant. Answer using ONLY the provided context. "
+        "Never use your training knowledge. If the context does not contain the answer, set missing_info to true."
     )
     user_prompt = (
         "Answer the patient's question using only the knowledge base excerpts below.\n\n"
@@ -137,7 +153,8 @@ async def _handle_kb_query(message: str, tenant_id: str, config: dict) -> tuple[
         "- For every claim, reference the exact document by number [Document N].\n"
         "- If the context does not contain the answer, set missing_info to true.\n"
         "- Do NOT combine separate facts into relationships unless the source text explicitly states that relationship.\n"
-        "- Do NOT use your training knowledge to supplement or interpret the context.\n\n"
+        "- NEVER use your training knowledge to supplement or interpret the context.\n"
+        "- If you are asked about a location, clinic, or address, answer ONLY what is written in the context.\n\n"
         f"CONTEXT:\n{context}\n\n"
         f"Patient question: {message}"
     )
@@ -161,6 +178,10 @@ async def _handle_kb_query(message: str, tenant_id: str, config: dict) -> tuple[
         if not guard_passed:
             logger.warning("Citation guard blocked %d citations, returning fallback", len(guard_failures))
             return "I don't have that information.", []
+
+    if not _verify_against_context(kb_result.answer, results):
+        logger.warning("Verify: answer entity check failed, returning fallback")
+        return "I don't have that information.", []
 
     answer = deterministic_naturalize(kb_result)
     if answer:

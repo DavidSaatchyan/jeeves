@@ -67,15 +67,15 @@ policies:
     - 3600
     - 86400
 rag:
-  chat_threshold: 0.8
-  citation_guard: false
+  chat_threshold: 0.75
+  citation_guard: true
   distance_threshold: 0.85
   embedding_model: text-embedding-3-small
-  mmr_lambda: 0.0
+  mmr_lambda: 0.3
   query_translation: true
   reranker:
     api_key: ''
-    model: rerank-v3.5
-    provider: ''
+    model: cross-encoder/ms-marco-MiniLM-L-6-v2
+    provider: bge
   semantic_cache: false
   top_k: 15

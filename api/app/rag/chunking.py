@@ -177,6 +177,7 @@ def _pdf_units(text: str) -> list[_Unit]:
 # Recursive token-aware splitter for a single unit -------------------------
 _PARA_SPLIT = re.compile(r"\n\s*\n+")
 _SENT_SPLIT = re.compile(r"(?<=[.!?])\s+(?=[A-ZА-ЯЁ0-9])")
+_ENUM_LINE = re.compile(r"^\d+[.)]\s+\S")
 
 
 def _split_recursive(text: str) -> list[str]:
@@ -188,8 +189,9 @@ def _split_recursive(text: str) -> list[str]:
     if _ntok(text) <= MAX_TOKENS:
         return [text]
 
-    # Paragraphs
-    parts = _PARA_SPLIT.split(text)
+    # Paragraphs — but keep enumerated list items together
+    raw_parts = _PARA_SPLIT.split(text)
+    parts = _coalesce_enumerated(raw_parts) if len(raw_parts) > 1 else raw_parts
     if len(parts) > 1:
         return _pack(parts, separator="\n\n")
 
@@ -200,6 +202,20 @@ def _split_recursive(text: str) -> list[str]:
 
     # Hard token window with overlap
     return _token_window(text)
+
+
+def _coalesce_enumerated(parts: list[str]) -> list[str]:
+    """Merge adjacent paragraph-split items that form an enumerated list."""
+    merged: list[str] = []
+    for p in parts:
+        p = p.strip()
+        if not p:
+            continue
+        if merged and _ENUM_LINE.match(p):
+            merged[-1] = merged[-1] + "\n\n" + p
+        else:
+            merged.append(p)
+    return merged or parts
 
 
 def _pack(parts: Iterable[str], separator: str) -> list[str]:
