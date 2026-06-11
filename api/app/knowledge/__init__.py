@@ -468,7 +468,27 @@ def delete_file(
     except Exception as e:
         logger.warning("chroma delete warning: %s", e)
 
+    # Clean up orphan chunks whose file_id no longer exists in DB
+    try:
+        _cleanup_orphans_after_delete(tenant, db)
+    except Exception as e:
+        logger.warning("orphan cleanup warning: %s", e)
+
     return
+
+
+def _cleanup_orphans_after_delete(tenant: Tenant, db: Session) -> dict:
+    """Quick orphan cleanup after a file/URL deletion. Collects active IDs and purges."""
+    active: set[str] = set()
+    for r in db.execute(select(FileRecord).where(FileRecord.tenant_id == tenant.id)).scalars().all():
+        active.add(str(r.id))
+    for r in db.execute(select(KnowledgeUrl).where(KnowledgeUrl.tenant_id == tenant.id)).scalars().all():
+        active.add(str(r.id))
+    p = rag.purge_orphans(tenant.id, active)
+    d = rag.deduplicate_collection(tenant.id)
+    if p.get("removed", 0) or d.get("removed", 0):
+        logger.info("cleanup after delete: purged %d orphans, deduped %d duplicates", p.get("removed", 0), d.get("removed", 0))
+    return {"purge": p, "dedup": d}
 
 
 @router.post("/cleanup")
@@ -480,16 +500,7 @@ def cleanup_chroma(
     1. Purge chunks whose file_id no longer exists in DB (orphans)
     2. Deduplicate remaining chunks by (filename, chunk_hash)
     """
-    active = set()
-    for r in db.execute(select(FileRecord).where(FileRecord.tenant_id == tenant.id)).scalars().all():
-        active.add(str(r.id))
-    for r in db.execute(select(KnowledgeUrl).where(KnowledgeUrl.tenant_id == tenant.id)).scalars().all():
-        active.add(str(r.id))
-
-    p = rag.purge_orphans(tenant.id, active)
-    d = rag.deduplicate_collection(tenant.id)
-
-    return {"purge": p, "dedup": d}
+    return _cleanup_orphans_after_delete(tenant, db)
 
 
 # ── Folder CRUD ──────────────────────────────────────────────────────────────
@@ -952,6 +963,11 @@ def delete_url(
     db.commit()
     _log_activity(db, tenant.id, "url_deleted", f"Deleted URL {rec.url}", str(url_id))
     db.commit()
+
+    try:
+        _cleanup_orphans_after_delete(tenant, db)
+    except Exception as e:
+        logger.warning("orphan cleanup warning: %s", e)
 
 
 @router.get("/urls/stale")

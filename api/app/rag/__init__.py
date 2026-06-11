@@ -16,6 +16,7 @@ from .config import (
     TOP_K,
 )
 from .engine import count_chunks_by_source, delete_file, get_chunks_for_file, index_file, index_structured_text, index_text, search
+from .grounding import validate_grounding
 from .maintenance import deduplicate_collection, purge_orphans
 from .mmr import mmr_diversify
 from .products import delete_products_by_batch, index_products
@@ -52,4 +53,5 @@ __all__ = [
     "search",
     "translate_and_search",
     "validate_citations",
+    "validate_grounding",
 ]

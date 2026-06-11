@@ -42,12 +42,20 @@ def _extract_service_sections(svc: dict[str, Any]) -> list[tuple[str, str]]:
     if item_code:
         lines.append(f"Code: {item_code}")
 
-    return [("Service", "\n".join(lines))]
+    section_label = f"Service: {name}" if name else "Service"
+    return [(section_label, "\n".join(lines))]
 
 
 def _extract_practitioner_sections(prac: dict[str, Any]) -> list[tuple[str, str]]:
     import re
-    full_name = prac.get("display_name", prac.get("first_name", ""))
+    display = prac.get("display_name", "")
+    if display:
+        full_name = display
+    else:
+        first = prac.get("first_name", "")
+        last = prac.get("last_name", "")
+        full_name = f"{first} {last}".strip() or ""
+
     normalized = re.sub(r'^(Mr\.?|Mrs\.?|Ms\.?|Dr\.?|Prof\.?)\s+', '', full_name, flags=re.IGNORECASE)
 
     lines: list[str] = [f"Name: {normalized}"]
@@ -65,7 +73,8 @@ def _extract_practitioner_sections(prac: dict[str, Any]) -> list[tuple[str, str]
         lines.append(f"Description: {description}")
     lines.append(f"Accepting new patients: {'Yes' if prac.get('active', True) else 'No'}")
 
-    return [("Practitioner", "\n".join(lines))]
+    section_label = f"Practitioner: {normalized}" if normalized else "Practitioner"
+    return [(section_label, "\n".join(lines))]
 
 
 def _extract_clinic_sections(clinic: dict[str, Any]) -> list[tuple[str, str]]:
@@ -98,7 +107,8 @@ def _extract_clinic_sections(clinic: dict[str, Any]) -> list[tuple[str, str]]:
     if additional:
         lines.append(f"Additional info: {additional}")
 
-    return [("Clinic", "\n".join(lines))]
+    section_label = f"Clinic: {name}" if name else "Clinic"
+    return [(section_label, "\n".join(lines))]
 
 
 def _delete_by_type_and_batch(

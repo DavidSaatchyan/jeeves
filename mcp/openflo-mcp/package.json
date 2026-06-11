@@ -1,0 +1,15 @@
+{
+  "name": "openflo-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OpenFlo MCP server — persistent memory with protocol-compliant JSON-RPC over stdio",
+  "main": "index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@xenova/transformers": "^2.17.2",
+    "better-sqlite3": "^12.10.0"
+  }
+}

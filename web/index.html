@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenFlo Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>OpenFlo</h1>
+  <nav>
+    <button data-tab="stats" class="active">Stats</button>
+    <button data-tab="memories">Memories</button>
+    <button data-tab="goals">Goals</button>
+    <button data-tab="peers">Peers</button>
+    <button data-tab="logs">Logs</button>
+  </nav>
+</header>
+
+<main>
+  <section id="tab-stats" class="tab-content active">
+    <h2>Server Stats</h2>
+    <div id="stats-grid" class="stats-grid"></div>
+  </section>
+
+  <section id="tab-memories" class="tab-content">
+    <h2>Recent Memories</h2>
+    <div id="memories-list"></div>
+  </section>
+
+  <section id="tab-goals" class="tab-content">
+    <h2>Active Goals</h2>
+    <div id="goals-list"></div>
+  </section>
+
+  <section id="tab-peers" class="tab-content">
+    <h2>Federation Peers</h2>
+    <div id="peers-list"></div>
+  </section>
+
+  <section id="tab-logs" class="tab-content">
+    <h2>Server Logs</h2>
+    <pre id="log-viewer"></pre>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -67,7 +67,7 @@ policies:
     - 3600
     - 86400
 rag:
-  chat_threshold: 0.75
+  chat_threshold: 0.85
   citation_guard: true
   distance_threshold: 0.85
   embedding_model: text-embedding-3-small
@@ -77,5 +77,5 @@ rag:
     api_key: ''
     model: cross-encoder/ms-marco-MiniLM-L-6-v2
     provider: bge
-  semantic_cache: false
+  semantic_cache: true
   top_k: 15

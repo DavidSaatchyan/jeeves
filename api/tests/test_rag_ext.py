@@ -432,68 +432,85 @@ class TestExtractServiceSections:
     def test_minimal(self):
         from app.rag.crm_indexer import _extract_service_sections
         result = _extract_service_sections({"name": "Consult"})
-        assert ("Name", "Consult") in result
-        assert not any(h == "Pricing" for h, _ in result)
-        assert not any(h == "Duration" for h, _ in result)
+        assert len(result) == 1
+        label, text = result[0]
+        assert label == "Service: Consult"
+        assert "Name: Consult" in text
+        assert "Pricing" not in text
+        assert "Duration" not in text
 
     def test_with_price_and_duration(self):
         from app.rag.crm_indexer import _extract_service_sections
         result = _extract_service_sections({"name": "Checkup", "price": 15000, "duration_in_minutes": 30})
-        assert any("$150" in v for _, v in result)
-        assert any("30 minutes" in v for _, v in result)
+        _, text = result[0]
+        assert "$150" in text
+        assert "30 minutes" in text
 
     def test_with_all_fields(self):
         from app.rag.crm_indexer import _extract_service_sections
         s = {"name": "Standard", "price": 10000, "duration_in_minutes": 45, "category": "Consultation",
              "description": "Full check", "telehealth_enabled": True, "item_code": "SC-001"}
         result = _extract_service_sections(s)
-        assert ("Telehealth", "Yes") in result
-        assert ("Code", "SC-001") in result
-        assert ("Category", "Consultation") in result
+        _, text = result[0]
+        assert "Telehealth: Yes" in text
+        assert "Code: SC-001" in text
+        assert "Category: Consultation" in text
 
     def test_telehealth_disabled(self):
         from app.rag.crm_indexer import _extract_service_sections
         result = _extract_service_sections({"name": "X", "telehealth_enabled": False})
-        assert ("Telehealth", "No") in result
+        _, text = result[0]
+        assert "Telehealth: No" in text
 
 
 class TestExtractPractitionerSections:
     def test_minimal(self):
         from app.rag.crm_indexer import _extract_practitioner_sections
         result = _extract_practitioner_sections({"display_name": "Dr. Smith"})
-        assert ("Name", "Dr. Smith") in result
-        assert ("Accepting new patients", "Yes") in result
+        assert len(result) == 1
+        label, text = result[0]
+        assert label == "Practitioner: Smith"
+        assert "Name: Smith" in text
+        assert "Display Name: Dr. Smith" in text
+        assert "Accepting new patients: Yes" in text
 
     def test_with_all_fields(self):
         from app.rag.crm_indexer import _extract_practitioner_sections
         p = {"display_name": "Dr. Jane", "title": "Dr.", "designation": "Physiotherapist",
              "description": "Sports medicine", "active": True}
         result = _extract_practitioner_sections(p)
-        assert ("Title", "Dr.") in result
-        assert ("Specialty", "Physiotherapist") in result
-        assert ("Description", "Sports medicine") in result
-        assert ("Accepting new patients", "Yes") in result
+        _, text = result[0]
+        assert "Title: Dr." in text
+        assert "Specialty: Physiotherapist" in text
+        assert "Description: Sports medicine" in text
+        assert "Accepting new patients: Yes" in text
 
     def test_inactive(self):
         from app.rag.crm_indexer import _extract_practitioner_sections
         result = _extract_practitioner_sections({"display_name": "X", "active": False})
-        assert ("Accepting new patients", "No") in result
+        _, text = result[0]
+        assert "Accepting new patients: No" in text
 
 
 class TestExtractClinicSections:
     def test_minimal(self):
         from app.rag.crm_indexer import _extract_clinic_sections
         result = _extract_clinic_sections({"business_name": "Sydney Physio"})
-        assert ("Clinic", "Sydney Physio") in result
+        assert len(result) == 1
+        label, text = result[0]
+        assert label == "Clinic: Sydney Physio"
+        assert "Clinic Name: Sydney Physio" in text
 
     def test_with_address(self):
         from app.rag.crm_indexer import _extract_clinic_sections
         c = {"business_name": "Clinic", "address": "123 Main St", "city": "Sydney", "state": "NSW",
              "postcode": "2000", "country": "Australia", "phone": "+612", "email": "info@c.com"}
         result = _extract_clinic_sections(c)
-        assert any("123 Main St" in v for _, v in result)
-        assert ("Phone", "+612") in result
-        assert ("Email", "info@c.com") in result
+        assert len(result) == 1
+        _, text = result[0]
+        assert "Address: 123 Main St" in text
+        assert "Phone: +612" in text
+        assert "Email: info@c.com" in text
 
 
 class TestIndexServices:
