@@ -29,14 +29,14 @@
 
 .inbox-status-tabs { display: flex; gap: 2px; padding: 0 14px 8px; flex-wrap: wrap; flex-shrink: 0; }
 .inbox-status-tab { font-size: 11px; padding: 3px 10px; border-radius: 12px; background: none; border: none; color: var(--muted2); cursor: pointer; font-weight: 500; }
-.inbox-status-tab:hover { background: rgba(0,0,0,0.04); color: var(--text); }
-.inbox-status-tab.active { background: rgba(94,106,210,0.1); color: var(--accent); }
+.inbox-status-tab:hover { background: rgba(79,70,229,0.06); color: var(--text); }
+.inbox-status-tab.active { background: rgba(79,70,229,0.1); color: var(--accent); }
 
 .inbox-convs { flex: 1; overflow-y: auto; padding: 0 6px; }
 
 .inbox-conv { display: flex; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer; align-items: flex-start; }
-.inbox-conv:hover { background: rgba(0,0,0,0.02); }
-.inbox-conv.active { background: rgba(94,106,210,0.08); }
+.inbox-conv:hover { background: rgba(79,70,229,0.03); }
+.inbox-conv.active { background: rgba(79,70,229,0.08); }
 .inbox-conv + .inbox-conv { border-top: 1px solid var(--border); }
 
 .inbox-conv-avatar { width: 32px; height: 32px; min-width: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; }
@@ -72,7 +72,7 @@
 .inbox-detail-header .meta { font-size: 11px; color: var(--muted2); white-space: nowrap; flex-shrink: 0; }
 .inbox-detail-header .actions { display: flex; gap: 4px; flex-shrink: 0; }
 .inbox-detail-header .actions button { font-size: 11px; padding: 4px 10px; border-radius: 5px; background: none; border: 1px solid var(--border); color: var(--muted); cursor: pointer; }
-.inbox-detail-header .actions button:hover { background: rgba(0,0,0,0.04); color: var(--text); border-color: var(--muted2); }
+.inbox-detail-header .actions button:hover { background: var(--surface2); color: var(--text); border-color: var(--muted2); }
 
 /* ★ CRITICAL: messages container must FILL the detail panel */
 .inbox-messages {
@@ -122,7 +122,7 @@
 
 .canned-list { overflow-y: auto; flex: 1; }
 .canned-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--border); }
-.canned-item:hover { background: rgba(94,106,210,0.07); }
+.canned-item:hover { background: rgba(79,70,229,0.07); }
 .canned-item:last-child { border-bottom: none; }
 .canned-item .ci-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 1px; }
 .canned-item .ci-shortcut { font-size: 10px; color: var(--muted2); background: var(--bg); padding: 1px 5px; border-radius: 3px; margin-left: 6px; font-weight: 400; }
@@ -138,7 +138,7 @@
 .profile-header .name { font-size: 14px; font-weight: 600; }
 .profile-header .email { font-size: 11px; color: var(--muted2); margin-top: 1px; }
 .profile-close { background: none; border: none; color: var(--muted2); cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; line-height: 1; }
-.profile-close:hover { color: var(--text); background: rgba(0,0,0,0.04); }
+.profile-close:hover { color: var(--text); background: var(--surface2); }
 @media (min-width: 1200px) { .profile-close { display: none; } }
 
 .profile-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 14px; }
@@ -151,7 +151,7 @@
 .risk-medium { color: var(--amber); }
 .risk-high { color: var(--red); }
 
-.tag { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(94,106,210,0.1); color: var(--accent); margin: 1px 2px; white-space: nowrap; }
+.tag { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(79,70,229,0.1); color: var(--accent); margin: 1px 2px; white-space: nowrap; }
 
 .profile-conv-item { font-size: 11px; color: var(--muted); padding: 4px 0; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; gap: 8px; }
 .profile-conv-item:hover { color: var(--text); }

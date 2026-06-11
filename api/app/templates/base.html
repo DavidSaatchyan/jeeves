@@ -10,19 +10,19 @@
   {% block head %}{% endblock %}
   <style>
     :root {
-      --bg: #F8FAFC;
+      --bg: #EFF2F6;
       --surface: #FFFFFF;
-      --surface2: #F1F5F9;
-      --border: rgba(0,0,0,0.07);
-      --border-bright: rgba(0,0,0,0.12);
-      --accent: #5e6ad2;
+      --surface2: #E2E7ED;
+      --border: rgba(0,0,0,0.09);
+      --border-bright: rgba(0,0,0,0.16);
+      --accent: #4f46e5;
       --green: #16a34a;
       --red: #dc2626;
       --amber: #d97706;
       --cyan: #0891b2;
-      --text: #1E293B;
-      --muted: #64748B;
-      --muted2: #94A3B8;
+      --text: #0F172A;
+      --muted: #475569;
+      --muted2: #64748B;
       --radius: 8px;
       --radius-sm: 5px;
     }
@@ -32,7 +32,7 @@
 
     /* ── SIDEBAR ── */
     aside { width: 220px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); padding: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; }
-    aside .brand { padding: 20px 18px 14px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(94,106,210,0.04) 0%, transparent 100%); }
+    aside .brand { padding: 20px 18px 14px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(79,70,229,0.06) 0%, transparent 100%); }
     aside .brand .brand-top { display:flex; align-items:center; gap:12px; }
     aside .brand .brand-logo { width: 40px; height: 40px; border-radius: 10px; flex-shrink:0; }
     aside .brand .brand-info { display:flex; flex-direction:column; }
@@ -41,8 +41,8 @@
 
     aside nav { padding: 8px 6px; flex: 1; display: flex; flex-direction: column; gap: 1px; }
     aside .nav-link { display: flex; align-items: center; padding: 8px 12px; color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 500; border-radius: 6px; transition: all .12s; gap: 10px; position:relative; }
-    aside .nav-link:hover { background: rgba(0,0,0,0.04); color: var(--text); }
-    aside .nav-link.active { background: rgba(94,106,210,0.08); color: var(--accent); font-weight: 600; }
+    aside .nav-link:hover { background: var(--surface2); color: var(--text); }
+    aside .nav-link.active { background: rgba(79,70,229,0.10); color: var(--accent); font-weight: 600; }
     aside .nav-link.active::before { content:''; position:absolute; left:0; top:6px; bottom:6px; width:2px; border-radius:2px; background:var(--accent); }
     aside .nav-link .nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.45; transition:opacity .12s; }
     aside .nav-link:hover .nav-icon { opacity:0.7; }
@@ -73,36 +73,36 @@
     input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="url"], textarea, select {
       width: 100%; padding: 10px 14px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; outline: none; font-family: inherit; font-size: 14px; transition: border-color .1s, box-shadow .1s;
     }
-    input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(94,106,210,0.25); }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,0.20); }
     textarea { min-height: 90px; font-family: 'SF Mono', ui-monospace, Consolas, monospace; font-size: 14px; resize: vertical; }
     select { cursor: pointer; }
 
     /* ── BUTTONS ── */
     button, .btn { background: var(--surface2); color: var(--text); border: none; border-radius: 6px; padding: 10px 18px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; transition: all .1s; display: inline-flex; align-items: center; gap: 8px; }
-    button:hover, .btn:hover { background: #e2e8f0; color: #1E293B; }
+    button:hover, .btn:hover { background: var(--surface2); color: var(--text); }
     button:disabled { opacity: .5; cursor: default; }
     button.ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-    button.ghost:hover { background: rgba(0,0,0,0.04); border-color: var(--border-bright); color: var(--text); }
+    button.ghost:hover { background: var(--surface2); border-color: var(--border-bright); color: var(--text); }
     button.ghost.danger { color: var(--red); background: transparent; }
-    button.ghost.danger:hover { background: rgba(220,38,38,0.06); border-color: rgba(220,38,38,0.2); }
+    button.ghost.danger:hover { background: rgba(220,38,38,0.08); border-color: rgba(220,38,38,0.25); }
     button.sm { padding: 7px 14px; font-size: 13px; }
     button.xs { padding: 4px 10px; font-size: 11px; }
     button.accent { background: var(--accent); color: #fff; }
-    button.accent:hover { background: #525fc9; }
+    button.accent:hover { background: #4338ca; }
     button.green { background: var(--green); color: #fff; }
     button.green:hover { background: #1a8f6a; }
     button.danger { background: var(--red); color: #fff; }
     button.danger:hover { background: #c33035; }
 
     .close-btn { width: 28px; height: 28px; border-radius: 6px; border: none; background: transparent; color: var(--muted2); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; transition: all .15s; }
-    .close-btn:hover { background: rgba(0,0,0,0.06); color: var(--text); }
+    .close-btn:hover { background: var(--surface2); color: var(--text); }
 
     /* ── TABLE ── */
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
     th { padding: 12px 16px; text-align: left; font-weight: 600; color: var(--muted2); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; border-bottom: 1px solid var(--border); }
     td { padding: 14px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(0,0,0,0.02); }
+    tr:hover td { background: rgba(79,70,229,0.03); }
 
     /* ── BADGES / PILLS ── */
     .pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; }
@@ -112,8 +112,8 @@
     .pill.warn { color: var(--amber); background: rgba(217,119,6,0.10); border: 1px solid rgba(217,119,6,0.20); }
     .pill.muted { color: var(--muted); background: var(--surface2); border: 1px solid var(--border); }
     .pill.cyan { color: var(--cyan); background: rgba(8,145,178,0.10); border: 1px solid rgba(8,145,178,0.20); }
-    .pill.accent { color: var(--accent); background: rgba(94,106,210,0.12); border: 1px solid rgba(94,106,210,0.25); }
-    .pill.processing { color: var(--accent); background: rgba(94,106,210,0.08); border: 1px solid rgba(94,106,210,0.2); }
+    .pill.accent { color: var(--accent); background: rgba(79,70,229,0.12); border: 1px solid rgba(79,70,229,0.25); }
+    .pill.processing { color: var(--accent); background: rgba(79,70,229,0.08); border: 1px solid rgba(79,70,229,0.20); }
 
     .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 
@@ -134,7 +134,7 @@
 
     /* ── DROP ZONE ── */
     .drop { border: 2px dashed var(--border); border-radius: var(--radius); padding: 32px; text-align: center; color: var(--muted); cursor: pointer; transition: all .1s; }
-    .drop:hover, .drop.hot { border-color: var(--border-bright); background: rgba(0,0,0,0.02); color: var(--text); }
+    .drop:hover, .drop.hot { border-color: var(--border-bright); background: rgba(79,70,229,0.03); color: var(--text); }
 
     /* ── LAYOUT ── */
     .grid { display: grid; gap: 14px; }
@@ -205,7 +205,7 @@
     /* ── CHANNEL TABS ── */
     .ch-tabs{display:flex;gap:4px;margin-bottom:18px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:4px;width:fit-content}
     .ch-tab{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted2);transition:all .1s;user-select:none;border:none;background:transparent}
-    .ch-tab:hover{color:var(--text);background:rgba(0,0,0,0.03)}
+    .ch-tab:hover{color:var(--text);background:var(--surface2)}
     .ch-tab.active{color:var(--text);background:var(--surface);}
     .ch-tab-icon{width:18px;height:18px;flex-shrink:0}
     .ch-tab-badge{font-size:11px;line-height:1;margin-left:3px}
@@ -242,7 +242,7 @@
     .ob-step { display: flex; align-items: center; }
     .ob-step-dot { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; transition: all .2s; position: relative; }
     .ob-step-done { background: var(--green); color: #fff; }
-    .ob-step-current { background: var(--accent); color: #fff; box-shadow: 0 0 0 4px rgba(94,106,210,0.25); }
+    .ob-step-current { background: var(--accent); color: #fff; box-shadow: 0 0 0 4px rgba(79,70,229,0.20); }
     .ob-step-pending { background: var(--bg); color: var(--muted2); border: 1px solid var(--border); }
     .ob-step-line { width: 44px; height: 2px; background: var(--border); margin: 0 4px; }
     .ob-step-line.done { background: var(--green); }
@@ -274,7 +274,7 @@
     /* ── KB TABS (unified knowledge page) ── */
     .kb-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:4px;width:fit-content}
     .kb-tab{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted2);transition:all .1s;user-select:none;border:none;background:transparent;text-decoration:none;border-bottom:none}
-    .kb-tab:hover{color:var(--text);background:rgba(0,0,0,0.03)}
+    .kb-tab:hover{color:var(--text);background:var(--surface2)}
     .kb-tab.active{color:var(--text);background:var(--surface)}
 
     /* ── HMS components ── */
@@ -299,10 +299,10 @@
     .hms-cross{color:var(--red);font-size:18px;font-weight:700}
     .hms-dot{color:var(--muted2);font-size:18px}
     .hms-global-status{margin-top:16px;padding:12px 18px;border-radius:var(--radius);font-size:14px;display:flex;align-items:center;gap:8px}
-    .hms-global-status.hms-ok{background:rgba(34,197,94,0.08);color:var(--green)}
-    .hms-global-status.hms-err{background:rgba(248,113,113,0.08);color:var(--red)}
-    .hms-global-status.hms-loading{background:rgba(99,102,241,0.08);color:var(--accent)}
-    .hms-global-status.hms-partial{background:rgba(234,179,8,0.08);color:#eab308}
+    .hms-global-status.hms-ok{background:rgba(22,163,74,0.10);color:var(--green)}
+    .hms-global-status.hms-err{background:rgba(220,38,38,0.10);color:var(--red)}
+    .hms-global-status.hms-loading{background:rgba(79,70,229,0.08);color:var(--accent)}
+    .hms-global-status.hms-partial{background:rgba(217,119,6,0.10);color:var(--amber)}
     .hms-metrics{display:flex;gap:16px;align-items:center;margin-bottom:20px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
     .hms-metric{font-size:13px;color:var(--muted2)}
     .hms-metric-value{font-size:18px;font-weight:700;color:var(--text)}
@@ -394,19 +394,19 @@ if(!token() && !location.pathname.endsWith('/login')){ location.href='/admin/log
       <div class="nav-section-title">Settings</div>
 
       <a href="/admin/settings/team" class="nav-link sub" data-path="/admin/settings/team" data-role="owner">
-        <span class="nav-agent-icon" style="background:rgba(0,0,0,0.04);color:var(--muted2)">
+        <span class="nav-agent-icon" style="background:var(--surface2);color:var(--muted2)">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </span>
         <span class="nav-link-text">Team</span>
       </a>
       <a href="/admin/settings/billing" class="nav-link sub" data-path="/admin/settings/billing" data-role="owner">
-        <span class="nav-agent-icon" style="background:rgba(0,0,0,0.04);color:var(--muted2)">
+        <span class="nav-agent-icon" style="background:var(--surface2);color:var(--muted2)">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         </span>
         <span class="nav-link-text">Billing</span>
       </a>
       <a href="/admin/settings/logs" class="nav-link sub" data-path="/admin/settings/logs" data-role="owner,manager">
-        <span class="nav-agent-icon" style="background:rgba(0,0,0,0.04);color:var(--muted2)">
+        <span class="nav-agent-icon" style="background:var(--surface2);color:var(--muted2)">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         </span>
         <span class="nav-link-text">Activity Logs</span>
