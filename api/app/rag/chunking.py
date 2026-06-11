@@ -151,6 +151,13 @@ def _is_heading(line: str) -> bool:
 
 def _pdf_units(text: str) -> list[_Unit]:
     """Split merged PDF text into units anchored at section headings."""
+    # Normalize common PDF-extraction artifacts:
+    #   - DEL (0x7F) → paragraph break (used by some PDFs as separator)
+    #   - Double/triple spaces → single space
+    #   - # HEADING on same line as text → separate line so _is_heading can detect it
+    text = text.replace("\x7f", "\n")
+    text = re.sub(r"  +", " ", text)
+    text = re.sub(r"(?<=\S)\s*#\s+(?=[A-Z])", "\n# ", text)
     lines = text.splitlines()
     units: list[_Unit] = []
     cur_section = ""
