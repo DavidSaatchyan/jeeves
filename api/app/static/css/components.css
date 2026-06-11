@@ -1,6 +1,6 @@
 /* ── CARDS ── */
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-6); margin-bottom: 18px; box-shadow: var(--shadow-sm); transition: box-shadow var(--duration-fast) var(--ease-out), border-color var(--duration-fast); }
-.card:hover { border-color: var(--border-bright); box-shadow: var(--shadow-md); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-6); margin-bottom: 18px; box-shadow: var(--shadow-sm); transition: box-shadow var(--duration-fast) var(--ease-out), border-color var(--duration-fast), transform var(--duration-fast) var(--ease-out); }
+.card:hover { border-color: var(--border-bright); box-shadow: var(--shadow-md); transform: translateY(-1px); }
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
 .card-header h2 { margin-bottom: 0; }
 
