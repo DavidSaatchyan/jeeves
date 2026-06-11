@@ -8,30 +8,13 @@
   <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root{--bg:#F8FAFC;--surface:#FFFFFF;--border:rgba(0,0,0,0.07);--accent:#5e6ad2;--text:#1E293B;--muted:#64748B;--muted2:#94A3B8;}
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.7;}
-    .terms-wrap{max-width:720px;margin:0 auto;padding:60px 24px 80px;}
-    .terms-back{display:inline-flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-size:13px;margin-bottom:40px;transition:color .2s;}
-    .terms-back:hover{color:var(--text);}
-    .terms-back svg{width:16px;height:16px;}
-    h1{font-size:28px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px;}
-    .updated{font-size:12px;color:var(--muted2);margin-bottom:40px;}
-    h2{font-size:16px;font-weight:700;margin:32px 0 12px;color:var(--text);}
-    p{color:var(--muted);margin-bottom:16px;}
-    ul{color:var(--muted);margin:0 0 16px 20px;}
-    li{margin-bottom:6px;}
-    a{color:var(--accent);text-decoration:none;}
-    a:hover{text-decoration:underline;}
-    .brand-logo{width:24px;height:24px;border-radius:5px;display:block;margin-bottom:24px;}
-  </style>
+  <link rel="stylesheet" href="/static/css/pages/legal.css">
 </head>
 <body>
 <div class="terms-wrap">
   <img src="/static/logo.svg" alt="Jeeves" class="brand-logo" width="24" height="24"/>
   <a class="terms-back" href="/">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="/static/svg/symbol-defs.svg#chevron-left"/></svg>
     Back to site
   </a>
 

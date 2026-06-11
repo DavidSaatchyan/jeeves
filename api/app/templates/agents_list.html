@@ -1,26 +1,6 @@
 {% extends "base.html" %}
 {% block body %}
-<style>
-  .agent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
-  .agent-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 12px; cursor: pointer; transition: all .15s; }
-  .agent-card:hover { border-color: var(--border-bright); background: rgba(79,70,229,0.03); }
-  .agent-card-top { display: flex; align-items: flex-start; gap: 14px; }
-  .agent-card-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-  .agent-card-info { flex: 1; min-width: 0; }
-  .agent-card-name { font-size: 16px; font-weight: 600; }
-  .agent-card-desc { font-size: 13px; color: var(--muted2); margin-top: 2px; line-height: 1.5; }
-  .agent-card-meta { display: flex; align-items: center; gap: 12px; margin-top: 6px; flex-wrap: wrap; }
-  .agent-card-stat { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
-  .agent-card-channel { width: 20px; height: 20px; border-radius: 4px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 12px; opacity: .5; }
-  .agent-card-channel.active { opacity: 1; background: rgba(91,192,222,0.12); }
-  .agent-card-lock { padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; color: var(--muted2); text-align: center; }
-  .toggle-wrap { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .toggle-switch { width: 36px; height: 20px; border-radius: 10px; background: var(--border); cursor: pointer; position: relative; transition: background .15s; }
-  .toggle-switch.on { background: var(--cyan); }
-  .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
-  .toggle-switch.on::after { transform: translateX(16px); }
-  .channel-icons { display: flex; gap: 4px; }
-</style>
+<link rel="stylesheet" href="/static/css/pages/agents.css">
 
 <h2 style="font-size:20px;font-weight:700;margin-bottom:20px">Agents</h2>
 <p style="font-size:14px;color:var(--muted2);margin-bottom:24px">Configure and manage your AI agents</p>
@@ -55,8 +35,8 @@ async function loadAgents() {
       const iconBg = isIncoming ? 'rgba(91,192,222,0.12)' : 'rgba(107,114,128,0.12)';
       const iconColor = isIncoming ? 'var(--cyan)' : 'var(--muted2)';
       const iconSvg = isIncoming
-        ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
-        : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+        ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="/static/svg/symbol-defs.svg#chat"/></svg>'
+        : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="/static/svg/symbol-defs.svg#lock"/></svg>';
 
       // Channel icons
       const chMap = {};
@@ -66,7 +46,7 @@ async function loadAgents() {
       const ig = chMap['instagram'];
       const channelHtml = `<div class="channel-icons">
         <div class="agent-card-channel ${wa && wa.connected ? 'active' : ''}" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
-        <div class="agent-card-channel ${ig && ig.connected ? 'active' : ''}" title="Instagram"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></div>
+        <div class="agent-card-channel ${ig && ig.connected ? 'active' : ''}" title="Instagram"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="/static/svg/symbol-defs.svg#instagram"/></svg></div>
         <div class="agent-card-channel ${wd && wd.connected ? 'active' : ''}" title="Widget"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></svg></div>
       </div>`;
 

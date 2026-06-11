@@ -74,10 +74,10 @@ tr:hover td { background: rgba(79,70,229,0.03); }
 .status-dot { width: 8px; height: 8px; border-radius: var(--radius-full); display: inline-block; flex-shrink: 0; }
 
 /* ── MODAL ── */
-.modal-overlay { display: none; position: fixed; inset: 0; background: var(--scrim); z-index: 1000; overflow-y: auto; backdrop-filter: blur(4px); }
-.modal-overlay.show { display: flex; align-items: center; justify-content: center; }
-.modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); width: 100%; max-width: 600px; padding: 28px; box-shadow: var(--shadow-lg); animation: modalEnter var(--duration-normal) var(--ease-spring); }
-@keyframes modalEnter { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+.modal-overlay { display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; background: var(--scrim); z-index: 1000; overflow-y: auto; backdrop-filter: blur(4px); opacity: 0; pointer-events: none; transition: opacity var(--duration-normal) var(--ease-out); }
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+.modal-overlay .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); width: 100%; max-width: 600px; padding: 28px; box-shadow: var(--shadow-lg); transform: scale(0.96); opacity: 0; transition: transform var(--duration-normal) var(--ease-spring), opacity var(--duration-normal) var(--ease-out); }
+.modal-overlay.show .modal { transform: scale(1); opacity: 1; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
 .modal-header h2 { margin: 0; font-size: 17px; text-transform: none; letter-spacing: 0; color: var(--text); }
 
@@ -223,6 +223,22 @@ tr:hover td { background: rgba(79,70,229,0.03); }
 .empty-state .empty-icon { width: 48px; height: 48px; color: var(--muted2); margin-bottom: var(--space-2); }
 .empty-state .empty-title { font-size: 15px; font-weight: 600; color: var(--text); }
 .empty-state .empty-desc { font-size: 13px; color: var(--muted); max-width: 300px; }
+
+/* ── SKIP-LINK ── */
+.skip-link { position: absolute; top: -100%; left: var(--space-4); padding: 8px 16px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; z-index: 9999; border-radius: 0 0 var(--radius-sm) var(--radius-sm); text-decoration: none; }
+.skip-link:focus { top: 0; }
+
+/* ── BUTTON PRESS ── */
+button:active, .btn:active { transform: scale(0.97); }
+
+/* ── CONTENTEDITABLE FOCUS ── */
+[contenteditable]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ── TOUCH TARGETS (mobile) ── */
+@media (hover: none) and (pointer: coarse) {
+  button, a, .nav-link, .toggle, [role="button"] { min-height: 44px; min-width: 44px; }
+  input, select, textarea { font-size: 16px; }
+}
 
 /* ── REDUCED MOTION ── */
 @media (prefers-reduced-motion: reduce) {

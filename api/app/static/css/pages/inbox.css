@@ -1,8 +1,4 @@
-/* ═══════════════════════════════════════════════════
-   Inbox — Full-viewport layout (independent of base.html)
-   ═══════════════════════════════════════════════════ */
-
-/* Fill viewport right of sidebar (220px) */
+/* Inbox — Full-viewport layout */
 #inboxApp {
   position: fixed;
   top: 0;
@@ -15,7 +11,6 @@
 
 .inbox-layout { display: flex; flex: 1; min-height: 0; }
 
-/* ── Left Panel ── */
 .inbox-list { width: 280px; min-width: 280px; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--surface); }
 
 .inbox-list-header { display: flex; align-items: center; gap: 8px; padding: 16px 14px 6px; flex-shrink: 0; }
@@ -48,7 +43,6 @@
 .inbox-conv-time { font-size: 11px; color: var(--muted2); white-space: nowrap; flex-shrink: 0; }
 .inbox-conv-preview { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.35; }
 
-/* Status dots */
 .status-dot { width: 8px; height: 8px; min-width: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 .inbox-conv .status-dot { margin-top: 6px; }
 .status-dot.active { background: var(--green); }
@@ -59,7 +53,6 @@
 
 .inbox-pagination { padding: 6px 14px; font-size: 10px; color: var(--muted2); text-align: center; flex-shrink: 0; border-top: 1px solid var(--border); }
 
-/* ── Center Panel ── */
 .inbox-detail { flex: 1; display: flex; flex-direction: column; background: var(--bg); min-width: 0; position: relative; }
 
 .inbox-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
@@ -74,14 +67,7 @@
 .inbox-detail-header .actions button { font-size: 11px; padding: 4px 10px; border-radius: 5px; background: none; border: 1px solid var(--border); color: var(--muted); cursor: pointer; }
 .inbox-detail-header .actions button:hover { background: var(--surface2); color: var(--text); border-color: var(--muted2); }
 
-/* ★ CRITICAL: messages container must FILL the detail panel */
-.inbox-messages {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
+.inbox-messages { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .inbox-msgs { flex: 1; overflow-y: auto; padding: 8px 16px; }
 
 .msg-date-sep { text-align: center; font-size: 11px; color: var(--muted2); padding: 12px 0 6px; font-weight: 500; position: relative; }
@@ -102,7 +88,6 @@
 .msg-time { font-size: 10px; color: var(--muted2); margin-top: 3px; opacity: .6; }
 .msg-row.system .msg-time { display: none; }
 
-/* Notes */
 .inbox-notes { border-top: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
 .inbox-notes-list { padding: 6px 16px 2px; display: flex; flex-direction: column; gap: 5px; max-height: 100px; overflow-y: auto; }
 .note-item { font-size: 11px; color: var(--muted); padding: 5px 10px; background: var(--bg); border-radius: 5px; border-left: 2px solid var(--amber); }
@@ -110,13 +95,10 @@
 .inbox-notes-input { display: flex; gap: 4px; padding: 4px 16px 8px; }
 .inbox-notes-input input { flex: 1; padding: 5px 9px; font-size: 11px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 5px; outline: none; }
 
-/* Reply area */
 .inbox-reply { display: flex; align-items: flex-end; gap: 6px; padding: 10px 16px; border-top: 1px solid var(--border); background: var(--surface); position: relative; flex-shrink: 0; }
 .inbox-reply input { flex: 1; padding: 8px 12px; font-size: 13px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; outline: none; }
 .inbox-reply input:focus { border-color: var(--accent); }
 
-
-/* Canned popup */
 .canned-popup { position: absolute; bottom: 100%; left: 12px; right: 12px; max-height: 300px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 -4px 20px rgba(0,0,0,0.12); overflow: hidden; display: flex; flex-direction: column; z-index: 100; }
 .canned-header { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--muted2); text-transform: uppercase; letter-spacing: .4px; flex-shrink: 0; }
 
@@ -128,7 +110,6 @@
 .canned-item .ci-shortcut { font-size: 10px; color: var(--muted2); background: var(--bg); padding: 1px 5px; border-radius: 3px; margin-left: 6px; font-weight: 400; }
 .canned-item .ci-preview { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ── Right Panel: Profile ── */
 .inbox-profile { position: absolute; top: 0; right: 0; bottom: 0; width: 280px; border-left: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; overflow-y: auto; z-index: 50; box-shadow: -4px 0 16px rgba(0,0,0,0.08); }
 @media (min-width: 1200px) { .inbox-messages { margin-right: 280px; } .inbox-profile { box-shadow: none; } }
 
@@ -158,14 +139,12 @@
 .profile-conv-item .pc-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 .profile-conv-item .pc-date { font-size: 10px; color: var(--muted2); white-space: nowrap; }
 
-/* ── Shared ── */
 .inbox-loading { display: flex; align-items: center; justify-content: center; padding: 30px; gap: 8px; color: var(--muted2); font-size: 12px; }
 .inbox-loading::before { content: ''; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .inbox-toast { position: fixed; bottom: 20px; right: 20px; background: var(--red); color: #fff; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 500; z-index: 2000; max-width: 280px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
 
-/* Avatar colors */
 .avatar-0 { background: #5e6ad2; }
 .avatar-1 { background: #16a34a; }
 .avatar-2 { background: #dc2626; }
@@ -175,7 +154,6 @@
 .avatar-6 { background: #ec4899; }
 .avatar-7 { background: #14b8a6; }
 
-/* ── Mobile fallback (sidebar collapses) ── */
 @media (max-width: 768px) {
   #inboxApp { position: static; left: auto; }
 }

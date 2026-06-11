@@ -63,7 +63,7 @@
   {"id":"enterprise","label":"Enterprise","price":149,"resolved":25000,"storage":100000,"agents":100},
 ] %}
 
-<div id="planModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closePlanModal()">
+<div id="planModal" class="modal-overlay" onclick="if(event.target===this)closePlanModal()">
   <div class="modal" style="max-width:700px">
     <div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:16px">
       <h2 style="margin:0">Choose a Plan</h2>
@@ -89,7 +89,7 @@
   </div>
 </div>
 
-<div id="addonsModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAddonsModal()">
+<div id="addonsModal" class="modal-overlay" onclick="if(event.target===this)closeAddonsModal()">
   <div class="modal" style="max-width:500px">
     <div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:16px">
       <h2 style="margin:0">Add-ons</h2>
@@ -103,10 +103,7 @@
 </div>
 {% endblock %}
 {% block tail %}
-<style>
-  .plan-card.selected { border-color:var(--accent) !important; }
-  .plan-card:hover { border-color:var(--accent); }
-</style>
+<link rel="stylesheet" href="/static/css/pages/settings.css">
 <script>
 var selectedPlan = null;
 
@@ -114,11 +111,11 @@ function showPlanModal() {
   selectedPlan = null;
   document.getElementById('confirmPlanBtn').disabled = true;
   document.querySelectorAll('.plan-card').forEach(function(el) { el.classList.remove('selected'); });
-  document.getElementById('planModal').style.display = 'flex';
+  document.getElementById('planModal').classList.add('show'); lockScroll();
 }
 
 function closePlanModal() {
-  document.getElementById('planModal').style.display = 'none';
+  document.getElementById('planModal').classList.remove('show'); unlockScroll();
 }
 
 function selectPlan(id) {
@@ -138,11 +135,11 @@ function confirmPlan() {
 }
 
 function showAddonsModal() {
-  document.getElementById('addonsModal').style.display = 'flex';
+  document.getElementById('addonsModal').classList.add('show'); lockScroll();
 }
 
 function closeAddonsModal() {
-  document.getElementById('addonsModal').style.display = 'none';
+  document.getElementById('addonsModal').classList.remove('show'); unlockScroll();
 }
 
 async function loadBilling() {

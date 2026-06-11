@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block head %}
-<link rel="stylesheet" href="/static/css/inbox.css">
+<link rel="stylesheet" href="/static/css/pages/inbox.css">
 {% endblock %}
 {% block body %}
 <div id="inboxApp">
@@ -28,7 +28,7 @@
     </div>
     <div class="inbox-detail" id="convDetail">
       <div class="inbox-empty" id="emptyState">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--muted2);margin-bottom:12px"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--muted2);margin-bottom:12px"><use href="/static/svg/symbol-defs.svg#inbox"/></svg>
         <p>Select a conversation</p>
       </div>
       <div class="inbox-messages" id="messagesArea" style="display:none">

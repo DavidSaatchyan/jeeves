@@ -1,0 +1,19 @@
+.agent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
+.agent-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 12px; cursor: pointer; transition: all .15s; }
+.agent-card:hover { border-color: var(--border-bright); background: rgba(79,70,229,0.03); }
+.agent-card-top { display: flex; align-items: flex-start; gap: 14px; }
+.agent-card-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.agent-card-info { flex: 1; min-width: 0; }
+.agent-card-name { font-size: 16px; font-weight: 600; }
+.agent-card-desc { font-size: 13px; color: var(--muted2); margin-top: 2px; line-height: 1.5; }
+.agent-card-meta { display: flex; align-items: center; gap: 12px; margin-top: 6px; flex-wrap: wrap; }
+.agent-card-stat { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.agent-card-channel { width: 20px; height: 20px; border-radius: 4px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 12px; opacity: .5; }
+.agent-card-channel.active { opacity: 1; background: rgba(91,192,222,0.12); }
+.agent-card-lock { padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; color: var(--muted2); text-align: center; }
+.toggle-wrap { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.toggle-switch { width: 36px; height: 20px; border-radius: 10px; background: var(--border); cursor: pointer; position: relative; transition: background .15s; }
+.toggle-switch.on { background: var(--cyan); }
+.toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.toggle-switch.on::after { transform: translateX(16px); }
+.channel-icons { display: flex; gap: 4px; }
