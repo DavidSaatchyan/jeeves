@@ -177,7 +177,7 @@ tr:hover .kebab-btn{opacity:1}
 .hms-preview-item:last-child{border-bottom:none}
 .hms-preview-item strong{color:var(--text)}
 .hms-onboarding-banner{display:flex;align-items:center;gap:12px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:var(--radius);padding:10px 14px;margin-top:12px;font-size:13px;color:var(--text)}
-#hmsTableSection{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);overflow:hidden}
+#hmsTableSection{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm)}
 .hms-table-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:0;padding:0;background:var(--surface-raised)}
 .hms-type-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted2);padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
 .hms-type-tab:hover{color:var(--text);border-bottom-color:var(--border-bright)}
