@@ -80,8 +80,8 @@ tr.selected td { background: var(--accent-subtle); }
 .status-dot { width: 8px; height: 8px; border-radius: var(--radius-full); display: inline-block; flex-shrink: 0; }
 
 /* ── MODAL ── */
-.modal-overlay { display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; background: var(--scrim); z-index: 1000; overflow-y: auto; backdrop-filter: blur(4px); opacity: 0; pointer-events: none; transition: opacity var(--duration-normal) var(--ease-out); }
-.modal-overlay.show { opacity: 1; pointer-events: all; }
+.modal-overlay { display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; background: var(--scrim); z-index: 1000; overflow-y: auto; backdrop-filter: blur(4px); opacity: 0; pointer-events: none; visibility: hidden; transition: opacity var(--duration-normal) var(--ease-out), visibility var(--duration-normal); }
+.modal-overlay.show { opacity: 1; pointer-events: all; visibility: visible; }
 .modal-overlay .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); width: 100%; max-width: 600px; padding: 28px; box-shadow: var(--shadow-lg); transform: scale(0.96); opacity: 0; transition: transform var(--duration-normal) var(--ease-spring), opacity var(--duration-normal) var(--ease-out); }
 .modal-overlay.show .modal { transform: scale(1); opacity: 1; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
